@@ -18,11 +18,14 @@ Alive.PlaceId=107705084891479 -- Pocket Pals Beta
 -- (DriftLanternsClient). Missing = on.
 -- GARDEN-PLAY-BRIEF-2 (beta 35 notes 4 and 8): `fruit` is the 3D fruit, the tree shake, the five-bite snack and its Heart
 -- XP (GardenFruit, FruitHost); `keepout` is the pets going round the garden's solid props (GardenKeepOut). Missing = on.
+-- AERO-JUICE-BRIEF 2 (beta 36 notes): `deckjuice` is the Pocket Deck juice pass (AeroJuice: the merge's impact frame,
+-- hold, beads, layered sound, combos, drop and land, idle life, rolling counters, glints). Missing = on. The Aero Glass
+-- default ball palette is not behind it: it is simply the new default.
 Alive.Features=table.freeze({"springs","menus","close","wind","life","scene","snack","windbed","asmr","wobble","balls","crunch","air",
- "fruit","keepout"})
+ "fruit","keepout","deckjuice"})
 local FlagNames=table.freeze({springs="AliveSprings",menus="AliveMenus",close="AliveClose",wind="AliveWind",life="AliveLife",
  scene="AliveScene",snack="AliveSnack",windbed="AliveWindbed",asmr="AliveAsmr",wobble="AliveWobble",balls="AliveBalls",
- crunch="AliveCrunch",air="AliveAir",fruit="AliveFruit",keepout="AliveKeepOut"})
+ crunch="AliveCrunch",air="AliveAir",fruit="AliveFruit",keepout="AliveKeepOut",deckjuice="AliveDeckJuice"})
 -- What a missing or malformed config value means, where it is not on.
 Alive.Defaults=table.freeze({windbed=false})
 

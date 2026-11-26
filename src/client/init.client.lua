@@ -251,6 +251,12 @@ local pixelMerges = {}
 local rendererPresentation={visible=false,connections={}}
 rendererPresentation.jolt=require(script.DeckMergeJolt).new({clientUI.deviceRoot})
 rendererPresentation.fx=require(script.FieldEffects).new(effects)
+-- Deck juice (AERO-JUICE-BRIEF 2): one pooled layer over the board, behind Alive "deckjuice" (AeroJuice); off, every
+-- call below answers as if it were not there. AeroUI carries the P5 UI pieces (counters, glints, press, chips).
+clientUI.aero=require(script.AeroJuice).new({parent=effects,audio=audio,faces=clientUI.ballFaces,haptics=require(script.Haptics),
+ deck=function()return clientUI.deck end,reduced=reduceEffects})
+rendererPresentation.fx:setAero(clientUI.aero)
+require(script.AeroUI).start({audio=audio,reduced=reduceEffects})
 rendererPresentation.fx:observeDrop(board:GetAttribute("ResetId"),clientUI.attr("Drops")or 0)
 rendererPresentation.setFieldOwner=function(visible,serial,reduced)
  rendererPresentation.jolt:setOwner(visible,serial,reduced)
@@ -4288,7 +4294,7 @@ local function addView(source)
 	local gel = if RunService:IsStudio() and gui:GetAttribute("MeshPreview")
 		then Jelly.new(scene, source) else Sprite.new(sprites, source,{gridWidth=JellyLCD.Width,themeId=clientUI.equippedBallTheme(),lazy=lcd~=nil})
 	-- No tier numerals (batch R1): size, colour and the ball's face carry the tier.
-	eggViews[source] = { gel = gel, id = id, tier = tier, radius = Config.Tiers[tier].radius, faceInput = { id = id, tier = tier, x = 0, y = 0, radius = Config.Tiers[tier].radius }, face = { tier = tier, expr = "idle", dx = 0 } }
+	eggViews[source] = { gel = gel, id = id, tier = tier, radius = Config.Tiers[tier].radius, faceInput = { id = id, tier = tier, x = 0, y = 0, radius = Config.Tiers[tier].radius }, face = { tier = tier, expr = "idle", dx = 0 }, born = os.clock() }
 	viewsById[id] = gel
 	if rendererPresentation.fx.trail then rendererPresentation.fx:ballAdded(source) end -- deck juice: nil while classic
 end
@@ -4390,16 +4396,18 @@ if clientUI.dropIntent and require(ReplicatedStorage.Shared.FeatureFlags).DeckNe
    local serial=board:GetAttribute("ResetId")
    if not rendererPresentation.canPresent(serial)then return end
    local now,id,reduced=os.clock(),-P.result.token,reduceEffects()
-   audio:play(if P.tier==2 then "merge_bubble"else "merge_jelly",audio:mergePitch(1,id),.56)
+   if not clientUI.aero:mergeSound(P.tier,1,id,false,"body")then audio:play(if P.tier==2 then "merge_bubble"else "merge_jelly",audio:mergePitch(1,id),.56)end
    clientUI.haptics.merge(P.tier,1,false)
    if lcdEnabled()and not reduced then
     if #pixelMerges>=6 then table.remove(pixelMerges,1)end
     table.insert(pixelMerges,{first=pixelPoint(Vector2.new(P.fromX,P.fromY)),second=pixelPoint(Vector2.new(P.otherX,P.otherY)),point=pixelPoint(Vector2.new(P.x,P.y)),
      radius=Config.Tiers[P.tier-1].radius*JellyLCD.Width/(Config.Width+.8),resultRadius=Config.Tiers[P.tier].radius*JellyLCD.Width/(Config.Width+.8),
-     color=clientUI.JellyPalette.byTier[P.tier].body,tier=P.tier,start=now,id=id})
+     color=clientUI.JellyPalette.byTier[P.tier].body,tier=P.tier,start=now,id=id,hold=clientUI.aero:mergeHold(P.tier)})
    end
    rendererPresentation.setFieldOwner(true,serial,reduced)
    rendererPresentation.fx:emit("merge",project(Vector2.new(P.x,P.y)),Config.Tiers[P.tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),clientUI.JellyPalette.byTier[P.tier].body,P.tier,1,serial,now,nil,false,nil)
+   clientUI.aero:merge({point=project(Vector2.new(P.x,P.y)),radius=Config.Tiers[P.tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),tier=P.tier,id=id,
+    x=P.x,y=P.y,worldRadius=Config.Tiers[P.tier].radius,list=clientUI.faceList,now=now,popStyle=rendererPresentation.fx.popStyle})
    rendererPresentation.jolt.scale=viewport.AbsoluteSize.Y/420
    rendererPresentation.jolt:emit(serial,id,P.tier,1,false,now)
   end,
@@ -4496,6 +4504,20 @@ function clientUI.playImpacts(batch,serial)
   rendererPresentation.fx:emit("impact",project(contact),radius*viewport.AbsoluteSize.X/(Config.Width+.8),contactSource.Color,contactSource:GetAttribute("Tier"),1,serial,now,normal)
   audio:play(if normal.Y<.78 then "bank"else "land",math.clamp(.82+strongest/100,.9,1.2),math.clamp(strongest/70,.24,.55))
  end
+ -- Deck juice P3: each ball's first contact (squash, two dust beads, the land cue by tier unless the plop just played,
+ -- the land buzz). Nothing while its switch is off.
+ if clientUI.aero.isOn then clientUI.aero:impacts(batch,now,lastPlop==now,clientUI.aeroWhere)end
+end
+-- Where AeroJuice draws a first contact: the contact point (overlay px), the ball's px radius and tier, or nil.
+clientUI.aeroWhere=function(id,normal)
+ for source,view in pairs(eggViews)do
+  if view.id==id then
+   local radius=source.Size.X/2
+   local contact=Vector2.new(source.Position.X,source.Position.Y)-(if typeof(normal)=="Vector2"then normal else Vector2.yAxis)*radius
+   return project(contact),radius*viewport.AbsoluteSize.X/(Config.Width+.8),view.tier
+  end
+ end
+ return nil
 end
 table.insert(rendererPresentation.connections,impacts.OnClientEvent:Connect(function(batch,serial,tick)
  if clientUI.mirrorOwns(serial)then return end -- B3: the mirror plays its own impacts
@@ -4512,21 +4534,26 @@ function clientUI.playMerge(position,tier,chain,first,second,id,cleared,serial)
  local now=os.clock()
  mergeBurst=if now-lastMerge<.08 then math.min(mergeBurst+1,2)else 0;lastMerge=now
  clientUI.ballFaces:merged(id,now)
- audio:play(if tier==2 then "merge_bubble"else "merge_jelly",audio:mergePitch(chain,id),.56*.68^mergeBurst)
+ -- Deck juice: the layered merge (body by tier, the sub, the sparkle in place of the chain accent); off, today's cues.
+ if not clientUI.aero:mergeSound(tier,chain,id,cleared,"body",.68^mergeBurst)then audio:play(if tier==2 then "merge_bubble"else "merge_jelly",audio:mergePitch(chain,id),.56*.68^mergeBurst)end
  clientUI.haptics.merge(tier,chain,cleared) -- a light tick that grows with the tier and the chain (beta only; capped)
  -- G1: every chain step pings (0.09 s guard, was 0.18), one note higher and a little louder.
  if(chain>1 or cleared)and now-lastChainAccent>=.09 then
-  lastChainAccent=now;audio:play("merge_chain",audio:mergePitch(chain,id),Audio.chainAccentVolume(chain))
+  lastChainAccent=now
+  if not clientUI.aero:mergeSound(tier,chain,id,cleared,"chain")then audio:play("merge_chain",audio:mergePitch(chain,id),Audio.chainAccentVolume(chain))end
  end
  local reduced=reduceEffects()
  if lcdEnabled()and not cleared and not reduced then
   if #pixelMerges>=6 then table.remove(pixelMerges,1)end
   table.insert(pixelMerges,{first=pixelPoint(first),second=pixelPoint(second),point=pixelPoint(position),
    radius=Config.Tiers[tier-1].radius*JellyLCD.Width/(Config.Width+.8),resultRadius=Config.Tiers[tier].radius*JellyLCD.Width/(Config.Width+.8),
-   color=clientUI.JellyPalette.byTier[tier].body,tier=tier,start=now,id=id})
+   color=clientUI.JellyPalette.byTier[tier].body,tier=tier,start=now,id=id,hold=clientUI.aero:mergeHold(tier)})
  end
  rendererPresentation.setFieldOwner(true,serial,reduced)
  rendererPresentation.fx:emit("merge",project(position),Config.Tiers[tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),clientUI.JellyPalette.byTier[tier].body,tier,chain,serial,now,nil,cleared,Config.mergeScore(tier,chain,cleared))
+ clientUI.aero:merge({point=project(position),radius=Config.Tiers[tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),tier=tier,id=id,cleared=cleared,
+  x=position.X,y=position.Y,worldRadius=Config.Tiers[tier].radius,list=clientUI.faceList,now=now,popStyle=rendererPresentation.fx.popStyle})
+ clientUI.aero:playCombo({chain=chain,tier=tier,cleared=cleared,now=now})
  -- G1: the kick is sized for a 420 px board and shrinks with a smaller (phone) one.
  rendererPresentation.jolt.scale=viewport.AbsoluteSize.Y/420
  rendererPresentation.jolt:emit(serial,id,tier,chain,cleared,now)
@@ -4559,8 +4586,10 @@ table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(fun
   -- and the chain accent (the server's chain) remain.
   clientUI.ballFaces:merged(id,now)
   if(chain>1 or cleared)and now-lastChainAccent>=.09 then
-   lastChainAccent=now;audio:play("merge_chain",audio:mergePitch(chain,id),Audio.chainAccentVolume(chain))
+   lastChainAccent=now
+   if not clientUI.aero:mergeSound(tier,chain,id,cleared,"chain")then audio:play("merge_chain",audio:mergePitch(chain,id),Audio.chainAccentVolume(chain))end
   end
+  clientUI.aero:playCombo({chain=chain,tier=tier,cleared=cleared,now=now})
   -- The predicted buzz was a plain merge: a chain climbs and a clear thumps now (the server's chain; capped).
   if chain>1 or cleared then clientUI.haptics.merge(tier,chain,cleared)end
   rendererPresentation.fx:pop(project(position),Config.Tiers[tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),clientUI.JellyPalette.byTier[tier].body,Config.mergeScore(tier,chain,cleared),now)
@@ -4584,6 +4613,7 @@ local function refreshMotion()
         if clientUI.hueView then clientUI.hueView.itemReveal:cancel()end
 		reveal:cancel()
 		rendererPresentation.fx:clear()
+		clientUI.aero:clear()
 		table.clear(pixelMerges)
 	end
 	if isPickerOpen() then
@@ -4647,6 +4677,7 @@ board:GetAttributeChangedSignal("Mode"):Connect(function()
 		end
 		reveal:cancel()
 		rendererPresentation.fx:clear()
+		clientUI.aero:clear()
 		table.clear(pixelMerges)
 	end
 	roomView:setMode(mode)
@@ -4673,6 +4704,7 @@ board:GetAttributeChangedSignal("ResetId"):Connect(function()
 	clearPlayInputs()
 	reveal:cancel()
 	rendererPresentation.fx:clear()
+	clientUI.aero:clear()
 	table.clear(pixelMerges)
 	lastPlop = -math.huge
 	lastMerge = -math.huge
@@ -4787,6 +4819,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
  clientUI.danger:update(pressure, graceLeft, now, reduced, presented, clientUI.roundOver())
  if not presented then rendererPresentation.visible=false;lcdElapsed=lcdStep;return end
  rendererPresentation.fx:update(now)
+ clientUI.aero:step(now,clientUI.faceList)
 	if not rendererPresentation.visible then
 		-- Resume at the current authoritative locations, never interpolate an old
 		-- frozen pile through a newly uncovered board.
@@ -4832,10 +4865,13 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 		if drawLCD then
 			lcdElapsed %= lcdStep
 			lcd:beginFrame()
+			clientUI.aero:frame(lcd,now)
 			for index = #pixelMerges, 1, -1 do
-				if now - pixelMerges[index].start >= JellyLCD.MergeDuration then
+				if now - pixelMerges[index].start >= JellyLCD.mergeLength(pixelMerges[index].hold) then
 					local born = viewsById[pixelMerges[index].id]
-					if born and not reduced then born:impact(Vector2.yAxis, 6 + 2 * pixelMerges[index].tier) end
+					-- Deck juice: the overshoot wobble takes the hand-over (AeroJuice:shape); else the ball's own squash.
+					if clientUI.aero.isOn then clientUI.aero:bornAt(pixelMerges[index].id,now)
+					elseif born and not reduced then born:impact(Vector2.yAxis, 6 + 2 * pixelMerges[index].tier) end
 					table.remove(pixelMerges, index)
 				end
 			end
@@ -4844,7 +4880,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 			local center = pixelPoint(Config.launchPosition())
 			lcd:drawGuide(aim)
 			local held=clientUI.heldFace;held.tier=tier;held.expr,held.dx=clientUI.ballFaces.preview(0,now,faceMood);held.star=clientUI.attr("NextPowerUp")==true;held.mark=nil
-			lcd:draw(center, radius, radius, 0, color, 0, nil, held)
+			lcd:draw(center, radius*clientUI.aero:held(now), radius*clientUI.aero:held(now), 0, color, 0, nil, held)
 		end
 	elseif lcd then
 		lcd.label.Visible = false
@@ -4864,9 +4900,12 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 			end
 			if not inMerge then
 				local radius = source.Size.X / 2 * JellyLCD.Width / (Config.Width + 0.8)
-				local face=view.face;face.expr,face.dx=clientUI.ballFaces:get(view.id)
+				local face=view.face;face.expr,face.dx=clientUI.ballFaces:get(view.id,now)
 				face.star=source:GetAttribute("PowerUp")==true;face.mark=source:GetAttribute("ItemMark")
-				lcd:draw(center, radius * widthScale, radius * heightScale, angle, source.Color, ripple, view.id == rendererPresentation.matchId, face)
+				-- Deck juice: the glint twinkle, the overshoot, the land squash and the fresh drop's stretch (1 while off).
+				face.twinkle=clientUI.aero:twinkle(view.id,now)
+				local kx,ky=clientUI.aero:shape(view.id,view.born,now)
+				lcd:draw(center, radius * widthScale * kx, radius * heightScale * ky, angle, source.Color, ripple, view.id == rendererPresentation.matchId, face)
 			end
 		end
 		if guide and source:GetAttribute("Tier") == tier and position.Y < Config.OverflowY then
@@ -4881,7 +4920,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	if drawLCD then
 		for _, merge in ipairs(pixelMerges) do
 			lcd:merge(merge.first, merge.second, merge.point, merge.radius, merge.resultRadius,
-				merge.color, now - merge.start, merge.tier)
+				merge.color, now - merge.start, merge.tier, merge.hold)
 		end
 		if lcd:finishFrame() then
 			lcd.label.Visible = true
@@ -4916,6 +4955,7 @@ gui.Destroying:Connect(function()
  rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduceEffects())
 	rendererPresentation.destroyed=true;rendererPresentation.visible=false
  rendererPresentation.fx:destroy()
+ clientUI.aero:destroy()
  if rendererPresentation.roundEnd then rendererPresentation.roundEnd:destroy()end
  rendererPresentation.jolt:destroy()
  if clientUI.clock then clientUI.clock:destroy();clientUI.clock=nil end

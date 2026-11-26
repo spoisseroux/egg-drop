@@ -53,6 +53,10 @@ Haptics.Patterns=table.freeze({
 	merge4=pattern("Large",6,{{.55,.55,45}}),
 	merge5=pattern("Large",7,{{.75,.75,60},{.75,0,80}}),
 	clear=pattern("Large",9,{{1,1,80},{.40,.40,120}},{major=true}),
+	-- Deck juice P1 (AERO-JUICE-BRIEF 2, AeroJuice; its switch and this one's): the release and the first contact of my
+	-- own board's ball. The lowest priorities, so a merge always wins.
+	drop=pattern("Small",1,{{.15,.15,12}}),
+	land=pattern("Small",2,{{.25,.25,18}}),
 	-- The egg machine's crank ticks (EggMachineClient's light / medium).
 	machine_light=pattern("Small",2,{{.30,.30,35}}),
 	machine_medium=pattern("Small",3,{{.60,.60,60}}),
