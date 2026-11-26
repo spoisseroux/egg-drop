@@ -92,7 +92,11 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # Beta 34 QA Pocket Deck: the computer text knob.
           "DeckText",
           # Bumble balls (GARDEN-PLAY-BRIEF 1): one ball's drawn state (predict, join mid-arc, blend, correct, fade).
-          "BumbleBallView"]
+          "BumbleBallView",
+          # The garden's crunchy toys (GARDEN-PLAY-BRIEF 2026-11-26 section 2): spots, budget, switch, timings, the client.
+          "CrunchToys",
+          # The garden's drift lanterns and seed fluff (GARDEN-PLAY-BRIEF section 4): spots, heights, night, the client.
+          "DriftLanterns"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -149,7 +153,11 @@ def client_modules():
                     # Beta 34 QA: the Pocket Deck's computer text knob.
                     "DeckText.lua",
                     # Bumble balls: the drawn state (the look and the controller are bundled, never required offline).
-                    "BumbleBall*.lua"):
+                    "BumbleBall*.lua",
+                    # The garden's crunchy toys.
+                    "CrunchToysClient.lua",
+                    # The garden's drift lanterns.
+                    "DriftLanternsClient.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")
