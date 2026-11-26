@@ -45,7 +45,8 @@ end
 -- used to ease over its whole length (a smoothstep: a 10-stud stroll spent five studs speeding up and five slowing
 -- down, a glide). It now gets going in EaseRamp seconds, walks at a steady pace and settles in EaseRamp at the end
 -- (cosine ramps, so no jolt), on the same line in the same time: its average is unchanged and its peak is lower than
--- the smoothstep's for any leg over 3 * EaseRamp. Legs that pass a corner moving keep their cubic.
+-- the smoothstep's for any leg over 3 * EaseRamp. Shorter legs (review B35) keep each ramp to a third of the leg, so
+-- the peak never passes the smoothstep's 1.5 x average. Legs that pass a corner moving keep their cubic.
 Activity.EaseRamp=.4
 -- 0..1 along a stop-to-stop leg at t (0..1) and its rate (per unit t), ramps of share r (at most .5) at each end.
 local function cruise(t,r)
@@ -64,7 +65,7 @@ local function legSample(leg,elapsed)
     local v0,v1=Activity.vector(leg.v0),Activity.vector(leg.v1)
     local delta=b-a
     if not leg.pivot and Activity.EaseRamp>0 and v0.Magnitude<1e-4 and v1.Magnitude<1e-4 and delta.Magnitude>.01 then
-        local share,rate=cruise(t,math.min(.5,Activity.EaseRamp/duration))
+        local share,rate=cruise(t,math.min(1/3,Activity.EaseRamp/duration))
         local velocity=if elapsed>=duration or elapsed<=0 then ZERO else delta*(rate/duration)
         local heading=math.atan2(delta.X,delta.Z)
         if Vector2.new(delta.X,delta.Z).Magnitude<=.00001 then heading=leg.yaw end

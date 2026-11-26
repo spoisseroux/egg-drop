@@ -178,6 +178,46 @@ return function(server,offline)
 		end
 	end)
 
+	test("review B35: a walk back that cannot fit its phase never overruns it (the straight move instead)",function()
+		local slide=Catalog.ById.slide
+		for _,row in ipairs(SITES)do
+			local name,site=row[1],row[2]
+			local slot=site.Slots.slide
+			-- The slide's timeline with the walk back squeezed to 0.3 s: no route round fits that.
+			local phases={}
+			for index,step in ipairs(slide.phases)do
+				phases[index]=if step.name=="return"then table.freeze({name=step.name,action=step.action,duration=.3})else step
+			end
+			local total=0;for _,step in ipairs(phases)do total+=step.duration end
+			local squeezed={id="slide",phases=phases,duration=total}
+			local path=Director.forSite(site).playPath(slot,squeezed,slot.yaw)
+			local sum=0;for _,leg in ipairs(path)do sum+=leg.duration end
+			assert(math.abs(sum-total)<1e-6,name..": the play path lasts "..sum.." of "..total)
+			local start=0;for _,step in ipairs(phases)do if step.name=="return"then break end;start+=step.duration end
+			local actor={from=path[1].from,to=path[#path].to,path=path,startTime=0,endTime=sum,action="parkSlide",behavior="play"}
+			assert((A.sample(actor,start+.3-1e-4).position-slot.approach).Magnitude<.05,name..": not at the ladder when the climb starts")
+		end
+	end)
+
+	test("review B35: a director builds its park's route graphs when it is made, not on the first walk",function()
+		local site=Park.build(Park.Specs.hollow)
+		assert(not Route.prepared(site),"a fresh layout has no graphs yet")
+		Director.forSite(site).new({options={now=function()return 0 end},actors={},inputs={}},{random=function()return .5 end})
+		assert(Route.prepared(site),"Director.new did not build them")
+		assert(Route.prepare(site)==false,"built twice")
+	end)
+
+	test("review B35: a mingle walk is taken only when it ends at the spot with no safety stop (Director.reaches)",function()
+		local D=Director.forSite(Park)
+		local at=Park.Center
+		local path=A.plan(at,at+Vector3.new(3,0,0),Vector3.zero,4,0,0,nil,Vector3.zero)
+		assert(D.reaches(path,at+Vector3.new(3,0,0)))
+		assert(not D.reaches(path,at+Vector3.new(4,0,0)),"ends short")
+		local stopped=table.clone(path);stopped[1]=table.clone(path[1]);stopped[1].safetyStop=true
+		assert(not D.reaches(stopped,at+Vector3.new(3,0,0)),"a safety stop")
+		assert(not D.reaches(nil,at)and not D.reaches({},at))
+	end)
+
 	test("the old straight walk back crossed the slide (the bug this fixes)",function()
 		for _,row in ipairs(SITES)do
 			local site=row[2]

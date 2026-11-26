@@ -43,6 +43,9 @@ Director.DuoWaitMembers=4
 -- Pets go up (WORLD-FINISH-LOOK): a pet that cannot plan its way between floors into the park waits this many times
 -- (a second each), then leaves the park.
 Director.CrossTries=10
+-- Review B35: the fastest a play walk (the slide's way back round the slide) may be planned (the planner's `speed`; its
+-- legs average a third to .4 of it). Past this it walks the straight line in its phase instead.
+Director.ReturnCap=18
 
 local function horizontal(a,b)return Vector2.new(a.X-b.X,a.Z-b.Z).Magnitude end
 local function angle(a,b)return math.atan2(math.sin(b-a),math.cos(b-a))end
@@ -62,6 +65,8 @@ function Director.new(garden,options)
 	local self=setmetatable({garden=garden,options=options,sessions={},serial=0,nextGreetAt=0,cooldowns={},
 		random=options.random or function()return generator:NextNumber()end},Director)
 	self.fetch=require(script.Parent.ParkFetch).new(self,Park)
+	-- Review B35: the park's footprints and route graphs are built here, once, not by the first routed walk.
+	Route.prepare(Park)
 	return self
 end
 function Director:clock()return(self.options.now or self.garden.options.now)()end
@@ -188,8 +193,14 @@ function Director.playPath(slot,activity,yaw)
 		local duration=if index==1 then step.duration-spent else step.duration
 		local delta=target-position
 		local previous=path[#path]
+		local walk,seconds
 		if delta.Magnitude>.01 and target==slot.approach then
-			local walk=Route.timed(Park,position,target,Park.WalkSpeed,duration,yaw,nil,slot.yaw)
+			walk,seconds=Route.timed(Park,position,target,Park.WalkSpeed,duration,yaw,Director.ReturnCap,slot.yaw)
+			-- Review B35: a walk that cannot fit its phase even at the cap never overruns it (the climb would start late
+			-- against ParkPetPose): the straight timed move instead, as before the routes.
+			if seconds>duration+1e-6 then walk=nil end
+		end
+		if walk then
 			for _,leg in ipairs(walk)do table.insert(path,leg)end
 			local last=path[#path]
 			yaw=last.yaw+last.turn
@@ -394,8 +405,20 @@ function Director:mingle(actor,input,now)
 	if target then
 		local sample=A.sample(actor,now)
 		local path,seconds=self:walk(position,target,sample and sample.velocity or ZERO,GardenLayout.StrollSpeed,sample and sample.yaw or actor.yaw or 0)
-		self.garden:transition(actor,"investigate",target,0,"wander",nil,nil,{path=path,duration=seconds})
-	elseif actor.action~="wanderPause"or now>=actor.endTime then self.garden:transition(actor,"rest",position,1.5,"wanderPause")end
+		-- Review B35: the same checks as start(): it must end at the spot and never be a safety stop; else pause.
+		if Director.reaches(path,target)then
+			self.garden:transition(actor,"investigate",target,0,"wander",nil,nil,{path=path,duration=seconds})
+			return
+		end
+	end
+	if actor.action~="wanderPause"or now>=actor.endTime then self.garden:transition(actor,"rest",position,1.5,"wanderPause")end
+end
+-- Whether a planned walk ends at `target` (within .1) with no safety stop in it.
+function Director.reaches(path,target)
+	local last=path and path[#path]
+	if not last or(A.vector(last.to)-target).Magnitude>=.1 then return false end
+	for _,leg in ipairs(path)do if leg.safetyStop then return false end end
+	return true
 end
 
 -- GardenState:decide hands every actor with actor.park here instead of its own branches.
