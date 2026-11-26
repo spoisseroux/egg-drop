@@ -82,6 +82,12 @@ local function shelfWeek(now)
 	if Shelf==nil or FeatureFlags.WeeklyShelf~=true then return nil end
 	return Shelf.week(now)
 end
+-- "This week" (ThisWeek): the week a weekly wardrobe pick is sold in, frozen in its purchase (nil for every other item).
+local ThisWeek=require(ReplicatedStorage.Shared.ThisWeek)
+local function listWeek(itemId, now)
+	if not ThisWeek.isWeekly(itemId) then return nil end
+	return ThisWeek.week(now)
+end
 
 local Hatching = { LeaseSeconds = 90, RenewSeconds = 20 }
 -- Petting pays +1 Star up to this many times a day (QA v2 R5.5: 5 -> 10, alongside the faster
@@ -528,6 +534,8 @@ function Hatching.public(handle)
 	-- Weekly shelf (slice C): the week the server prices with (nil while the shelf is off).
 	-- The client may also derive it from dailyDay; this is the authoritative copy.
 	public.shelfWeek = shelfWeek(handle.adapter.now())
+	-- "This week": the week the server sells the weekly pick in (nil while its switch is off).
+	public.thisWeek = if ThisWeek.on() then ThisWeek.week(handle.adapter.now()) else nil
 	-- QA Q5: Stars from rounds saved today in this session (not saved; no daily cap).
 	public.todayEarned = Hatching.roundStarsToday(handle, dayOf(handle.adapter.now()))
 	public.restricted = isRestricted(handle)
@@ -1195,6 +1203,8 @@ local function shelfApply(handle, apply)
 	local gates = Levels.on("gates")
 	return function(state, captured)
 		if captured.week ~= nil and shelfWeek(handle.adapter.now()) ~= captured.week then return false, "ShelfChanged" end
+		-- The same for a "This week" pick: sold in the week it was asked for, by the server's clock, or not at all.
+		if captured.listWeek ~= nil and ThisWeek.week(handle.adapter.now()) ~= captured.listWeek then return false, "ShelfChanged" end
 		return apply(state, captured, gates)
 	end
 end
@@ -1230,7 +1240,7 @@ function Hatching.buyWearable(handle, operationId, petId, itemId, price, equip)
 	if Wearables.owns(handle.state, petId, itemId) and not resuming then return true, "AlreadyOwned" end
 	local candidate = resuming and handle.pending.candidate
 		or table.freeze({ petId = petId, itemId = itemId, price = price, operationId = operationId, equip = equip == true,
-			week = shelfWeek(handle.adapter.now()) })
+			week = shelfWeek(handle.adapter.now()), listWeek = listWeek(itemId, handle.adapter.now()) })
 	if candidate.petId ~= petId or candidate.itemId ~= itemId or candidate.price ~= price then return false, "OperationConflict" end
 	local digest = "buy:" .. candidate.petId .. ":" .. candidate.itemId .. ":" .. tostring(candidate.price)
 	local ok, reason = transact(handle, signature, handle.state.revision, shelfApply(handle, Wearables.applyBuy), candidate, signature, nil, digest)

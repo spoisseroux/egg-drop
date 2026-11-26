@@ -22,6 +22,8 @@ local Bounds=require(script.Parent.PetRigBounds)
 local TabInk=require(script.Parent.TabInk)
 local HintLegend=require(script.Parent.HintLegend)
 local Deal=require(script.Parent.ShelfDeal)
+-- "This week" (ThisWeek): one recolour a week at its full price, in a tab of its own while the switch is on.
+local ThisWeek=require(Shared.ThisWeek)
 -- Levels matter (S2): level-gated recolours (the chip, the bar and the way to the training).
 local Levels=require(Shared.Levels)
 local Locked=require(script.Parent.LockedItem)
@@ -40,21 +42,28 @@ Shop.NoneId="none"
 -- Pure: the cards of one slot tab (None first, then the catalogue items). A slot
 -- with no items for this pet has no cards at all (the empty line shows instead).
 -- `owned` (the pet's owned ids): a gated item it owns stays listed while gates are off.
-function Shop.tileList(petId,slot,owned)
+-- `tab` (optional): the "This week" tab holds its one pick and no None card.
+function Shop.tileList(petId,slot,owned,tab)
  if not petId then return {}end -- before the first open there is no pet yet (slice E)
+ if type(tab)=="table"and tab.thisWeek then
+  -- The tab already decided the pick is listed (Shop.thisWeekTab); status decides what it sells.
+  local item=Catalog.forPet(petId,math.huge).byId[tab.thisWeek]
+  return if item then {item}else {}
+ end
  local items=Catalog.shopTab(petId,slot,owned)
  if #items==0 then return {}end
  local list={{id=Shop.NoneId,none=true,slot=slot,name=UICopy.get("r4.wardrobe.none")}}
  for _,item in ipairs(items)do table.insert(list,item)end
  return list
 end
--- Pure: an item by id. A gated item the shop does not list (gates off) still resolves, so an
--- owned one can be seen, worn and taken off; `status` never sells it.
+-- Pure: an item by id. A gated item the shop does not list (gates off), or a "This week" item
+-- outside its week, still resolves, so an owned one can be seen, worn and taken off; `status`
+-- never sells it.
 function Shop.item(petId,id)
  local item=Catalog.item(petId,id)
  if item then return item end
  local any=Catalog.forPet(petId,math.huge).byId[id]
- return if any and any.gate~=nil then any else nil
+ return if any and(any.gate~=nil or any.weekly==true)then any else nil
 end
 -- Pure: the None card's pane. Current when nothing is worn in the slot.
 function Shop.noneStatus(petId,slot,ctx)
@@ -83,6 +92,11 @@ function Shop.status(petId,itemId,ctx)
  end
  -- Slice C: an item on this week's shelf sells at the shelf price (`full` = the struck price).
  local price,full=Deal.quote("wearable",itemId,item.price,ctx.week)
+ -- This week: the pick at its full price, and the stated cycle (never a countdown).
+ if item.weekly==true and wallet>=price then
+  local lines=Shop.thisWeekLines()
+  return {kind="buy",text=lines[1],fit=lines,button="★ Buy "..price,price=price,enabled=true,thisWeek=true}
+ end
  if wallet>=price then return {kind="buy",text=if full then UICopy.get("shelf.status")else "You have enough Stars",button="★ Buy "..price,price=price,full=full,enabled=true}end
  return {kind="short",text=require(script.Parent.ShopPriceState).need(price,wallet),button="★ Buy "..price,price=price,full=full,enabled=false}
 end
@@ -99,6 +113,19 @@ function Shop.tileStatus(petId,itemId,ctx,slot)
  if s.kind=="locked"then return "","dim"end -- the chip stands where the price would
  return "","dim"
 end
+-- This week: the pane line for the pick, longest first ("This week's pick. Back every 8 weeks.", then the short one).
+function Shop.thisWeekLines()
+ return {UICopy.get("thisWeek.status",{weeks=ThisWeek.Every}),UICopy.get("thisWeek.statusShort",{weeks=ThisWeek.Every})}
+end
+-- Pure: the "This week" tab for this pet in `week` (the snapshot's shelf week, ShelfDeal.week), or nil: no week
+-- yet, the switch is off, or the pet's rig does not sell this week's pick. Its slot is the pick's own slot.
+function Shop.thisWeekTab(petId,week)
+ if not petId or type(week)~="number"then return nil end
+ local row=ThisWeek.featured(week)
+ local item=row and Catalog.forPet(petId,week).byId[row.id]
+ if not item then return nil end
+ return {id="thisweek",slot=item.slot,label="This week",copy="thisWeek.tab",thisWeek=item.id}
+end
 -- Slice E: the pet the Wardrobe opens on when none (or one without wearables) is asked
 -- for: the first active pet that has items, else the first active pet.
 function Shop.firstPet()
@@ -108,9 +135,12 @@ end
 -- Slice B: only slot tabs with at least one item for this pet are shown (Ankle stays
 -- hidden until an anklet exists). A pet with no wearables at all keeps every tab, so
 -- the screen still has a tab bar and the empty line.
-function Shop.tabsFor(petId,owned)
+function Shop.tabsFor(petId,owned,week)
  local list={}
  if petId then
+  -- This week: its own tab, first in line (only while the switch is on and this pet's rig sells the pick).
+  local pick=Shop.thisWeekTab(petId,week)
+  if pick then table.insert(list,pick)end
   for _,tab in ipairs(Catalog.Tabs)do if #Catalog.shopTab(petId,tab.slot,owned)>0 then table.insert(list,tab)end end
  end
  if #list==0 then for _,tab in ipairs(Catalog.Tabs)do table.insert(list,tab)end end
@@ -122,6 +152,7 @@ function Shop.tabKey(tabs)
 end
 -- A tab's label: the UICopy string for the new tabs, the catalogue's label otherwise.
 function Shop.tabLabel(tab)
+ if tab.copy then return UICopy.get(tab.copy)end
  local key="variants.tab."..tostring(tab.id)
  return if UICopy.has(key)then UICopy.get(key)else tab.label
 end
@@ -259,7 +290,12 @@ end
 -- The visible tab list (slice B) and the tab in front.
 function Shop:tabInfo()return self.tabList[self.tab]or self.tabList[1]end
 function Shop:owned()return self.ctx.row and self.ctx.row.owned or nil end
-function Shop:items()return if self.petId then Catalog.shopTab(self.petId,self:tabInfo().slot,self:owned())else {}end
+function Shop:items()
+ if not self.petId then return {}end
+ local tab=self:tabInfo()
+ if tab.thisWeek then return Shop.tileList(self.petId,tab.slot,self:owned(),tab)end
+ return Catalog.shopTab(self.petId,tab.slot,self:owned())
+end
 function Shop:slot()return self:tabInfo().slot end
 -- The pane status of a card (None included).
 function Shop:statusOf(id)
@@ -284,6 +320,11 @@ function Shop:buildPane(pane,pw,ph,compact)
  if self.visual then self.visual:destroy();self.visual=nil end
  -- Slice C: "THIS WEEK −20%" in the well's corner while the focused item is on the shelf.
  self.deal=Deal.chip(well,22);self.deal.root.ZIndex=well.ZIndex+3;self.deal.root.Position=UDim2.fromOffset(8,8)
+ -- This week: the same corner for the weekly pick (it is never on the shelf, so the two never meet).
+ local pick=Kit.chip(well,UICopy.get("thisWeek.chip"),"sticker",22);pick.label.TextSize=12
+ pick.set(UICopy.get("thisWeek.chip"),"sticker",Kit.Color.stars)
+ pick.root.Name="ThisWeekChip";pick.root.Visible=false;pick.root.Active=false;pick.root.ZIndex=well.ZIndex+3;pick.root.Position=UDim2.fromOffset(8,8)
+ self.weekChip=pick
  self.dealWidth=pw-pad*2-16
  local y=pad+viewH+(if compact then 8 else 12)
  self.name=txt(pane,"Title","","text",pad,y,pw-pad*2-96,nameH,{TextSize=if compact then 18 else 24,TextTruncate=Enum.TextTruncate.AtEnd})
@@ -304,7 +345,7 @@ function Shop:buildTiles(parent,x0,y0,tileW,tileH,gap,cols)
  if self.tileRoot then self.tileRoot:Destroy()end
  local holder=Kit.frame(parent,"Tiles",nil,UDim2.new(),UDim2.fromScale(1,1));holder.ZIndex=parent.ZIndex+1;self.tileRoot=holder
  self.tiles={}
- for index,item in ipairs(Shop.tileList(self.petId,self:slot(),self:owned()))do
+ for index,item in ipairs(Shop.tileList(self.petId,self:slot(),self:owned(),self:tabInfo()))do
   local col,row=(index-1)%cols,math.floor((index-1)/cols)
   -- T2: pressable tile with a lip (4 px in the 12 px desktop gap, 3 px in the 8 px phone gap).
   local tile,tileState=Kit.tile(holder,"Tile_"..item.id,{selectable=false,radius=12,compact=gap<12,
@@ -387,7 +428,7 @@ function Shop:build(view)
  -- Slice B: the tabs this pet has items for; the front tab stays on its slot when it can.
  local frontId=self.tabList and self.tabList[self.tab]and self.tabList[self.tab].id
  self.levelsKey=Levels.key()
- self.tabList=Shop.tabsFor(self.petId,self:owned());self.tabKey=Shop.tabKey(self.tabList)
+ self.tabList=Shop.tabsFor(self.petId,self:owned(),self.ctx.week);self.tabKey=Shop.tabKey(self.tabList)
  self.tab=1;for i,tab in ipairs(self.tabList)do if tab.id==frontId then self.tab=i end end
  local labels={};for _,tab in ipairs(self.tabList)do table.insert(labels,Shop.tabLabel(tab))end
  if phone then
@@ -709,6 +750,7 @@ function Shop:paintPane()
   self.name.Text="";self.note.Text="";self.status.Text="";self.action.Visible=false;self.tier.root.Visible=false
   self:paintLock(nil)
   if self.deal then self.deal.set(false)end
+  if self.weekChip then self.weekChip.root.Visible=false end
   if self.visible and self.petId then self:paintPreview()end;return
  end
  local item=Shop.item(self.petId,id)
@@ -722,10 +764,17 @@ function Shop:paintPane()
  end
  local status=self:statusOf(id)
  if self.deal then self.deal.set(status.full~=nil,self.dealWidth)end
+ -- This week: the chip on the pick in every state (bought or not) while it is this week's.
+ if self.weekChip then
+  local weekly=item~=nil and item.weekly==true and type(self.ctx.week)=="number"and ThisWeek.listed(id,self.ctx.week)
+  self.weekChip.root.Visible=weekly
+  self.root:SetAttribute("ThisWeek",weekly)
+ end
  self.root:SetAttribute("ShelfPrice",if status.full then status.price else nil)
  local confirming=self.confirmId==id and os.clock()<self.confirmUntil
  local pending=self.pending and self.pending.itemId==id and self.pending.action=="wearableBuy"
  self.status.Text=if pending then "Saving…"elseif self.errorId==id and self.errorText then self.errorText else status.text
+ if not pending and not(self.errorId==id and self.errorText)and status.fit then Kit.fitText(self.status,status.fit)end
  if not pending and self.errorId==id and self.errorFit then Kit.fitText(self.status,self.errorFit)end
  -- Levels matter: "Needs Jump 30 · 22/30" (the requirement alone when that is too long) and its bar.
  local gate=if status.kind=="locked"then status.gate else nil
@@ -776,7 +825,7 @@ function Shop:showItem(itemId)
  local item=self.petId and Shop.item(self.petId,itemId)
  if not item then return false end
  for index,tab in ipairs(self.tabList)do
-  if tab.slot==item.slot then
+  if tab.slot==item.slot and(tab.thisWeek==nil or tab.thisWeek==itemId)then
    if index~=self.tab and self:setTab(index)==false then return false end
    for i,tile in ipairs(self.tiles)do if tile.id==itemId then self:focus(i,true);return true end end
   end
@@ -918,7 +967,7 @@ function Shop:open(petId,ctx)
  self.visible=true;self.root.Visible=true;self.confirmId,self.errorId=nil,nil
  Kit.shadeOpen(self,self.shade,function(covered)self.root.Visible=not covered end)
  -- Slice B: another pet can have other tabs; rebuild the bar when the set changes.
- if Shop.tabKey(Shop.tabsFor(self.petId,self:owned()))~=self.tabKey or self.levelsKey~=Levels.key()then self:build(self.view);self:relayout()end
+ if Shop.tabKey(Shop.tabsFor(self.petId,self:owned(),self.ctx.week))~=self.tabKey or self.levelsKey~=Levels.key()then self:build(self.view);self:relayout()end
  self:fit(self.host.AbsoluteSize)
  if self.visual and self.visualPet~=self.petId then self.visual:destroy();self.visual=nil end
  self:setTab(self.tab)

@@ -104,6 +104,9 @@
 -- place or Studio. Membership up there also needs the TierPets gate; ParkMount builds the Top Lawn only with the
 -- island's sculpt (CliffDen). false: the Hollow exactly as before (the old site spec stays behind this for one beta);
 -- the terrace's greybox clump and the pets' rest spots up there stay where slice B put them either way (beta only).
+-- ThisWeek (GARDEN-PLAY-BRIEF-2 section 8, Spencer 2026-11-26): the build ceiling for the "This week" wardrobe pick, one
+-- recolour a week at its full price on a stated cycle (ThisWeek.lua). Also needs the beta place or Studio
+-- (ThisWeek.PlaceId) and the server's switch (ThisWeekConfig: this_week). Missing = off: no weekly row listed or sold.
 return table.freeze({PetTrail=true,FirstHelloBonus=true,RoundTwoNudge=true,ToyPillCopy=true,CalmFirstDeck=true,TomorrowStrip=true,GardenTourCut=true,StarterBonus=true,FirstSessionFunnel=true,SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true,
  AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true,AliveScene=true,AliveSnack=true,AliveWindbed=true,
@@ -125,4 +128,4 @@ return table.freeze({PetTrail=true,FirstHelloBonus=true,RoundTwoNudge=true,ToyPi
  -- AliveAeroHatch (AERO-JUICE-BRIEF beta 36, section 3): the Aero hatch screens (HatchAero); beta and Studio only.
  AliveAeroHatch=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
- PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,PlayerScale=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true,TierPets=true,ParkTopLawn=true})
+ PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,PlayerScale=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true,TierPets=true,ParkTopLawn=true,ThisWeek=true})

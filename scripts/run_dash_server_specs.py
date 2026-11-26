@@ -67,7 +67,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # GARDEN-PLAY-BRIEF-2: pets go round the garden's solid props (GardenKeepOut); the fruit's Heart XP (GardenFruit).
          "GardenKeepOut", "GardenFruit",
          # AERO-JUICE-BRIEF (beta 36) section 3: the Aero hatch screens' palettes, contrast, bubbles and switch.
-         "HatchAero"]
+         "HatchAero",
+         # "This week" (GARDEN-PLAY-BRIEF-2 section 8): the weekly wardrobe pick's rotation, prices, listing and purchase.
+         "ThisWeek"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.

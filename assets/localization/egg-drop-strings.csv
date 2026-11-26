@@ -441,7 +441,7 @@ ui.hub.tile.settings.line,"Sound, music and motion",,Pocket menu (machine hub)
 ui.hub.tile.settings.name,Settings,,"Pocket menu (machine hub); also ui.pause.settings, ui.report.eyebrow"
 ui.hub.tile.style.line,"Faceplates, backgrounds and balls",,Pocket menu (machine hub); also ui.r5.station.Customize.line
 ui.hub.tile.style.short,Style,,Pocket menu (machine hub)
-ui.hub.week,This week,,Pocket menu (machine hub)
+ui.hub.week,This week,,"Pocket menu (machine hub); also ui.thisWeek.chip, ui.thisWeek.tab"
 ui.input.action.browse,Browse,,Menu text; also ui.stats.hint.browse
 ui.input.action.confirm,Pick,,Menu text
 ui.input.action.tab,Switch tab,,Menu text
@@ -1095,6 +1095,8 @@ ui.things.new,New,,Things to do page
 ui.things.play,Play,,Things to do page
 ui.things.tile.line,Every game in the garden,,Things to do page
 ui.things.tile.short,Things,,Things to do page
+ui.thisWeek.status,This week's pick. Back every {weeks} weeks.,,Menu text; e.g. This week's pick. Back every {weeks} weeks.
+ui.thisWeek.statusShort,Back every {weeks} weeks,,Menu text; e.g. Back every {weeks} weeks
 ui.tomorrow.claim,{count} to claim,,Results TOMORROW strip and garden line; e.g. 3 to claim
 ui.tomorrow.claimOne,1 to claim,,Results TOMORROW strip and garden line
 ui.tomorrow.label,TOMORROW,,Results TOMORROW strip and garden line
@@ -1296,6 +1298,14 @@ catalog.WearableCatalog.Variants.21.name,Peach Blush Stickers,,Catalogue Wearabl
 catalog.WearableCatalog.Variants.22.name,Sky Sun Hat,,Catalogue WearableCatalog (name)
 catalog.WearableCatalog.Variants.23.name,Starbloom Hoodie,,Catalogue WearableCatalog (name)
 catalog.WearableCatalog.Variants.24.name,Golden Flower Crown,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.25.name,Plum Party Hat,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.26.name,Sherbet Friendship Bands,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.27.name,Bluebell Round Specs,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.28.name,Lantern Star Hoodie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.29.name,Berry Party Hat,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.30.name,Lime Friendship Bands,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.31.name,Lilac Round Specs,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.32.name,Tide Star Hoodie,,Catalogue WearableCatalog (name)
 catalog.RoundItems.ById.bomb.effect,Your next ball bursts on landing and clears a small circle.,,Catalogue RoundItems (effect)
 catalog.RoundItems.ById.bomb.name,Bomb,,Catalogue RoundItems (name)
 catalog.RoundItems.ById.bomb.short,Next ball clears a circle.,,Catalogue RoundItems (short)
