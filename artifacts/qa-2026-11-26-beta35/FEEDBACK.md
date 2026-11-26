@@ -25,3 +25,14 @@ ramp (disconnected faces), 58 left of the den mouth by the first steps.
 | 18 | "Make the balloon above garden dash start more interesting too, something more fun" | Garden air | open |
 | 19 | "how do i test the new onboarding?" | Answer | `/freshsave` in chat, rejoin; `/freshsave restore` brings your save back |
 | - | "does feel really good tho" (the machine), "i like them tho" (the balls) | | kept |
+
+## Onboarding (Spencer, same day, after `/freshsave`; shots 59 the Welcome deck, 60 the Bear reveal)
+
+| # | Note (trimmed) | Lane | Status |
+|---|---|---|---|
+| 20 | "the new onboarding doesnt help? idek know what to do?" | Onboarding v2 | open |
+| 21 | "i just hatched the bear which animated in the pocket deck wonkily" | Onboarding v2 | open |
+| 22 | "the onboarding egg hatch egg drop game ui is weird? maybe make the egg on the pocket deck 3d and spinning?" (59: "Hatch a / friend" wraps big, flat pixel egg) | Onboarding v2 | open |
+| 23 | "the animation of the bear being dropped by a stork, in front of us after, and then we open like a petting screen for the egg and tap it 3 times to hatch it, and then we get the bear smash screen" | Onboarding v2 | open (his flow) |
+| 24 | "(the reveal) needs to be fixed, the scaling is weird, it doesnt fit under the roblox ui" (60) | Onboarding v2 | open |
+| 25 | "then we need to know what we can do after? it didnt say anything after hatching the bear, just to press g on it??" | Onboarding v2 | open |
