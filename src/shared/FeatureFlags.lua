@@ -109,5 +109,7 @@ return table.freeze({PetTrail=true,FirstHelloBonus=true,RoundTwoNudge=true,ToyPi
  AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true,AliveScene=true,AliveSnack=true,AliveWindbed=true,
  -- AliveAsmr (ASMR-AND-SCALE-LOOK 1, 2): the ASMR hatch sounds and the vibration (HatchAsmr, Haptics); beta and Studio only.
  AliveAsmr=true,
+ -- AliveWobble (beta 34, GARDEN-PLAY-BRIEF 3): the Wobble Egg on the crag; beta and Studio only.
+ AliveWobble=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
  PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,PlayerScale=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true,TierPets=true,ParkTopLawn=true})

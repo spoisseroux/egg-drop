@@ -82,7 +82,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # The First Hatch (onboarding-2026-11-26): the crack ritual's clock hold.
           "CrackRitual",
           # Player scale (player-scale-2026-11-26): the knob.
-          "PlayerScale"]
+          "PlayerScale",
+          # Beta (34) notes: the Wobble Egg on the crag (GARDEN-PLAY-BRIEF 3).
+          "WobbleEgg"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]

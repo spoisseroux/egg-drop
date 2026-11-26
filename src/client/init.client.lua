@@ -5379,6 +5379,12 @@ do
  if ok and hill then gui.Destroying:Connect(function()hill:destroy()end)
  elseif not ok then warn("[HillNight] not mounted: "..tostring(hill))end
 end
+-- The Wobble Egg on the crag (beta 34, WobbleEggClient): nil where the `wobble` ceiling is closed (live).
+do
+ local ok,egg=pcall(function()return require(script.WobbleEggClient).mount()end)
+ if ok and egg then gui.Destroying:Connect(function()egg:destroy()end)
+ elseif not ok then warn("[WobbleEgg] not mounted: "..tostring(egg))end
+end
 -- Things to do (Shared.Things): nothing at all with the build ceiling off; with the switch off only the switches are
 -- watched. clientUI.things is what the Pocket menu's page (MachineHub), the coach's last line (ThingsTips) and the trail
 -- (ThingsTrail) ask.

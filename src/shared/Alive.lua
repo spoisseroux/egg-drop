@@ -11,9 +11,10 @@ Alive.PlaceId=107705084891479 -- Pocket Pals Beta
 -- the one feature whose missing value is OFF (Alive.Defaults).
 -- ASMR-AND-SCALE-LOOK 1 and 2: `asmr` is the ASMR hatch (HatchAsmr: layered cracks and the pop) and the vibration
 -- (Haptics: the hatch beats, Pocket Deck merges, the Vibration setting). Missing = on.
-Alive.Features=table.freeze({"springs","menus","close","wind","life","scene","snack","windbed","asmr"})
+-- Beta 34 notes (GARDEN-PLAY-BRIEF 3): `wobble` is the Wobble Egg on the crag (WobbleEggClient). Missing = on.
+Alive.Features=table.freeze({"springs","menus","close","wind","life","scene","snack","windbed","asmr","wobble"})
 local FlagNames=table.freeze({springs="AliveSprings",menus="AliveMenus",close="AliveClose",wind="AliveWind",life="AliveLife",
- scene="AliveScene",snack="AliveSnack",windbed="AliveWindbed",asmr="AliveAsmr"})
+ scene="AliveScene",snack="AliveSnack",windbed="AliveWindbed",asmr="AliveAsmr",wobble="AliveWobble"})
 -- What a missing or malformed config value means, where it is not on.
 Alive.Defaults=table.freeze({windbed=false})
 
