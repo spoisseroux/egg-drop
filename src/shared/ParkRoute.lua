@@ -225,6 +225,14 @@ local function graph(site,loose)
 	built[key]={nodes=nodes,visible=visible}
 	return built[key]
 end
+-- Build a site's footprints and both graphs now (review B35: the director does it when it is made, so no walk pays tens
+-- of ms for them in one server frame). Returns whether they were built by this call.
+function Route.prepare(site)
+	local fresh=not(cache[site]and cache[site].strict and cache[site].loose)
+	Route.footprints(site);graph(site,false);graph(site,true)
+	return fresh
+end
+function Route.prepared(site)return cache[site]~=nil and cache[site].strict~=nil and cache[site].loose~=nil end
 
 -- The nearest point off every grown footprint for a point inside some: on the edges of the ones it stands in (pushed
 -- out by Push), else a graph corner. nil when none is clear.

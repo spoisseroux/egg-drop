@@ -53,6 +53,16 @@ return function(client)
 		end
 	end)
 
+	test("review B35: a short stop-to-stop leg never peaks above the old smoothstep's 1.5 x its average",function()
+		for _,length in ipairs({.3,.6,1,1.5,2.5})do
+			local path=A.plan(Vector3.new(0,4,0),Vector3.new(0,4,length),Vector3.zero,4,0,0,nil,Vector3.zero)
+			local actor,total=walk(path)
+			local mean,fastest=length/total,0
+			for t=0,total,total/200 do fastest=math.max(fastest,A.sample(actor,t).velocity.Magnitude)end
+			assert(fastest<=mean*1.5+1e-6,string.format("a %.1f-stud leg peaks at %.2f x its average",length,fastest/mean))
+		end
+	end)
+
 	test("turns on the spot run at TurnRate (an about-turn over half a second, never a snap)",function()
 		assert(math.abs(A.turnSeconds(math.pi)-math.pi/A.TurnRate)<1e-9 and A.turnSeconds(math.pi)>=.5)
 		assert(A.turnSeconds(.05)==A.TurnMin)

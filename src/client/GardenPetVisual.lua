@@ -348,8 +348,11 @@ function Visual:update(dt)
  support*=gait
  -- Beta (34): the waddle doubled (3 -> 6 degrees of roll onto the standing foot, .045 -> .06 studs across) so a walk
  -- reads as steps, not a glide; the head rolls back half of it (below) so the face stays steady.
- local weightX=support*.06*math.min(1,(self.worldScale or .72)/.72)
- local weightRoll=support*math.rad(6)
+ -- Review B35: under Reduced Motion gait and support are already 0 (above); the waddle is also zeroed here outright so
+ -- no later change to `support` can bring it back.
+ local waddle=if reduced then 0 else 1
+ local weightX=support*.06*waddle*math.min(1,(self.worldScale or .72)/.72)
+ local weightRoll=support*math.rad(6)*waddle
  self.weightShift,self.weightRoll=weightX,weightRoll
  local hipAnchor=v(self.definition.anchors.Body)*self.scale
  -- Walk body (B2): lean 4 degrees into travel; sitting lowers 0.22 and leans back 6.
@@ -410,7 +413,7 @@ function Visual:update(dt)
   elseif channel=="FootL"or channel=="FootR"or channel=="Foot"then
    local side=if string.sub(name,-1)=="L"then -1 else 1
    -- Beta (34): each foot lifts .085 (was .045) and swings .095 (was .075), x the pet's scale: visible little steps.
-   cf=root*CFrame.new(0,math.max(0,step*side)*.085*self.scale+(self.careFootLift or 0),step*side*.095*self.scale+(self.careFootForward or 0))*Sit.foot(entry.frame,side,sit,self.scale)*entry.frame
+   cf=root*CFrame.new(0,math.max(0,step*side)*(if reduced then .045 else .085)*self.scale+(self.careFootLift or 0),step*side*(if reduced then .075 else .095)*self.scale+(self.careFootForward or 0))*Sit.foot(entry.frame,side,sit,self.scale)*entry.frame
   end
   local size=entry.size;local hidden=not Charms.isVisible(self,entry)or entry.suppressed==true
   if channel=="Body"then
