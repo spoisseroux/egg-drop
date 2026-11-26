@@ -493,6 +493,38 @@ REVEAL_C = L.hexrgb("#6F7D78")  # round 7 (Fable ROUND7 5): the cliff rock's gre
 REVEAL = (2.0, 4.0, 1.5)        # grey for the outer 2 studs, graded over 4 more in; how far past the opening it reaches
 
 
+# Round 8b: the island's cliff rock map (assets/world/textures/grounded/W1_cliff_rock.png, display space, H x W x 3) and its
+# UV density (uv units per stud, build_world_finish_art.rock_density); set by the build before the shell bake.
+ROCK = None
+ROCK_K = .25
+# In game the shell map is tinted #B8A39E (its manifest look) and the island's rock #E2EAF0 (Aero): a rock texel on the
+# shell is the rock map times the ratio, so both read the same under the same light.
+ROCK_TINT = np.array(L.hexrgb("#E2EAF0")) / np.array(L.hexrgb("#B8A39E"))
+
+
+def _bilinear(img, u, v):
+    """Bilinear, wrapping samples of img (H, W, 3) at u, v (tile units, any range)."""
+    H, W = img.shape[:2]
+    fx, fy = np.mod(u, 1.0) * W - .5, np.mod(-v, 1.0) * H - .5
+    x0, y0 = np.floor(fx).astype(int), np.floor(fy).astype(int)
+    tx, ty = (fx - x0)[:, None], (fy - y0)[:, None]
+    x0, y0 = np.mod(x0, W), np.mod(y0, H)
+    x1, y1 = np.mod(x0 + 1, W), np.mod(y0 + 1, H)
+    return ((img[y0, x0] * (1 - tx) + img[y0, x1] * tx) * (1 - ty) + (img[y1, x0] * (1 - tx) + img[y1, x1] * tx) * ty)
+
+
+def reveal_rock(x, y, z):
+    """The cliff rock map at texel positions (Roblox studs), on each face's dominant axis as triplanar_uv does: the
+    collar's jamb walls (x at a drawn jamb) on (z, y), its soffit (the arch, at most 30 degrees off level) on (x, z),
+    the front wall's pilaster on (x, y)."""
+    k = ROCK_K
+    jamb = (np.abs(x - JW) < .08) | (np.abs(x - JE) < .08)
+    collar = z > Z1 + PIL_OFF + .05
+    u = np.where(collar & jamb, -z, x) * k
+    v = np.where(collar & ~jamb, z, y) * k
+    return np.clip(_bilinear(ROCK, u, v) * ROCK_TINT[None, :], 0, 1)
+
+
 def reveal_weight(x, y, z):
     """0..1: how far a texel is the reveal's grey (1 on the collar's outer 2 studs, 0 from 6 studs in), only round the
     opening (its span and its arch, grown REVEAL[2])."""
@@ -539,6 +571,10 @@ def shell_colour(pos, ao, mask):
     # in the cliff's grey-green, graded to the den's brown over the next 4 studs in, with the same tone and grain
     w = reveal_weight(x, y, z)
     grey = np.array(REVEAL_C)[None, :] * (1 + tone + grain)[:, None]
+    if ROCK is not None:
+        # round 8b (Spencer beta 34 follow-up: the collar's lining still read as a plain grey band): the reveal carries
+        # the island's own cliff rock map, projected as the island projects it, so it reads as the mouth rock does
+        grey = reveal_rock(x, y, z)
     col = col * (1 - w)[:, None] + grey * w[:, None]
     # soot over each lantern
     for lx, ly, lz in LANTERNS:

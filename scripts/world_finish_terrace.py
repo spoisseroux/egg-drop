@@ -161,7 +161,7 @@ def cap_and_face():
         # round 7 (Fable ROUND7 6b, studio-r6e 06: a green wall 3 high left of the top flight): beside the return leg's
         # flight, where the lip stands over its steps, the lip is the cliff's rock, not grass
         if by_flight([cap_v[k] for k in quad]):
-            lip_rock.append([cap_v[k] for k in quad])
+            lip_rock.append((i, [cap_v[k] for k in quad]))
         else:
             cap_f.append(quad)
     # round 6 (mesh gate: the old fan was 160 needles): the middle steps down through rings of half as many points
@@ -207,8 +207,26 @@ def cap_and_face():
             if g is None or yy < g - .6 or yy < 12:
                 break
         cols.append(col)
-    for pts in lip_rock:
-        face.quad(*pts)
+    # Round 8b (Spencer beta 34 follow-up: blocky, stretched rock patches high over the lower path, the face's top rows):
+    # the face was mapped per face on its dominant axis, so neighbouring quads leaning across 45 degrees in plan swapped
+    # projections (a seam and up to 1.4x stretch each), and the lip's rock strip, near level, took a top-down map. Now the
+    # whole face is one continuous map in studs: across, the distance along the lip ring; down, the distance down each
+    # column from its lip point (the lip's rock strip continues it upward to the cap's edge).
+    along = [0.0]
+    for a, b in zip(lip_ring, lip_ring[1:] + lip_ring[:1]):
+        along.append(along[-1] + math.hypot(b[0] - a[0], b[2] - a[2]))
+    down = []
+    for col in cols:
+        acc = [0.0]
+        for a, b in zip(col, col[1:]):
+            acc.append(acc[-1] + math.dist(a, b))
+        down.append(acc)
+    for i, pts in lip_rock:
+        j = i + 1                                           # along[n] closes the ring without a jump
+        cap_i, cap_j = cap_v[last + i], cap_v[last + (i + 1) % n]
+        up_i, up_j = math.dist(cap_i, lip_ring[i]), math.dist(cap_j, lip_ring[(i + 1) % n])
+        # pts = [cap j, lip j, lip i, cap i] (the cap quad's order, reversed)
+        face.quad(*pts, uv=[(along[j], up_j), (along[j], 0.0), (along[i], 0.0), (along[i], up_i)])
     for i in range(n):
         c0, c1 = cols[i], cols[(i + 1) % n]
         m = min(len(c0), len(c1))
@@ -216,7 +234,9 @@ def cap_and_face():
             pts = [c0[r], c1[r], c1[r + 1], c0[r + 1]]
             if any(near_path(p[0], p[2])[0] and p[1] > near_path(p[0], p[2])[1]["h"] - .2 for p in pts):
                 continue                                    # never over the cliff path's tread
-            face.quad(*pts)
+            d0, d1 = down[i], down[(i + 1) % n]
+            face.quad(*pts, uv=[(along[i], -d0[r]), (along[i + 1], -d1[r]), (along[i + 1], -d1[r + 1]),
+                                (along[i], -d0[r + 1])])
     return cap, face, ol, cols
 
 

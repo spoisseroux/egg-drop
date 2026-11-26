@@ -538,6 +538,11 @@ def slice_den():
         Den.unwrap_half(half)
         half.data.materials.append(L.material("WF_ShellBake" + side, L.hexrgb("#7E6B58")))
     if not NO_BAKE:
+        # round 8b: the reveal carries the island's cliff rock map at the island's density (world_finish_den.reveal_rock)
+        rock_img = bpy.data.images.load(str(GROUNDED / "W1_cliff_rock.png"))
+        w_, h_ = rock_img.size
+        Den.ROCK = np.array(rock_img.pixels[:], dtype=np.float32).reshape(h_, w_, 4)[::-1, :, :3]
+        Den.ROCK_K = rock_k
         was = solo([h for h, _ in halves] + [high, floor])
         for half, side in halves:
             high.hide_render = True
