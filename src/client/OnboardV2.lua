@@ -89,6 +89,26 @@ end
 -- The sound and buzz of combo n (HatchAsmr layer names; no pop: the pop belongs to step 3).
 V2.ComboLayers=table.freeze({"crack1","crack2","creakLong"})
 
+-- ── Step 1 to 2: one hatch, never two (review B36) ──────────────────────────────────────────────────────────────────
+-- The deck's own hatch modal waits up to Hold s for the Bear's receipt (the stork plays it). A receipt that comes later
+-- finds the modal already let back: the stork then declines it for the session (the old path plays it), so the Bear
+-- never hatches twice. gate: a table the story keeps ({since, declined}).
+V2.Hold=4
+-- Pure: does the deck modal wait (true) at `now`? bear: the deck is hatching the first Bear; running: the story runs.
+function V2.deckHold(gate,bear,running,now)
+	if not bear then gate.since=nil;return false end
+	if running then return true end
+	if gate.declined then return false end
+	gate.since=gate.since or now
+	if now-gate.since<V2.Hold then return true end
+	gate.declined=true -- the modal shows from here: no stork for this session
+	return false
+end
+-- Pure: may the story still take the Bear's receipt?
+function V2.mayClaim(gate)return gate.declined~=true end
+-- The card's safety: with no stage (it failed to show) Meet happens at once; a card left up this long meets too.
+V2.CardTimeout=90
+
 -- ── Step 2: the stork ────────────────────────────────────────────────────────────────────────────────────────────────
 V2.Stork=table.freeze({
 	glide=3.0,hover=3.8,release=4.3,total=6.0,             -- seconds: glide in, lower the bundle, let go, fly off

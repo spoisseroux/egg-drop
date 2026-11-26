@@ -80,15 +80,16 @@ function Story:event(name)if not self.replaying and self.d.event then pcall(self
 -- Is this the receipt the story plays (the starter Bear, the switch on, not given up this session)?
 function Story:wants(result)
 	return not self.disabled and type(result)=="table"and result.starter==true and result.petId=="pip"and V2.on("stork")
+		and V2.mayClaim(self.gate or {})
 end
 -- The Welcome deck's hatch modal waits for the story (it never shows when the story plays). A grant whose receipt never
 -- comes lets the modal back after Hold seconds.
-Story.Hold=4
+-- Review B36: once the modal has been let back, a late receipt never starts the stork (V2.deckHold / V2.mayClaim).
+Story.Hold=V2.Hold
 function Story:holdsDeck(pet)
-	if self.disabled or not V2.on("stork")or pet~=Pets[1]then self.heldSince=nil;return false end
-	if self.state~="idle"and not self.replaying then return true end
-	self.heldSince=self.heldSince or os.clock()
-	return os.clock()-self.heldSince<Story.Hold
+	self.gate=self.gate or {}
+	if self.disabled or not V2.on("stork")then return false end
+	return V2.deckHold(self.gate,pet==Pets[1],self.state~="idle"and not self.replaying,os.clock())
 end
 -- The receipt is the story's (Hatch eggs must not open it meanwhile).
 -- (and after Meet, until the server has taken the ack)
@@ -579,10 +580,12 @@ function Story:toCard()
 end
 function Story:stepCard()
 	if self.bear and self.since<1 then pcall(function()self.bear:update(1/60)end)end
+	-- Review B36: a card that never showed (or is gone) or was left up too long meets, so input is never held.
+	if not self.stage or self.stage.destroyed or self.since>=V2.CardTimeout then self:meet()end
 end
 function Story:cardKey(key)
 	local stage=self.stage
-	if not stage then return Enum.ContextActionResult.Sink end
+	if not stage then self:meet();return Enum.ContextActionResult.Sink end
 	-- The stage reads A / Enter / Space itself; B, Esc and Backspace settle it, then meet (there is no Back).
 	if key==K.ButtonB or key==K.Escape or key==K.Backspace then
 		if stage:isSettled()then self:meet()else stage:back()end

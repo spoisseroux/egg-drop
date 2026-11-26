@@ -47,6 +47,20 @@ return function(client)
 		for _,name in ipairs({"StorkShown","EggSetDown","AllSet","OnboardSkipped_Stork"})do assert(Onboard.Events[name]==true,name)end
 		assert(Onboard.Events.FirstPet==nil and Onboard.Events.BearMet==nil and Onboard.Events.EggTapped==nil,"recorded where they happen")
 	end)
+	test("review B36: one hatch, never two: the modal waits Hold s for the receipt; once let back, a late receipt never starts the stork",function()
+		local g={}
+		assert(V2.deckHold(g,false,false,0)==false,"no Bear hatching: nothing held")
+		assert(V2.deckHold(g,true,false,0)==true and V2.deckHold(g,true,false,V2.Hold-.01)==true,"waiting for the receipt")
+		assert(V2.mayClaim(g),"a receipt inside the wait plays as the stork")
+		assert(V2.deckHold(g,true,true,V2.Hold+5)==true,"the story running: the modal stays hidden")
+		local late={}
+		V2.deckHold(late,true,false,0)
+		assert(V2.deckHold(late,true,false,V2.Hold)==false,"no receipt in time: the modal shows")
+		assert(not V2.mayClaim(late),"a later receipt is the old path's")
+		assert(V2.deckHold(late,false,false,10)==false and not V2.mayClaim(late),"for the rest of the session")
+		assert(V2.deckHold(late,true,false,11)==false,"the modal is never held again")
+		assert(V2.CardTimeout>0)
+	end)
 	test("step 1: one line a moment, in order; 16 characters or fewer, no key names",function()
 		local seen={}
 		for _,step in ipairs({{0,0,"Drop a ball!"},{1,0,"Match two!"},{4,1,"2 more!"},{6,2,"1 more!"},{8,3,"It's hatching!"}})do
