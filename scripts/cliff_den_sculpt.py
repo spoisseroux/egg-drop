@@ -82,19 +82,23 @@ def ground(x, z):
 # beside the terrace's garden face (about 26 degrees: drawn as steps, collision a smooth ramp); the arrival through the
 # notch onto the terrace's south-west end.
 PATH_CTRL = [
-    (-28.0, 29.5, 4.6, 6.0),     # foot
-    (-20.0, 30.5, 6.9, 6.0),
-    (-12.0, 33.0, 9.2, 6.0),
-    (-4.0, 34.2, 11.5, 6.0),
-    (4.0, 32.6, 13.8, 6.0),
-    (12.0, 32.0, 16.1, 6.0),
-    (20.0, 31.5, 18.4, 6.0),
-    (28.0, 31.0, 20.7, 6.0),     # code review: the outbound leg stays at t 31 to the turn, so the return leg (t 25)
-    (35.0, 31.0, 22.7, 6.0),     # is a full width away from it (it overhung it at knee height)
-    (40.0, 30.0, 23.0, 7.0),     # the turn pocket
-    (42.0, 26.5, 23.0, 7.0),
-    (37.5, 25.0, 24.6, 6.0),     # the return leg (outside the terrace footprint, t >= 22)
-    (30.0, 22.0, 29.0, 6.0),     # the arrival (on the terrace's garden edge, through the notch)
+    # round 6 (Spencer beta 25 "everything feels a little too small"; Fable DEN-ROUND6-LOOK 2): 9 wide, the turn pocket
+    # 12; the return leg stays 6 (it is outside the terrace footprint only at t >= 22); the outbound leg moves out to
+    # t 33 from s 28 so its inner edge (28.5) clears the return leg's outer edge (28) where they pass (architect: at 9
+    # wide on t 31 the legs overlapped by 2.7 in plan)
+    (-28.0, 29.5, 4.6, 9.0),     # foot
+    (-20.0, 30.5, 6.9, 9.0),
+    (-12.0, 33.0, 9.2, 9.0),
+    (-4.0, 34.2, 11.5, 9.0),
+    (4.0, 31.1, 13.8, 9.0),      # round 6: past the Paw Glade the wider path grows into the hill (t -1.5), so its
+    (12.0, 30.5, 16.1, 9.0),     # lawn edge and the glade's rim keep their room (ParkSites)
+    (20.0, 31.0, 18.4, 9.0),
+    (28.0, 33.0, 20.7, 9.0),     # code review: the outbound leg stays clear of the return leg (it overhung it at
+    (35.0, 33.0, 22.7, 9.0),     # knee height)
+    (40.0, 31.0, 23.0, 12.0),    # the turn pocket
+    (42.0, 26.5, 23.0, 12.0),
+    (37.5, 25.0, 24.6, 6.5),     # the return leg (outside the terrace footprint, t >= 22); 6.5 so the spline from the
+    (30.0, 22.0, 29.0, 6.5),     # 12-wide pocket never dips under 6 (Tier spec)
 ]
 STEPS_FROM = 10                  # the return leg (PATH_CTRL[10] -> [11]) is drawn as steps
 STEP_COUNT = 6
@@ -213,8 +217,18 @@ def in_path_cut(x, y, z):
 
 
 # ---------------------------------------------------------------------------------------------------------- the den
-DEN = {"x0": -22.0, "x1": 6.0, "z0": -119.0, "z1": -100.5, "floor": 4.2, "wall": 11.0, "peak": 16.0, "corner": 5.0}
-MOUTH = {"x0": -14.5, "x1": .5, "top": 9.85, "west_to": -95.0, "east_to": -99.0}   # under the lintel trim (y 10.2)
+# Round 6 (Spencer beta 25: "the cave entrance is way too smal"; Fable DEN-ROUND6-LOOK 1-2; fit checked against the
+# walk grid: 3+ studs of rock over the roof everywhere behind the front strip): the room 36 x 24, walls 10 over the
+# floor, peak 17; the mouth a rough arch 18 wide, 11 clear at the crown and 8.5 at the shoulders.
+DEN = {"x0": -25.0, "x1": 11.0, "z0": -124.5, "z1": -100.5, "floor": 4.2, "wall": 14.2, "peak": 21.2, "corner": 6.0}
+MOUTH = {"x0": -16.0, "x1": 2.0, "top": 15.2, "shoulder": 12.7, "west_to": -95.0, "east_to": -99.0}
+
+
+def mouth_top(x):
+    """The arch over the mouth at x: the crown (MOUTH top) at the middle, the shoulders at the jambs."""
+    m = MOUTH
+    u = (x - (m["x0"] + m["x1"]) / 2) / ((m["x1"] - m["x0"]) / 2)
+    return m["shoulder"] + (m["top"] - m["shoulder"]) * max(0.0, 1 - u * u)
 SOFFIT_TO = -99.8                                 # the soffit's outer edge: just past the lintel trim (z -100.07)
 
 
@@ -254,7 +268,7 @@ def in_den_cut(x, y, z):
     if den_inside(x, z, .3) and d["floor"] + .05 < y < den_roof(x, z) + .3:
         return True
     m = MOUTH
-    if m["x0"] - .1 <= x <= m["x1"] + .1 and d["floor"] + .05 < y < m["top"]:
+    if m["x0"] - .1 <= x <= m["x1"] + .1 and d["floor"] + .05 < y < mouth_top(x):
         reach = m["west_to"] if x < (m["x0"] + m["x1"]) / 2 else m["east_to"]
         return d["z1"] - .5 <= z <= reach + .1
     return False
@@ -272,7 +286,7 @@ def in_cut(x, y, z):
 
 # ---------------------------------------------------------------------------------------------------------- carving
 CARVE = ("Rocks_Walls__", "Terrain_Ground__", "Landmarks__", "Anim__Landmark_GlowGrotto_Crystals__")
-KEEP = ("Landmarks__trim", "Landmarks__gold", "Landmarks__teal")   # the lintel stays; the bars are hidden while open
+KEEP = ()   # round 6: the old door (marble, trim, gold and teal caps) goes with the bigger mouth; bars hidden while open
 
 
 def _roblox(v):
@@ -339,6 +353,10 @@ def carve(objs):
                         shards += island
             if shards:
                 bmesh.ops.delete(bm, geom=shards, context="FACES")
+            # round 6: no loose vertices left behind (they kept a carved part's bounds at the old size)
+            loose = [v for v in bm.verts if not v.link_faces]
+            if loose:
+                bmesh.ops.delete(bm, geom=loose, context="VERTS")
             bm.to_mesh(o.data)
             o.data.update()
             changed.append(o.name)
@@ -616,12 +634,15 @@ def build_den(objs):
 # collides: their faces there move to non-colliding visual parts (CD_Region__<mat>), what is left of each colliding mesh
 # near the region is cut into 32-stud tiles (small hulls), and the den and the path collide on boxes the server builds
 # from CliffDenData.collision (architect review: primitives, exact, nothing to upload).
-REGION_TOP = 18.0
+REGION_TOP = 23.0   # round 6: over the bigger den peak (21.2)
 TILE = 32.0
 # Studio R2 (2026-11-25): the carved island-wide cliff rock, left as one mesh past the ring, re-baked with hulls that
 # moved by up to 10 studs on the east mountain and the north-west band (the decomposition is global: any cut changes it
 # everywhere). These are tiled whole, so every hull stays inside its 32-stud tile, near the drawn surface.
-TILE_ALL = ("Rocks_Walls__cliff_rock", "Landmarks__cliff_rock")
+TILE_ALL = ("Rocks_Walls__cliff_rock", "Landmarks__cliff_rock",
+            # round 6 (architect): the old door's marble and trim stood inside the new mouth; carved, they are tiled
+            # whole like the rock (a carved island-wide marble re-baked one hull bridging the plaza, Studio R2)
+            "Landmarks__marble", "Landmarks__trim")
 
 
 def in_region(x, y, z):
@@ -630,7 +651,7 @@ def in_region(x, y, z):
     d, m = DEN, MOUTH
     if den_inside(x, z, 2.5) and y < REGION_TOP:
         return True
-    if m["x0"] - 1.5 <= x <= m["x1"] + 1.5 and d["z1"] - .5 <= z <= m["west_to"] + 1.0 and y < 12.0:
+    if m["x0"] - 1.5 <= x <= m["x1"] + 1.5 and d["z1"] - .5 <= z <= m["west_to"] + 1.0 and y < m["top"] + 2.0:
         return True
     s = _nearest(x, z)
     a = (x - s["x"]) * s["out"][0] + (z - s["z"]) * s["out"][1]       # toward the lawn
@@ -687,6 +708,7 @@ def split_region(objs, collides):
             pb.from_mesh(piece.data)
             pb.faces.ensure_lookup_table()
             bmesh.ops.delete(pb, geom=[f for f in pb.faces if f.index not in keep], context="FACES")
+            bmesh.ops.delete(pb, geom=[v for v in pb.verts if not v.link_faces], context="VERTS")   # round 6
             pb.to_mesh(piece.data)
             pb.free()
             piece.name = name + "__" + mat
@@ -696,6 +718,7 @@ def split_region(objs, collides):
         rb_.from_mesh(o.data)
         rb_.faces.ensure_lookup_table()
         bmesh.ops.delete(rb_, geom=[f for f in rb_.faces if f.index in where], context="FACES")
+        bmesh.ops.delete(rb_, geom=[v for v in rb_.verts if not v.link_faces], context="VERTS")   # round 6
         rb_.to_mesh(o.data)
         rb_.free()
         o.data.update()
@@ -733,7 +756,7 @@ def _aabb(kind, lo, hi):
 def collision_boxes():
     """The den, the mouth and the path as boxes (CliffDenData.collision.boxes): exact, every top a walk surface."""
     d, m = DEN, MOUTH
-    F, top = d["floor"], 12.2
+    F, top = d["floor"], d["wall"]   # round 6: the ceiling box at the wall top (the dome rises over it)
     out = [_aabb("floor", (d["x0"], F - 2, d["z0"]), (d["x1"], F, d["z1"]))]
     # the mouth and the apron's first studs: one slab to the west jamb's reach (the lawn there sits 4.1 to 4.5)
     out.append(_aabb("floor", (m["x0"], F - 2, d["z1"] - .5), (m["x1"], F, m["west_to"] + 1.8)))
@@ -756,9 +779,10 @@ def collision_boxes():
     # the front either side of the mouth (thin: the lawn beside the east jamb stays walkable), the jambs, the lintel
     for xa, xb in ((d["x0"] - 2, m["x0"]), (m["x1"], d["x1"] + 2)):
         out.append(_aabb("front", (xa, F - 1, d["z1"]), (xb, REGION_TOP, d["z1"] + .6)))
-    out.append(_aabb("jamb", (m["x0"] - 1.0, F - 1, d["z1"]), (m["x0"], 12.0, m["west_to"])))
-    out.append(_aabb("jamb", (m["x1"], F - 1, d["z1"]), (m["x1"] + 1.0, 12.0, m["east_to"])))
-    out.append(_aabb("lintel", (m["x0"] - 1.0, m["top"], d["z1"]), (m["x1"] + 1.0, REGION_TOP, SOFFIT_TO)))
+    out.append(_aabb("jamb", (m["x0"] - 1.0, F - 1, d["z1"]), (m["x0"], m["top"] + 1.0, m["west_to"])))
+    out.append(_aabb("jamb", (m["x1"], F - 1, d["z1"]), (m["x1"] + 1.0, m["top"] + 1.0, m["east_to"])))
+    # round 6: the arch's lintel box sits at the shoulders (a flat collider under the drawn crown)
+    out.append(_aabb("lintel", (m["x0"] - 1.0, m["shoulder"], d["z1"]), (m["x1"] + 1.0, REGION_TOP, SOFFIT_TO)))
     out.append(_aabb("ceiling", (d["x0"] - 2, top, d["z0"] - 2), (d["x1"] + 2, top + 1.5, d["z1"])))
     # the path: treads on the smooth ramp (1.5 thick, each run overlapping the next), the cut back wall, the blocks
     S = path_samples()
@@ -822,8 +846,11 @@ def anchors():
     """The code side's anchors (world studs): den, path, terrace, evacuation."""
     S = path_samples()
     d, m = DEN, MOUTH
+    picked = S[::max(1, int(2.0 / SAMPLE))]
+    if picked[-1] is not S[-1]:
+        picked.append(S[-1])          # round 6: the line always ends at the arrival (the longer bend moved the stride)
     centre_line = [{"x": round(s["x"], 3), "y": round(s["h"], 3), "z": round(s["z"], 3), "width": s["w"],
-                    "steps": s["step"]} for s in S[::max(1, int(2.0 / SAMPLE))]]
+                    "steps": s["step"]} for s in picked]
     foot, arrival = S[0], S[-1]
     turn = min(S, key=lambda s: (s["x"] - tier_xz(41.0, 28.5)[0]) ** 2 + (s["z"] - tier_xz(41.0, 28.5)[1]) ** 2)
     outline = []
@@ -840,11 +867,12 @@ def anchors():
         return round(ground(x, z) or 4.6, 2)
     # Fable's five bays, each a point it stands on and a point it looks toward (DenLayout: CFrame.lookAt): the side
     # bays face the room's middle, the back ones the mouth. roof = the dome over each.
-    bays = [{"name": n, "use": u, "at": [x, d["floor"], z], "facing": [fx, d["floor"], fz], "width": 7.0,
-             "roof": round(den_roof(x, z), 2)} for n, u, x, z, fx, fz in (
-        ("Bay1", "DashGate", -18.0, -110.0, -7.0, -106.0), ("Bay2", "Niche", -12.0, -116.0, -12.0, -100.0),
-        ("Bay3", "DeckTable", -7.0, -117.0, -7.0, -100.0), ("Bay4", "Niche", -2.0, -116.0, -2.0, -100.0),
-        ("Bay5", "Niche", 4.0, -110.0, -7.0, -106.0))]
+    # round 6: the bays spread with the room; the Garden Dash gate's bay is 9 clear wide (Fable 4: 9 x 9)
+    bays = [{"name": n, "use": u, "at": [x, d["floor"], z], "facing": [fx, d["floor"], fz], "width": w,
+             "roof": round(den_roof(x, z), 2)} for n, u, x, z, fx, fz, w in (
+        ("Bay1", "DashGate", -20.0, -112.0, -7.0, -106.0, 9.0), ("Bay2", "Niche", -13.0, -120.5, -13.0, -100.0, 7.0),
+        ("Bay3", "DeckTable", -7.0, -121.5, -7.0, -100.0, 7.0), ("Bay4", "Niche", -1.0, -120.5, -1.0, -100.0, 7.0),
+        ("Bay5", "Niche", 6.0, -112.0, -7.0, -106.0, 7.0))]
     # DenLayout.fromData's contract (schema 1, PLAY-DEN-BUILD-PLAN section 10): points as {x, y, z}; a spot is
     # {at, facing} with facing a point to look toward.
     return {
@@ -853,14 +881,18 @@ def anchors():
                 "room": {"min": [d["x0"], d["floor"], d["z0"]], "max": [d["x1"], d["peak"], d["z1"]]},
                 # The closer (Play Den architect review): the world builds a colliding CaveBlocker here, closed by
                 # default; the code only opens it. A box on the mouth line, into each jamb .3, floor to the lintel.
-                "mouth": {"x1": m["x0"], "x2": m["x1"], "top": m["top"], "z": d["z1"],
-                          "blocker": {"center": [round((m["x0"] + m["x1"]) / 2, 3), round((d["floor"] + 10.2) / 2, 3), d["z1"]],
-                                      "size": [round(m["x1"] - m["x0"] + .6, 3), round(10.2 - d["floor"], 3), 1.0], "yaw": 0}},
+                "mouth": {"x1": m["x0"], "x2": m["x1"], "top": m["top"], "shoulder": m["shoulder"], "z": d["z1"],
+                          # round 6 (architect): floor to the crown, so a closed den cannot be jumped
+                          "blocker": {"center": [round((m["x0"] + m["x1"]) / 2, 3), round((d["floor"] + m["top"]) / 2, 3), d["z1"]],
+                                      "size": [round(m["x1"] - m["x0"] + .6, 3), round(m["top"] - d["floor"], 3), 1.0], "yaw": 0}},
                 "bays": bays,
                 # The sign hangs under the lintel trim (y 10.2), its top under the mouth's top, facing the lawn.
-                "sign": {"at": [-7.0, 8.7, -100.07], "facing": [-7.0, 8.7, -80.0], "under": "W7_Landmarks__trim"},
+                # round 6 (Fable 1.5): 8 x 2.2 hung under the brow, its bottom 9 over the floor
+                "sign": {"at": [-7.0, round(d["floor"] + 10.1, 3), round(d["z1"] + .6, 3)],
+                         "facing": [-7.0, round(d["floor"] + 10.1, 3), -80.0]},
                 # The notice board on the lawn east of the mouth, facing the lawn.
-                "board": {"at": [3.0, lawn(3.0, -96.0), -96.0], "facing": [3.0, lawn(3.0, -96.0), -80.0]},
+                # round 6 (architect): out of the east buttress, on the apron's east end
+                "board": {"at": [9.0, lawn(9.0, -93.0), -93.0], "facing": [9.0, lawn(9.0, -93.0), -80.0]},
                 # Show me's pin: on the mouth's floor just out of the mouth.
                 "pin": [-7.0, d["floor"], -96.0],
                 # Where the close puts players (past the waiting area and the apron, on the home Floor), facing out,
@@ -869,9 +901,11 @@ def anchors():
                              "landing": [-7.0, lawn(-7.0, -84.0), -84.0]},
                 # Two posts out of the mouth (the west one past the jamb's end, on the mouth's floor; the east one on
                 # the lawn past the east jamb) and two wall lamps on the back wall.
-                "lanterns": [{"at": [-13.8, d["floor"], -94.6], "post": True},
-                             {"at": [1.6, lawn(1.6, -97.8), -97.8], "post": True},
-                             {"at": [-14.0, 8.0, -118.4], "post": False}, {"at": [0.0, 8.0, -118.4], "post": False}]},
+                # round 6 (Fable 1.6): on hooks on the jambs' props at 7.5 over the floor; the wall lamps on the new back
+                "lanterns": [{"at": [m["x0"] - .3, d["floor"], round(d["z1"] + 1.2, 3)], "post": True},
+                             {"at": [m["x1"] + .3, d["floor"], round(d["z1"] + 1.2, 3)], "post": True},
+                             {"at": [-16.0, round(d["floor"] + 6.0, 3), round(d["z0"] + .6, 3)], "post": False},
+                             {"at": [2.0, round(d["floor"] + 6.0, 3), round(d["z0"] + .6, 3)], "post": False}]},
         "path": {"foot": [round(foot["x"], 3), foot["h"], round(foot["z"], 3)],
                  "turn": [round(turn["x"], 3), turn["h"], round(turn["z"], 3)],
                  "arrival": [round(arrival["x"], 3), arrival["h"], round(arrival["z"], 3)],

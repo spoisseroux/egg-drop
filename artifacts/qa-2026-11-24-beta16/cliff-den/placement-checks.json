@@ -19,7 +19,7 @@
     27.05,
     -72.32
    ],
-   "where": "terrace top"
+   "where": "path cut (may float or block)"
   },
   {
    "source": "WorldDressing",
@@ -80,6 +80,16 @@
     -73.81
    ],
    "where": "terrace top"
+  },
+  {
+   "source": "WorldDressing",
+   "tag": "row",
+   "at": [
+    -38.05,
+    20.76,
+    -86.54
+   ],
+   "where": "path cut (may float or block)"
   },
   {
    "source": "WorldDressing",

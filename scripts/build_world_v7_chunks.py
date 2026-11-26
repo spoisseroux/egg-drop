@@ -1065,6 +1065,8 @@ def main():
                 finals.append((join(b["objs"], f"W7_{key}_{index}"), key))
             continue
         total = sum(tris(o) for o in objs)
+        if total == 0:
+            continue          # round 6: a group the sculpt emptied (e.g. the old trim lintel) is listed as removed below
         if total <= TRI_CAP:
             finals.append((join(objs, "W7_" + key), key))
         else:

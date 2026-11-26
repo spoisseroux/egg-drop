@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 import sys
 from pathlib import Path
@@ -49,8 +50,10 @@ DEGENERATE = .05                   # a collision piece with an extent under this
 # mouth to z -22, where live has bare lawn), and a fresh bake of the live marble mesh matches live exactly. The live
 # marble and trim leave the new mouth open (a 4.4 sill, posts on the new jambs at x -15 and 1, the lintel at 10.5), so
 # they stay live: no carved copy, no region piece. (The old frame stays drawn round the new mouth until the art pass.)
-KEEP_LIVE = {"W7_Landmarks__marble", "W7_Landmarks__trim"}
-KEEP_LIVE_SHOWS = {"W7_CD_Landmarks__marble", "W7_CD_Region__marble", "W7_CD_Region__trim"}
+# Round 6: the bigger mouth (x -16..2) takes in the old marble posts and the trim lintel, so both are carved now and
+# tiled whole (cliff_den_sculpt.TILE_ALL), never left as one re-baked island-wide mesh.
+KEEP_LIVE = set()
+KEEP_LIVE_SHOWS = set()
 
 
 def sha_text(path: Path) -> str:
@@ -181,19 +184,25 @@ def build():
                 surface.append([i, j, bs["rows"][j][i], bs["h"][j][i]])
     # Step A's layer (FeatureFlags.CliffDen false): only the bars split out, with its own palette copy (the carve also
     # takes palette faces in the den, the path and the terrace): its triangles are the live palette's less the bars'.
-    bars = next(e for e in manifest["parts"] if e["name"] == BARS)
+    # Round 6: the bigger mouth carves the old bars away whole (they stood in the old opening); then there is no bars
+    # part (CliffDenSwap.bars returns nil) and step A's pocket is the palette copy alone.
+    bars = next((e for e in manifest["parts"] if e["name"] == BARS), None)
     pal = next(e for e in manifest["parts"] if e["name"] == POCKET)
     live_pal = next(e for e in json.loads((WORLD / "world-v7-manifest.json").read_text())["parts"]
                     if e["name"] == "W7_Landmarks__palette")
-    assert pal["tris"] + bars["tris"] == live_pal["tris"], ("step A's palette is not the live one less the bars",
-                                                           pal["tris"], bars["tris"], live_pal["tris"])
-    pocket = [{"hide": "W7_Landmarks__palette", "show": POCKET}, {"hide": None, "show": BARS}]
+    if bars is not None:
+        assert pal["tris"] + bars["tris"] == live_pal["tris"], ("step A's palette is not the live one less the bars",
+                                                               pal["tris"], bars["tris"], live_pal["tris"])
+    pocket = [{"hide": "W7_Landmarks__palette", "show": POCKET}] + ([{"hide": None, "show": BARS}] if bars else [])
     m = anchors["den"]["mouth"]
     bad = []
     for z in range(int(m["z"]) + 1, -89):
-        for x in range(int(m["x1"]), int(m["x2"]) + 4):
+        # round 6: from the first cell inside each jamb (the jamb's own rock edge is not the apron)
+        # past the west half's floor (z > -95, cliff_den_sculpt MOUTH west_to) the column by the west jamb is the
+        # west buttress's foot (Fable 1.4), not apron
+        for x in range(math.floor(m["x1"]) + (2 if z > -95 else 1), int(m["x2"]) + 4):
             h = bs["h"][z - bs["z0"]][x - bs["x0"]]
-            if h == -999 or (x <= m["x2"] and h > anchors["den"]["floorY"] + 1.5):
+            if h == -999 or (x < m["x2"] and h > anchors["den"]["floorY"] + 1.5):
                 bad.append((x, z, h))
     assert not bad, ("the apron's top surface is not the floor or the lawn (a soffit or a hole)", bad[:8])
     data = {
@@ -205,7 +214,7 @@ def build():
                  "walk": sha_text(WORLD / "world-v7-walk.json")},
         "swap": swap,
         "pocket": pocket,
-        "bars": BARS,
+        "bars": BARS if bars else None,
         "parts": parts,
         "den": anchors["den"], "path": anchors["path"], "terrace": anchors["terrace"], "evacuate": anchors["evacuate"],
         "collision": anchors["collision"],

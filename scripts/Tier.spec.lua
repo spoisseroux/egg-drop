@@ -298,7 +298,11 @@ return function(server,offline)
 		end
 		local gates=Greybox.gates(Tier.gates())
 		assert(#gates==2)
-		for _,g in ipairs(gates)do assert(not g.visible and g.collide and g.size.Z>=PATH.widths[1]+2,g.name)end
+		-- round 6: the foot is 9 wide and the arrival 6.5; each gate spans its own end of the path
+		for _,g in ipairs(gates)do
+			local w=if string.find(g.name,"Notch")then PATH.widths[#PATH.widths]else PATH.widths[1]
+			assert(not g.visible and g.collide and g.size.Z>=w+2,g.name)
+		end
 	end)
 
 	test("pets: the blocked footprints cover the path off the lawn; a catch-up spot under a tread is refused; the lawn is not",function()

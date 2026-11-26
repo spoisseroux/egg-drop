@@ -80,9 +80,11 @@ return function(server)
 	end)
 	test("the anchors: the den inside the ring's rule (rounded back corners), the mouth under the lintel, the path foot to arrival",function()
 		local den=Data.den
-		assert(den.floorY>4 and den.floorY<4.5 and den.peakY==16 and den.wallY==11)
-		assert(den.mouth.top<10.2 and den.mouth.x1<den.mouth.x2 and den.mouth.x2-den.mouth.x1>=15)
-		assert(den.sign.under=="W7_Landmarks__trim")
+		-- round 6 (Spencer beta 25, Fable DEN-ROUND6-LOOK): the room 36 x 24, walls 10 and peak 17 over the floor; the mouth
+		-- an arch 18 wide, its crown 11 over the floor; no trim lintel (the old door is carved away)
+		assert(den.floorY>4 and den.floorY<4.5 and den.peakY==21.2 and den.wallY==14.2)
+		assert(math.abs(den.mouth.top-den.floorY-11)<.01 and den.mouth.x1<den.mouth.x2 and den.mouth.x2-den.mouth.x1>=18)
+		assert(den.sign.under==nil and den.sign.at[2]-1.1>=den.floorY+9-1e-6)
 		local p=Data.path
 		assert(math.abs(p.foot[2]-4.6)<.05 and math.abs(p.arrival[2]-29)<.05 and p.turn[2]>22 and p.turn[2]<24)
 		assert(#p.centreLine>30)
@@ -100,30 +102,31 @@ return function(server)
 		assert(b.size[1]>den.mouth.x2-den.mouth.x1,"blocker narrower than the mouth")
 		assert(math.abs(b.center[2]-b.size[2]/2-den.floorY)<.01,"blocker not on the floor")
 		assert(#den.bays==5 and den.bays[1].use=="DashGate"and den.bays[3].use=="DeckTable")
-		for _,bay in ipairs(den.bays)do assert(bay.roof>=11 and bay.roof<=16 and bay.at[2]==den.floorY,bay.name)end
+		for _,bay in ipairs(den.bays)do assert(bay.roof>=14.2 and bay.roof<=21.2 and bay.at[2]==den.floorY,bay.name)end
 		assert(#den.doorstep.at==3 and #den.doorstep.landing==3 and #den.pin==3 and #den.board.at==3 and #den.lanterns==4)
 		assert(#Data.safe.rows>10)
 		assert(#Data.ground>0 and #Data.walk.grid>0 and #Data.walk.surface>0)
 	end)
-	test("step A's layer (CliffDen false): only the cave's bars split out of the palette; no CliffDen, the sculpt untouched",function()
+	test("step A's layer (CliffDen false): the palette copy (round 6: the bigger mouth carves the old bars away); no CliffDen, the sculpt untouched",function()
 		local world,storage,ws=rig()
 		local got,mode=Swap.apply(world,{flags={Tier=true,CliffDen=false},place=Swap.PlaceId,storage=storage,data=Data,workspace=ws})
 		assert(got==Data and mode=="pocket")
 		local now=names(world)
-		assert(not now["W7_Landmarks__palette"]and now["W7_CD_Pocket__palette"]and now[Data.bars]and not now["W7_CD_Landmarks__palette"])
+		assert(not now["W7_Landmarks__palette"]and now["W7_CD_Pocket__palette"]and(Data.bars==nil or now[Data.bars])and not now["W7_CD_Landmarks__palette"])
 		assert(now["W7_Rocks__cliff_rock"]and not now["W7_CD_Rocks__cliff_rock"]and not now["W7_CD_PlayDen__cliff_rock"])
 		assert(world:GetAttribute("CliffDen")==nil and ws:GetAttribute("CliffDen")==nil)
-		assert(#Data.pocket==2 and Data.parts[Data.bars].collide==false and Data.parts[Data.bars].region=="CaveBars")
+		assert(#Data.pocket==(if Data.bars then 2 else 1)and(Data.bars==nil or(Data.parts[Data.bars].collide==false and Data.parts[Data.bars].region=="CaveBars")))
 		local _,den=Swap.apply(rig(),{flags={Tier=true},place=Swap.PlaceId,storage=storage,data=Data,workspace=Instance.new("Workspace")})
 		assert(den=="den")
 		local listed=false
 		for _,pair in ipairs(Data.swap)do if pair.show==Data.bars then listed=true end end
-		assert(listed,"the room's layer has the bars too")
+		assert(listed or Data.bars==nil,"the room's layer has the bars too")
 	end)
 	test("the bars hide while Den_open is true and come back when it clears; no bars part, nothing",function()
 		local Den=require(Shared.PlayDen)
 		local world=Instance.new("Model")
-		local bars=part(Data.bars,world)
+		local barsData={bars="W7_CD_CaveBars__palette"} -- round 6: the real data has none (carved away); the behaviour stands
+		local bars=part(barsData.bars,world)
 		local attrs,listeners={},{}
 		local ws={
 			GetAttribute=function(_,k)return attrs[k]end,
@@ -132,14 +135,15 @@ return function(server)
 			end,
 		}
 		local function set(v)attrs[Den.OpenAttribute]=v;if listeners[Den.OpenAttribute]then listeners[Den.OpenAttribute]()end end
-		assert(Swap.bars(world,Data,{workspace=ws}))
+		assert(Swap.bars(world,barsData,{workspace=ws}))
 		assert(bars.Transparency==0)
 		set(true);assert(bars.Transparency==1)
 		set(nil);assert(bars.Transparency==0)
 		attrs[Den.OpenAttribute]=true
-		local w2=Instance.new("Model");local b2=part(Data.bars,w2)
-		Swap.bars(w2,Data,{workspace=ws});assert(b2.Transparency==1,"already open at start")
-		assert(Swap.bars(Instance.new("Model"),Data,{workspace=ws})==nil and Swap.bars(world,nil,{workspace=ws})==nil)
+		local w2=Instance.new("Model");local b2=part(barsData.bars,w2)
+		Swap.bars(w2,barsData,{workspace=ws});assert(b2.Transparency==1,"already open at start")
+		assert(Swap.bars(Instance.new("Model"),barsData,{workspace=ws})==nil and Swap.bars(world,nil,{workspace=ws})==nil)
+		assert(Data.bars==nil or Data.parts[Data.bars])
 	end)
 	test("the collision boxes: the den's floor at the floor under every safe cell, headroom to 11.5, the path's treads under its centre line and nothing over it",function()
 		local boxes=Data.collision.boxes
@@ -167,7 +171,8 @@ return function(server)
 				for x=row[2],row[3]do
 					n+=1
 					assert(solid(Vector3.new(x,F-.05,z)),"no floor at "..x..","..z)
-					local head=if z>Data.den.mouth.z-1 then Data.den.mouth.top-.3 else 11.5   -- under the lintel: the mouth's height
+					-- by the mouth: under its arch's shoulders (round 6: the lintel box sits there); elsewhere 11.5
+					local head=if z>Data.den.mouth.z-1 then(Data.den.mouth.shoulder or Data.den.mouth.top)-.3 else 11.5
 					for _,y in ipairs({F+.05,F+2,F+5,head})do assert(not solid(Vector3.new(x,y,z)),"blocked at "..x..","..y..","..z)end
 				end
 			end
@@ -241,7 +246,13 @@ return function(server)
 		assert(skipped==#Data.dressingHide,skipped)
 		local hidden={}
 		for _,pair in ipairs(Data.swap)do if pair.hide then hidden[pair.hide]=true end end
-		assert(not hidden.W7_Landmarks__marble and not hidden.W7_Landmarks__trim,"the carved marble re-baked a hull over the plaza")
+		-- round 6: the old door's marble and trim are carved (the bigger mouth takes them in); what is left of the marble
+		-- shows only as 32-stud tiles, never as one re-baked island-wide mesh (Studio R2: that bridged the plaza)
+		for name,info in pairs(Data.parts)do
+			if string.find(name,"marble")or string.find(name,"__trim")then
+				assert(string.match(name,"_%d%d%d%d$")and info.size[1]<=34 and info.size[3]<=34,name.." is not a tile")
+			end
+		end
 		assert(hidden.W7_Rocks__cliff_rock and hidden.W7_Ground__ground and Data.parts.W7_CD_Ground__ground.collide==false)
 		for name,info in pairs(Data.parts)do assert(info.size[1]>=.05 and info.size[2]>=.05 and info.size[3]>=.05,name.." is a sliver")end
 	end)
@@ -262,7 +273,7 @@ return function(server)
 			assert(x<m.x1-1.5 or x>m.x2+1.5,"out of the mouth's opening "..x)
 			assert(z>m.z and z<m.z+6,"at the jamb rocks' feet "..z)
 			assert(y>=4 and y<=5.2,"on the apron or the lawn "..y)
-			if x<m.x1 then left+=1;assert(math.abs(x+18)<=1.5)else right+=1;assert(math.abs(x-4)<=2.5)end
+			if x<m.x1 then left+=1;assert(math.abs(x-(m.x1-3))<=1.5)else right+=1;assert(math.abs(x-(m.x2+3))<=2.5)end -- round 6: by the jambs
 			-- Behind the notice board's face, never in front of it.
 			local board=Vector3.new(table.unpack(Data.den.board.at))
 			if math.abs(x-board.X)<3 then assert(z<board.Z-1,"behind the board")end
