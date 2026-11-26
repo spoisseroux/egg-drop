@@ -473,10 +473,18 @@ return function(client,parent)
    for _,seg in ipairs(bear.ringSegs)do assert(seg.BackgroundColor3==Color3.new(1,1,1))end
    for _,piece in ipairs(bear.confettiPieces)do assert(piece.BackgroundColor3~=gold)end
    assert(bear.pool[1].node.BackgroundColor3==sky.floor and bear.petGlow[1].BackgroundColor3==sky.core,"no warm lights")
+   -- Fable B37: the sky gradient round the card (no checker, six faint bubbles), the polka dots at 6%, the cool key light.
+   local D=Aero.Backdrop
+   assert(bear.root.AeroSky.Enabled and bear.root.AeroSky.Color==ColorSequence.new(D.top,D.bottom)and bear.root.BackgroundColor3==Color3.new(1,1,1),"the sky gradient")
+   assert(not b.shell.CheckerHolder.Visible and #b.aeroParts.outer==D.bubbles and b.aeroParts.outerHolder.Visible,"no checker; sky bubbles")
+   local outer=0;for _,o in ipairs(b.aeroParts.outer)do if o.node.Visible then outer+=1 end end;assert(outer>0,"the sky bubbles rise")
+   assert(math.abs(b.pattern.ImageTransparency-(1-sky.patternAlpha))<1e-6 and sky.patternAlpha<=.06,"polka dots at 6%")
+   assert(bear.viewport.LightColor==Aero.PetLight.key and bear.viewport.Ambient==Aero.PetLight.ambient,"white key, cool fill")
    bear:destroy()
    local old=Stage.show(host,{pet=Pets.byId.pip,tag="new",reduced=false,aero=false,instant=true,buttons={{id="meet",text="Meet Bear",primary=true}}})
    table.insert(stages,old);if old.connection then old.connection:Disconnect();old.connection=nil end
    assert(not old.aero and old.backdrop.aeroParts==nil and old.plateBody.BackgroundColor3==gold and old.backdrop.well.BackgroundColor3==Rarity.Stage.Common.edge,"off: the old card")
+   assert(old.root:FindFirstChild("AeroSky")==nil and old.backdrop.shell.CheckerHolder.Visible and old.viewport.Ambient==Stage.Light.ambient,"off: the checker and the warm light")
    old:destroy();host:Destroy()
   end)
  end)

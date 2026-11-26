@@ -446,6 +446,24 @@ end
 -- The shell and the stage well as one piece (the pet reveal draws the same backdrop).
 -- Returns {shell, checkerTile, shafts, well, clip, core, raysImage, pattern, floorLight,
 -- floorShadow, bloom, seat, waitEgg, rim, rimStroke, rimRainbow, ...}.
+-- One Aero bubble: a round white body, a rim (`rim` colour, `thickness` px) and a white spec, all hidden until painted.
+function Stage.bubbleNode(parent,name,z,rim,thickness)
+ local bubble=frame(parent,name,z,{AnchorPoint=Vector2.new(.5,.5),BackgroundTransparency=1,BackgroundColor3=Color3.new(1,1,1),Visible=false})
+ node("UICorner",bubble,{CornerRadius=UDim.new(.5,0)})
+ local stroke=node("UIStroke",bubble,{Color=rim,Thickness=thickness,ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Transparency=1})
+ local spec=frame(bubble,"Spec",z,{AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.3,.3),BackgroundTransparency=1,BackgroundColor3=Color3.new(1,1,1)})
+ node("UICorner",spec,{CornerRadius=UDim.new(.5,0)})
+ return {node=bubble,stroke=stroke,spec=spec,thickness=thickness}
+end
+-- Fable B37: the sky round an Aero card, #58B8F2 at the top to #0E5FB8 at the bottom (HatchAero.Backdrop). Never
+-- theme-bound (Kit.paint would put the deck colour back on a theme change).
+function Stage.skyFill(object)
+ local D=Aero.Backdrop
+ object.BackgroundColor3=Color3.new(1,1,1)
+ local gradient=object:FindFirstChild("AeroSky")or node("UIGradient",object,{Name="AeroSky",Rotation=90})
+ gradient.Color=ColorSequence.new(D.top,D.bottom);gradient.Enabled=true
+ return gradient
+end
 -- `aero` (AERO-JUICE-BRIEF 3, the Alive `aerohatch` switch as the card read it): the Sky / Meadow / Aurora well, with
 -- soft shafts from the top centre instead of the sunburst, a lens glint, a grass horizon (Rare: a glass floor), rising
 -- bubbles rimmed in the egg type's accent, Uncommon's dew glints and Rare's sparkles (b.aero; Stage.placeAero and
@@ -456,8 +474,9 @@ function Stage.backdrop(root,z,tier,kind,aero)
  local look,st=Rarity.lookOf(tier,aero),Rarity.stageLook(tier,aero)
  local b={}
  b.shell=frame(root,"Shell",z+1,{Size=UDim2.fromScale(1,1),BackgroundTransparency=0})
- Kit.paint(b.shell,"BackgroundColor3","shell")
- local holder=frame(b.shell,"CheckerHolder",z+1,{Size=UDim2.fromScale(1,1),ClipsDescendants=true})
+ -- Fable B37: on an Aero card the screen round the card is the sky gradient, no deck checker (Stage.skyFill).
+ if aero then Stage.skyFill(b.shell)else Kit.paint(b.shell,"BackgroundColor3","shell")end
+ local holder=frame(b.shell,"CheckerHolder",z+1,{Size=UDim2.fromScale(1,1),ClipsDescendants=true,Visible=not aero})
  local K=Kit.Checker
  b.checkerTile=node("ImageLabel",holder,{Name="Checker",BackgroundTransparency=1,Image=K.image,ImageTransparency=K.transparency,
   ScaleType=Enum.ScaleType.Tile,TileSize=UDim2.fromOffset(K.tile,K.tile),Size=UDim2.new(1,K.tile,1,K.tile),Position=UDim2.fromOffset(-K.tile,-K.tile),ZIndex=z+1})
@@ -484,9 +503,13 @@ function Stage.backdrop(root,z,tier,kind,aero)
  end
  local a=nil
  if p then
-  a={palette=p,tier=tier,kind=kind,bubbles={},sparkles={},state={},turn=0}
+  a={palette=p,tier=tier,kind=kind,bubbles={},sparkles={},state={},turn=0,outer={}}
   a.raysAlt=image(b.clip,"RaysAlt","shafts",z+3,{ImageColor3=p.ray,ImageTransparency=1-R.alpha,Position=UDim2.fromScale(.5,0)})
   b.aeroParts=a
+  -- Fable B37: six big faint bubbles on the sky round the card (white rims, 12% alpha), in one holder a host can hide.
+  local D=Aero.Backdrop
+  a.outerHolder=frame(b.shell,"SkyBubbles",z+1,{Size=UDim2.fromScale(1,1),ClipsDescendants=true})
+  for index=1,D.bubbles do a.outer[index]=Stage.bubbleNode(a.outerHolder,"SkyBubble"..index,z+1,Color3.new(1,1,1),D.rim)end
  end
  b.pattern=image(b.clip,"EdgePattern",st.pattern,z+3,{ImageColor3=Color3.new(1,1,1),ImageTransparency=if p then 1-p.patternAlpha else .8,Position=UDim2.fromScale(.5,.5),Size=UDim2.fromScale(1,1)})
  for index,rotation in ipairs({0,90})do
@@ -516,13 +539,7 @@ function Stage.backdrop(root,z,tier,kind,aero)
   end
   local B=Aero.Bubble
   for index=1,p.bubbles do
-   local rim=Aero.accent(kind,index)or Color3.new(1,1,1)
-   local bubble=frame(b.clip,"Bubble"..index,z+3,{AnchorPoint=Vector2.new(.5,.5),BackgroundTransparency=1,BackgroundColor3=Color3.new(1,1,1),Visible=false})
-   node("UICorner",bubble,{CornerRadius=UDim.new(.5,0)})
-   local stroke=node("UIStroke",bubble,{Color=rim,Thickness=B.rim,ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Transparency=1})
-   local spec=frame(bubble,"Spec",z+3,{AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.3,.3),BackgroundTransparency=1,BackgroundColor3=Color3.new(1,1,1)})
-   node("UICorner",spec,{CornerRadius=UDim.new(.5,0)})
-   a.bubbles[index]={node=bubble,stroke=stroke,spec=spec}
+   a.bubbles[index]=Stage.bubbleNode(b.clip,"Bubble"..index,z+3,Aero.accent(kind,index)or Color3.new(1,1,1),B.rim)
   end
  end
  b.bloom=image(b.clip,"Bloom","glow",z+4,{ImageColor3=Color3.new(1,1,1),ImageTransparency=1})
@@ -569,6 +586,12 @@ function Stage.placeAero(b,w,h,floorShare,scale)
  end
  a.state={}
 end
+-- Fable B37: the screen the sky bubbles rise across (the stage's W x H).
+function Stage.placeAeroScreen(b,W,H,scale)
+ local a=b.aeroParts;if not a then return end
+ a.screenW,a.screenH,a.screenScale=math.max(1,W),math.max(1,H),scale or 1
+ a.outerState=nil
+end
 -- Aero motion on the stage's own clock: the shafts turn (Uncommon 18, Rare 12 deg/s; `turn` is the stage's integrated
 -- angle), Rare's tint sweeps aqua to pink, the glints and sparkles twinkle, the bubbles rise and pop at the burst.
 -- `burstAge`: seconds since the burst on the hatch clock (nil: no pop, a reopen); after the first sighting the stage's
@@ -610,6 +633,28 @@ function Stage.paintAero(b,clock,burstAge,reduced,turn)
    if bubble.al~=al then
     bubble.al=al
     bubble.node.BackgroundTransparency=1-B.fill*al;bubble.stroke.Transparency=1-B.rimAlpha*al;bubble.spec.BackgroundTransparency=1-B.specAlpha*al
+   end
+  end
+ end
+ -- Fable B37: the six sky bubbles round the card, twice the size, 12% alpha, on the same clock and burst.
+ if a.screenW and #a.outer>0 then
+  local D=Aero.Backdrop
+  local s=a.screenScale*D.scale
+  local outerSpec=math.max(3,math.floor(B.spec*s+.5))
+  local thick=math.max(1,math.floor(D.rim*a.screenScale+.5))
+  for index,bubble in ipairs(a.outer)do
+   local x,y,size,alpha=Aero.bubble(index,#a.outer,clock,age,a.screenW,a.screenH,s,reduced)
+   local shown=x~=nil
+   if bubble.shown~=shown then bubble.shown=shown;bubble.node.Visible=shown end
+   if shown then
+    local px,py,sz=math.floor(x+.5),math.floor(y+.5),math.max(2,math.floor(size+.5))
+    local al=math.floor(alpha*10+.5)/10
+    if bubble.px~=px or bubble.py~=py then bubble.px,bubble.py=px,py;bubble.node.Position=UDim2.fromOffset(px,py)end
+    if bubble.sz~=sz then bubble.sz=sz;bubble.node.Size=UDim2.fromOffset(sz,sz);bubble.spec.Size=UDim2.fromOffset(outerSpec,outerSpec);bubble.stroke.Thickness=thick end
+    if bubble.al~=al then
+     bubble.al=al
+     bubble.node.BackgroundTransparency=1-D.fill*al;bubble.stroke.Transparency=1-D.alpha*al;bubble.spec.BackgroundTransparency=1-D.alpha*al
+    end
    end
   end
  end
@@ -936,6 +981,7 @@ function Stage:layout()
  local size=self.root.AbsoluteSize;local W,H=math.max(1,size.X),math.max(1,size.Y)
  local safe,bar=Stage.safeArea(self.root)
  local L=Stage.geometry(W,H,Stage.topClear(safe,bar));self.L=L;self.staticDone=false
+ if self.aeroParts then Stage.placeAeroScreen(self,W,H,L.s)end
  do
   local ring=Stage.edgeRing(if L.phone then Stage.EdgeRadius.phone else Stage.EdgeRadius.regular)
   self.rainbow.Position=UDim2.fromOffset(-ring.offset,-ring.offset);self.rainbow.Size=UDim2.new(1,ring.offset*2,1,ring.offset*2)

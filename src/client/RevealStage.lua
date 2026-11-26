@@ -420,7 +420,8 @@ function Stage.show(parent,options)
  -- shell and the tier's vibrant well (Sunny Peach for the Bear). No dark stage, no spotlight
  -- and no full-screen flash (section 4).
  root.BackgroundTransparency=0;root.ClipsDescendants=true;root.Active=true
- Kit.paint(root,"BackgroundColor3","shell")
+ -- Fable B37: an Aero card stands on the sky gradient (HatchItemStage.skyFill), not the deck's navy checker.
+ if self.aero then ItemStage.skyFill(root)else Kit.paint(root,"BackgroundColor3","shell")end
  root:SetAttribute("AccessibleLabel",(pet.name or "Pet").." revealed")
  self.root=root
  Stage.live[self]=true
@@ -669,7 +670,7 @@ function Stage:build()
  end
  self.ring=Kit.focusRing(ui)
  self.cover=fill(root,"FadeCover",C.Stage,1);self.cover.Size=UDim2.fromScale(1,1);self.cover.ZIndex=root.ZIndex+200;self.cover.Active=false
- Kit.paint(self.cover,"BackgroundColor3","shell")
+ if self.aero then ItemStage.skyFill(self.cover)else Kit.paint(self.cover,"BackgroundColor3","shell")end
  -- The shell's checker and the tier's well, under every layer (layers start at +10).
  local b=ItemStage.backdrop(root,root.ZIndex,self.tier,"companion",self.aero)
  b.shell.BackgroundTransparency=1
@@ -718,7 +719,8 @@ function Stage:createPet()
  local holder=Kit.frame(self.petLayer,"PetHolder",nil,UDim2.new(),UDim2.fromOffset(10,10));holder.AnchorPoint=Vector2.new(.5,1)
  self.petHolder=holder
  local viewport=Kit.node("ViewportFrame",holder,{Name="PetHero3D",BackgroundTransparency=1,BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=holder.ZIndex+1,
-  Ambient=Stage.Light.ambient,LightColor=Stage.Light.color,LightDirection=Stage.Light.direction,ImageTransparency=1})
+  Ambient=if self.aero then Rarity.Aero.PetLight.ambient else Stage.Light.ambient,
+  LightColor=if self.aero then Rarity.Aero.PetLight.key else Stage.Light.color,LightDirection=Stage.Light.direction,ImageTransparency=1})
  self.viewport=viewport;self.loaded=false
  local ok=pcall(function()
   local world=Instance.new("WorldModel");world.Name="PetStage";world.Parent=viewport;self.world=world
@@ -790,6 +792,8 @@ function Stage:paintBackdrop()
  local b=self.backdrop;if not b or not self.L then return end
  local alpha=self.root.BackgroundTransparency
  b.well.Visible=alpha<.5;b.rim.Visible=alpha<.5
+ -- (The sky bubbles round the card come and go with the sky itself, as the well does.)
+ if b.aeroParts and b.aeroParts.outerHolder then b.aeroParts.outerHolder.Visible=alpha<.5 end
  b.checkerTile.Position=UDim2.fromOffset(math.floor(-Kit.Checker.tile+self.checkerOffset),math.floor(-Kit.Checker.tile+self.checkerOffset))
  if b.aeroParts then self:paintAero(self.reducedStart==true or self:reduced())else b.raysImage.Rotation=self.rayTurn end
  -- Round 3: a Rare pet's shafts and rainbow edge keep turning while the card is up.
@@ -812,6 +816,7 @@ function Stage:layout()
   end
  end
  local L=Stage.geometry(W,H,nil,safe);self.L=L
+ ItemStage.placeAeroScreen(self.backdrop,W,H,L.s)
  self.root:SetAttribute("SafeCard",safe~=nil)
  do
   local b=self.backdrop
