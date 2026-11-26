@@ -57,7 +57,7 @@ return function(_server,offline)
 		local Kit=require(Shared.WorldAeroKit)
 		assert(trunks==#Kit.crowns and trunks>=20,"trunks "..trunks)
 		assert(lamps==#World.Lamps,"lamps "..lamps)
-		for _,id in ipairs({"fountain","wobble egg","rattle_gourds","pebble_tray"})do assert(ids[id],id)end
+		for _,id in ipairs({"fountain","wobble egg","rattle_gourds",require(Shared.CrunchToys).Places.tray.id})do assert(ids[id],id)end
 		assert(soft==2+6,"the two leaf heaps and six pods squash: "..soft)
 		for _,e in ipairs(all)do
 			if e.id=="leaf_heap_1"or e.id=="leaf_heap_2"or string.sub(e.id,1,8)=="pop_pod_"then assert(e.kind=="soft",e.id)end
