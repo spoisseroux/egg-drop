@@ -92,5 +92,16 @@ return function(client)
 		assert(again:tap()==true,"the tap still lands")
 		Ritual.onFirstTap=saved
 	end)
+	test("onboarding v2: a ritual's own auto (7 s in the garden) holds that long; the default stays Ritual.Auto",function()
+		local c,now=clock()
+		local r=Ritual.new({.3,.9,1.5},now,7)
+		assert(r:hold(.3)==true and r:waited()==0)
+		c.t=Ritual.Auto+.5;assert(r:hold(.3)==true,"past the reveal's 1.1 s, still held")
+		assert(math.abs(r:waited()-(Ritual.Auto+.5))<1e-9,"waited")
+		c.t=7.01;assert(r:hold(.3)==false,"lets go at 7 s")
+		assert(r:waited()==0,"not held: nothing waited")
+		local d=Ritual.new({.3},now,0)
+		c.t=0;assert(d:hold(.3)==true);c.t=Ritual.Auto+.01;assert(d:hold(.3)==false,"a bad auto is the default")
+	end)
 	return{passed=#cases,cases=cases}
 end
