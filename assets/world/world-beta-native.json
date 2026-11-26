@@ -1,10 +1,17 @@
 {
  "schemaVersion": 1,
- "note": "The beta overlay pack (CLIFF-DEN-ISLAND-SCOPE): built in Studio Edit from the readback ids (AssetService:CreateMeshPartAsync, precise collision where CliffDenData.parts says collide, Box and no query otherwise; each part a clone of its live template with the mesh applied, TextureID restored), exported with SerializationService:SerializeInstancesAsync and checked by a round trip (201 parts, 2958 rays identical). Mounted by default.project.json only; scripts/world_beta_pack.py --check binds it.",
+ "note": "The beta overlay pack (CLIFF-DEN-ISLAND-SCOPE): built in Studio Edit from the readback ids (AssetService:CreateMeshPartAsync, precise collision where CliffDenData.parts says collide, Box and no query otherwise; each part a clone of its live template with the mesh applied, TextureID restored), exported with SerializationService:SerializeInstancesAsync and checked by a round trip (201 parts, 2958 rays identical). Mounted by default.project.json only; scripts/world_beta_pack.py --check binds it. Round 6 (2026-11-25): rebuilt the same way by artifacts/qa-2026-11-25-beta25/build_world_beta_pack.luau (the tiled parts' looks applied after, from the same live templates), exported with SerializationService and reassembled byte for byte (h=(h*31+b)%2^32 2717870127).",
  "nativePath": "assets/world/WorldBeta.rbxm",
- "nativeBytes": 134706,
- "nativeSha256": "48d42001de1cfc866cca7db00e5ed9d91291f056629630abf48a752a35e690dd",
- "version": "861c072272ad9afb",
- "parts": 201,
- "readback": "artifacts/qa-2026-11-25-beta17/cliff-den/upload-readback-r2.json"
+ "nativeBytes": 140918,
+ "nativeSha256": "1fdd3359ae5c356d441edd3e3bff13d408935f63a38bf39b125b3859668d6637",
+ "version": "a93e14640fa4192b",
+ "parts": 215,
+ "readback": "artifacts/qa-2026-11-25-beta25/build_world_beta_pack.luau (uploads 98284784411093 visual, 103168916149306 collision)",
+ "previous": {
+  "nativeBytes": 134706,
+  "nativeSha256": "48d42001de1cfc866cca7db00e5ed9d91291f056629630abf48a752a35e690dd",
+  "version": "861c072272ad9afb",
+  "parts": 201,
+  "readback": "artifacts/qa-2026-11-25-beta17/cliff-den/upload-readback-r2.json"
+ }
 }
