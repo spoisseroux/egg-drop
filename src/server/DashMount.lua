@@ -85,8 +85,10 @@ function Mount.build(room,options)
 	local gate=CFrame.new(Mount.gate())
 	local r=Course.Pad.r/100
 	part(model,"WaitPad",Vector3.new(.16,r*2,r*2),gate*CFrame.new(0,.08,0)*CFrame.Angles(0,0,math.pi/2),Mount.Wait).Shape=Enum.PartType.Cylinder
-	part(model,"SignPost",Vector3.new(.25,3,.25),gate*CFrame.new(0,1.5,-r-.4),Mount.Frame)
-	part(model,"Sign",Vector3.new(2.2,1.2,.2),gate*CFrame.new(0,3,-r-.4),Mount.Banner)
+	-- Beta 34 note: the board hangs between two posts at its ends, so no post crosses the words.
+	part(model,"SignPost",Vector3.new(.25,3.35,.25),gate*CFrame.new(-1.225,1.675,-r-.4),Mount.Frame)
+	part(model,"SignPost2",Vector3.new(.25,3.35,.25),gate*CFrame.new(1.225,1.675,-r-.4),Mount.Frame)
+	part(model,"Sign",Vector3.new(2.2,1.2,.2),gate*CFrame.new(0,2.6,-r-.4),Mount.Banner)
 	for index,stone in ipairs(Course.Stones)do
 		part(model,"Stone_"..index,Vector3.new(2.2,.3,2.2),CFrame.new(stone.x/100,stone.y/100-.15,stone.z/100),Mount.Stone)
 	end

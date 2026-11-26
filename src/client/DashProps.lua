@@ -411,8 +411,8 @@ function Props:balloon(now,still)
 	local fete=Props.fete(self.parent)
 	if made and made.fete~=fete then
 		made.ball:Destroy();made.flag:Destroy()
-		if made.rope then made.rope:Destroy()end
-		if made.foot then made.foot:Destroy()end
+		for _,rope in ipairs(made.ropes or {})do rope:Destroy()end
+		for _,foot in ipairs(made.feet or {})do foot:Destroy()end
 		self.count-=2
 		self.sky,made=nil,nil
 	end
@@ -432,17 +432,26 @@ function Props:balloon(now,still)
 		local x,y,z,yaw=Course.at(0)
 		made={ball=ball,flag=flag,at=CFrame.new(x,y+Props.BalloonHeight,z),fete=fete}
 		if fete then
-			-- The rope: an attachment under the balloon, one in Terrain at the north post's top (the gate's -X post).
-			local top=Instance.new("Attachment");top.Name="BalloonRope";top.Position=Vector3.new(0,-F.size/2,0);top.Parent=ball
-			local foot=Instance.new("Attachment");foot.Name="DashBalloonFoot"
-			foot.WorldPosition=(CFrame.new(x,y,z)*CFrame.Angles(0,yaw,0)*CFrame.new(-Grid.PostOut/100,F.postTop,0)).Position
+			-- The ropes: one to each post's top (beta 34, Spencer: "only connected by one string?"). Each starts from
+			-- an attachment low on the balloon's side toward its post, and ends in Terrain at that post's top.
 			local terrain=workspace:FindFirstChildOfClass("Terrain")
-			foot.Parent=terrain or ball
-			local rope=Instance.new("Beam");rope.Name="BalloonRope";rope.Attachment0,rope.Attachment1=top,foot
-			rope.Width0,rope.Width1=F.ropeWidth,F.ropeWidth;rope.FaceCamera=true;rope.Segments=1
-			rope.Color=ColorSequence.new(F.rope);rope.LightEmission=0;rope.LightInfluence=1
-			rope.Parent=ball
-			made.rope,made.foot=rope,foot
+			made.ropes,made.feet={},{}
+			for _,side in ipairs({-1,1})do
+				local post=(CFrame.new(x,y,z)*CFrame.Angles(0,yaw,0)*CFrame.new(side*Grid.PostOut/100,F.postTop,0)).Position
+				local across=Vector3.new(post.X-x,0,post.Z-z)
+				across=if across.Magnitude>1e-3 then across.Unit else Vector3.zero
+				local top=Instance.new("Attachment");top.Name="BalloonRope"
+				top.Position=across*F.size*.2+Vector3.new(0,-F.size/2*.9,0) -- the ball has no turn, so local = world axes
+				top.Parent=ball
+				local foot=Instance.new("Attachment");foot.Name="DashBalloonFoot"
+				foot.WorldPosition=post
+				foot.Parent=terrain or ball
+				local rope=Instance.new("Beam");rope.Name="BalloonRope";rope.Attachment0,rope.Attachment1=top,foot
+				rope.Width0,rope.Width1=F.ropeWidth,F.ropeWidth;rope.FaceCamera=true;rope.Segments=1
+				rope.Color=ColorSequence.new(F.rope);rope.LightEmission=0;rope.LightInfluence=1
+				rope.Parent=ball
+				table.insert(made.ropes,rope);table.insert(made.feet,foot)
+			end
 		end
 		self.sky=made
 	end
@@ -457,7 +466,7 @@ function Props:balloon(now,still)
 	end
 end
 function Props:destroy()
-	if self.sky and self.sky.foot then self.sky.foot:Destroy()end
+	if self.sky then for _,foot in ipairs(self.sky.feet or {})do foot:Destroy()end end
 	if self.folder then self.folder:Destroy();self.folder=nil end
 	table.clear(self.hoops);table.clear(self.clovers);table.clear(self.tags);table.clear(self.order)
 	self.sky=nil

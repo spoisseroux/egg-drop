@@ -152,13 +152,19 @@ function Fete.finish()
 end
 
 -- The waiting pad: trodden earth with the rope ring round it as today (DashLine), and a timber sign on the far edge.
-Fete.Pad=table.freeze({high=.06,post=Vector3.new(.3,3,.3),board=Vector3.new(2.4,1.3,.2),out=.4})
+-- Spencer 2026-11-26 (beta 34): "the garden dash sign has the post going up thru the text". The board now hangs
+-- between two posts at its ends (each a hair past the board's top), so nothing crosses the words on either face.
+Fete.Pad=table.freeze({high=.06,post=Vector3.new(.3,3,.3),board=Vector3.new(2.4,1.3,.2),out=.4,boardY=2.6,postOver=.15})
 function Fete.pad(r)
 	local P=Fete.Pad
 	local parts={}
 	piece(parts,"WaitPad","Cylinder",Vector3.new(P.high,r*2,r*2),CFrame.new(0,P.high/2,0)*CFrame.Angles(0,0,math.pi/2),"Ground",Fete.Earth)
-	piece(parts,"SignPost","Block",P.post,CFrame.new(0,P.post.Y/2,-r-P.out),"Wood",Fete.Timber)
-	piece(parts,"Sign","Block",P.board,CFrame.new(0,P.post.Y,-r-P.out),"Wood",Fete.Timber,{words={"Front","Back"}})
+	local top=P.boardY+P.board.Y/2+P.postOver
+	local side=P.board.X/2+P.post.X/2
+	for index,x in ipairs({-side,side})do
+		piece(parts,if index==1 then"SignPost"else"SignPost2","Block",Vector3.new(P.post.X,top,P.post.Z),CFrame.new(x,top/2,-r-P.out),"Wood",Fete.Timber)
+	end
+	piece(parts,"Sign","Block",P.board,CFrame.new(0,P.boardY,-r-P.out),"Wood",Fete.Timber,{words={"Front","Back"}})
 	return parts,{}
 end
 
