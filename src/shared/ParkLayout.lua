@@ -31,6 +31,10 @@
 --                       membership only standing up there (Y >= floorY - 4) while the gate is open (the server's:
 --                       setTerraceGate, the TierPets gate; a client reads the switches the server publishes)
 --   lawnDressing        the Top Lawn's list (patches under the pieces, gap stones, rim boulders, the flower drift)
+--   toyScale            the Top Lawn's toys x1.25 (Fable, ROUND7-LOOK 7): every toy offset inside a piece (seat, pivot, rope,
+--                       ladder, deck, chute run, castle, dig spots, ball spots, heights, keepouts) and the worn patches scale
+--                       about the piece's root; the roots stay. SeatStepOut stays pet-sized. Default 1 (no field, no change);
+--                       ParkPoseData scales the meshes, seats and colliders to match (Park.ToyScale).
 -- Each piece moves as a rigid group about its own root: the root, its slots (approach, pose, seat, pivot, ladder,
 -- chute, castle, ball points) and its keepout circle turn together. Nothing inside a piece changes (seat heights,
 -- arcs, the chute's 7.5 run, SeatStepOut), so the pose data and choreography are untouched. ParkSites.spec pins the
@@ -59,6 +63,9 @@ local Arrangement=table.freeze({36,66}) -- the arrival centre, where the arrange
 local function makeLayout(spec)
 local CX,CZ,siteId,rotation=spec.x,spec.z,spec.id,spec.rotation or 0
 local Park={Id=siteId}
+-- The toy scale (1 everywhere but the Top Lawn; a k = 1 site carries no field and every product below is exact).
+local K=spec.toyScale or 1
+if spec.toyScale then Park.ToyScale=spec.toyScale end
 Park.Enabled=World.WorldVersion=="v7"
 Park.Version=1
 
@@ -115,20 +122,20 @@ end
 local swingCenter=piece(-8,5)
 local seesawCenter=piece(1,7)
 local slideBase=piece(9,6)    -- top deck footprint (54, 73)
-local slideEnd=piece(9,-1.5)  -- chute foot on the lawn (54, 65.5)
+local slideEnd=piece(9,6-7.5*K)  -- chute foot on the lawn (54, 65.5): the chute's 7.5 run
 local sandCenter=piece(-10,-2)
 local ballCenter=piece(9,-6)   -- (45, 60): furthest east the kerb and the east gate allow; the blossom shrub that touched the mat's west edge (Studio 2026-11-13) is removed from the world mesh
 Park.Equipment=table.freeze({
 	-- Top bar along X, 5.6 high; two swings 2.8 apart swing along Z, facing the lawn (-Z).
-	swing=equipment("swing",swingCenter,SOUTH,4,{barHeight=5.6,seatHeight=1.5}),
+	swing=equipment("swing",swingCenter,SOUTH,4*K,{barHeight=5.6*K,seatHeight=1.5*K}),
 	-- Ladder at +Z, chute runs -Z to the lawn: top deck 3.6 high.
-	slide=equipment("slide",slideBase,SOUTH,2,{deckHeight=3.6,chuteEnd=slideEnd}),
+	slide=equipment("slide",slideBase,SOUTH,2*K,{deckHeight=3.6*K,chuteEnd=slideEnd}),
 	-- Beam along X on a 1.1-high pivot; seats 2.6 each side.
-	seesaw=equipment("seesaw",seesawCenter,NORTH,3.6,{pivotHeight=1.1,arm=2.6,maxTilt=.26}),
+	seesaw=equipment("seesaw",seesawCenter,NORTH,3.6*K,{pivotHeight=1.1*K,arm=2.6*K,maxTilt=.26}),
 	-- 5 x 5 sand box with a 0.35 rim; sand top 0.25 above the lawn; one castle in the middle.
-	sandbox=equipment("sandbox",sandCenter,NORTH,3.6,{size=Vector2.new(5,5),sandHeight=.25}),
+	sandbox=equipment("sandbox",sandCenter,NORTH,3.6*K,{size=Vector2.new(5,5)*K,sandHeight=.25*K}),
 	-- One ball on a small mat; two spots 4 studs apart along X.
-	ball=equipment("ball",ballCenter,NORTH,3,{}),
+	ball=equipment("ball",ballCenter,NORTH,3*K,{}),
 })
 
 -- Slots: one pet each. approach = the ground point the pet walks to and stays on during play
@@ -143,41 +150,45 @@ end
 -- seat, rides, hops forward and lands where it started, instead of landing in front and walking back.
 Park.SeatStepOut=1.25
 local function swingSlot(id,dx)
+	dx*=K
 	local base=Vector3.new(swingCenter.X+dx,aground(swingCenter.X+dx,swingCenter.Z),swingCenter.Z)
 	-- Seats face the swing set's front (-Z, toward the lawn); the pet waits 1.25 studs in front.
 	local x,z=base.X,base.Z-Park.SeatStepOut
 	local approach=Vector3.new(x,aground(x,z),z)
-	return slot(id,"swing",approach,SOUTH,{position=lift(base,1.5),yaw=SOUTH},
-		{seatGround=base,pivot=lift(base,5.6),rope=4.1,axis="X",amplitude=.5}) -- pendulum about the bar (X axis), arcs along Z
+	return slot(id,"swing",approach,SOUTH,{position=lift(base,1.5*K),yaw=SOUTH},
+		{seatGround=base,pivot=lift(base,5.6*K),rope=4.1*K,axis="X",amplitude=.5}) -- pendulum about the bar (X axis), arcs along Z
 end
 local function seesawSlot(id,side)
-	local base=Vector3.new(seesawCenter.X+side*2.6,aground(seesawCenter.X+side*2.6,seesawCenter.Z),seesawCenter.Z)
+	local arm=side*2.6*K
+	local base=Vector3.new(seesawCenter.X+arm,aground(seesawCenter.X+arm,seesawCenter.Z),seesawCenter.Z)
 	-- Seat 1 (west) faces east, seat 2 (east) faces west: the pets face each other. Each waits off
 	-- the beam's park-centre side (-Z) beside its own seat.
 	local x,z=base.X,base.Z-Park.SeatStepOut
 	local approach=Vector3.new(x,aground(x,z),z)
-	return slot(id,"seesaw",approach,if side<0 then EAST else WEST,{position=lift(base,1.25),yaw=if side<0 then EAST else WEST},
-		{seatGround=base,pivot=lift(seesawCenter,1.1),arm=2.6*side})
+	return slot(id,"seesaw",approach,if side<0 then EAST else WEST,{position=lift(base,1.25*K),yaw=if side<0 then EAST else WEST},
+		{seatGround=base,pivot=lift(seesawCenter,1.1*K),arm=arm})
 end
 local function sandSlot(id,side)
-	local base=Vector3.new(sandCenter.X+side*1.6,aground(sandCenter.X+side*1.6,sandCenter.Z),sandCenter.Z)
-	return slot(id,"sandbox",base,if side<0 then EAST else WEST,{position=lift(base,.25),yaw=if side<0 then EAST else WEST},
-		{castle=lift(sandCenter,.25)})
+	local dx=side*1.6*K
+	local base=Vector3.new(sandCenter.X+dx,aground(sandCenter.X+dx,sandCenter.Z),sandCenter.Z)
+	return slot(id,"sandbox",base,if side<0 then EAST else WEST,{position=lift(base,.25*K),yaw=if side<0 then EAST else WEST},
+		{castle=lift(sandCenter,.25*K)})
 end
 local function ballSlot(id,side)
-	local base=Vector3.new(ballCenter.X+side*2,aground(ballCenter.X+side*2,ballCenter.Z),ballCenter.Z)
+	local dx=side*2*K
+	local base=Vector3.new(ballCenter.X+dx,aground(ballCenter.X+dx,ballCenter.Z),ballCenter.Z)
 	return slot(id,"ball",base,if side<0 then EAST else WEST,{position=base,yaw=if side<0 then EAST else WEST},
-		{ball=lift(ballCenter,.45)}) -- ball rest centre (radius ~.45)
+		{ball=lift(ballCenter,.45*K)}) -- ball rest centre (radius ~.45)
 end
-local ladder=Vector3.new(slideBase.X,aground(slideBase.X,slideBase.Z+1.2),slideBase.Z+1.2) -- ladder foot (54, 74.2)
+local ladder=Vector3.new(slideBase.X,aground(slideBase.X,slideBase.Z+1.2*K),slideBase.Z+1.2*K) -- ladder foot (54, 74.2)
 Park.Slots=table.freeze({
 	swing1=swingSlot("swing1",-1.4),
 	swing2=swingSlot("swing2",1.4),
 	-- The pet waits at the ladder foot facing the ladder and the deck (-Z; QA Q4: was +Z, away from
 	-- it), climbs to the deck, sits at the chute top facing -Z, slides to chuteEnd, tumbles, and
 	-- walks back for a second go.
-	slide=slot("slide","slide",ladder,SOUTH,{position=lift(slideBase,3.6),yaw=SOUTH},
-		{ladderTop=lift(Vector3.new(ladder.X,ladder.Y,ladder.Z-.6),3.6),chuteTop=lift(slideBase+Vector3.new(0,0,-.8),3.6),chuteEnd=slideEnd}),
+	slide=slot("slide","slide",ladder,SOUTH,{position=lift(slideBase,3.6*K),yaw=SOUTH},
+		{ladderTop=lift(Vector3.new(ladder.X,ladder.Y,ladder.Z-.6*K),3.6*K),chuteTop=lift(slideBase+Vector3.new(0,0,-.8*K),3.6*K),chuteEnd=slideEnd}),
 	seesaw1=seesawSlot("seesaw1",-1),
 	seesaw2=seesawSlot("seesaw2",1),
 	sand1=sandSlot("sand1",-1),
@@ -235,8 +246,8 @@ for _,entry in pairs(Park.Equipment)do table.insert(keepout,table.freeze({center
 do
 	-- The chute's foot and its middle (from the placed slide; the arrival's deck and foot share X).
 	local base,foot=Park.Equipment.slide.position,Park.Equipment.slide.chuteEnd
-	table.insert(keepout,table.freeze({center=Vector2.new(foot.X,foot.Z),radius=1.6}))
-	table.insert(keepout,table.freeze({center=Vector2.new((base.X+foot.X)*.5,(base.Z+foot.Z)*.5),radius=1.6}))
+	table.insert(keepout,table.freeze({center=Vector2.new(foot.X,foot.Z),radius=1.6*K}))
+	table.insert(keepout,table.freeze({center=Vector2.new((base.X+foot.X)*.5,(base.Z+foot.Z)*.5),radius=1.6*K}))
 end
 for _,bench in ipairs(Park.Benches)do
 	-- A circle every ~3 studs along the bench's length (the long bench is 9.6 studs).
@@ -370,13 +381,14 @@ if spec.lawnDressing then
 		table.insert(plates,table.freeze({name=name,x=x,y=y,z=z,size=Vector2.new(sx,sz),yaw=yaw,art=art,
 			colour=colour,transparency=transparency,lift=.04}))
 	end
+	-- The worn patches grow with the toys (x toyScale), the slide's still down the chute by the same share.
 	for _,toe in ipairs({{"seesaw",0,0,"#9A7B55"},{"slide",0,1.5,"#9A7B55"},{"swing",0,0,"#9A7B55"},{"sandbox",0,0,"#D9C29A"}})do
-		local x,z=pieceLocal(toe[1],toe[2],toe[3])
-		plate("TopLawnPatch_"..toe[1],x,z,5.5,6.5,heading(x,z,CX,CZ),"lawnPatchA",toe[4],.30)
+		local x,z=pieceLocal(toe[1],toe[2]*K,toe[3]*K)
+		plate("TopLawnPatch_"..toe[1],x,z,5.5*K,6.5*K,heading(x,z,CX,CZ),"lawnPatchA",toe[4],.30)
 	end
 	do
 		local ball=Park.Equipment.ball.position
-		plate("TopLawnPatch_ball",ball.X,ball.Z,6.5,6.5,heading(ball.X,ball.Z,CX,CZ),"lawnPatchB","#6FA85A",.45)
+		plate("TopLawnPatch_ball",ball.X,ball.Z,6.5*K,6.5*K,heading(ball.X,ball.Z,CX,CZ),"lawnPatchB","#6FA85A",.45)
 	end
 	local GREYS={"#8A8580","#7F847F","#948E84"}
 	local function stone(name,x,z,size,yaw,seed)
@@ -524,6 +536,8 @@ Specs.hollow=table.freeze({id="grove",x=-39.8,z=-47.7,rx=12,rz=12,natural=true,
 -- Opus from "faces K", 2026-11-25): swing seats face K; the slide's chute runs toward K (lands about (0.2, 6.5));
 -- the see-saw's beam lies along the lip with its riders on K's side (-t); the dig spot and the ball face K. The bench
 -- (Fable's (0, -7)) is nudged 1 stud toward K to (0, -6) so both its ends sit inside the circle less 1.
+-- Toys x1.25 (Fable, ROUND7-LOOK 7, 2026-11-26): they read small beside the 18-stud tree and the 7-high outcrops. The
+-- pieces keep their places; each grows about its root (the swing bar 5.6 -> 7.0, the chute's run 7.5 -> 9.375).
 do
 	local K=Tier.T(0,5)
 	local function at(s,t)local p=Tier.T(s,t);return p.X,p.Z end
@@ -531,14 +545,18 @@ do
 	local function rimAngle(s,t)local x,z=at(s,t);return math.atan2(z-K.Z,x-K.X)end
 	local function place(s,t,yaw)local x,z=at(s,t);return table.freeze({x,z,yaw})end
 	local inward=math.atan2(-Tier.N.X,-Tier.N.Y) -- -t: from the lip toward K
-	Specs.topLawn=table.freeze({id="grove",x=K.X,z=K.Z,rx=13,rz=13,natural=true,floorY=Tier.FloorY,
+	Specs.topLawn=table.freeze({id="grove",x=K.X,z=K.Z,rx=13,rz=13,natural=true,floorY=Tier.FloorY,toyScale=1.25,
 		gaps=table.freeze({table.freeze({"path",rimAngle(13,4),4}),table.freeze({"lookout",rimAngle(-13,5),4})}),
 		bench=table.freeze({at(0,-6)}),
 		pieces=table.freeze({
 			swing=place(-7,12,faces(-7,12)),     -- the bar across the view, seats face K; tallest, nearest the lip
 			slide=place(1,14,faces(1,14)),       -- the deck; ladder on the lip side, the chute runs toward K
-			seesaw=place(8,11.5,inward),         -- the beam along the lip; pets face each other, riders wait on K's side
-			sandbox=place(-9,0,faces(-9,0)),     -- the dig spot, outer side, beside the rim boulders
+			-- x1.25 (2026-11-26): the see-saw moves 0.4 along the lip and 1.1 toward K from Fable's (8, 11.5), so its longer
+			-- beam ends inside the circle and seat 1's rider waits 1+ inside the rim.
+			seesaw=place(7.6,10.4,inward),       -- the beam along the lip; pets face each other, riders wait on K's side
+			-- x1.25: the dig spot moves 0.7 toward K from Fable's (-9, 0) along its own line to K (its yaw and the rim
+			-- boulders' angle unchanged), so the bigger frame clears the boulders.
+			sandbox=place(-9+9/math.sqrt(106)*.7,5/math.sqrt(106)*.7,faces(-9,0)), -- the dig spot, outer side, beside the rim boulders
 			ball=place(6,0,faces(6,0)),          -- the open middle; fetch throws go along s
 		}),
 		-- {angle off the dig spot's rim angle, radius from K, across}: three boulders, the biggest straight behind it.

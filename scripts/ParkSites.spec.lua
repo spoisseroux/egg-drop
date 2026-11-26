@@ -797,6 +797,8 @@ return function(server,offline)
 	-- The Top Lawn (WORLD-FINISH-LOOK section 1, slice B) -----------------------------------------------------------
 	local Tier=require(Shared.Tier)
 	local T=Park.build(Park.Specs.topLawn)
+	-- Its toys are x1.25 (ROUND7-LOOK 7; ParkToyScale.spec): the rigid-group check runs on the same spec without the scale.
+	local T1=(function()local copy=table.clone(Park.Specs.topLawn);copy.toyScale=nil;return Park.build(table.freeze(copy))end)()
 	local K=Tier.T(0,5)
 	local function st(p)return Tier.local2(nil,p.X,p.Z)end
 	local function headingTo(p,q)return math.atan2(q.X-p.X,q.Z-p.Z)end
@@ -826,13 +828,13 @@ return function(server,offline)
 	end)
 
 	test("the Top Lawn: rigid groups, Fable's places, the yaws from faces K (swing -1.733, slide -2.629, see-saw -2.519, dig -0.441, ball 1.499)",function()
-		for id,slot in pairs(T.Slots)do
+		for id,slot in pairs(T1.Slots)do
 			local old=Park.Slots[id]
-			local e,oe=T.Equipment[slot.equipment],Park.Equipment[slot.equipment]
+			local e,oe=T1.Equipment[slot.equipment],Park.Equipment[slot.equipment]
 			local function check(p,q,name)
 				local a,b=local2(e.position,e.yaw,p),local2(oe.position,oe.yaw,q)
 				assert((a-b).Magnitude<1e-3,id.."."..name.." moved inside its piece")
-				local lift,oldLift=p.Y-T.ground(p.X,p.Z),q.Y-Park.ground(q.X,q.Z)
+				local lift,oldLift=p.Y-T1.ground(p.X,p.Z),q.Y-Park.ground(q.X,q.Z)
 				assert(math.abs(lift-oldLift)<1e-3,id.."."..name.." height "..lift.." was "..oldLift)
 			end
 			check(slot.approach,old.approach,"approach");check(slot.pose.position,old.pose.position,"pose")
@@ -840,7 +842,7 @@ return function(server,offline)
 				if old[key]then check(slot[key],old[key],key)end
 			end
 		end
-		local places={swing={-7,12},slide={1,14},seesaw={8,11.5},sandbox={-9,0},ball={6,0}}
+		local places={swing={-7,12},slide={1,14},seesaw={7.6,10.4},sandbox={-9+9/math.sqrt(106)*.7,5/math.sqrt(106)*.7},ball={6,0}} -- x1.25 moves (ParkLayout)
 		for id,at in pairs(places)do
 			local s,t=st(T.Equipment[id].position)
 			assert(math.abs(s-at[1])<1e-3 and math.abs(t-at[2])<1e-3,id.." not at Fable's place")
@@ -862,13 +864,15 @@ return function(server,offline)
 			local _,tw=st(T.Slots[id].approach);local _,ts=st(T.Slots[id].seatGround)
 			assert(tw<ts,id.." waits on the lip side")
 		end
-		-- Swing seats face K; the chute lands about (1, 6.5).
+		-- Swing seats face K; the chute lands about (1, 6.5) at x1, about (0, 4.7) with the toys x1.25 (its run 9.375).
 		for _,id in ipairs({"swing1","swing2"})do
 			local slot=T.Slots[id]
 			assert(Vector2.new(math.sin(slot.yaw),math.cos(slot.yaw)):Dot((flat(K)-flat(slot.approach)).Unit)>.95,id.." faces K")
 		end
-		local fs,ft=st(T.Slots.slide.chuteEnd)
+		local fs,ft=st(T1.Slots.slide.chuteEnd)
 		assert(math.abs(fs-1)<1.2 and math.abs(ft-6.5)<1.2,string.format("the chute lands at (%.2f, %.2f)",fs,ft))
+		fs,ft=st(T.Slots.slide.chuteEnd)
+		assert(math.abs(fs)<.3 and math.abs(ft-4.7)<.3,string.format("the x1.25 chute lands at (%.2f, %.2f)",fs,ft))
 	end)
 
 	test("the Top Lawn: slots inside the circle less 1, 3+ inside the terrace everywhere, the ladder 5+ from the lip",function()
@@ -879,6 +883,7 @@ return function(server,offline)
 		end
 		for id,slot in pairs(T.Slots)do
 			assert(T.inside(slot.approach,-1),id.." approach too near the rim")
+			assert(T1.inside(T1.Slots[id].approach,-1),id.." approach too near the rim at x1")
 			onTerrace(slot.approach,id);onTerrace(slot.pose.position,id.." pose")
 			for _,key in ipairs({"seatGround","ladderTop","chuteTop","chuteEnd","castle","ball"})do if slot[key]then onTerrace(slot[key],id.."."..key)end end
 		end

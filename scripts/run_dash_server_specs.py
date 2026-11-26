@@ -45,6 +45,8 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          "DashFete",
          # The park sites and the Hollow (WORLD-ALIVE-LOOK section 2): the pinned arrival and grove, the multi-site director.
          "ParkSites", "MultipleParks", "ParkDirector",
+         # The Top Lawn's toys x1.25 (ROUND7-LOOK 7): every k = 1 site pinned, the scaled toys, seats and slots.
+         "ParkToyScale",
          # The cliff path / Play Den / terrace top (CLIFF-DEN-ISLAND-SCOPE): the beta's server-start swap and its data.
          "CliffDen",
          # Live growth cuts G1 + G2, ported to the beta (PORT-TO-BETA.md): the Welcome bonus and the first hello (pure

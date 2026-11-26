@@ -12,7 +12,11 @@
 -- data and never take the turn. Group roots come from ParkLayout
 -- (authoritative positions, yaw = heading of the group's +Z front). The slide is the one exception:
 -- its root is shifted so the mesh's ladder foot lands on the slide slot's approach point, which also
--- puts the chute end within 0.15 studs of ParkLayout's chuteEnd.
+-- puts the chute end within 0.15 studs (x the toy scale) of ParkLayout's chuteEnd.
+--
+-- Toy scale (Park.ToyScale, the Top Lawn's 1.25; ParkLayout `toyScale`): every toy mesh's size, offset, pivot, seat and
+-- radius, the slide's ladder and chute points, the see-saw seats, the castle spot, the ball homes, the surface lifts and
+-- the toy colliders scale by k about their group root. Benches, kerbs and gate posts are not toys. k = 1 multiplies by 1.
 --
 -- Motion is a pure function of a park slot entry ({session, activity, ownerId, startTime, ...}) and
 -- a server time, so every viewer (late joiners included) sees the same swing beat, tilt and castle.
@@ -31,10 +35,13 @@ local function v(x,y,z)return Vector3.new(x,y,z)end
 local IDENTITY=CFrame.identity
 local TAU=math.pi*2
 
+local K=Park.ToyScale or 1
+local NOT_TOYS={Park_KerbSegment=true,Park_GatePost=true,Park_GateStarOrb=true,Park_Bench=true,Park_BenchLong=true}
 local meshes={}
 local function mesh(name,id,size,offset,pivot,extra)
-	local entry={name=name,id=id,size=size,offset=offset,pivot=pivot}
-	for key,value in pairs(extra or {})do entry[key]=value end
+	local k=if NOT_TOYS[name]then 1 else K
+	local entry={name=name,id=id,size=size*k,offset=offset*k,pivot=pivot*k}
+	for key,value in pairs(extra or {})do entry[key]=if key=="seat"or key=="radius"then value*k else value end
 	meshes[name]=table.freeze(entry)
 end
 mesh("Park_SwingFrame","rbxassetid://114085020332908",v(7.36,4.5,3.32),v(0,0,0),v(0,-2.25,0))
@@ -83,7 +90,7 @@ local roots={
 	Sandbox=Park.cframe(E.sandbox.position,E.sandbox.yaw),
 	BallCorner=Park.cframe(E.ball.position,E.ball.yaw),
 }
-local LADDER_BOTTOM=v(0,0,-2.55)
+local LADDER_BOTTOM=v(0,0,-2.55)*K
 do
 	local approach=Park.Slots.slide.approach
 	local turn=CFrame.Angles(0,E.slide.yaw,0)
@@ -112,12 +119,12 @@ Data.SwingSettle=table.freeze({share=.45,decay=1.6,stop=8})
 -- See-saw: the beam turns about the fulcrum's Z axis; positive tilt lowers seat A (seesaw1, west).
 Data.SeeSaw=table.freeze({
 	pivot=roots.SeeSaw*CFrame.new(meshes.Park_SeeSawBeam.offset),
-	seats=table.freeze({seesaw1=v(-2.62,.41,0),seesaw2=v(2.62,.41,0)}),
+	seats=table.freeze({seesaw1=v(-2.62,.41,0)*K,seesaw2=v(2.62,.41,0)*K}),
 	max=E.seesaw.maxTilt,rest=E.seesaw.maxTilt,period=Catalog.ById.seesaw.period,
 })
 
--- Slide: world points along the ladder (approach -> rungs -> deck) and down the chute.
-local function slidePoint(p)return roots.Slide:PointToWorldSpace(p)end
+-- Slide: world points along the ladder (approach -> rungs -> deck) and down the chute (mesh-local, x the toy scale).
+local function slidePoint(p)return roots.Slide:PointToWorldSpace(p*K)end
 local ladder={Park.Slots.slide.approach}
 for _,p in ipairs({v(0,0,-2.55),v(0,.417,-1.83),v(0,.833,-1.66),v(0,1.25,-1.49),v(0,1.667,-1.32),v(0,2.083,-1.15),v(0,2.51,-.55),v(0,2.51,0)})do
 	table.insert(ladder,slidePoint(p))
@@ -133,14 +140,17 @@ Data.Slide=table.freeze({
 	platform=slidePoint(v(0,2.51,0)),chuteTop=slidePoint(v(0,2.51,.95)),landing=Park.Slots.slide.chuteEnd,
 })
 
-Data.Sand=table.freeze({castle=roots.Sandbox*CFrame.new(0,.32,0),height=.32})
+Data.Sand=table.freeze({castle=roots.Sandbox*CFrame.new(0,.32*K,0),height=.32*K})
 Data.Ball=table.freeze({
 	homeA=roots.BallCorner:PointToWorldSpace(meshes.Park_BallA.offset),
 	homeB=roots.BallCorner:PointToWorldSpace(meshes.Park_BallB.offset),
-	matTop=.13,radius=.42,period=Catalog.ById.ball.period,
+	matTop=.13*K,radius=.42*K,period=Catalog.ById.ball.period,
 })
 -- Surface lift (studs above the slot's ground point) for pets playing on a mat or in the sand.
-Data.Lift=table.freeze({sandbox=.32,ball=.13})
+Data.Lift=table.freeze({sandbox=.32*K,ball=.13*K})
+-- A ball in front of a pet: its centre .75 out at k = 1; a bigger ball's centre moves out by its extra radius, so its
+-- near side stays the same (pet-sized) .33 in front of the pet.
+local BALL_FRONT=.75+(.42*K-.42)
 
 -- Static layout: kerb segments, gate posts + orbs, benches, colliders and bench seats -----------
 local KERB_CHORD,POST_RADIUS=3.3,.54
@@ -198,7 +208,8 @@ for i=1,5 do table.insert(BENCH_SEATS.Park_BenchLong,{center=v((i-3)*1.75,1.7,0)
 -- Until Park_BenchLong is uploaded: two Park_Bench meshes end to end (local X offsets).
 local LONG_STAND_IN={-2.3,2.3}
 -- Manifest colliders (group frame). pitchDeg is negated: the manifest's sign follows Blender, and
--- the chute planks must descend toward the group's +Z like the chute path does.
+-- the chute planks must descend toward the group's +Z like the chute path does. The toy groups' boxes
+-- (all but the benches) take the toy scale where they are placed (Data.layout).
 local COLLIDERS={
 	SwingSet={{v(-2.95,2.1,0),v(.5,4.2,2.9),0},{v(2.95,2.1,0),v(.5,4.2,2.9),0}},
 	Slide={{v(0,1.5,0),v(2,3,2),0},{v(0,2.377,1.371),v(1.44,.17,.854),-9.8},{v(0,2.106,2.213),v(1.44,.17,.931),-25.26},
@@ -282,7 +293,7 @@ function Data.layout()
 	for group,boxes in pairs(COLLIDERS)do
 		if group=="Bench"or group=="BenchLong"then continue end
 		for _,box in ipairs(boxes)do
-			table.insert(colliders,table.freeze({group=group,cframe=roots[group]*CFrame.new(box[1])*CFrame.Angles(-math.rad(box[3]),0,0),size=box[2]}))
+			table.insert(colliders,table.freeze({group=group,cframe=roots[group]*CFrame.new(box[1]*K)*CFrame.Angles(-math.rad(box[3]),0,0),size=box[2]*K}))
 		end
 	end
 	table.sort(colliders,function(a,b)
@@ -401,7 +412,7 @@ function Data.castle(entry,t)
 	local stage,progress=Data.stage(activity,entry.startTime,t)
 	if stage==4 then
 		local u=progress*progress
-		return 3,math.max(.08,1-.92*u),1+.35*u,.25*u
+		return 3,math.max(.08,1-.92*u),1+.35*u,.25*u*K
 	end
 	if step.stage then
 		if progress<.35 then return stage,1,1,0 end
@@ -421,7 +432,7 @@ Data.facing=facing
 -- Where a ball sits in front of the pet on a ball slot (centre of the ball).
 function Data.ballFront(slotId)
 	local slot=Park.Slots[slotId]
-	return Data.spot(slotId)+facing(slot.yaw)*.75+Vector3.new(0,Data.Ball.radius,0)
+	return Data.spot(slotId)+facing(slot.yaw)*BALL_FRONT+Vector3.new(0,Data.Ball.radius,0)
 end
 
 Data.BallPickup=.35
