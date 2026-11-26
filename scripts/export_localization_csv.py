@@ -58,6 +58,7 @@ SECTION_NOTES = {
     "onb3": "First-session onboarding: pet bubbles, Sleepy Nest, results strip",
     "tomorrow": "Results TOMORROW strip and garden line",
     "loading": "Join loading screen",
+    "deck": "Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button",
 }
 # One key's own note, for a word that is ambiguous on its own (EGG-CORNER-LOOK 1: "Turn" is the egg machine's prompt).
 KEY_NOTES = {
@@ -65,7 +66,8 @@ KEY_NOTES = {
 }
 SAMPLE = {"count": 3, "heat": "Medium", "low": 6, "high": 8, "pet": "Bear", "reward": 5, "item": "Squeaky Bone",
           "owned": 3, "total": 12, "target": 3, "name": "Pet Park", "level": 10,
-          "hours": 7, "minutes": 40, "quests": 3, "egg": "Toy Egg"}
+          "hours": 7, "minutes": 40, "quests": 3, "egg": "Toy Egg",
+          "ball": "a green ball", "where": "on the left", "small": "blue balls", "goal": "make 2 merges anywhere"}
 
 HARNESS = r'''
 local Sources = SOURCES

@@ -17,6 +17,9 @@ local Flags=require(Shared.FeatureFlags)
 -- Growth cuts (2026-11-25, live G1): the TOMORROW strip (TomorrowStrip) and the next-egg nudge (StarterBonus). On the
 -- beta the v3 Coming up strip wins while the Sleepy Nest is on (TomorrowChips.live): one strip, never both.
 local Chips=require(script.Parent.TomorrowChips)
+-- Beta 34 QA: the computer text knob (DeckText) on the payout and goals panes, and the goals in words.
+local DeckText=require(script.Parent.DeckText)
+local GoalWords=require(Shared.GoalWords)
 local View={};View.__index=View
 local ORDER={1,3,5,2} -- Replay, difficulty, Hatch eggs, Back to garden.
 local function text(parent,name,value,size,color)
@@ -211,10 +214,17 @@ function View.new(owner,v)
   self.strip=strip
  end
  self.stripHits={};self.phoneLines={}
+ -- Beta 34 QA ("the font on the pocket deck could be bigger on computer too"): the payout and goals panes' text,
+ -- once (DeckText; phones keep 1). The wallet chip sizes itself; the Star column and the strip keep their sizes.
+ self.textBoost=DeckText.results(v.phone)
+ self.wallet.root:SetAttribute("DeckTextKeep",true)
+ DeckText.apply(self.left,self.textBoost);DeckText.apply(self.goals,self.textBoost)
  root.Destroying:Connect(function()self:hide()end)
  self.ring=Kit.focusRing(owner.host)
  return self
 end
+-- A size the paint writes later, under the same knob.
+function View:sz(n)return DeckText.size(n,self.textBoost or 1,nil,true)end
 -- A new results screen in a reused view: the strip waits for this round's count-up, the focus rule runs again.
 function View:reset()
  self.countEnded=nil;self.hatchFocused=nil
@@ -308,7 +318,7 @@ end
 -- gains as rows (a dot and the name in the stat's colour, the gain, a "Lv n" pill on a level-up); the strip under all
 -- three panes.
 function View:paintPayoutV3(data,pad,lw)
- self.payoutTitle.Text=string.upper(self.payoutTitle.Text);self.payoutTitle.TextSize=11;self.payoutTitle.Position=UDim2.fromOffset(pad,8)
+ self.payoutTitle.Text=string.upper(self.payoutTitle.Text);self.payoutTitle.TextSize=self:sz(11);self.payoutTitle.Position=UDim2.fromOffset(pad,8)
  local nameWidth=lw-2*pad-self.amountWidth-4
  -- Beta 14 B6: the blocks fitted to the scroll window (Layout.payoutPlan): tighter rows and gaps, then stats two to a
  -- line, so nothing is cut at the window's foot (shot 5: the second stat sat under the edge).
@@ -341,7 +351,7 @@ function View:paintPayoutV3(data,pad,lw)
   self.amounts[1].Visible=false;y=28+44
  end
  self.rule.Position=UDim2.fromOffset(pad,y+2);self.rule.Size=UDim2.fromOffset(lw-2*pad,1)
- self.total.Position=UDim2.fromOffset(pad,y+8);self.total.TextSize=15
+ self.total.Position=UDim2.fromOffset(pad,y+8);self.total.TextSize=self:sz(15)
  self.total.Text=Copy.get("results.inPlace.total",{count=if data.pending then "…"else data.total or data.earned or 0})
  y+=plan.total
  -- Growth cuts (TomorrowStrip): without the v3 strip, a phone's TOMORROW block takes the TODAY line's place (the stat
@@ -370,9 +380,9 @@ function View:paintPayoutV3(data,pad,lw)
   if part and not row then
    local frame=Kit.frame(self.payout,"StatGain"..i,nil,UDim2.new(),UDim2.fromOffset(lw-2*pad,18))
    local dot=Kit.frame(frame,"Dot",nil,UDim2.fromOffset(0,4),UDim2.fromOffset(10,10),999);dot.BackgroundTransparency=0
-   local name=Kit.text(frame,"BodyMedium","","text",{Name="Name",Position=UDim2.fromOffset(16,0),Size=UDim2.fromOffset(lw-2*pad-16,18),TextSize=12,
+   local name=Kit.text(frame,"BodyMedium","","text",{Name="Name",Position=UDim2.fromOffset(16,0),Size=UDim2.fromOffset(lw-2*pad-16,18),TextSize=self:sz(12),
     TextWrapped=false,TextTruncate=Enum.TextTruncate.AtEnd})
-   local gain=Kit.text(frame,"Strong","","text",{Name="Gain",Position=UDim2.fromOffset(16,0),Size=UDim2.fromOffset(40,18),TextSize=12,TextWrapped=false});Kit.fixedText(gain)
+   local gain=Kit.text(frame,"Strong","","text",{Name="Gain",Position=UDim2.fromOffset(16,0),Size=UDim2.fromOffset(40,18),TextSize=self:sz(12),TextWrapped=false});Kit.fixedText(gain)
    local pill=Kit.frame(frame,"LevelUp",nil,UDim2.new(0,0,.5,0),UDim2.fromOffset(34,14),999);pill.AnchorPoint=Vector2.new(0,.5);pill.BackgroundTransparency=0
    local lv=Kit.text(pill,"Title","","text",{Size=UDim2.fromScale(1,1),TextSize=10,TextXAlignment=Enum.TextXAlignment.Center});Kit.fixedText(lv)
    lv.TextColor3=Color3.fromHex("#15143A")
@@ -528,7 +538,15 @@ function View:paint(data)
   if goal then
    count+=1;if goal.done then done+=1 end
    label.Position=UDim2.fromOffset(pad,gy);label.RichText=true
-   label.Text=(goal.done and "✓ "or "○ ")..tostring(goal.short or goal.text or goal.title or goal.name or "")
+   -- Beta 34 QA: the same words as the deck's Goals card (GoalWords), the longest that fits two lines here (one in a
+   -- tight pane); a goal that is done gets a green tick.
+   local size=label.TextSize
+   local words=if type(goal.words)=="table"then goal.words else {tostring(goal.text or goal.short or goal.title or goal.name or "")}
+   local line=GoalWords.pick(words,function(candidate)
+    return Kit.measure("○ "..Balls.strip(candidate),"BodyMedium",size,rw-2*pad).Y<=size*((if tight then 1 else 2)+.6)
+   end)
+   local tick=if goal.done then '<font color="#'..Kit.Color.good:ToHex()..'">✓</font> 'else "○ "
+   label.Text=tick..string.gsub(line,'size="(%d+)"','size="'..math.floor(size)..'"')
    -- A goal still open reads softer than one that is done.
    label.TextTransparency=if goal.done then 0 else .25
    local height=math.max(if tight then 20 else 22,math.ceil(Kit.measure(Balls.strip(label.Text),"BodyMedium",label.TextSize,rw-2*pad).Y*label.LineHeight)+(if tight then 2 else 4))

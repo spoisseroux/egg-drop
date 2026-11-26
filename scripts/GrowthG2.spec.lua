@@ -158,11 +158,12 @@ return function(client)
 
 	test("calm deck, PC: coach card to the column foot over the quests; egg over Difficulty and Win pays; Controls empty",function()
 		local L,R,col=12,620,216
-		local regular={Score={x=L,y=12,w=col,h=96},Chain={x=L,y=116,w=col,h=64},Goals={x=L,y=188,w=col,h=244},DailyQuests={x=L,y=440,w=col,h=156},
+		local regular={Score={x=L,y=12,w=col,h=96},Chain={x=L,y=116,w=col,h=80},Goals={x=L,y=204,w=col,h=244},DailyQuests={x=L,y=456,w=col,h=140},
 			Next={x=R,y=12,w=col,h=140},EggsLeft={x=R,y=160,w=col,h=96},Difficulty={x=R,y=264,w=col,h=72},WinPays={x=R,y=344,w=col,h=84},Controls={x=R,y=436,w=col,h=160}}
 		local plan=Calm.plan("regular",regular)
 		assert(#plan.hide==6 and not table.find(plan.hide,"Next")and not table.find(plan.hide,"Goals")and not table.find(plan.hide,"EggsLeft"))
-		assert(plan.coach.x==L and plan.coach.y==188 and plan.coach.h==596-188 and plan.coach.w==col)
+		-- (beta 34 QA: the Chain card is 16 taller for its line, Goals 16 lower, Daily quests 16 shorter)
+		assert(plan.coach.x==L and plan.coach.y==204 and plan.coach.h==596-204 and plan.coach.w==col)
 		assert(plan.egg.y==160-56 and plan.egg.h==428-104,"the Controls slot stays empty; NEXT gives the egg 40%")
 		assert(plan.next.y==12 and plan.next.h==140-56 and plan.next.x==R)
 		local small={Score={x=6,y=6,w=100,h=54},Goals={x=6,y=66,w=100,h=136},Chain={x=6,y=208,w=100,h=85},

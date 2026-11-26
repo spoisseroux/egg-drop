@@ -2,7 +2,7 @@ local Stars=require(script.Parent.StarText)
 -- Public, sequence-bound presentation only. Never creates/chooses a field.
 local HttpService=game:GetService("HttpService")
 local Objectives=require(game:GetService("ReplicatedStorage").Shared.FieldObjectives)
-local BallThemes=require(game:GetService("ReplicatedStorage").Shared.BallThemes)
+local Words=require(game:GetService("ReplicatedStorage").Shared.GoalWords)
 local Text={}
 Text.NoField=table.freeze({empty=true,key="no-field"})
 function Text.valid(value,sequence)
@@ -31,43 +31,20 @@ function Text.read(board,cache)
  return cache.value
 end
 -- No tier numerals (batch 2026-11-13 R1). `rich` (deck labels with RichText) names a
--- ball with a flat colour circle stepped in size; plain text uses the colour word.
-local function ball(tier,rich,size)
- return if rich then BallThemes.circle(tier,size)else BallThemes.word(tier)
-end
+-- ball with its colour word and a flat colour circle; plain text says "a green ball".
+-- Beta 34 QA (Spencer: "the goals need to be clearer"): every line is words (GoalWords,
+-- UICopy deck.goal), never the old arrow and plus shorthands ("●↑ LEFT", "●+● RIGHT").
+-- Returns the full line and the shorter lines; a merges or chain goal's lines carry " · 1/2" when `progress` is given.
 function Text.goal(goal,progress,rich,size)
  if not goal then return "Field loading…",{"Loading…"}end
- local zone=goal.zone.kind;local place=if zone=="center"then "in CENTER"elseif zone=="any"then "anywhere"else "on "..zone:upper()
- if goal.kind=="count"then
-  if progress==nil then return "Make "..goal.target.." merges anywhere",{}end
-  local count=string.format("%d/%d",progress,goal.target)
-  return "Make "..goal.target.." merges anywhere · "..count,{"Merge "..count,"Merges "..count}
- elseif goal.kind=="chain"then
-  if progress==nil then return "Connect "..goal.target.." new merges in one chain",{}end
-  local count=string.format("%d/%d",progress,goal.target)
-  return "Connect "..goal.target.." new merges in one chain · "..count,{"Link "..count,"Chain "..count}
- end
- local tier=goal.tier or goal.minTier;local mark=ball(tier,rich,size)
- local made=if rich then mark else BallThemes.aBall(tier)
- local full=if goal.tier==2 and goal.id=="center_ii"then "Match "..ball(1,rich,size).." + "..ball(1,rich,size).." "..place else "Make "..made..(if goal.minTier then " or bigger "else " ")..place
- local pair=if tier>1 then ball(tier-1,rich,size).."+"..ball(tier-1,rich,size)else mark
- local candidates={}
- if goal.minTier then
-  -- "Or bigger" is an up arrow when space is short (a plus now means "and").
-  table.insert(candidates,mark.."↑ "..zone:upper())
-  if zone=="left"then table.insert(candidates,"←"..mark.."↑")elseif zone=="right"then table.insert(candidates,mark.."↑→")end
- end
- table.insert(candidates,pair.." "..zone:upper())
- if zone=="left"then table.insert(candidates,"←"..pair)elseif zone=="right"then table.insert(candidates,pair.."→")elseif zone=="center"then table.insert(candidates,pair.." mid")end
- return full,candidates
+ local lines=Words.lines(goal,rich,size)
+ if progress==nil or(goal.kind~="count"and goal.kind~="chain")then return lines[1],{lines[2],lines[3]}end
+ local count=string.format("%d/%d",progress,goal.target or 1)
+ return lines[1].." · "..count,{lines[2].." · "..count,lines[3].." · "..count}
 end
 -- Reserve the same descriptor-derived hint footprint through both stages.
 function Text.nextGoalHint(nextGoal)
- if not nextGoal then return ""end
- if nextGoal.kind=="chain"then return "Next, link two new merges in one chain"end
- if nextGoal.kind=="count"then return "Next, make two merges anywhere"end
- local tier=nextGoal.tier or nextGoal.minTier
- return "Next, make "..BallThemes.aBall(tier)..(if nextGoal.minTier then " or bigger"else "")..(if nextGoal.zone.kind=="center"then " in CENTER"else " on "..nextGoal.zone.kind:upper())
+ return Words.next(nextGoal)
 end
 function Text.describe(view,phase)
  if not view then return{instruction="Field loading…",candidates={"Field loading…","Loading…"},ticker="",dynamics="",title="Field",zone="any",key="loading"}end

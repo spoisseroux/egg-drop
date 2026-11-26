@@ -198,19 +198,22 @@ return function(client,parent)
      assert(first.icon and first.egg.ball.Visible and first.check.root.Visible and not first.count.Visible,label.." done icon goal shows the check")
      assert(s.hud.goals[2].plus.Visible and s.hud.goals[2].zone.root.Visible and not s.hud.goals[3].zone.root.Visible,label.." + and zone glyphs")
      assert(s.hud.goals[2].row:GetAttribute("AccessibleLabel")=="Make III on RIGHT",label.." icon row carries the words")
-    else assert(first.text and first.text.Text=="II centre",label.." text goals")end
+    -- Beta 34 QA: a wide row shows the longest of the goal's lines that fits it (DeckScreen.goalLine).
+    else assert(first.text and(first.text.Text=="II centre"or first.text.Text=="Merge II in the centre"),label.." text goals")end
     -- Touch Controls: Aim and Drop only.
     if s.hud.controls then
      local texts={};for _,slot in ipairs(s.hud.controls)do if slot.text.Text~=""then table.insert(texts,slot.text.Text)end end
      assert(#texts==2 and texts[1]=="Aim"and texts[2]=="Drop",label.." touch controls "..table.concat(texts,","))
      assert(s.hud.controlsCard.AbsoluteSize.Y==30+2*28,label.." card follows its rows")
     end
-    -- QA Q5: the quests card / handle shows progress only (the quest log opens from the
-    -- garden hub's Quests tile): no hit target on it.
-    assert(s.hud.questsHit==nil,label.." no quest log route on the HUD")
+    -- QA Q5 took the quest log off the HUD; beta 34 QA ("theres no quests button anymore?") brings it back: the
+    -- quests card / handle is one OpenQuestLog button (bindQuestTarget), and the old per-row hits stay gone.
+    assert(s.hud.questsHit==nil,label.." no old per-row quest hits")
+    local questHost=s.hud.handle or s.hud.quests
+    assert(questHost and questHost:FindFirstChild("OpenQuestLog"),label.." the quests card / handle opens the quest log")
     for _,node in ipairs(root:GetDescendants())do
      if node:IsA("GuiButton")and(node.Name=="Hit")then
-      assert(not(node:FindFirstAncestor("DailyQuests")or node:FindFirstAncestor("QuestHandle")),label.." quests card is not a button")
+      assert(not(node:FindFirstAncestor("DailyQuests")or node:FindFirstAncestor("QuestHandle")),label.." no old Hit buttons on the quests card")
      end
     end
     -- Keyboard: three rows; B is Items in a round (BUILD-PLAN 2026-11-13, leaving is MENU / back arrow).

@@ -36,9 +36,9 @@ return function(client,parent)
 			local Copy=require(client.FieldQuestText)
 			local goal={kind="merge",minTier=4,zone={kind="left"},target=1,id="x"}
 			local full,short=Copy.goal(goal)
-			assert(full=="Make a pink ball or bigger on LEFT","plain "..full)
+			assert(full=="Make a pink ball or bigger on the left","plain "..full)
 			local richFull=Copy.goal(goal,nil,true,14)
-			assert(Themes.strip(richFull)=="Make "..Themes.Glyph.." or bigger on LEFT","rich "..richFull)
+			assert(Themes.strip(richFull)=="Make a pink "..Themes.Glyph.." or bigger on the left","rich "..richFull)
 			for _,caption in ipairs(short)do assert(not caption:find("IV"),caption)end
 		end)
 		test("faces are drawn inside the ball (no glyph overlay): span LCD draws a smiley",function()
