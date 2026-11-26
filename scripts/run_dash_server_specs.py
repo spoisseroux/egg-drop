@@ -59,7 +59,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # The hill's sound zones and night (WORLD-FINISH-LOOK slice F).
          "HillNight",
          # Beta 34 QA Pocket Deck: the goals as plain instructions (GoalWords).
-         "GoalWords"]
+         "GoalWords",
+         # Bumble balls (GARDEN-PLAY-BRIEF 1): the shared sim, the checks and the blend maths; the host and the pets' bunt.
+         "BumbleBalls", "BumbleBallHost"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
@@ -88,7 +90,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # Beta (34) notes: the Wobble Egg on the crag (GARDEN-PLAY-BRIEF 3).
           "WobbleEgg",
           # Beta 34 QA Pocket Deck: the computer text knob.
-          "DeckText"]
+          "DeckText",
+          # Bumble balls (GARDEN-PLAY-BRIEF 1): one ball's drawn state (predict, join mid-arc, blend, correct, fade).
+          "BumbleBallView"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -143,7 +147,9 @@ def client_modules():
                     # The First Hatch: the crack ritual.
                     "CrackRitual.lua",
                     # Beta 34 QA: the Pocket Deck's computer text knob.
-                    "DeckText.lua"):
+                    "DeckText.lua",
+                    # Bumble balls: the drawn state (the look and the controller are bundled, never required offline).
+                    "BumbleBall*.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

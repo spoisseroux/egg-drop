@@ -111,5 +111,7 @@ return table.freeze({PetTrail=true,FirstHelloBonus=true,RoundTwoNudge=true,ToyPi
  AliveAsmr=true,
  -- AliveWobble (beta 34, GARDEN-PLAY-BRIEF 3): the Wobble Egg on the crag; beta and Studio only.
  AliveWobble=true,
+ -- AliveBalls (GARDEN-PLAY-BRIEF 1): the three Bumble balls everyone and the pets can kick; beta and Studio only.
+ AliveBalls=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
  PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,PlayerScale=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true,TierPets=true,ParkTopLawn=true})

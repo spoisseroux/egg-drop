@@ -2381,6 +2381,14 @@ do
 	end)
 	if not ok then warn("[Bounds] not mounted: " .. tostring(problem)) end
 end
+-- Bumble balls (GARDEN-PLAY-BRIEF 1, Alive `balls`): nil and nothing made with the ceiling off (live). Its own remote
+-- (BumbleBall), protected connections and a 1 s timer; reads the garden's pets for their nose-bunts, never writes them.
+do
+	local ok, problem = pcall(function()
+		require(script.BumbleBallHost).mount({ remotes = remotes, players = Players, garden = garden })
+	end)
+	if not ok then warn("[Balls] not mounted: " .. tostring(problem)) end
+end
 -- The Hush (FeatureFlags.Hush, HUSH-GREYBOX-BUILD-PLAN): nil and nothing made with the build ceiling off. The greybox, the
 -- open cave, the passage (the pet carried with its owner) and the evacuation, on its own protected connections.
 do
