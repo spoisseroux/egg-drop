@@ -70,6 +70,7 @@ Beta (33), 2026-11-26: player scale (row 60). Beta (32), 2026-11-26: the first e
 | 61 | **Top Lawn toys x1.25, and fetch works there** (`artifacts/toys-125-2026-11-26/`) | (34) | In the Top Lawn: bigger swing set, slide, see-saw, sandbox and ball mat, all on the lawn. Watch the pets ride each (seated, nothing floating or sunk; the slide runs all the way down). Throw the ball there: it works now. Other parks unchanged. | None |
 | 62 | **Spencer's beta (34) notes: egg machine, deck words, world round 8, Wobble Egg, Bumble balls, crunchy toys, lanterns, pet walking** (`artifacts/qa-2026-11-26-beta34/TEST-PASS-B35.md`) | (35) | Follow TEST-PASS-B35 sections A to F. Switches: `/alive wobble`, `balls`, `crunch` or `air` `off`. | |
 | 63 | **Spencer's beta (35) notes and onboarding v2: deck netcode, every egg cranks, machine mouth, world round 9, water audio, balloons, new balls, crackle slab, fruit, pet keep-outs** (`artifacts/qa-2026-11-26-beta35/TEST-PASS-B36.md`) | (36) | Follow TEST-PASS-B36 A to E (A with `/freshsave`). Switches: `/onboard egg3d`, `stork`, `safecard`, `guide`; `/alive balls`, `crunch`, `air`, `fruit`, `keepout`. | |
+| 64 | **Aero Glass balls, deck juice, Aero hatch screens, the cathartic 3D crack, This week** (`artifacts/qa-2026-11-26-beta36/TEST-PASS-B37.md`) | (37) | Follow TEST-PASS-B37 rows 1-9. Switches: `/alive deckjuice`, `/alive aerohatch`, `/thisweek`. | |
 
 ## Built, not on the beta yet
 

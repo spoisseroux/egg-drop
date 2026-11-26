@@ -244,6 +244,10 @@ ui.deck.goal.where.right,on the right,,"Pocket Deck round screen: goal instructi
 ui.deck.goal.whereTiny.center,middle,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
 ui.deck.goal.whereTiny.left,left,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
 ui.deck.goal.whereTiny.right,right,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
+ui.deck.praise.bubbly,Bubbly!,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
+ui.deck.praise.fizzy,Fizzy!,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
+ui.deck.praise.sky,Sky high!,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
+ui.deck.praise.sparkly,Sparkly!,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
 ui.deck.quests.open,Open,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
 ui.den.board,Notice board,,Menu text
 ui.den.name,The Play Den,,Menu text; also ui.things.den.name
@@ -916,11 +920,11 @@ ui.results.starter.row,Welcome bonus,,Round results screen
 ui.results.today.label,TODAY,,Round results screen
 ui.results.today.line,★ {count} earned,,Round results screen; e.g. ★ 3 earned
 ui.results.today.short,Today: ★ {count},,Round results screen; e.g. Today: ★ 3
-ui.shelf.chip,This week −20%,,Menu text
+ui.shelf.chip,Deal −20%,,Menu text
 ui.shelf.chipShort,−20%,,Menu text
 ui.shelf.deluxe,Deluxe,,Menu text
-ui.shelf.line,This week: {item},,Menu text; e.g. This week: Squeaky Bone
-ui.shelf.short,20% off this week,,Menu text
+ui.shelf.line,Deal: {item},,Menu text; e.g. Deal: Squeaky Bone
+ui.shelf.short,20% off,,Menu text
 ui.shelf.status,On this week's shelf,,Menu text
 ui.shop.failed.applied,Not applied,,Shop status and errors
 ui.shop.failed.bought,Not bought,,Shop status and errors
