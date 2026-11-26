@@ -5074,6 +5074,8 @@ function clientUI.eggCornerMount(Onboard)
  end
  local machine=require(script.EggMachineClient).new({room=lounge,corner=on,
   warn=function(text)warn(text)end,
+  -- Beta (34): the Stat Egg's reveal waits for the machine's egg too (its own module's gate).
+  statReveal=require(script.StatEggReveal),
   -- The capsule shot (beta 17 U5; CAPSULE-AND-HUD-LOOK 1): its switch, the camera, the HUD, this player's character,
   -- the line checks and the pocket drop in the Hatch eggs preview well.
   capsule=function()return Onboard.on("capsule")end,
@@ -5184,11 +5186,14 @@ function clientUI.eggCornerMount(Onboard)
  -- The egg in the cup fades FadeAfter after the hatch screen that showed its reveal closes (Hatch eggs or the egg page).
  local function watchClose(shade)
   if not shade then return end
-  shade:GetPropertyChangedSignal("Visible"):Connect(function()if not shade.Visible then machine:revealClosed()end end)
+  shade:GetPropertyChangedSignal("Visible"):Connect(function()if not shade.Visible then machine:revealClosed("screen")end end)
  end
  watchClose(nurseryView and nurseryView.shade)
  watchClose(clientUI.hueView and clientUI.hueView.shade)
  local snacks=clientUI.snacks
+ -- Beta (34): the Stat Egg's own reveal closing ends its buy (the Hatch eggs screen closes under it at the buy).
+ local statReveal=snacks and snacks.reveal
+ if statReveal then statReveal.onClosed=function()machine:revealClosed("stat")end end
  local intent=snacks and snacks.intent
  if intent and type(intent.send)=="function"then
   local send=intent.send
@@ -5200,7 +5205,9 @@ function clientUI.eggCornerMount(Onboard)
     if type(callback)=="function"then
      local rest={select(2,...)}
      return send(self,action,payload,function(message)
-      if type(message)=="table"and message.status=="Saved"and on()then pcall(machine.confirm,machine,nil)
+      -- Beta (34): confirmed with its reveal, so the shot holds that reveal until the egg is in the cup (the reveal
+      -- opens in this same callback, below).
+      if type(message)=="table"and message.status=="Saved"and on()then pcall(machine.confirm,machine,statReveal)
       elseif type(message)=="table"and message.status~="Retrying"then pcall(machine.refuse,machine)end
       return callback(message)
      end,table.unpack(rest))
