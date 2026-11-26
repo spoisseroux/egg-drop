@@ -61,3 +61,14 @@ endless/"Chill" mode.
 - Changing the Welcome charge threshold could break the payout/Stars budget or the existing Welcome specs.
 - The crack overlay sitting between the round end and `HatchCinematic` could double-play sounds or desync the reveal.
 - Funnel numbering: a wrong step order silently corrupts Creator Hub funnels.
+
+## Revised after the architect review (2026-11-25)
+
+| Original | Revised (why) |
+|---|---|
+| Raise the Welcome charge threshold | Keep `pip.charge=6` (live, save cap, skip path, meter all use it). With `opener` on, a server-only Welcome charge with its own threshold; on reaching it, `chargeHatch(profile, pip.charge-profile.charge)`. Own attributes for the client meter. Payout unchanged (fixed amounts). |
+| "A sure chain on drop two" | A measured hit rate over all first-and-second aim pairs (the first merge clears the fixed queue); the spec also asserts no Trials unlock (3-chain, 250 points, tier V pair) and no rare hatch. Run in Studio (solver spec is not offline). |
+| Crack overlay on the board, egg moves to the glass | Cut the move. The taps live inside `HatchCinematic` for the Bear's receipt only, using its per-reveal clock hold (before crack 1, crack 2, the pop); each tap releases the next beat, so the existing sound+buzz plays once. Not `Cinematic.gate` (the capsule shot uses it). Rejoin replays the receipt, never a second grant. |
+| Nest first: reorder `Needs.Order` | Also lock the order once the garden is ready: an opened bubble is never replaced; wait up to ~6 s for the nest, else today's order. `nestfirst` needs `needs` and `nest` on. Spec updated. No "Hatches tomorrow" once the egg is ready. |
+| Funnel steps "Joined" and "Egg tapped" | One-time custom events "DeckShown" (client, when the loading screen leaves) and "EggTapped" (server-validated, once, Bear owned). No v3 step renumbering. Note: nest first makes step 8 arrive before 7 (held, not corrupted). |
+| Three switches | Added to the four `Onboard.lua` tables; default on in the beta (missing config = on). `opener` read once per Welcome round; re-seed if it resolves before the first drop. |
