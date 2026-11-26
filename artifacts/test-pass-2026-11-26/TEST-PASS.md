@@ -1,6 +1,6 @@
-# Test pass: beta (31), 2026-11-26
+# Test pass: beta (32), 2026-11-26
 
-Build: beta (31), place version v92, runtime ae3b0e27.
+Build: beta (32), place version v94, runtime 123f8698.
 
 Place: **Pocket Pals Beta** (the private beta). Live is not touched.
 Do the whole pass twice: once on a **phone**, once on **PC**.
@@ -40,7 +40,7 @@ Mark each row **OK** or write what went wrong (a screenshot helps).
 | C2 | Keep waiting about 1 s | A little hand appears on the egg and taps, to show you how | |
 | C3 | Tap the egg | Crack sound and buzz at once, a ring and flakes where you tapped, and a dark crack line across the egg. The egg stops again | |
 | C4 | Tap again | The crack forks, with a light line along it | |
-| C5 | Tap a third time | It creaks, then pops: the Bear | |
+| C5 | Tap a third time | It creaks, then pops: the Bear. Under his name there is no "NEXT · Toy Egg ready" line any more (his first ask is the nest) | |
 | C6 | New `/freshsave`; at the reveal, don't touch anything | It cracks by itself about once a second and opens in ~4 s | |
 | C7 | New `/freshsave`; at the reveal, tap very fast many times | It never skips the Bear's pop | |
 | C8 | Turn **Reduced Motion** on and hatch again | No stops, no flying flakes; the hatch plays as before | |
@@ -52,7 +52,7 @@ Mark each row **OK** or write what went wrong (a screenshot helps).
 | D1 | After "Meet Bear", wait | A hand bubble over the Bear. Tap it to say hi | |
 | D2 | After hi | The **next** bubble is the moon with a small egg (the nest), before the toy ball | |
 | D3 | Top-left rail before you tuck the egg in | No nest ticket yet | |
-| D4 | Follow the prints, tuck the egg in | The tuck card shows. The ticket then appears in the rail | |
+| D4 | Follow the prints, tuck the egg in | The tuck card shows, the egg sits in the nest under a blanket, and a little egg flies from the nest up to the rail, where the new ticket pulses | |
 | D5 | Read the ticket | "Hatches tomorrow" if the egg is ready on a later day, else a countdown ("Egg 7 h"). Late in the day it should say tomorrow | |
 | D6 | Then | The toy ball bubble, the deck bubble, and the rest as before | |
 

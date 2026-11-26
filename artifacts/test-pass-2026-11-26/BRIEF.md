@@ -1,6 +1,6 @@
 # What changed since your beta (25) notes
 
-Covers beta (26) to beta (31) (v92, runtime ae3b0e27), all on Pocket Pals Beta. **Live has not been touched.**
+Covers beta (26) to beta (32) (v94, runtime 123f8698), all on Pocket Pals Beta. **Live has not been touched.**
 Your test doc is `TEST-PASS.md`, in this folder.
 
 ## Your beta (25) notes, all six done
@@ -22,7 +22,7 @@ From your "It needs to be GREAT!!!" and "Maybe three combos and the egg hatches?
 - **Sparks.** Each merge flies a spark in its ball's colour into the egg, which bumps; one of three dots fills per combo.
 - **A bigger egg.** It now nearly fills its card. On the calm first deck it also gets 40% of the mostly empty NEXT card's height. It is coloured like the reveal egg (blue spots, green band), so it reads as the same egg.
 - **You crack it.** On the Bear's reveal the egg stops before each crack, and a gold pill asks you to tap ("Tap / Click the egg!", "Press A!"). A hand shows how. Each tap gives a crack sound and a buzz, a ring and flakes where you tap, and a crack drawn across the egg. Untouched, it opens by itself in about 4 s. Mashing never skips the pop.
-- **Tomorrow's egg comes first.** Straight after the first hello, the Bear asks for the nest: the moon bubble now carries a little egg. Once you tuck it in, the ticket says "Hatches tomorrow" if it really hatches on a later day, and counts down otherwise.
+- **Tomorrow's egg comes first.** Straight after the first hello, the Bear asks for the nest: the moon bubble now carries a little egg. When you tuck it in, a little egg flies from the nest to the rail and the new ticket pulses. The ticket says "Hatches tomorrow" if it really hatches on a later day, and counts down otherwise (a tuck at 4 am hatches at noon). The Bear's reveal no longer points at the Toy Egg.
 - **Measuring.** Two new one-time events, "DeckShown" (the loading screen left) and "EggTapped" (the first crack tap), so the funnel can see loading losses and the tap.
 - **Switches.** Every part has its own switch: `/onboard opener|crack|nestfirst off`. Off is exactly beta (27).
 - No new Stars and no pressure timers. Art is drawn in code and the sounds are the existing crack sounds.
@@ -52,9 +52,10 @@ From your "It needs to be GREAT!!!" and "Maybe three combos and the egg hatches?
 
 ## Not done, or not checked
 
-- **Top Lawn toys at 1.25x.** Each toy's pet seats and poses are tied to its frame, so this needs its own rework. Fable said to ship without it.
+- **Top Lawn toys at 1.25x.** The toy frames come from one shared park layout that every park site uses. The swing pivots, the see-saw pivot and the slide root drive the pets' animations on each client. Scaling the frames while keeping seats pet-sized means reworking those anchors and re-probing every seat. That's too risky to rush overnight, and Fable said to ship without it. It is a job of its own.
 - **Two small steps on the path** come from the island's collision, not the art: the switchback's outer edge and the terrace floor corners.
-- **Not seen on a real phone.** Sizes are worked out from the layout, because Studio can't emulate a phone here.
+- **Not seen on a real phone.** Studio can't emulate a phone here, so sizes come from the layout maths: on an 844x390 phone the Welcome egg's shell is about 95 wide by 104 tall (Fable asked for about 104 x 130). Please judge it on your phone.
+- **Studio's Output panel** is floating at the bottom of the screen after my phone-size attempt. Drag its title bar back to the bottom dock, or reopen it from the Window menu.
 - **The two new events** only record on live servers.
 
 ## Waiting on you
