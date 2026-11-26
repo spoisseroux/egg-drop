@@ -8,14 +8,14 @@
    "centre": [
     -60.5706,
     28.4256,
-    -96.1671
+    -96.3525
    ],
    "size": [
     85.7623,
     1.2489,
-    77.963
+    77.5923
    ],
-   "triangles": 2360,
+   "triangles": 2352,
    "look": {
     "kind": "island",
     "material": "grass"
@@ -30,15 +30,15 @@
    "role": "fixed",
    "centre": [
     -59.3992,
-    19.9501,
+    20.1806,
     -96.1703
    ],
    "size": [
     95.2162,
-    17.2778,
+    17.7387,
     83.3925
    ],
-   "triangles": 1108,
+   "triangles": 1116,
    "look": {
     "kind": "island",
     "material": "cliff_rock"
@@ -586,8 +586,8 @@
  },
  "hide": [],
  "report": {
-  "W7_F_Terrace__grass": 2360,
-  "W7_F_TerraceFace__cliff_rock": 1108,
+  "W7_F_Terrace__grass": 2352,
+  "W7_F_TerraceFace__cliff_rock": 1116,
   "W7_F_TerraceTongues__grass": 22,
   "W7_F_TerraceEarth__dirt_path": 14,
   "W7_F_TerraceRocks__cliff_rock": 1255,

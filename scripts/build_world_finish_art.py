@@ -47,9 +47,10 @@ RENDER_HIDE = ["W7_CD_CaveBars__palette"]
 
 def studio_look():
     """The review renders show the island as Studio does: SurfaceAppearance maps (the grounded textures) with the Aero
-    tints, no vertex colours (SurfaceAppearance drops them)."""
+    tints, no vertex colours (SurfaceAppearance drops them). Round 7: the island's re-cut copies (W7_F_Over*,
+    W7_F_PathOver*) too, which the pack dresses as their island part (they rendered in the raw import colour)."""
     for o in bpy.data.objects:
-        if o.type != "MESH" or o.name.startswith(("W7_F_", "WF_")):
+        if o.type != "MESH" or (o.name.startswith(("W7_F_", "WF_")) and "Over" not in o.name):
             continue
         for slot in o.material_slots:
             m = slot.material
@@ -158,10 +159,11 @@ def restore(was):
         o.hide_render = h
 
 
-def recut(source_name, new_name, doomed, corner=None):
+def recut(source_name, new_name, doomed, corner=None, face=None):
     """A copy of an island pack part with the faces `doomed(centre_roblox)` removed (its UVs and material kept). The
     pack's part is hidden by the mount and this copy shown in its place (visual-only parts only: never a colliding
-    one, whose hulls a cut would move)."""
+    one, whose hulls a cut would move). Round 7: `face(points, normal_y)` (Roblox) condemns a face by its points and
+    its world normal's y."""
     src = bpy.data.objects[source_name]
     src.name = source_name + "__pack"         # the copy takes the pack part's own name (Aero, CliffDenData.parts)
     o = src.copy()
@@ -182,7 +184,9 @@ def recut(source_name, new_name, doomed, corner=None):
                 out.append(tuple((cs[a][i] + cs[b][i]) / 2 for i in range(3)))
         out.append(tuple(sum(c[i] for c in cs) / len(cs) for i in range(3)))
         return out
-    gone = [f for f in bm.faces if doomed(L.rb(mw @ f.calc_center_median())) or (corner and corner(samples(f)))]
+    rot = mw.to_3x3()
+    gone = [f for f in bm.faces if doomed(L.rb(mw @ f.calc_center_median())) or (corner and corner(samples(f)))
+            or (face and face(samples(f), (rot @ f.normal).normalized().z))]
     _bm.ops.delete(bm, geom=gone, context="FACES")
     bm.to_mesh(o.data)
     bm.free()
@@ -227,6 +231,41 @@ def cliff_den_parts():
     import re
     text = (ROOT / "src" / "shared" / "CliffDenData.lua").read_text(encoding="utf-8")
     return json.loads(re.search(r"\[=\[(.*)\]=\]", text, re.S).group(1))
+
+
+def cliff_depth_fn(accept):
+    """Fable R7 review A: cliff_depth(centre, inward, reach) for world_finish_path.seat_masses over the visible meshes
+    `accept(name)` takes: the nearest of five rays (the centre and four points a third of the way to the blob's sides)
+    along `inward` that meets one within `reach`, or None."""
+    from mathutils import Vector
+    from mathutils.bvhtree import BVHTree
+    dg = bpy.context.evaluated_depsgraph_get()
+    trees = [(BVHTree.FromObject(o, dg), o.matrix_world, o.matrix_world.inverted()) for o in bpy.data.objects
+             if o.type == "MESH" and not o.hide_render and accept(o.name)]
+
+    def depth(c, inward, reach):
+        d = L.bl(inward) - L.bl((0, 0, 0))
+        d.normalize()
+        side = Vector((d.y, -d.x, 0)).normalized() if abs(d.z) < .99 else Vector((1, 0, 0))
+        best = None
+        for off in (Vector((0, 0, 0)), side * 1.5, -side * 1.5, Vector((0, 0, 1.2)), Vector((0, 0, -1.2))):
+            o = L.bl(c) + off
+            for t, mw, inv in trees:
+                h = t.ray_cast(inv @ o, (inv.to_3x3() @ d).normalized(), reach * 4)
+                if h[0] is not None:
+                    dist = ((mw @ h[0]) - o).length
+                    if dist <= reach and (best is None or dist < best):
+                        best = dist
+        return best
+    return depth
+
+
+def den_sweep(c):
+    """Round 7: the den's orphan sweep envelopes (world_finish_path.sweep_envelope) round the mouth only, the west flank
+    and the path's foot; the path slice sweeps the rest of the path."""
+    import world_finish_path as Pth
+    env = Pth.sweep_envelope(c)
+    return env if env == "flank" or (env and -46 < c[0] < 24 and -106 < c[2] < -78) else None
 
 
 def den_recuts(Den, rows, shell):
@@ -275,39 +314,71 @@ def den_recuts(Den, rows, shell):
     def spans(points):
         return any(inside(p) or near_shell(p) or blade(p) for p in points)
 
+    # Round 7 (Fable ROUND7 5, R6-CDE 3: the grass flaps in the collar, upper left, over the brow, far right): the island's
+    # grass standing on the cliff round the mouth (normal y under FLAP[1]) goes outright; no more masses to hide it
+    FLAP_BOX, FLAP_NY = ((-46.0, 6.0, -106.0), (24.0, 34.0, -88.0)), .6
+
+    def flap(points, ny):
+        (x0, y0, z0), (x1, y1, z1) = FLAP_BOX
+        if ny < FLAP_NY and any(x0 < p[0] < x1 and y0 < p[1] < y1 and z0 < p[2] < z1 for p in points):
+            return True
+        # Fable R7 review (watch list: three smaller flaps left in r7-S01): also any island grass standing on edge
+        # (normal y under 0.5) within 30 studs of the mouth, above y 20
+        mx, mz = (Den.M["x0"] + Den.M["x1"]) / 2, Den.Z1
+        return ny < .5 and any(p[1] > 20 and math.hypot(p[0] - mx, p[2] - mz) < 30 for p in points)
+
+    import world_finish_path as Pth
+    holes = []
     for name in candidates:
         o = bpy.data.objects[name]
         mw = o.matrix_world
+        rot = mw.to_3x3()
         doomed_extra = extra.get(name)
-        hits = 0
+        grassy = "__grass" in name or "__meadow" in name
+        hits = flaps = 0
         for p in o.data.polygons:
             c = L.rb(mw @ p.center)
-            if inside(c) or (doomed_extra and doomed_extra(c)) or spans([L.rb(mw @ o.data.vertices[k].co) for k in p.vertices] + [c]):
+            pts = [L.rb(mw @ o.data.vertices[k].co) for k in p.vertices] + [c]
+            if inside(c) or (doomed_extra and doomed_extra(c)) or spans(pts):
                 hits += 1
-        if not hits:
+            elif grassy and flap(pts, (rot @ p.normal).normalized().z):
+                flaps += 1
+        isl, bm_ = Pth.islands(o)
+        small = sum(1 for f_, cen, area, _ in isl if Pth.sweepable(f_, area, den_sweep(cen)))
+        bm_.free()
+        if not hits and not flaps and not small:
             continue
         doomed = lambda c, e=doomed_extra: inside(c) or (e is not None and e(c))
         collide = parts[name]["collide"]
+        face = flap if grassy else None
         if collide:
-            copy, gone = recut(name, "W7_F_Over" + name[len("W7_CD_"):], doomed, spans)
+            copy, gone = recut(name, "W7_F_Over" + name[len("W7_CD_"):], doomed, spans, face)
             bpy.data.objects[name + "__pack"].name = name          # the original stays (invisible, colliding)
         else:
-            copy, gone = recut(name, name, doomed, spans)
-        # Fable world R1 fix 2: loose shards left near the mouth (islands of 60 faces or fewer, R3) go too
-        gone += drop_shards(copy, lambda c: -50 < c[0] < 25 and -112 < c[2] < -78, 60)
+            copy, gone = recut(name, name, doomed, spans, face)
+        # Fable world R1 fix 2: loose shards left near the mouth (islands of 60 faces or fewer, R3) go too (round 7:
+        # only from a part the shell cut, as before; a part copied only for its flaps or orphans keeps its big islands)
+        if hits:
+            gone += drop_shards(copy, lambda c: -50 < c[0] < 25 and -112 < c[2] < -78, 60)
+        # round 7 (Fable ROUND7 3): the orphan sweep over the path and the mouth's west flank
+        n0 = len(copy.data.polygons)
+        holes += Pth.sweep(copy, den_sweep)
+        gone += n0 - len(copy.data.polygons)
         if not copy.data.polygons:
             # nothing left to show: a visual part is simply hidden; a colliding one stays invisible, colliding
             bpy.data.objects.remove(copy)
             (Den.HIDE_VISUAL if collide else Den.HIDE).append(name)
             continue
-        extra = {"overlays": name} if collide else {"replaces": name}
-        extra.update(facesRemoved=gone, collide=False)
-        rows.append(manifest_row(copy, "fixed", {"kind": "copy", "of": name}, "den", extra))
+        # round 7: its own name (this used to rebind `extra`, the per-part cut rules, after the first copy, so the
+        # crystal and lawn rules never ran)
+        row_extra = {"overlays": name} if collide else {"replaces": name}
+        row_extra.update(facesRemoved=gone, collide=False)
+        rows.append(manifest_row(copy, "fixed", {"kind": "copy", "of": name}, "den", row_extra))
         out.append(copy)
-    return out
+    return out, holes
 
 
-def rock_skin(name, where, steep=.65):
+def rock_skin(name, where, steep=.65, keep=None):
     """Fable world R1 fixes 2 and 9 (R2): the island's steep ground faces (W1_ground, tan in game) that show where the
     sculpt took the rock in front of them get a rock skin 0.12 proud (one welded surface), in the island's cliff rock at
     the hill's cell size. The ground faces stay behind it (nothing opens)."""
@@ -323,6 +394,8 @@ def rock_skin(name, where, steep=.65):
             n = (rot @ p.normal).normalized()
             if not where(c) or abs(n.z) >= (steep(c) if callable(steep) else steep):
                 continue
+            if keep is not None and not keep([L.rb(mw @ o.data.vertices[k].co) for k in p.vertices] + [c]):
+                continue                                  # round 7: a face-level rule (its corners and centre)
             base = len(verts)
             for k in p.vertices:
                 verts.append(mw @ o.data.vertices[k].co)
@@ -433,7 +506,7 @@ def slice_den():
     bvh = Den.obstacles(solid)
     low, info = Den.build_shell("W7_F_Den__shell", .9, .8, 9, 4, bvh=bvh)
     high, _ = Den.build_shell("WF_ShellHigh", .3, .27, 27, 12, detail=True, bvh=bvh)
-    cut_objs = den_recuts(Den, rows, low)
+    cut_objs, holes = den_recuts(Den, rows, low)
     rock_k = rock_density()
     from mathutils.bvhtree import BVHTree
     shell_tree = BVHTree.FromObject(low, bpy.context.evaluated_depsgraph_get())
@@ -496,9 +569,62 @@ def slice_den():
                              "den", {"collide": False, "shadow": False}))
     rows.append(manifest_row(lid, "fixed", {"kind": "island", "material": "cliff_rock"}, "den",
                              {"collide": False, "shadow": True, "uvPerStud": round(rock_k, 5)}))
+    # rock skin: east of the mouth (round 3), and the one contiguous tan wall left of the mouth over the path's foot (round 4,
+    # studio-r3/01: x -42..-17, y 5..24; every ground face there short of a near-flat top, so the skin is one surface
+    # following the ground, not loose sheets)
+    import cliff_den_sculpt as S
+    import world_finish_path as Pth
+
+    def off_path(c):                      # never over the cliff path's tread
+        s = S._nearest(c[0], c[2])
+        a = (c[0] - s["x"]) * s["out"][0] + (c[2] - s["z"]) * s["out"][1]
+        return not (abs(a) < s["w"] / 2 + .6 and c[1] < s["h"] + 1.5)
+
+    left = lambda c: -42 < c[0] < -17 and -104 < c[2] < -84 and 5.0 < c[1] < 24.5 and off_path(c)
+    skin_where = lambda c: (2 < c[0] < 24 and -106 < c[2] < -86 and c[1] > 4.8) or left(c)
+    skin_steep = lambda c: .85 if c[0] < 0 else .65
+    skin = rock_skin("W7_F_DenSkin__cliff_rock", skin_where, steep=skin_steep)
+    # round 7 (Fable ROUND7 3, jagged shards; studio-r6e 01 left third): the orphan sweep over the skin too, and the
+    # holes it and the re-cuts leave over the path backed by rock masses on the mouth's surround (the west flank's are
+    # backed by the round 6 mass at (-36, 14, -98.5), already in MOUTH_BLOBS)
+    # The skin is a layer of cards by construction (big ground triangles lifted 0.12): in the two envelopes round the
+    # mouth any of its islands up to SKIN_SWEEP faces goes (studio-r6e 01's left third: a 16-face island of tall cards
+    # west of the mouth), and rock masses take its place.
+    SKIN_SWEEP = (24, 0.0)
+    if skin:
+        holes += Pth.sweep(skin, den_sweep, SKIN_SWEEP)
+        if not skin.data.polygons:
+            bpy.data.objects.remove(skin)
+            skin = None
+    r6 = next(c for c, r, yaw in Den.MOUTH_BLOBS if c == (-36.0, 14.0, -98.5))      # the round 6 flank mass
+    # Fable R7 review A: each backing blob sinks 1.5 into the wall and stays only if it reaches 1.0 into the cliff or
+    # into another mass (den/CAM-MOUTH-EAST: one stood free against the sky)
+    blobs = Pth.backing_blobs(holes, covered=[r6])
+    depth = cliff_depth_fn(lambda n: (n.startswith(("W7_CD_", "W7_F_Over", "W7_F_DenLid")) and "glow" not in n
+                                      and "CaveBars" not in n and "Crystals" not in n))
+    seated, dropped = Pth.seat_masses(blobs, [(c, r, math.radians(y)) for c, r, y in Den.MOUTH_BLOBS], depth)
+    backing = [(c, r, math.degrees(yaw)) for c, r, yaw, _ in seated]
     # the mouth surround
-    mouth = Den.build_mouth("W7_F_DenMouth__cliff_rock")
+    mouth = Den.build_mouth("W7_F_DenMouth__cliff_rock", extra=backing)
     push_out_of_shell(mouth, shell_tree, .3)
+    if backing:
+        # the skin again, less what the surround now covers in those envelopes: a ground face the masses do not reach
+        # (the lawn's keep-out flattens their feet) keeps its skin, so no tan shows through between them
+        from mathutils import Vector as _V
+        m_tree = BVHTree.FromObject(mouth, bpy.context.evaluated_depsgraph_get())
+
+        def covered(c):
+            hits, o = 0, L.bl(c)
+            while True:
+                h = m_tree.ray_cast(o, _V((0, 0, 1)), 60)
+                if h[0] is None:
+                    break
+                hits, o = hits + 1, h[0] + _V((0, 0, .001))
+            return hits % 2 == 1
+        if skin:
+            bpy.data.objects.remove(skin)
+        skin = rock_skin("W7_F_DenSkin__cliff_rock", skin_where, steep=skin_steep,
+                         keep=lambda pts: not (den_sweep(pts[-1]) and all(covered(q) for q in pts)))
     triplanar_uv(mouth, rock_k)
     mouth.data.materials.append(island_material("cliff_rock"))
     rows.append(manifest_row(mouth, "fixed", {"kind": "island", "material": "cliff_rock"}, "den",
@@ -539,27 +665,16 @@ def slice_den():
     place["lanterns"] = {"light": {"color": "#FFB870", "brightness": .9, "range": 14, "shadows": False},
                          "ledgeY": Den.LEDGE_Y, "cord": .8}
     tri = {r["name"]: r["triangles"] for r in rows}
-    report = {"shell": tri["W7_F_Den__shellWest"] + tri["W7_F_Den__shellEast"], "floor": tri["W7_F_Den__floor"],
+    report = {"holes": [[[round(v, 2) for v in h[0]], round(h[1], 1), h[3]] for h in holes],
+              "backing": [[round(v, 2) for v in b[0]] for b in backing],
+              "backingDropped": [[round(v, 2) for v in b[0]] for b in dropped],
+              "shell": tri["W7_F_Den__shellWest"] + tri["W7_F_Den__shellEast"], "floor": tri["W7_F_Den__floor"],
               "mouth": tri["W7_F_DenMouth__cliff_rock"],
               "lantern": tri["W7_F_Lantern__cage"] + tri["W7_F_Lantern__pane"], "crystal": tri["W7_F_Den__crystal"],
               "stone": tri["W7_F_Stone__flat"], "pxPerStud": density, "areas": areas}
     print("WORLDFINISH den", json.dumps(report))
     # export: fixed parts carry world coordinates (their centre is where the part goes); templates are authored about
     # their placement point, so their centre is the offset from it (Roblox centres a MeshPart on its mesh's bounds)
-    # rock skin: east of the mouth (round 3), and the one contiguous tan wall left of the mouth over the path's foot (round 4,
-    # studio-r3/01: x -42..-17, y 5..24; every ground face there short of a near-flat top, so the skin is one surface
-    # following the ground, not loose sheets)
-    import cliff_den_sculpt as S
-
-    def off_path(c):                      # never over the cliff path's tread
-        s = S._nearest(c[0], c[2])
-        a = (c[0] - s["x"]) * s["out"][0] + (c[2] - s["z"]) * s["out"][1]
-        return not (abs(a) < s["w"] / 2 + .6 and c[1] < s["h"] + 1.5)
-
-    left = lambda c: -42 < c[0] < -17 and -104 < c[2] < -84 and 5.0 < c[1] < 24.5 and off_path(c)
-    skin = rock_skin("W7_F_DenSkin__cliff_rock",
-                     lambda c: (2 < c[0] < 24 and -106 < c[2] < -86 and c[1] > 4.8) or left(c),
-                     steep=lambda c: .85 if c[0] < 0 else .65)
     if skin:
         rows.append(manifest_row(skin, "fixed", {"kind": "island", "material": "cliff_rock"}, "den",
                                  {"collide": False, "shadow": True, "doubleSided": True}))
@@ -712,22 +827,51 @@ def slice_path():
     parts_cd = cliff_den_parts()["parts"]
     cuts, path_hide, path_hide_visual = [], [], []
     test = lambda pts: Pth.recut_test(pts) or Pth.in_fin(pts)       # round 3: and inside the fin cluster
-    for o in [o for o in bpy.data.objects if o.type == "MESH" and not o.hide_render and o.name in parts_cd
+    # round 7 (Fable ROUND7 1, 2, 3): ground and grass standing on edge behind the inner edge (the pale bank), whatever
+    # is left from 1.0 under the tread (the slivers), and the small orphan islands over the path and the west flank
+    import re
+    holes = []
+    # round 7: the den's overlay copies of colliding tiles (W7_F_Over<tile>) too. Their tile is hidden in this scene, so
+    # until now the path's cuts never reached them; a path copy of the den's copy (both slices' cuts) replaces it, and
+    # the den's copy is hidden (the path requires the den)
+    def den_overlay_tile(n):
+        return "W7_CD_" + n[len("W7_F_Over"):] if n.startswith("W7_F_Over") else None
+    for o in [o for o in bpy.data.objects if o.type == "MESH" and not o.hide_render
+              and (o.name in parts_cd or den_overlay_tile(o.name) in parts_cd)
               and o.name != "W7_CD_CaveBars__palette" and "glow" not in o.name]:
         mw = o.matrix_world
-        if not any(test([L.rb(mw @ o.data.vertices[k].co) for k in p.vertices]) for p in o.data.polygons):
+        rot = mw.to_3x3()
+        face = Pth.bank_face if re.match(r"(ground|grass|meadow)", o.name.rsplit("__", 1)[1]) else None
+
+        def hit(p):
+            pts = [L.rb(mw @ o.data.vertices[k].co) for k in p.vertices]
+            c = L.rb(mw @ p.center)
+            return test(pts) or Pth.under_tread(c) or (face is not None and face(pts + [c], (rot @ p.normal).normalized().z))
+        isl, bm_ = Pth.islands(o)
+        small = any(Pth.sweepable(f_, area, Pth.sweep_envelope(cen)) for f_, cen, area, _ in isl)
+        bm_.free()
+        if not small and not any(hit(p) for p in o.data.polygons):
             continue
-        name = o.name
+        den_copy = o.name if den_overlay_tile(o.name) else None
+        name = den_overlay_tile(o.name) or o.name
         collide = parts_cd[name]["collide"]
-        if collide:
+        if den_copy:
+            copy, gone = recut(den_copy, "W7_F_PathOver" + name[len("W7_CD_"):], Pth.under_tread, test, face)
+            bpy.data.objects[den_copy + "__pack"].name = den_copy
+            path_hide.append(den_copy)                       # the den's copy goes; the tile stays invisible, colliding
+        elif collide:
             # a colliding tile keeps its hulls: it stays invisible and colliding under a visual re-cut copy
-            copy, gone = recut(name, "W7_F_PathOver" + name[len("W7_CD_"):], lambda c: False, test)
+            copy, gone = recut(name, "W7_F_PathOver" + name[len("W7_CD_"):], Pth.under_tread, test, face)
             bpy.data.objects[name + "__pack"].name = name
         else:
-            copy, gone = recut(name, name, lambda c: False, test)
+            copy, gone = recut(name, name, Pth.under_tread, test, face)
+        n0 = len(copy.data.polygons)
+        holes += Pth.sweep(copy)
+        gone += n0 - len(copy.data.polygons)
         if not copy.data.polygons:
             bpy.data.objects.remove(copy)
-            (path_hide_visual if collide else path_hide).append(name)
+            if not den_copy:
+                (path_hide_visual if collide else path_hide).append(name)
             continue
         extra = {"overlays": name} if collide else {"replaces": name}
         extra.update(facesRemoved=gone, collide=False)
@@ -739,10 +883,46 @@ def slice_path():
         return c[1] > 5.0 and (c[0] - s["x"]) ** 2 + (c[2] - s["z"]) ** 2 < 12 ** 2 and not (c[0] > -26 and c[2] < -86)
     pskin = rock_skin("W7_F_PathSkin__cliff_rock", near_path)
     if pskin:
+        holes += Pth.sweep(pskin)                                    # round 7 (Fable ROUND7 3)
+        if not pskin.data.polygons:
+            bpy.data.objects.remove(pskin)
+            pskin = None
+    if pskin:
         parts.append(pskin)
         rows.append(manifest_row(pskin, "fixed", {"kind": "island", "material": "cliff_rock"}, "path",
                                  {"collide": False, "shadow": True, "doubleSided": True}))
-    lips = Pth.lip_layout()
+    # round 7 (Fable ROUND7 3): rock masses over the holes the sweep left over the path, one per 10 studs of hole,
+    # standing 0.8 proud, rock cells about 6 studs (the west flank's holes: the den's round 6 mass)
+    depth = cliff_depth_fn(lambda n: n.startswith(("W7_CD_", "W7_F_Over", "W7_F_PathOver", "W7_F_PathWall",
+                                                   "W7_F_PathRocks", "W7_F_DenMouth", "W7_F_DenLid"))
+                           and "glow" not in n and "CaveBars" not in n and not n.startswith("W7_CD_CliffPath"))
+    import world_finish_den as Den
+    seated, dropped = Pth.seat_masses(Pth.backing_blobs(holes), [(c, r, math.radians(y)) for c, r, y in Den.MOUTH_BLOBS],
+                                      depth)
+    backing = Pth.backing_mass("W7_F_PathBacking__cliff_rock", seated)
+    if backing:
+        triplanar_uv(backing, rock_density())
+        backing.data.materials.append(island_material("cliff_rock"))
+        parts.append(backing)
+        rows.append(manifest_row(backing, "fixed", {"kind": "island", "material": "cliff_rock"}, "path",
+                                 {"collide": False, "shadow": True}))
+    # Fable R7 review B: a lip stone with no surface within 0.5 under its centre goes (one stood in the sky)
+    from mathutils import Vector as _V
+    from mathutils.bvhtree import BVHTree as _T
+    dg = bpy.context.evaluated_depsgraph_get()
+    ground_trees = [(_T.FromObject(o, dg), o.matrix_world, o.matrix_world.inverted()) for o in bpy.data.objects
+                    if o.type == "MESH" and not o.hide_render and not o.name.startswith(("WF_", "W7_F_Lip", "W7_F_Stake"))
+                    and "Backdrop" not in o.name]
+
+    def under(lp):
+        top = L.bl((lp["at"][0], lp["seat"] + 1.0, lp["at"][2]))
+        for t, mw, inv in ground_trees:
+            h = t.ray_cast(inv @ top, (inv.to_3x3() @ _V((0, 0, -1))).normalized(), 10.0)
+            if h[0] is not None and (mw @ h[0]).z + 4 >= lp["seat"] - .5:
+                return True
+        return False
+    lips_all = Pth.lip_layout()
+    lips = [lp for lp in lips_all if under(lp)]
     stakes, ropes = Pth.stake_layout()
     boulders = Pth.foot_stones()
     place.update(lips=lips, stakes=stakes, ropes=ropes, tufts=Pth.tufts(), steps=step_rows, boulders=boulders,
@@ -752,6 +932,10 @@ def slice_path():
     report["fixedTotal"] = sum(r["triangles"] for r in rows if r["role"] == "fixed")
     report["lipStones"], report["stakes"] = len(lips), len(stakes)
     report["stepMaxDeviation"] = max((s["dev"] for s in step_rows), default=0)
+    report["lipStonesByShelf"] = {str(k): sum(1 for lp in lips if lp["shelf"] == k) for k in (1, 2, 3)}
+    report["lipStonesDropped"] = [lp["at"] for lp in lips_all if lp not in lips]
+    report["backingKept"], report["backingDropped"] = len(seated), [[round(v, 2) for v in b[0]] for b in dropped]
+    report["holes"] = [[[round(v, 2) for v in h[0]], round(h[1], 1), h[3]] for h in holes]
     print("WORLDFINISH path", json.dumps(report))
     L.export_fbx(parts + kit + [st] + cuts, OUT / "world-finish-path.fbx")
     remeasure(rows)

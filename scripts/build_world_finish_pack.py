@@ -220,15 +220,19 @@ def rot_rows(yaw):
     return [round(v, 6) for v in _ry(yaw)]
 
 
-def slice_data(manifest: dict, allparts: dict | None = None) -> dict:
+def slice_data(manifest: dict, allparts: dict | None = None, rename: dict | None = None) -> dict:
+    """rename: {part name: pack template name} for this slice's parts an earlier slice also packs (see template_names)."""
+    rename = rename or {}
     parts = {p["name"]: p for p in manifest["parts"]}
     place = manifest.get("place", {})
     out = {"hide": manifest.get("hide", []), "hideVisual": manifest.get("hideVisual", []), "fixed": [], "instances": [], "boxes": [], "tufts": [],
-           "templates": sorted(n for n, p in parts.items()), "triangles": sum(p["triangles"] for p in parts.values())}
+           "templates": sorted(rename.get(n, n) for n, p in parts.items()), "triangles": sum(p["triangles"] for p in parts.values())}
     for p in manifest["parts"]:
         if p["role"] != "fixed":
             continue
         row = {"name": p["name"], "cframe": cf(p["centre"]), "size": p["size"]}
+        if p["name"] in rename:
+            row["template"] = rename[p["name"]]
         for k in ("replaces", "overlays"):
             if p.get(k):
                 row[k] = p[k]
@@ -238,7 +242,8 @@ def slice_data(manifest: dict, allparts: dict | None = None) -> dict:
         t = (allparts or parts)[template]
         size = [round(a * b, 4) for a, b in zip(t["size"], scale)]
         off = [a * b for a, b in zip(t["centre"], scale)]
-        return {"template": template, "cframe": cf(at, yaw, off, tilt), "size": size}
+        # a template this slice re-packs under its own name (template_names) is placed from its own copy too (review)
+        return {"template": rename.get(template, template), "cframe": cf(at, yaw, off, tilt), "size": size}
 
     for c in place.get("crystals", []):
         out["instances"].append(inst("W7_F_Den__crystal", c["at"], c["yaw"], (c["scale"],) * 3))
@@ -303,6 +308,22 @@ def lua(data: dict) -> str:
             f'return game:GetService("HttpService"):JSONDecode([=[{body}]=])\n')
 
 
+def template_names(manifests: dict) -> dict:
+    """{slice: {part name: template name}}: a part an earlier slice (SLICES order) already packs is packed as
+    "<name>@<slice>" (round 7: the den and the path both re-cut W7_CD_Ground__ground; one folder, one name, and the
+    mount cloned the den's for both, so the path's re-cut never showed)."""
+    seen, out = set(), {}
+    for s in SLICES:
+        if s not in manifests:
+            continue
+        out[s] = {}
+        for p in manifests[s]["parts"]:
+            if p["name"] in seen:
+                out[s][p["name"]] = f'{p["name"]}@{s}'
+        seen |= {p["name"] for p in manifests[s]["parts"]}
+    return out
+
+
 def build():
     uploads = json.loads((DIR / "world-finish-uploads.json").read_text(encoding="utf-8"))
     manifests = {s: json.loads((DIR / f"world-finish-{s}.json").read_text(encoding="utf-8"))
@@ -313,9 +334,10 @@ def build():
     version = digest.hexdigest()[:16]
     data = {"version": version, "cliffDen": cliff_den_version(), "slices": {}}
     items, notes = [], []
+    renames = template_names(manifests)
     for s, m in manifests.items():
         rows, scale, problems = bind(s, m, uploads)
-        d = slice_data(m, {p["name"]: p for mm in manifests.values() for p in mm["parts"]})
+        d = slice_data(m, {p["name"]: p for mm in manifests.values() for p in mm["parts"]}, renames.get(s))
         d["packed"] = not problems
         data["slices"][s] = d
         if problems:
@@ -323,7 +345,8 @@ def build():
             continue
         images = {k: "rbxassetid://" + v["assetId"] for k, v in uploads[s].get("images", {}).items()}
         for k, p in enumerate(m["parts"]):
-            items.append(xml_part(f"WF{s[0].upper()}{k}", p, rows[p["name"]], images))
+            packed = dict(p, name=renames.get(s, {}).get(p["name"], p["name"]))
+            items.append(xml_part(f"WF{s[0].upper()}{k}", packed, rows[p["name"]], images))
     xml = ('<roblox version="4">\n  <Item class="Folder" referent="WorldFinish">\n    <Properties>\n'
            '      <string name="Name">WorldFinish</string>\n    </Properties>\n'
            '    <Item class="StringValue" referent="WorldFinishVersion">\n      <Properties>\n'

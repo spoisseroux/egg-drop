@@ -211,7 +211,9 @@ return function(server)
 		assert(ok and type(gen.version)=="string"and type(gen.cliffDen)=="string")
 		for name,slice in pairs(gen.slices)do
 			local set={};for _,t in ipairs(slice.templates)do set[t]=true end
-			for _,row in ipairs(slice.fixed)do assert(set[row.name],name..": "..row.name)end
+			-- a re-cut an earlier slice also packs carries its own template ("<name>@<slice>", round 7)
+			for _,row in ipairs(slice.fixed)do assert(set[row.template or row.name],name..": "..row.name)end
+			for _,row in ipairs(slice.fixed)do if row.template then assert(row.template==row.name.."@"..name,row.template)end end
 			for _,row in ipairs(slice.instances or {})do assert(set[row.template],name..": "..row.template)end
 		end
 	end)

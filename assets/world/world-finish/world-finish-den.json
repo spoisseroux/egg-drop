@@ -38,13 +38,13 @@
     46.836,
     210.0
    ],
-   "triangles": 5559,
+   "triangles": 5549,
    "look": {
     "kind": "copy",
     "of": "W7_CD_Ground__grass"
    },
    "replaces": "W7_CD_Ground__grass",
-   "facesRemoved": 11,
+   "facesRemoved": 21,
    "collide": false
   },
   {
@@ -140,6 +140,52 @@
    "collide": false
   },
   {
+   "name": "W7_F_OverRocks__cliff_rock_1816",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    -47.0612,
+    14.1579,
+    -109.9259
+   ],
+   "size": [
+    35.2072,
+    28.3475,
+    33.7636
+   ],
+   "triangles": 89,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Rocks__cliff_rock_1816"
+   },
+   "overlays": "W7_CD_Rocks__cliff_rock_1816",
+   "facesRemoved": 9,
+   "collide": false
+  },
+  {
+   "name": "W7_F_OverRocks__cliff_rock_1817",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    -49.7648,
+    13.2981,
+    -81.1282
+   ],
+   "size": [
+    37.9138,
+    26.628,
+    37.8019
+   ],
+   "triangles": 205,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Rocks__cliff_rock_1817"
+   },
+   "overlays": "W7_CD_Rocks__cliff_rock_1817",
+   "facesRemoved": 10,
+   "collide": false
+  },
+  {
    "name": "W7_F_OverRocks__cliff_rock_1916",
    "slice": "den",
    "role": "fixed",
@@ -183,6 +229,52 @@
    },
    "overlays": "W7_CD_Rocks__cliff_rock_2016",
    "facesRemoved": 134,
+   "collide": false
+  },
+  {
+   "name": "W7_F_OverRocks__grass_1916",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    -22.8736,
+    30.4363,
+    -116.3217
+   ],
+   "size": [
+    13.4741,
+    6.4915,
+    10.6996
+   ],
+   "triangles": 3,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Rocks__grass_1916"
+   },
+   "overlays": "W7_CD_Rocks__grass_1916",
+   "facesRemoved": 3,
+   "collide": false
+  },
+  {
+   "name": "W7_F_OverRocks__grass_2016",
+   "slice": "den",
+   "role": "fixed",
+   "centre": [
+    16.4057,
+    23.5417,
+    -112.0753
+   ],
+   "size": [
+    34.9715,
+    29.7366,
+    34.9771
+   ],
+   "triangles": 27,
+   "look": {
+    "kind": "copy",
+    "of": "W7_CD_Rocks__grass_2016"
+   },
+   "overlays": "W7_CD_Rocks__grass_2016",
+   "facesRemoved": 2,
    "collide": false
   },
   {
@@ -299,16 +391,16 @@
    "slice": "den",
    "role": "fixed",
    "centre": [
-    -13.2073,
-    13.9689,
-    -97.3514
+    -14.8343,
+    15.2769,
+    -91.5457
    ],
    "size": [
-    58.9555,
-    21.1997,
-    8.5992
+    62.2707,
+    23.8473,
+    23.1314
    ],
-   "triangles": 2398,
+   "triangles": 5040,
    "look": {
     "kind": "island",
     "material": "cliff_rock"
@@ -947,12 +1039,209 @@
  ],
  "hideVisual": [
   "W7_CD_Rocks__cliff_rock_1917",
+  "W7_CD_Rocks__grass_1817",
   "W7_CD_Rocks__grass_1917"
  ],
  "report": {
+  "holes": [
+   [
+    [
+     -33.95,
+     13.52,
+     -97.17
+    ],
+    64.9,
+    "flank"
+   ],
+   [
+    [
+     -34.98,
+     25.5,
+     -98.4
+    ],
+    38.0,
+    "flank"
+   ],
+   [
+    [
+     -38.23,
+     15.67,
+     -94.07
+    ],
+    300.9,
+    "flank"
+   ],
+   [
+    [
+     -45.66,
+     20.87,
+     -81.4
+    ],
+    107.2,
+    "path"
+   ],
+   [
+    [
+     -34.15,
+     20.85,
+     -92.17
+    ],
+    29.7,
+    "flank"
+   ],
+   [
+    [
+     -25.23,
+     18.66,
+     -97.54
+    ],
+    14.2,
+    "flank"
+   ],
+   [
+    [
+     -19.65,
+     19.71,
+     -97.63
+    ],
+    13.8,
+    "flank"
+   ],
+   [
+    [
+     -20.01,
+     10.43,
+     -96.65
+    ],
+    2.5,
+    "flank"
+   ],
+   [
+    [
+     -24.97,
+     18.8,
+     -96.34
+    ],
+    170.8,
+    "flank"
+   ],
+   [
+    [
+     -33.08,
+     14.96,
+     -86.47
+    ],
+    126.2,
+    "path"
+   ]
+  ],
+  "backing": [
+   [
+    -40.58,
+    15.67,
+    -96.24
+   ],
+   [
+    -40.73,
+    11.93,
+    -96.58
+   ],
+   [
+    -38.07,
+    19.56,
+    -95.4
+   ],
+   [
+    -34.19,
+    7.22,
+    -98.52
+   ],
+   [
+    -34.45,
+    11.88,
+    -96.28
+   ],
+   [
+    -34.72,
+    18.21,
+    -97.39
+   ],
+   [
+    -41.65,
+    18.87,
+    -97.53
+   ],
+   [
+    -42.4,
+    14.36,
+    -97.19
+   ],
+   [
+    -39.02,
+    21.68,
+    -96.28
+   ],
+   [
+    -27.11,
+    18.8,
+    -98.72
+   ],
+   [
+    -23.78,
+    14.99,
+    -99.5
+   ],
+   [
+    -24.33,
+    9.6,
+    -96.78
+   ],
+   [
+    -32.02,
+    20.47,
+    -94.73
+   ],
+   [
+    -35.06,
+    20.35,
+    -91.51
+   ],
+   [
+    -30.24,
+    23.27,
+    -99.13
+   ],
+   [
+    -35.61,
+    14.96,
+    -88.43
+   ],
+   [
+    -33.8,
+    9.51,
+    -87.29
+   ],
+   [
+    -37.39,
+    18.77,
+    -87.91
+   ]
+  ],
+  "backingDropped": [
+   [
+    -21.04,
+    22.27,
+    -103.9
+   ],
+   [
+    -37.13,
+    25.5,
+    -100.77
+   ]
+  ],
   "shell": 6531,
   "floor": 910,
-  "mouth": 2400,
+  "mouth": 5100,
   "lantern": 142,
   "crystal": 28,
   "stone": 40,

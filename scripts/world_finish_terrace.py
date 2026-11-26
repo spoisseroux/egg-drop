@@ -95,6 +95,24 @@ def near_path(x, z, grow=.6):
     return abs(along) <= 1.0 and abs(a) < s["w"] / 2 + grow, s
 
 
+FLIGHT_GRASS = (1.5, .8)            # round 7 (Fable ROUND7 6b): within 1.5 of the flight, standing 0.8 over its tread
+
+
+def by_flight(pts):
+    """Is a face (Roblox points) within FLIGHT_GRASS[0] of the return leg's flight (beside it, along it) and standing
+    more than FLIGHT_GRASS[1] over its tread there?"""
+    near, over = FLIGHT_GRASS
+    c = tuple(sum(p[k] for p in pts) / len(pts) for k in range(3))
+    for s in S.path_samples():
+        if not s["step"]:
+            continue
+        along = (c[0] - s["x"]) * s["dir"][0] + (c[2] - s["z"]) * s["dir"][1]
+        a = (c[0] - s["x"]) * s["out"][0] + (c[2] - s["z"]) * s["out"][1]
+        if abs(along) <= .6 and abs(a) <= s["w"] / 2 + near and c[1] > s["h"] + over:
+            return True
+    return False
+
+
 def cap_and_face():
     """The cap (a fan from the middle to the outline, rings every ~2 studs, the last ring rolling over) and the face from
     the rolled edge down at 20 degrees to the island's ground."""
@@ -123,9 +141,16 @@ def cap_and_face():
         lip_ring.append(T(s_ + s_ / ln * .4, t_ + t_ / ln * .4, Y - drop))
     cap_v += lip_ring
     last = 1 + (len(rings) - 1) * n
+    lip_rock = []
     for i in range(n):
         a, b = last + i, last + (i + 1) % n
-        cap_f.append([a, base + i, base + (i + 1) % n, b][::-1])
+        quad = [a, base + i, base + (i + 1) % n, b][::-1]
+        # round 7 (Fable ROUND7 6b, studio-r6e 06: a green wall 3 high left of the top flight): beside the return leg's
+        # flight, where the lip stands over its steps, the lip is the cliff's rock, not grass
+        if by_flight([cap_v[k] for k in quad]):
+            lip_rock.append([cap_v[k] for k in quad])
+        else:
+            cap_f.append(quad)
     # round 6 (mesh gate: the old fan was 160 needles): the middle steps down through rings of half as many points
     # (n, n/2, n/4, n/8) to a fan of n/8 spokes, so no triangle is a needle
     assert n % 8 == 0, n                     # code review: the halving rings need n divisible by 8
@@ -167,6 +192,8 @@ def cap_and_face():
             if g is None or yy < g - .6 or yy < 12:
                 break
         cols.append(col)
+    for pts in lip_rock:
+        face.quad(*pts)
     for i in range(n):
         c0, c1 = cols[i], cols[(i + 1) % n]
         m = min(len(c0), len(c1))

@@ -3,38 +3,39 @@
  "den": {
   "model": {
    "file": "world-finish-den.fbx",
-   "sha256": "965bf585e9da4efbe18c61d8a76445e2ee0c7b3fcc295f27de3b45932e67a25a",
-   "manifestSha256": "636745fde71b95c8275d41cf2b8ef9370c5d47b01ec284037e748432cc9a9ba6",
-   "operation": "5a14a355-e6fa-4ff1-a00c-8a1587763b12",
-   "assetId": "92775758678075",
+   "sha256": "5ace8afdf13602220e7efa1c23731d4b1fa9959a22028b8d37b48ee696a3904a",
+   "manifestSha256": "cfe926988ff23c281659b4b4722d412b539e27eb868fb77a6d466ac591d68c62",
+   "operation": "228d2ee1-b121-4d1b-a1e3-20c208b7feb2",
+   "assetId": "79272668578896",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "132034092866805",
-    "operation": "92862d29-9a2b-4a8f-84cd-662848b20905",
-    "why": "round 6e (the island pack's pi turn and the tread plane carve; terrace arrival gap to s 37); mesh gate PASS"
-   }
+    "assetId": "125885279330597",
+    "operation": "97a3d563-9865-4d1f-b587-167652a00c06",
+    "why": "round 7 first cut, superseded by 7b (Fable FABLE-REVIEW-R7 fixes A and B)"
+   },
+   "why": "round 7b (Fable ROUND7-LOOK items 1-6, FABLE-REVIEW-R7 fixes A and B); mesh gate PASS"
   },
   "images": {
    "den_shell_west_color": {
     "file": "textures/den_shell_west_color.png",
-    "sha256": "6f1d091de73d8ba5519a1605c2978e2c8abd7ebdd4b0cdfbd69c5c205e56cbd9",
-    "operation": "73a0464b-19f7-4cca-a3bd-da0f9e2b63f1",
-    "assetId": "104356978170281",
+    "sha256": "bb3e4dfe156aa9d9aee78dd1d78035aec78a066e10598303d41d69f5ece0a5cd",
+    "operation": "ab9af050-a5ff-46c6-979b-b582b12d5e6c",
+    "assetId": "86178763675956",
     "moderation": "Approved",
     "superseded": {
-     "assetId": "96814699596274",
-     "why": "round 6c re-bake"
+     "assetId": "104356978170281",
+     "why": "round 7 reveal grade re-bake"
     }
    },
    "den_shell_east_color": {
     "file": "textures/den_shell_east_color.png",
-    "sha256": "b5c12c9a2e30f0c555b424f8432ea6c33c92e4b828c41bc2366612d5e91fd7b6",
-    "operation": "6c8ec003-dd74-4cad-90ab-6edc94a8b814",
-    "assetId": "121376278515679",
+    "sha256": "9e8a86e2eb0e03e306d0b40b5809fc10fc5ba11379009abc8ea1011b027b0149",
+    "operation": "ec3cf364-d45f-4da4-a5ed-61c2e8a8dc50",
+    "assetId": "81328421670391",
     "moderation": "Approved",
     "superseded": {
-     "assetId": "105648387452459",
-     "why": "round 6c re-bake"
+     "assetId": "121376278515679",
+     "why": "round 7 reveal grade re-bake"
     }
    },
    "den_shell_west_normal": {
@@ -78,32 +79,34 @@
  "path": {
   "model": {
    "file": "world-finish-path.fbx",
-   "sha256": "00cb080b1cd6ca0f8452f844f9ada9103de72bcba272134964f43bf0139a5415",
-   "manifestSha256": "a1fbe1d213b08b1ab1c41d877661c786331183974a409b84309cb5ce68d27c25",
-   "operation": "bc60347b-fc90-4553-9f99-7fb4d821e992",
-   "assetId": "84698401536715",
+   "sha256": "d40339a635f10b0ec1f33ab988d2add68b2c72109d188cfd67dcfa35b7453f8d",
+   "manifestSha256": "83e13c3178b871614ace510347ff935c7c00bd46e3975c57692a811b5e353f6b",
+   "operation": "09c9c6cb-51f6-480f-9f16-c71e08bca1b4",
+   "assetId": "107372779032354",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "77649928127763",
-    "operation": "4aa1185e-0f00-48dc-9ce7-45ae1fffc03c",
-    "why": "round 6f (Studio R6e captures: a ground bank by the path's inner edge, pale against the wall; re-cut over every nearby sample to head height)"
-   }
+    "assetId": "121830328283890",
+    "operation": "11e5b19a-e9f5-487a-b580-01d9928bd131",
+    "why": "round 7 first cut, superseded by 7b (Fable FABLE-REVIEW-R7 fixes A and B)"
+   },
+   "why": "round 7b (Fable ROUND7-LOOK items 1-6, FABLE-REVIEW-R7 fixes A and B); mesh gate PASS"
   },
   "images": {}
  },
  "terrace": {
   "model": {
    "file": "world-finish-terrace.fbx",
-   "sha256": "cc8aed63ba577655c8fc8160e953f02820e96c5add7570897bbac45213734ae7",
-   "manifestSha256": "cce2487806f73f7e350e442d909ecf5bdb54cd7f5202d2b535785e9db69c2632",
-   "operation": "228e6ba1-884a-4c1a-aa25-f0da3be13067",
-   "assetId": "123893436079803",
+   "sha256": "58f8121a6f38b835a15cf1647c36703420573e63504f257f39a32c0b2bae2280",
+   "manifestSha256": "10bbb9dc70b01f042158bd296615def2a857e838976120707221348cbeb32ce1",
+   "operation": "dd6c2ac7-6bf2-4170-b673-712ebf7399e1",
+   "assetId": "95735155301156",
    "moderation": "Approved",
    "superseded": {
-    "assetId": "117446794714330",
-    "operation": "51c37578-5c31-407f-96c6-861b33e38fee",
-    "why": "round 6f (Studio R6e captures: a ground bank by the path's inner edge, pale against the wall; re-cut over every nearby sample to head height)"
-   }
+    "assetId": "89156781527438",
+    "operation": "b672cc5b-6def-4d2e-a33e-50311f189fe5",
+    "why": "round 7 first cut, superseded by 7b (Fable FABLE-REVIEW-R7 fixes A and B)"
+   },
+   "why": "round 7b (Fable ROUND7-LOOK items 1-6, FABLE-REVIEW-R7 fixes A and B); mesh gate PASS"
   },
   "images": {}
  },

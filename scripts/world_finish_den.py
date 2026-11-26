@@ -489,6 +489,23 @@ DAMP_C = L.hexrgb("#54483E")
 SOOT_C = L.hexrgb("#3C332C")
 
 
+REVEAL_C = L.hexrgb("#6F7D78")  # round 7 (Fable ROUND7 5): the cliff rock's grey-green
+REVEAL = (2.0, 4.0, 1.5)        # grey for the outer 2 studs, graded over 4 more in; how far past the opening it reaches
+
+
+def reveal_weight(x, y, z):
+    """0..1: how far a texel is the reveal's grey (1 on the collar's outer 2 studs, 0 from 6 studs in), only round the
+    opening (its span and its arch, grown REVEAL[2])."""
+    full, grade, grow = REVEAL
+    din = COLLAR_END - z
+    w = _smooth(full + grade, full, din)
+    m = S.MOUTH
+    u = (x - (m["x0"] + m["x1"]) / 2) / ((m["x1"] - m["x0"]) / 2)
+    arch = m["shoulder"] + (m["top"] - m["shoulder"]) * np.clip(1 - u * u, 0, None)
+    near = (np.abs(x - (JW + JE) / 2) <= (JE - JW) / 2 + grow) & (y <= arch + grow)
+    return w * near
+
+
 def shell_colour(pos, ao, mask):
     """Display-space colour (H, W, 3) from texel positions (Roblox studs) and baked AO."""
     H, W = pos.shape[:2]
@@ -518,6 +535,11 @@ def shell_colour(pos, ao, mask):
     # the damp band: the first 1.5 studs over the floor
     damp = _smooth(FLOOR + 1.5, FLOOR + .2, y)
     col = col * (1 - damp)[:, None] + np.array(DAMP_C) * damp[:, None]
+    # round 7 (Fable ROUND7 5, R6-CDE 2: a brown band straight under the brow): the reveal's outer 2 studs and the jambs
+    # in the cliff's grey-green, graded to the den's brown over the next 4 studs in, with the same tone and grain
+    w = reveal_weight(x, y, z)
+    grey = np.array(REVEAL_C)[None, :] * (1 + tone + grain)[:, None]
+    col = col * (1 - w)[:, None] + grey * w[:, None]
     # soot over each lantern
     for lx, ly, lz in LANTERNS:
         d = ((x - lx) / 1.1) ** 2 + ((z - lz) / 1.1) ** 2 + ((y - (ly + 1.6)) / 1.6) ** 2
@@ -825,9 +847,11 @@ def _keep_out(p):
     return p
 
 
-def build_mouth(name, voxel=.28, target_tris=2400):
+def build_mouth(name, voxel=.28, target_tris=2400, extra=(), per_extra=150):
+    """The surround: MOUTH_BLOBS and any `extra` blobs (round 7: the masses backing the swept shards over the path's
+    foot), one welded rock."""
     bm = bmesh.new()
-    for (c, r, yaw) in MOUTH_BLOBS:
+    for (c, r, yaw) in list(MOUTH_BLOBS) + list(extra):
         geom = bmesh.ops.create_icosphere(bm, subdivisions=3, radius=1.0)
         cy, sy = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
         for v in geom["verts"]:
@@ -859,11 +883,15 @@ def build_mouth(name, voxel=.28, target_tris=2400):
     bm.to_mesh(obj.data)
     bm.free()
     dec = obj.modifiers.new("Decimate", "DECIMATE")
-    dec.ratio = min(1.0, target_tris / max(1, L.tris(obj)))
+    dec.ratio = min(1.0, (target_tris + per_extra * len(extra)) / max(1, L.tris(obj)))
     bpy.ops.object.modifier_apply(modifier=dec.name)
     # keep-out after decimation (exact), then drop faces wholly under the lawn (y < 3.2)
     me = obj.data
     P = _keep_out(np.array([L.rb(v.co) for v in me.vertices]))
+    if extra:
+        # round 7: a backing mass by the path's foot never reaches into the walking corridor
+        import world_finish_path as Pth
+        P = np.array([Pth.corridor_keep_out(tuple(q), Pth.BACKING_CLEAR) for q in P])
     for v, q in zip(me.vertices, P):
         v.co = L.bl(q)
     bm = bmesh.new()

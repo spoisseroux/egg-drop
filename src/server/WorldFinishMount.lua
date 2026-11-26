@@ -139,7 +139,9 @@ function Mount.world(world,env)
 		-- Clone everything first.
 		local made={}
 		for _,row in ipairs(slice.fixed)do
-			local part=still(pack[row.name]:Clone())
+			-- row.template: a later slice's re-cut of a piece an earlier slice also re-cuts is packed as "<name>@<slice>"
+			-- (round 7: by name alone the path's ground re-cut cloned the den's, so its fixes never showed)
+			local part=still(pack[row.template or row.name]:Clone());part.Name=row.name
 			part.Size,part.CFrame=vector(row.size),cframe(row.cframe)
 			-- a re-cut copy keeps whatever the pack part carried (code review 4); Art.meshes then sets its own on top
 			local old=replaced[row.name]

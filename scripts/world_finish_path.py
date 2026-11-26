@@ -18,6 +18,7 @@ path the collision boxes, the pets and the anchors already use): the walking sur
 from __future__ import annotations
 
 import math
+import re
 
 import bmesh
 import bpy
@@ -87,31 +88,82 @@ class Mesh:
         return obj
 
 
+GRASS_EDGE = -.05                   # round 7 (Fable ROUND7 6a): the grass strip's outer edge, from the tread's edge
+GRASS_SKIRT = .4                    # and its turf skirt straight down over the rock skirt's top
+DIRT_SKIRT = (.6, 1.15)             # round 7 (Fable ROUND7 2): the tread's inner edge grows out and down over the deeper cut
+
+
+def has_grass(s0, s1):
+    return not (s0["flip"] != s1["flip"] or on_flight(s0) or on_flight(s1))     # round 6 (Fable R6-CDE 7): none by the flights
+
+
 def tread():
-    """Dirt over the ramp (+0.03) and the grass strip (outer third, ragged, +0.08), off the flights."""
+    """Dirt over the ramp (+0.03) with a skirt down at its inner edge, and the grass strip (outer third, ragged, +0.08)
+    with a turf skirt at its outer edge, off the flights."""
     dirt, grass = Mesh("W7_F_Path__dirt_path"), Mesh("W7_F_PathGrass__grass")
     S_ = samples(2)
     rnd = np.random.default_rng(41)
     # Fable D1 9: a 2.0 mean (1.2 to 2.6)
     gw = [min(2.6, max(1.2, 2.0 + .45 * math.sin(s["d"] * .9) + .25 * rnd.uniform(-1, 1))) for s in S_]
+    out_, down = DIRT_SKIRT
     for i, (s0, s1) in enumerate(zip(S_, S_[1:])):
         if on_flight(s0) and on_flight(s1):
             continue
         w0, w1 = s0["w"] / 2, s1["w"] / 2
         dirt.quad(Q(s0, -w0, s0["h"] + .03), Q(s1, -w1, s1["h"] + .03), Q(s1, w1, s1["h"] + .03), Q(s0, w0, s0["h"] + .03))
-        if s0["flip"] != s1["flip"] or on_flight(s0) or on_flight(s1):     # round 6 (Fable R6-CDE 7): no grass by the flights
+        # round 7 (Fable ROUND7 2): the island is cut 1.0 under the tread out to 0.5 past each edge (recut_test); the
+        # inner edge's skirt (out 0.6, down 1.15) closes that from the side. The outer edge has the rock skirt.
+        if s0["flip"] == s1["flip"]:
+            q = [P(s0, -w0 - out_, s0["h"] - down), P(s1, -w1 - out_, s1["h"] - down), P(s1, -w1, s1["h"] + .03),
+                 P(s0, -w0, s0["h"] + .03)]
+            dirt.quad(*(q if s0["flip"] > 0 else q[::-1]))      # wound as the tread (Q runs the other way when flipped)
+        if not has_grass(s0, s1):
             continue
         g0, g1 = gw[i], gw[i + 1]
-        grass.quad(P(s0, w0 - g0, s0["h"] + .08), P(s1, w1 - g1, s1["h"] + .08), P(s1, w1 + .15, s1["h"] + .06),
-                   P(s0, w0 + .15, s0["h"] + .06))
+        e = GRASS_EDGE
+        grass.quad(P(s0, w0 - g0, s0["h"] + .08), P(s1, w1 - g1, s1["h"] + .08), P(s1, w1 + e, s1["h"] + .07),
+                   P(s0, w0 + e, s0["h"] + .07))
+        # round 7 (Fable ROUND7 6a: the strip overhung the edge with a dark underside line): it stops 0.05 inside the
+        # edge and turns down 0.4, a turf lip over the rock skirt, a touch outward so the two never fight
+        grass.quad(P(s0, w0 + e, s0["h"] + .07), P(s1, w1 + e, s1["h"] + .07), P(s1, w1 + e + .08, s1["h"] - GRASS_SKIRT),
+                   P(s0, w0 + e + .08, s0["h"] - GRASS_SKIRT))
     return dirt, grass
+
+
+BANK_SPAN = (5.0, 6.0, 4.0)         # round 7 (Fable ROUND7 1): the wall's least reach over a bank, how far behind
+                                    # the edge a bank is looked for, and how far it must stand over the wall's top
+_SPAN = {}
+
+
+def behind_ground(s, dd):
+    x, _, z = P(s, -s["w"] / 2 - dd, 0)
+    return S.ground(x, z)
+
+
+def wall_span(s):
+    """(back, top) of the drawn cut at sample s: the sculpt's, except over a bank. Round 7 (Fable ROUND7 1, studio-r6e
+    02/04: island ground stood on edge in a hole in the wall by the foot, d 3 to 4): where the ground dips at the inner
+    edge the sculpt's wall stops at the dip (back 0.25, 0.6 high) though a bank rises 16 within 6 behind it. There the
+    wall reaches back BANK_SPAN[0] and up to the ground at its back line, as its neighbours do."""
+    k = id(s)
+    if k in _SPAN:
+        return _SPAN[k]
+    back, top = s["back"], s["top"]
+    reach, look, over = BANK_SPAN
+    gs = [g for g in (behind_ground(s, i * .25) for i in range(int(look / .25) + 1)) if g is not None]
+    if gs and back < reach and max(gs) > top + over:
+        g_back = behind_ground(s, reach)
+        back = reach
+        top = max(top, (g_back if g_back is not None else max(gs)) + .4)
+    _SPAN[k] = (back, top)
+    return back, top
 
 
 def wall_and_shoulders():
     """The cut (back wall), its dirt foot, and the dry-stone shoulders."""
     wall, foot = Mesh("W7_F_PathWall__cliff_rock"), Mesh("W7_F_PathFoot__dirt_path")
     S_ = samples(2)
-    walled = [s for s in S_ if s["back"] > .05]
+    walled = [s for s in S_ if wall_span(s)[0] > .05]
     d0, d1 = (walled[0]["d"], walled[-1]["d"]) if walled else (0, 1)
     rnd = np.random.default_rng(43)
     R1 = {id(s): 3.6 + 1.2 * (.5 + .5 * math.sin(s["d"] * .37 + 1.3)) for s in S_}
@@ -121,8 +173,8 @@ def wall_and_shoulders():
         point counts were joined crosswise, the stretched strips and slivers in studio-r2/05), from the foot up the lower
         face (3.6 to 4.8, leaning 20 degrees), a bench, the upper rise in two halves to the old cut's top line, then the
         cap 1.2 and 3.4 on up the old slope. Where there is no room for a bench its points close up (zero-width faces)."""
-        hgt = s["top"] - s["h"]
-        back = s["back"]
+        back, top = wall_span(s)
+        hgt = top - s["h"]
         t = (s["d"] - d0) / max(1e-6, d1 - d0)
         bow = 1.25 - 1.25 * math.cos(4 * math.pi * min(1, max(0, t)))          # two bows, 0 to 2.5
         r1 = min(R1[id(s)], hgt)
@@ -148,7 +200,7 @@ def wall_and_shoulders():
         if s0["flip"] != s1["flip"]:
             continue
         w0, w1 = s0["w"] / 2, s1["w"] / 2
-        if s0["back"] > .05 and s1["back"] > .05:
+        if wall_span(s0)[0] > .05 and wall_span(s1)[0] > .05:
             p0, b0 = profile(s0)
             p1, b1 = profile(s1)
 
@@ -173,13 +225,16 @@ def wall_and_shoulders():
                       P(s1, -w1 - b1, s1["h"] + .3 + .25 * b1), P(s0, -w0 - b0, s0["h"] + .3 + .25 * b0))
             foot.quad(P(s0, -w0 - b0 + .02, s0["h"] - .2), P(s1, -w1 - b1 + .02, s1["h"] - .2),
                       P(s1, -w1 - b1 - 1.0 * LEAN + .02, s1["h"] + 1.0), P(s0, -w0 - b0 - 1.0 * LEAN + .02, s0["h"] + 1.0))
-        # Fable D1 7: the outer edge always has thickness, a skirt 1.3 deep tucked under 15 degrees
-        wall.quad(P(s0, w0 + .15, s0["h"] + .05), P(s1, w1 + .15, s1["h"] + .05), P(s1, w1 - .2, s1["h"] - 1.3),
+        # Fable D1 7: the outer edge always has thickness, a skirt 1.3 deep tucked under 15 degrees. Round 7 (Fable
+        # ROUND7 6a): its top no longer stands out past the edge (the dark line under the grass): behind the grass's
+        # turf skirt where there is grass, flush with the tread's edge where there is none
+        e = -.1 if has_grass(s0, s1) else .02
+        wall.quad(P(s0, w0 + e, s0["h"] + .02), P(s1, w1 + e, s1["h"] + .02), P(s1, w1 - .2, s1["h"] - 1.3),
                   P(s0, w0 - .2, s0["h"] - 1.3),
-                  uv=[(s0["d"], s0["h"] + .05), (s1["d"], s1["h"] + .05), (s1["d"], s1["h"] - 1.3), (s0["d"], s0["h"] - 1.3)])
+                  uv=[(s0["d"], s0["h"] + .02), (s1["d"], s1["h"] + .02), (s1["d"], s1["h"] - 1.3), (s0["d"], s0["h"] - 1.3)])
         # shoulders: where the ground beside an edge is under the path, a stepped dry-stone bank down to it
         for side in (1, -1):
-            if side < 0 and (s0["back"] > .05 or s1["back"] > .05):
+            if side < 0 and (wall_span(s0)[0] > .05 or wall_span(s1)[0] > .05):
                 continue
             a0, a1 = side * w0, side * w1
             g0 = S.ground(*P(s0, a0 + side * .5, 0)[::2]) or s0["h"] - 8
@@ -378,14 +433,15 @@ def fin_boxes():
     return boxes
 
 
-def corridor_keep_out(p):
-    """Push a point out of the walking corridor (the tread's width + 0.3, from 0.2 under to 7 over the tread) sideways."""
+def corridor_keep_out(p, margin=.3):
+    """Push a point out of the walking corridor (the tread's width + `margin`, from 0.2 under to 7 over the tread)
+    sideways."""
     s = S._nearest(p[0], p[2])
     along = (p[0] - s["x"]) * s["dir"][0] + (p[2] - s["z"]) * s["dir"][1]
     if abs(along) > 1.0:
         return p
     a = (p[0] - s["x"]) * s["out"][0] + (p[2] - s["z"]) * s["out"][1]
-    half = s["w"] / 2 + .3
+    half = s["w"] / 2 + margin
     if abs(a) < half and s["h"] - .2 < p[1] < s["h"] + 7:
         to = half if a >= 0 else -half
         return (p[0] + s["out"][0] * (to - a), p[1], p[2] + s["out"][1] * (to - a))
@@ -407,6 +463,62 @@ def fin_and_notch():
             for k, f in enumerate((.25, .7)):
                 blobs.append(((c[0], c[1] - h / 2 + h * f, c[2]), (2.0 - .3 * k, h * .34, 2.0 - .3 * k), yaw, .12))
     return rock_mass("W7_F_PathRocks__cliff_rock", blobs, keep_out=corridor_keep_out, target=1800, floor_y=3.5)
+
+
+MASS_SEAT = (1.0, 1.5)              # Fable R7 review A: a mass must overlap the cliff or another mass by 1.0; sunk 1.5
+
+
+def _radius(r, yaw, u):
+    """An ellipsoid's radius (radii r, yawed as rock_mass yaws: local z along (sin yaw, cos yaw)) along unit vector u."""
+    cy, sy = math.cos(yaw), math.sin(yaw)
+    lx, lz = u[0] * cy - u[2] * sy, u[0] * sy + u[2] * cy
+    return 1.0 / math.sqrt((lx / r[0]) ** 2 + (u[1] / r[1]) ** 2 + (lz / r[2]) ** 2)
+
+
+def mass_overlap(a, b):
+    """How deep two masses ((centre, radii, yaw), Roblox, yaw in radians) overlap along the line between their centres."""
+    d = [b[0][k] - a[0][k] for k in range(3)]
+    n = math.sqrt(sum(v * v for v in d))
+    if n < 1e-6:
+        return min(a[1]) + min(b[1])
+    u = [v / n for v in d]
+    return _radius(a[1], a[2], u) + _radius(b[1], b[2], [-v for v in u]) - n
+
+
+def seat_masses(blobs, fixed, cliff_depth, need=MASS_SEAT[0], sink=MASS_SEAT[1]):
+    """Fable R7 review A: every backing blob ((x, y, z), radii, yaw, tilt) sinks `sink` into the wall (back along its
+    outward normal), then stays only if it reaches `need` into the cliff (cliff_depth(centre, inward unit, reach): how
+    far in from the centre the cliff's surface is, or None) or overlaps a fixed mass ((centre, radii, yaw)) or a kept
+    blob by `need`. Returns (kept, dropped)."""
+    sunk = []
+    for c, r, yaw, tilt in blobs:
+        nx, nz = math.sin(yaw), math.cos(yaw)
+        sunk.append(((c[0] - nx * sink, c[1], c[2] - nz * sink), r, yaw, tilt))
+    kept, left = [], list(sunk)
+    anchors = [(c, r, yaw) for c, r, yaw in fixed]
+    changed = True
+    while changed:
+        changed = False
+        for b in list(left):
+            c, r, yaw, _ = b
+            inward = (-math.sin(yaw), 0.0, -math.cos(yaw))
+            t = cliff_depth(c, inward, r[2])
+            seated = t is not None and r[2] - t >= need
+            if seated or any(mass_overlap((c, r, yaw), a) >= need for a in anchors):
+                kept.append(b)
+                anchors.append((c, r, yaw))
+                left.remove(b)
+                changed = True
+    return kept, left
+
+
+def backing_mass(name, blobs):
+    """Round 7 (Fable ROUND7 3): one sculpted rock over the swept holes, rock cells about 6 studs (5 to 7), kept out of
+    the walking corridor. None when there is nothing to back."""
+    if not blobs:
+        return None
+    return rock_mass(name, blobs, keep_out=lambda p: corridor_keep_out(p, BACKING_CLEAR), target=min(1600, 420 * len(blobs)),
+                     cell=6.0, seed=93, floor_y=3.5)
 
 
 # --------------------------------------------------------------------------------------------------------- the kit
@@ -461,13 +573,26 @@ def outward(obj):
     return obj
 
 
+LIP_KITS = 3                        # round 7: the path's lip stones use the three lower kit stones
+LIP_OUT, LIP_SINK = .1, .4          # Fable R7 review B: the centre at most 0.1 past the edge; sunk 0.4
+LIP_INTRUDE = .75                   # round 7 (Fable ROUND7 4): a lip stone reaches at most 0.75 over the tread (walk > 7)
+
+
+def shelf_of(s):
+    """1: the lower shelf (the foot's flight to the bend at PATH_CTRL[4]); 2: the upper shelf (the bend to the turn
+    pocket, PATH_CTRL[8]); 3: the pocket and the return leg."""
+    return 1 if s["seg"] < 4 else 2 if s["seg"] < 8 else 3
+
+
 def lip_layout():
-    """Lip stones along the lawn side where the drop is over 1.2 (off the flights): gaps 0.6 to 4, every fourth missing,
-    three gaps of 4+ over the Paw Glade. Returns [{kit, at, yaw, box}] with `at` the stone's base point (sunk 0.3)."""
+    """Lip stones along the lawn side where the drop is over 1.2 (off the flights). Round 7 (Fable ROUND7 4: round 6 left
+    one stone on the wider path): each stone straddles the edge (centre 0.2 inside it, so the tread or its bank is under
+    it; never more than LIP_INTRUDE over the tread), sunk 0.3, gaps 2.5 to 4.5 (about one per 7 studs), every fourth
+    missing on shelf 1 only, three gaps of 4+ over the Paw Glade. Returns [{kit, at, yaw, box, shelf}] with `at` the
+    stone's base point."""
     S_ = S.path_samples()
     rnd = np.random.default_rng(53)
-    out, run, count, glade_gaps = [], 0.0, 0, 0
-    need_gap = 0.0
+    out, count, glade_gaps = [], 0, 0
     last_kit = -1
     i = 0
     while i < len(S_):
@@ -477,29 +602,33 @@ def lip_layout():
             i += 1
             continue
         near_glade = math.hypot(s["x"] - GLADE[0], s["z"] - GLADE[1]) < 13 and glade_gaps < 3
-        kit = int(rnd.integers(0, 5))
+        # round 7 (Fable ROUND7 4: 0.8 to 1.8 showing): kits 1 to 3 (1.2 to 1.9 over the tread); 4 and 5 stand 2.3+
+        kit = int(rnd.integers(0, LIP_KITS))
         if kit == last_kit:
-            kit = (kit + 2) % 5
+            kit = (kit + 1) % LIP_KITS
         last_kit = kit
         length, height, _ = LIP_KIT[kit]
         count += 1
-        if count % 4 != 0:
-            turn = math.radians(rnd.uniform(-15, 15))
+        shelf = shelf_of(s)
+        turn = math.radians(rnd.uniform(-15, 15))
+        if shelf != 1 or count % 4 != 0:
             yaw = math.atan2(-s["dir"][1], s["dir"][0]) + turn
-            # far enough out that a turned stone's inner corner stays off the 6-wide tread
-            # code review r6: the drawn stone is 2 * (.45 + .1 * length) deep; its inner face and turned corner clear
-            depth = 2 * (.45 + .1 * length)
-            at = P(s, s["w"] / 2 + depth / 2 + .1 + abs(math.sin(turn)) * length / 2, s["h"])
-            # round 6 (Fable R6-CDE 6): the bigger stones never hang over a sheer drop (no bank under them)
-            g_at = S.ground(at[0], at[2])
-            if g_at is None or s["h"] - g_at > 3.0:
-                count -= 1
-                i += 1
-                continue
-            out.append({"kit": kit + 1, "at": [round(v, 3) for v in at], "yaw": round(yaw, 4),
-                        "box": {"c": [round(at[0], 3), round(s["h"] + height / 2 - .3, 3), round(at[2], 3)],
+            depth = 2 * (.45 + .1 * length)          # the drawn stone's depth (lip_stone)
+            # its inner reach from its centre (a turned stone's corner too): the centre sits 0.2 inside the edge, or as
+            # far out as keeps that reach within LIP_INTRUDE of the edge
+            reach = lambda t: depth / 2 * math.cos(t) + abs(math.sin(t)) * length / 2
+            # Fable R7 review B: the centre never more than LIP_OUT past the edge (outer stones hung on the wall face);
+            # the turn eases off until the stone's inner reach still keeps within LIP_INTRUDE of the edge
+            while reach(turn) > LIP_INTRUDE + LIP_OUT and abs(turn) > .01:
+                turn *= .8
+            yaw = math.atan2(-s["dir"][1], s["dir"][0]) + turn
+            a = min(s["w"] / 2 + LIP_OUT, max(s["w"] / 2 - .2, s["w"] / 2 - LIP_INTRUDE + reach(turn)))
+            at = P(s, a, s["h"] - (LIP_SINK - .3))      # the kit stone's base is 0.3 under its point: sunk LIP_SINK
+            out.append({"kit": kit + 1, "at": [round(v, 3) for v in at], "yaw": round(yaw, 4), "shelf": shelf,
+                        "seat": round(s["h"], 3),
+                        "box": {"c": [round(at[0], 3), round(s["h"] + height / 2 - LIP_SINK, 3), round(at[2], 3)],
                                 "s": [round(length * .9, 3), round(height, 3), round(depth * .9, 3)], "yaw": round(yaw, 4)}})
-        gap = 4.2 + rnd.uniform(0, .6) if near_glade else rnd.uniform(.6, 3.0)
+        gap = 4.2 + rnd.uniform(0, .6) if near_glade else rnd.uniform(2.5, 4.5)
         if near_glade:
             glade_gaps += 1
         step = (length + gap) / S.SAMPLE
@@ -508,15 +637,16 @@ def lip_layout():
 
 
 def stake_layout():
-    """Three stakes along the outer side of each flight and four round the turn, 4 to 5 apart, leaning a few degrees;
+    """Three stakes along the outer side of the return leg's flight (round 7: none at the foot's) and four round the
+    turn, 4 to 5 apart, leaning a few degrees;
     the rope sags between them. Returns stakes [{at, yaw, lean}] and ropes [[from, to], ...] (rope attach points)."""
     S_ = S.path_samples()
     rnd = np.random.default_rng(59)
     stakes, ropes = [], []
-    groups = [[s for s in S_ if FLIGHT1[0] + .6 <= s["d"] <= FLIGHT1[1]],
-              [s for s in S_ if s["step"]],
+    # Fable R7 review (R6 item 8): the foot flight's stakes read as two flat brown boards by the boulder; they go
+    groups = [[s for s in S_ if s["step"]],
               [s for s in S_ if 62 <= s["d"] <= 74]]
-    for g, n in zip(groups, (3, 3, 4)):
+    for g, n in zip(groups, (3, 4)):
         if not g:
             continue
         span = [g[int(round(k * (len(g) - 1) / (n - 1)))] for k in range(n)]
@@ -556,6 +686,7 @@ def recut_test(points):
     # new wall's cap reaches 3.4 behind it), from under the tread to 1.0 over the cap
     # round 6 (Studio R6e: a bank of island ground stood up beside the inner edge, pale against the wall): every sample
     # near the point, not only the nearest (the hairpin's other leg let it off), and the no-wall envelope to head height
+    # round 7: the wall's span over a bank (wall_span), not the sculpt's
     for p in points:
         near = S._tread_grid().get((math.floor(p[0] / 4), math.floor(p[2] / 4)), ())
         if not _recut_one(p, near):
@@ -570,18 +701,202 @@ def _recut_one(p, near):
         a = (p[0] - s["x"]) * s["out"][0] + (p[2] - s["z"]) * s["out"][1]
         if abs(along) > 1.0:
             continue
-        if s["back"] <= .05:                     # no cut wall here: only the envelope over the tread, to head height
+        back, top = wall_span(s)
+        if back <= .05:                          # no cut wall here: only the envelope over the tread, to head height
             if -s["w"] / 2 - 2.8 <= a <= s["w"] / 2 + .3 and s["h"] - .25 < p[1] < s["h"] + 6.5:
                 return True
             continue
-        if not (-s["w"] / 2 - s["back"] - 3.6 <= a <= s["w"] / 2 + .3):
+        if not (-s["w"] / 2 - back - 3.6 <= a <= s["w"] / 2 + .3):
             continue
-        x, _, z = P(s, -s["w"] / 2 - s["back"] - 3.4, 0)
+        x, _, z = P(s, -s["w"] / 2 - back - 3.4, 0)
         g = S.ground(x, z)
-        roof = max(s["top"], g if g is not None else s["top"]) + 1.0
+        roof = max(top, g if g is not None else top) + 1.0
         if s["h"] - .3 < p[1] < roof:
             return True
     return False
+
+
+_NEAR = None
+
+
+def _near_samples(x, z):
+    """Path samples whose cross-section (the tread plus 11 behind or past it) can reach (x, z): 4-stud buckets."""
+    global _NEAR
+    if _NEAR is None:
+        _NEAR = {}
+        for s in S.path_samples():
+            r = s["w"] / 2 + 11.0
+            for cx in range(math.floor((s["x"] - r) / 4), math.floor((s["x"] + r) / 4) + 1):
+                for cz in range(math.floor((s["z"] - r) / 4), math.floor((s["z"] + r) / 4) + 1):
+                    _NEAR.setdefault((cx, cz), []).append(s)
+    return _NEAR.get((math.floor(x / 4), math.floor(z / 4)), ())
+
+
+def _cross(p, s):
+    """(along, a) of a Roblox point against sample s: along its direction, and toward the lawn from its centre line."""
+    return ((p[0] - s["x"]) * s["dir"][0] + (p[2] - s["z"]) * s["dir"][1],
+            (p[0] - s["x"]) * s["out"][0] + (p[2] - s["z"]) * s["out"][1])
+
+
+BANK = (6.0, -.25, 12.0, .5)        # round 7 (Fable ROUND7 1): behind the inner edge, from / to over the tread, normal y
+
+
+def bank_face(points, ny):
+    """Round 7 (Fable ROUND7 1, the pale bank): an island GROUND face standing on edge (normal y under 0.5) with a point
+    within 6 behind the inner edge, from 0.25 under the tread to 12 over it. Nothing but the cliff's rock stands there."""
+    depth, lo, hi, steep = BANK
+    if ny >= steep:
+        return False
+    for p in points:
+        for s in _near_samples(p[0], p[2]):
+            along, a = _cross(p, s)
+            if abs(along) <= .6 and -s["w"] / 2 - depth <= a <= -s["w"] / 2 + .3 and s["h"] + lo < p[1] < s["h"] + hi:
+                return True
+    return False
+
+
+UNDER = (.5, 1.0)                   # round 7 (Fable ROUND7 2): 0.5 past each edge, down to 1.0 under the tread
+
+
+def under_tread(c):
+    """Round 7 (Fable ROUND7 2, rock slivers through the tread): a face whose centre is within 0.5 past either edge and
+    from 1.0 under the tread up goes (the island's carve stops at 0.3 under it); the tread's skirt hides the hole."""
+    past, down = UNDER
+    for s in _near_samples(c[0], c[2]):
+        along, a = _cross(c, s)
+        if abs(along) <= .6 and abs(a) <= s["w"] / 2 + past and s["h"] - down <= c[1] <= s["h"] + .3:
+            return True
+    return False
+
+
+# Round 7 (Fable ROUND7 3, jagged shards): the orphan sweep (cliff_den_sculpt.carve's, over the terrace only) over two
+# more envelopes. A connected island of 12 faces or fewer, or of 6 square studs or less, whose centre is in one goes.
+SWEEP = (12, 6.0)
+# Fable R7 review A (den/CAM-MOUTH-EAST: hanging cards west of the mouth): the west flank's envelope widened, and there
+# an island of 20 faces or fewer, or of 12 square studs or less, goes
+FLANK = ((-60.0, 6.0, -110.0), (-18.0, 40.0, -90.0))     # the mouth's west flank (x, y, z min and max)
+SWEEP_BY = {"path": SWEEP, "flank": (20, 12.0)}
+
+
+def sweepable(faces, area, env, most=None):
+    """Is an island of `faces` faces and `area` square studs, centred in envelope `env`, small enough to go? `most`
+    (faces, area), when given, raises the envelope's own limit."""
+    lim = SWEEP_BY.get(env) if env else None
+    if lim is None:
+        return False
+    if most:
+        lim = (max(lim[0], most[0]), max(lim[1], most[1]))
+    return len(faces) <= lim[0] or area <= lim[1]
+
+
+def path_envelope(c):
+    """0 to 10 behind the inner edge, from the tread to 14 over it."""
+    for s in _near_samples(c[0], c[2]):
+        along, a = _cross(c, s)
+        behind = -s["w"] / 2 - a
+        if abs(along) <= .6 and -.3 <= behind <= 10.0 and s["h"] - .3 <= c[1] <= s["h"] + 14.0:
+            return True
+    return False
+
+
+def flank_envelope(c):
+    (x0, y0, z0), (x1, y1, z1) = FLANK
+    return x0 <= c[0] <= x1 and y0 <= c[1] <= y1 and z0 <= c[2] <= z1
+
+
+def sweep_envelope(c):
+    return "flank" if flank_envelope(c) else "path" if path_envelope(c) else None
+
+
+def islands(obj):
+    """The connected face islands of a mesh object: ([(faces (bmesh), centre (Roblox), area, normal (Roblox, area
+    weighted))], the bmesh (the caller frees it))."""
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    bm.faces.ensure_lookup_table()
+    mw = obj.matrix_world
+    rot = mw.to_3x3()
+    seen, out = set(), []
+    for f in bm.faces:
+        if f.index in seen:
+            continue
+        stack, isl = [f], []
+        seen.add(f.index)
+        while stack:
+            g = stack.pop()
+            isl.append(g)
+            for e in g.edges:
+                for h in e.link_faces:
+                    if h.index not in seen:
+                        seen.add(h.index)
+                        stack.append(h)
+        area = sum(g.calc_area() for g in isl) or 1e-9
+        cen, nrm = [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]
+        for g in isl:
+            c, w = L.rb(mw @ g.calc_center_median()), g.calc_area()
+            n = L.rb(rot @ g.normal)
+            for k in range(3):
+                cen[k] += c[k] * w / area
+                nrm[k] += n[k] * w
+        out.append((isl, tuple(cen), area, tuple(nrm)))
+    return out, bm
+
+
+def sweep(obj, where=sweep_envelope, most=None):
+    """Delete the small islands (sweepable: per envelope, SWEEP_BY, or `most` if bigger) whose centre is in an envelope.
+    Returns the holes left: [(centre, area, unit normal (Roblox), envelope, [(face centre, its normal)] (biggest first),
+    backed)]; a
+    grass island's hole is not backed (Fable ROUND7 5: the flaps go outright, no masses chase them)."""
+    backed = not re.search(r"__(grass|meadow)", obj.name)
+    isl, bm = islands(obj)
+    gone, holes = [], []
+    for faces, cen, area, nrm in isl:
+        env = where(cen)
+        if not sweepable(faces, area, env, most):
+            continue
+        gone += faces
+        ln = math.sqrt(sum(v * v for v in nrm)) or 1.0
+        mw = obj.matrix_world
+        rot = mw.to_3x3()
+        pts = [(L.rb(mw @ f.calc_center_median()), L.rb(rot @ f.normal)) for f in sorted(faces, key=lambda f: -f.calc_area())]
+        holes.append((cen, area, tuple(v / ln for v in nrm), env, pts, backed))
+    if gone:
+        bmesh.ops.delete(bm, geom=gone, context="FACES")
+        loose = [v for v in bm.verts if not v.link_faces]
+        if loose:
+            bmesh.ops.delete(bm, geom=loose, context="VERTS")
+        bm.to_mesh(obj.data)
+    bm.free()
+    return holes
+
+
+BACKING_CLEAR = 1.0                  # a backing mass's vertices stay this far past the tread's edge (its big decimated
+                                    # faces then never reach over the tread: the tread probe)
+BACKING = ((5.0, 4.0, 2.5), .8, 10.0)   # Fable ROUND7 3: a blob's radii (along, up, depth), how proud, the spacing
+
+
+def backing_blobs(holes, radii=BACKING[0], proud=BACKING[1], spacing=BACKING[2], covered=()):
+    """Rock masses backing the swept holes: one blob per `spacing` studs of hole (its middle, then any of its faces
+    farther than spacing / 2 from a blob or from a `covered` point, a mass already there), its face `proud` in front of
+    the hole along the hole's outward normal (the path side for a hole with no clear normal). Returns rock_mass blobs
+    ((x, y, z), radii, yaw, tilt)."""
+    blobs, at = [], list(covered)
+    reach = min(spacing / 2, radii[0], radii[1])          # a blob covers this far round its point
+    back = radii[2] - proud                               # the blob's front stands `proud` in front of the hole
+    for cen, area, n, env, pts, backed in sorted(holes, key=lambda h: -h[1]):
+        if not backed:
+            continue
+        for p, fn in [(cen, n)] + list(pts):              # the hole's middle first, then its faces, biggest first
+            if any(math.dist(p, q) < reach for q in at):
+                continue
+            nx, nz = fn[0], fn[2]
+            if math.hypot(nx, nz) < .3:                   # flat or unclear: the hole's own, else face the path
+                nx, nz = (n[0], n[2]) if math.hypot(n[0], n[2]) >= .3 else S._nearest(p[0], p[2])["out"]
+            m = math.hypot(nx, nz)
+            nx, nz = nx / m, nz / m
+            at.append(p)
+            blobs.append(((p[0] - nx * back, p[1], p[2] - nz * back), radii, math.atan2(nx, nz), 0.0))
+    return blobs
 
 
 def tuck(obj):
