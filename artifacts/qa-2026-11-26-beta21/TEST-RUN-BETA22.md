@@ -1,4 +1,4 @@
-# Pocket Pals QA run: beta (22), the den, cliff path, terrace and Top Lawn
+# Pocket Pals QA run: beta (22) to (25), the den, cliff path, terrace and Top Lawn
 
 **Beta:** Pocket Pals Beta, beta (22). Everything in the beta (21) list still applies (`TEST-RUN-BETA21.md`).
 
@@ -30,6 +30,12 @@
 - [ ] Walk up the path: the wind rises the higher you go (with `/alive windbed on`), the stream fades. On the terrace: wind, little water.
 - [ ] At night (`/hour at 2800` jumps the clock): the den's lanterns glow warmer, small glowing caps line the path edge, the turn and the lookout, fireflies over the terrace.
 - [ ] **On your phone:** does it stay smooth up there at night?
+
+## 6. New in beta (25): the loading screen and polish
+
+- [ ] **Join on your phone and on PC:** "Hatch a Handheld Pal" over the moving checker, five pals waving in turn in different colours and outfits, the bar filling. Skip shows bottom-right after 10 s. Everything fades out together.
+- [ ] The den mouth reads as one rock cliff with its lintel and sign; the terrace edge is broken, not straight; the Top Lawn's edge stones match the path.
+- [ ] In the Pocket Deck the counter says **BALLS LEFT**.
 
 ## Notes
 
