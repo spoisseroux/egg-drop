@@ -397,9 +397,12 @@ function Juice:dropped(now)
 end
 -- First contacts in an impact batch (P3). batch: {{id, normal, speed}, ...}; where(id) -> overlay px point, px radius,
 -- tier (nil when the ball is not drawn); plopped: the board's own plop sounded for this batch.
-function Juice:impacts(batch,now,plopped,where)
- if not self.isOn then return end
- local sounded=plopped==true
+-- Review B37: exactly one land cue per batch. `busy` (the board's plop gap has not passed) keeps this one quiet too; it
+-- answers true when it played the batch's cue, and the board then plays no plop of its own for the batch.
+function Juice:impacts(batch,now,busy,where)
+ if not self.isOn then return false end
+ local sounded=busy==true
+ local played=false
  for _,impact in ipairs(batch)do
   local id=impact[1]
   if id~=nil and not self.seen[id]and(impact[3]or 0)>=4 then
@@ -413,12 +416,13 @@ function Juice:impacts(batch,now,plopped,where)
     end
     if not sounded and self:can("landcue")and self.audio then
      sounded=true
-     self.audio:play("land",Juice.TierPitch[math.clamp(tier or 1,1,5)],Juice.Gain.land)
+     played=self.audio:play("land",Juice.TierPitch[math.clamp(tier or 1,1,5)],Juice.Gain.land)~=false
     end
     if self:can("haptics")and self.haptics then self.haptics.play("land")end
    end
   end
  end
+ return played
 end
 -- The drawn size of ball `id` (LCD radii scales): the overshoot, the land squash and the fresh drop's stretch.
 function Juice:shape(id,bornAt,now)

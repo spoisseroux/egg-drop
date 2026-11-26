@@ -792,7 +792,8 @@ Kit.PressScale=table.freeze({
 -- springs can ever run (Alive's place ceiling, read once); the live game keeps today's button tree exactly. Specs set it.
 Kit.FaceOn=(function()local ok,on=pcall(Alive.ceiling,"springs");return ok and on==true end)()
 -- Deck juice P5 (AeroUI: the aero press, the key glints, the card caustics, the rolling Stars): required on first use and
--- only where its switch can ever be on (Alive "deckjuice", read once); the live game never loads it.
+-- only where its switch can ever be on (Alive "deckjuice", read once). The live game loads AeroUI (init.client starts it
+-- for the menu lift and counters' sound) but every piece of it checks the switch, so live keeps today's keys and cards.
 Kit.AeroOn=(function()local ok,on=pcall(Alive.ceiling,"deckjuice");return ok and on==true end)()
 local aeroModule=nil
 function Kit.aero()
