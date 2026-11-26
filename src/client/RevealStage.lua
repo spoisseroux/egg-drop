@@ -31,6 +31,7 @@ local BaseColors=require(ReplicatedStorage.Shared.PetBaseColors)
 local ItemStage=require(script.Parent.HatchItemStage)
 local Rarity=require(script.Parent.HatchRarityCue)
 local Copy=require(ReplicatedStorage.Shared.UICopy)
+local Layout=require(script.Parent.RevealLayout)
 local Stage={};Stage.__index=Stage
 
 -- ── Pure rules (specs cover these) ───────────────────────────────────────────
@@ -324,57 +325,64 @@ end
 
 -- Layout (1.2). Desktop numbers are authored at 1920x1080 and phone numbers at
 -- 812x354, then scaled; left items keep their left offset, right items their
--- right offset, so wider screens open up the middle.
--- Beta 14 Q3: on a phone the button row keeps RowClear px clear of the stage card (shot 2: Back sat 8 px inside it at
--- 844 x 390). Back (the short label) gives way first, down to PlayMin; then the card narrows (never under 1.3 pet boxes).
-Stage.RowClear=12
-Stage.PlayMin=110
+-- right offset, so wider screens open up the middle. The numbers live in RevealLayout (pure, run by the offline
+-- specs), with the safe card (Onboard "safecard", ONBOARDING-V2 step 4): one content box inside the CoreUISafeInsets
+-- rect, scaled by its short side, never cropped.
+Stage.RowClear=Layout.RowClear
+Stage.PlayMin=Layout.PlayMin
 -- Held to the beta place and Studio (DeckLook.on); live keeps today's layout exactly.
 function Stage.rowClearOn()
  local ok,on=pcall(function()return require(ReplicatedStorage.Shared.DeckLook).on()end)
  return ok and on==true
 end
 -- clear (specs): true / false forces the Q3 row rule on or off; nil asks Stage.rowClearOn().
-function Stage.geometry(W,H,clear)
- local L={W=W,H=H,phone=Kit.compactRule(W,H)or W<760}
+-- safe: nil (today's layout) or the safe rect {x, y, w, h} in the root's pixels (the safe card).
+function Stage.geometry(W,H,clear,safe)
  if clear==nil then clear=Stage.rowClearOn()end
- if L.phone then
-  local s=math.min(W/812,H/354);L.s=s
-  local top=60
-  L.petX=math.floor(W*268/812);L.feet=H-math.floor(48*s);L.petH=188*s;L.petBox=230*s
-  L.coneTop,L.coneBottom=34*s,240*s
-  L.poolRX,L.poolRY,L.ring=120*s,24*s,math.max(2,4*s)
-  L.headX,L.headY=math.max(24,math.floor(22*s)),math.max(top+4,math.floor(64*s))
-  L.tagSize,L.lineSize=12,math.max(18,27*s);L.dropTag=W<700
-  L.plateX=W-math.floor(368*s);L.plateY=math.max(top+40,math.floor(104*s));L.plateH=math.max(44,math.floor(60*s))
-  L.nameSize=math.max(26,46*s);L.plateTag=12
-  L.descX=W-math.floor(342*s);L.descY=L.plateY+L.plateH+math.floor(34*s);L.descSize=math.max(12,14*s);L.descW=math.floor(300*s);L.descLines=1
-  L.btnH=48;L.btnY=H-L.btnH-math.floor(14*s);L.meetW=math.max(120,math.floor(176*s));L.playW=math.max(110,math.floor(150*s))
-  L.margin=24;L.gap=10;L.btnText=16
-  L.hintX,L.hintY,L.hintSize=L.petX,H-math.floor(16*s),12
-  local wellRight=L.petX+math.floor(math.min(L.petBox*1.7,L.petX*2-32))/2
-  local rowLeft=W-L.margin-L.meetW-L.gap-L.playW
-  local need=math.ceil(wellRight+Stage.RowClear-rowLeft)
-  if clear and need>0 then
-   local give=math.min(need,math.max(0,L.playW-Stage.PlayMin))
-   L.playW-=give;rowLeft+=give;need-=give
-   if need>0 then L.wellW=math.max(math.floor(L.petBox*1.3),math.floor((rowLeft-Stage.RowClear-L.petX)*2))end
-  end
- else
-  local s=math.min(W/1920,H/1080);L.s=s
-  L.petX=math.floor(W*800/1920);L.feet=H-math.floor(238*s);L.petH=590*s;L.petBox=700*s
-  L.coneTop,L.coneBottom=92*s,700*s
-  L.poolRX,L.poolRY,L.ring=350*s,70*s,math.max(2,4*s)
-  L.headX,L.headY=math.floor(88*s),math.floor(76*s);L.tagSize,L.lineSize=math.max(12,26*s),math.max(24,80*s)
-  L.plateX=W-math.floor(910*s);L.plateY=L.feet-math.floor(202*s);L.plateH=math.max(56,math.floor(168*s))
-  L.nameSize=math.max(28,128*s);L.plateTag=math.max(12,22*s)
-  L.descX=W-math.floor(812*s);L.descY=L.feet+math.floor(36*s);L.descSize=math.max(14,26*s);L.descW=math.floor(700*s);L.descLines=2
-  L.btnH=math.max(44,math.floor(72*s));L.btnY=H-math.floor(112*s);L.meetW=math.max(160,math.floor(300*s));L.playW=math.max(130,math.floor(240*s))
-  L.margin=math.floor(88*s);L.gap=math.max(10,math.floor(16*s));L.btnText=math.max(16,math.floor(22*s))
-  L.hintX,L.hintY,L.hintSize=L.petX,H-math.floor(118*s),math.max(12,16*s)
-  L.nextX,L.nextY,L.nextSize=math.floor(88*s),H-math.floor(76*s),math.max(12,16*s)
+ return Layout.geometry(W,H,clear,safe)
+end
+-- The safe card's switch (Onboard "safecard"): every pet reveal drawn by this stage follows it.
+function Stage.safeCardOn()
+ local ok,on=pcall(function()return require(ReplicatedStorage.Shared.Onboard).on("safecard")end)
+ return ok and on==true
+end
+-- One CoreUISafeInsets probe per PlayerGui (the clientUI.insetProbe pattern): a full-size Frame in a ScreenGui that
+-- Roblox keeps clear of its top bar and the notch.
+local safeProbe
+function Stage.safeProbe(root)
+ if safeProbe and safeProbe.Parent and safeProbe.Parent.Parent then return safeProbe end
+ local holder=root and root:FindFirstAncestorOfClass("PlayerGui")
+ if not holder then return nil end
+ local gui=holder:FindFirstChild("EggDropCoreSafeProbe")
+ if not gui then
+  gui=Instance.new("ScreenGui");gui.Name="EggDropCoreSafeProbe";gui.ResetOnSpawn=false;gui.DisplayOrder=0
+  gui.ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets;gui.IgnoreGuiInset=false;gui.Parent=holder
  end
- return L
+ local frame=gui:FindFirstChild("Probe")
+ if not frame then
+  frame=Instance.new("Frame");frame.Name="Probe";frame.BackgroundTransparency=1;frame.Active=false
+  frame.Size=UDim2.fromScale(1,1);frame.Parent=gui
+ end
+ safeProbe=frame
+ return frame
+end
+-- The safe rect in `root`'s pixels, or nil (switch off, or nothing measurable). GuiService:GetGuiInset() stands in
+-- while the probe has no size yet.
+function Stage.safeRect(root)
+ if not Stage.safeCardOn()then return nil end
+ local rp,rs=root.AbsolutePosition,root.AbsoluteSize
+ local probe=Stage.safeProbe(root)
+ local pp,ps
+ if probe and probe.AbsoluteSize.X>0 and probe.AbsoluteSize.Y>0 then pp,ps=probe.AbsolutePosition,probe.AbsoluteSize
+ else
+  -- An IgnoreGuiInset root starts above the inset area (a negative AbsolutePosition.Y); else take the top bar's inset.
+  local top=if rp.Y<0 then -rp.Y else GuiService:GetGuiInset().Y
+  pp,ps=Vector2.new(rp.X,rp.Y+top),Vector2.new(rs.X,rs.Y-top)
+ end
+ local x0,y0=math.max(0,pp.X-rp.X),math.max(0,pp.Y-rp.Y)
+ local x1,y1=math.min(rs.X,pp.X+ps.X-rp.X),math.min(rs.Y,pp.Y+ps.Y-rp.Y)
+ if x1-x0<64 or y1-y0<64 then return nil end
+ return{x=x0,y=y0,w=x1-x0,h=y1-y0}
 end
 
 -- Deterministic scatter for sparkles and dust (no random state in a sample).
@@ -758,12 +766,8 @@ function Stage:placeCamera()
 end
 
 -- The well behind the pet: from the top of the stage to just under its feet.
-function Stage.wellRect(L)
- local top=math.max(16,math.floor(L.feet-L.petH*1.55))
- local bottom=math.min(L.H-8,math.floor(L.feet+math.max(30,L.petH*.2)))
- local w=L.wellW or math.floor(math.min(L.petBox*1.7,L.petX*2-32))
- return math.floor(L.petX-w/2),top,w,bottom-top
-end
+-- (RevealLayout: today's numbers, and the safe card's box and top floor.)
+Stage.wellRect=Layout.wellRect
 function Stage:paintBackdrop()
  local b=self.backdrop;if not b or not self.L then return end
  local alpha=self.root.BackgroundTransparency
@@ -779,7 +783,18 @@ end
 function Stage:layout()
  local size=self.root.AbsoluteSize
  local W,H=math.max(1,size.X),math.max(1,size.Y)
- local L=Stage.geometry(W,H);self.L=L
+ -- The safe card (Onboard "safecard"): the content box inside the CoreUISafeInsets rect, re-laid when it changes.
+ local safe=Stage.safeRect(self.root)
+ if safe and not self.safeWatch then
+  local probe=Stage.safeProbe(self.root)
+  if probe then
+   self.safeWatch=true
+   table.insert(self.connections,probe:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()if not self.destroyed then self:layout()end end))
+   table.insert(self.connections,probe:GetPropertyChangedSignal("AbsolutePosition"):Connect(function()if not self.destroyed then self:layout()end end))
+  end
+ end
+ local L=Stage.geometry(W,H,nil,safe);self.L=L
+ self.root:SetAttribute("SafeCard",safe~=nil)
  do
   local b=self.backdrop
   local x,y,w,h=Stage.wellRect(L)
@@ -875,7 +890,7 @@ function Stage:layout()
  local tw=C.measure(tagText,L.plateTag).X+math.floor(L.plateTag*1.4)
  local th=math.floor(L.plateTag*1.6)
  self.plateTagBox.Size=UDim2.fromOffset(tw,th);self.plateTagBox.Position=UDim2.fromOffset(math.floor(L.plateH*.42),-th)
- local available=W-L.plateX-L.plateH*.5-(if L.phone then 24 else 60)
+ local available=Layout.right(L)-L.plateX-L.plateH*.5-(if L.phone then 24 else 60)
  local wanted=C.measure(self.name.Text,L.nameSize).X
  local nameSize=if wanted>available then math.max(20,math.floor(L.nameSize*available/wanted))else math.floor(L.nameSize)
  self.name.TextSize=nameSize
@@ -904,7 +919,7 @@ function Stage:layout()
  self.desc.Position=UDim2.fromOffset(math.floor(L.descSize*.9),0);self.desc.Size=UDim2.fromOffset(math.floor(textW),boxH)
  self.desc.TextWrapped=L.descLines>1
  -- Buttons right-aligned at the bottom; Meet on the right.
- local x=W-L.margin
+ local x=Layout.right(L)-L.margin
  for index=#self.buttons,1,-1 do
   local entry=self.buttons[index]
   local w=if entry.primary then L.meetW else L.playW
@@ -934,8 +949,9 @@ end
 function Stage:fitHeadline(L)
  local h=self.headline
  local kind=Stage.headline(self.kind)
- -- Re-run the headline measure at the layout's sizes.
- local tagSize,lineSize=math.floor(L.tagSize),math.floor(L.lineSize)
+ -- Re-run the headline measure at the layout's sizes (the safe card shrinks a line that would leave its box).
+ local tagSize=math.floor(L.tagSize)
+ local lineSize=Layout.headlineSize(L,kind[2],function(text,size)return C.measure(text,size).X end)
  h.tagText.TextSize,h.label.TextSize,h.shadow.TextSize=tagSize,lineSize,lineSize
  local tw=C.measure(kind[1],tagSize);local lw=C.measure(kind[2],lineSize)
  local tagH=if L.dropTag then 0 else math.floor(tagSize*1.45)
