@@ -420,6 +420,19 @@ function View:showRevealBackdrop(on)
 	on = on == true and self.shade.Visible
 	if backdrop.Visible == on then return end
 	backdrop.Visible = on
+	if on then
+		-- AERO-JUICE-BRIEF 3 (the Alive `aerohatch` switch): the egg beats before the hand-off play on the Sky backdrop
+		-- (HatchAero Sky back to backDeep, top to bottom) instead of the black stage, so the card opens onto the same sky.
+		local Aero = require(ReplicatedStorage.Shared.HatchAero)
+		local aero = Aero.on()
+		local sky = Aero.palette("Common")
+		local gradient = backdrop:FindFirstChild("AeroSky")
+		if aero and not gradient then
+			gradient = Kit.node("UIGradient", backdrop, { Name = "AeroSky", Rotation = 90, Color = ColorSequence.new(sky.back, sky.backDeep) })
+		end
+		if gradient then gradient.Enabled = aero end
+		backdrop.BackgroundColor3 = if aero then Color3.new(1, 1, 1) else C.Stage
+	end
 	if on and not self:eggReduced() then
 		backdrop.BackgroundTransparency = 1
 		Kit.tween(backdrop, .15, { BackgroundTransparency = 0 })

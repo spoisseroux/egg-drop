@@ -1,6 +1,7 @@
 local TweenService = game:GetService("TweenService")
 local Palette = require(game:GetService("ReplicatedStorage").Shared.DeckPalette)
 local Art = require(script.Parent.DeckArt)
+local Aero = require(game:GetService("ReplicatedStorage").Shared.HatchAero)
 
 local Reveal = {}
 Reveal.__index = Reveal
@@ -81,10 +82,12 @@ function Reveal:start(valid, cue, color)
 		egg:Destroy()
 		self.audio:play("hatch")
 		self:playTween(self.scale, 0.36, { Scale = 1 }, Enum.EasingStyle.Back)
-		local ring = shape(self.layer, "HatchRing", Palette.Amber, center, UDim2.fromOffset(45, 45), 12)
+		-- AERO-JUICE-BRIEF 3 (the Alive `aerohatch` switch): the ring and the flecks are sky and white, not amber.
+		local sky = if Aero.on() then Aero.palette("Common") else nil
+		local ring = shape(self.layer, "HatchRing", if sky then sky.edge else Palette.Amber, center, UDim2.fromOffset(45, 45), 12)
 		ring.BackgroundTransparency = 1
 		local glow = Instance.new("UIStroke")
-		glow.Color, glow.Thickness = Art.Amber, 2
+		glow.Color, glow.Thickness = if sky then sky.edge else Art.Amber, 2
 		glow.Parent = ring
 		self:playTween(ring, 0.48, { Size = UDim2.fromOffset(176, 94) })
 		self:playTween(glow, 0.48, { Transparency = 1 })
@@ -102,7 +105,7 @@ function Reveal:start(valid, cue, color)
 		end
 		for i = 1, 8 do
 			local angle = i * math.pi / 4
-			local tint = if i % 2 == 0 then Art.Amber else Art.Cyan
+			local tint = if sky then (if i % 2 == 0 then Color3.new(1, 1, 1) else sky.edge) elseif i % 2 == 0 then Art.Amber else Art.Cyan
 			local fleck = Art.frame(self.layer, "PixelRay", tint, center, UDim2.fromOffset(9, 3), 12)
 			fleck.AnchorPoint = Vector2.new(0.5, 0.5)
 			fleck.Rotation = math.deg(angle)

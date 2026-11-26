@@ -120,8 +120,33 @@ return function(client,parent)
     for _,c in ipairs({st.core,st.edge,st.ray})do local h=c:ToHSV()*360;assert(h<150 or h>200,tier.." has a teal hue")end
     assert(Kit.contrast(st.core,Color3.new(1,1,1))>=2 and Kit.contrast(st.core,Stage.Ink)>=5,tier.." core reads with white and ink items")
    end
-   local stage=open(844,390,{tier="Uncommon"})
+   -- Off (the Alive `aerohatch` switch, forced here): the old wells exactly.
+   local stage=open(844,390,{tier="Uncommon",aero=false})
    assert(stage.well.BackgroundColor3==Rarity.Stage.Uncommon.edge and stage.core.ImageColor3==Rarity.Stage.Uncommon.core and stage.rimStroke.Color==Rarity.Look.Uncommon.color)
+   assert(stage.aeroParts==nil and stage.raysImage.ImageRectOffset==Vector2.new(0,0),"the sunburst, no Aero parts")
+  end)
+  test("AERO-JUICE-BRIEF 3: Sky, Meadow and Aurora wells; shafts from the top, a horizon, bubbles in the egg's accent",function()
+   local Aero=Rarity.Aero
+   for _,tier in ipairs({"Common","Uncommon","Rare"})do
+    local p=Aero.palette(tier)
+    local stage=open(844,390,{tier=tier,kind="toy",aero=true});at(stage,.5)
+    local st,lk=Rarity.stageLook(tier,true),Rarity.lookOf(tier,true)
+    assert(stage.aero==true and stage.well.BackgroundColor3==p.edge and stage.core.ImageColor3==p.core and st.edge==p.edge,tier.." well")
+    assert(stage.rimStroke.Color==lk.color and lk.color==p.look,tier.." rim")
+    assert(stage.raysImage.ImageRectOffset==Vector2.new(512,0)and stage.aeroParts.raysAlt.ImageRectOffset==Vector2.new(512,0),"the shafts, not the sunburst")
+    assert(math.abs(stage.raysImage.ImageTransparency-(1-Aero.Rays.alpha))<1e-6 and stage.raysImage.Position.Y.Scale==0,"soft, from the top")
+    assert(#stage.aeroParts.bubbles==p.bubbles and #stage.aeroParts.sparkles==p.glints+p.sparkles,tier.." bubbles and sparkles")
+    local shown=0;for _,b in ipairs(stage.aeroParts.bubbles)do if b.node.Visible then shown+=1 end end
+    assert(shown>0,"bubbles rise before the burst")
+    assert(stage.aeroParts.bubbles[1].stroke.Color==Aero.accent("toy",1),"the rim is the Toy Egg's accent")
+    assert(stage.floorShadow.ImageColor3==p.shadow,"no cocoa shadow on the grass")
+    for i=1,6 do assert(stage:stoneColor(i)~=Color3.fromHex("#FFC14D"),"no Stars gold in the confetti")end
+    -- Common and Uncommon (the Bear's sky too) never teal-grey: saturated edges (HatchAero.spec has the full check).
+    local _,s=p.edge:ToHSV();assert(s>=.6,tier.." edge saturated")
+   end
+   local reduced=open(844,390,{tier="Uncommon",aero=true,reduced=function()return true end});at(reduced,.95)
+   local b=reduced.aeroParts.bubbles[1];local before=b.node.Position
+   reduced.clock+=2;at(reduced,1.5);assert(b.node.Position==before and reduced.raysImage.Rotation==0,"Reduced Motion: still rays and bubbles")
   end)
   test("layout: phone 844x390 matches the spec rects; 812x354, 568x320, PC and portrait stay on screen",function()
    local L=Stage.geometry(844,390)

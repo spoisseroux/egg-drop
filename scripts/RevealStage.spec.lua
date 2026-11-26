@@ -166,7 +166,9 @@ return function(client,parent)
     local stage=Stage.show(host,{pet=Pets.byId.pip,tag="new",reduced=false,instant=true,buttons={{id="meet",text="Meet Bear",primary=true}}})
     table.insert(stages,stage);stage.connection:Disconnect();stage.connection=nil
     local L=stage.L;local cut,body=stage.plateCut,stage.plateBody
-    assert(cut.Rotation==0 and cut.AnchorPoint==Vector2.zero and cut.BackgroundColor3==body.BackgroundColor3 and cut.BackgroundTransparency==0,"same colour, not a turned block")
+    -- (Aero, brief 3: both are the same white glass at 85%; off, both opaque.)
+    assert(cut.Rotation==0 and cut.AnchorPoint==Vector2.zero and cut.BackgroundColor3==body.BackgroundColor3 and cut.BackgroundTransparency==body.BackgroundTransparency,"same colour, not a turned block")
+    assert(body.BackgroundTransparency==(if stage.aero then .15 else 0))
     assert(cut.Position.Y.Offset==0 and cut.Size.Y.Offset==L.plateH and body.Position.Y.Offset==0 and body.Size.Y.Offset==L.plateH,"the end shares the plate's top and bottom edges")
     assert(cut.Position.X.Offset<0 and cut.Position.X.Offset+cut.Size.X.Offset>=1 and cut.Position.X.Offset+cut.Size.X.Offset<=3,"the end starts left of the plate and overlaps it, so no gap shows")
     local keys=stage.plateCutGradient.Transparency.Keypoints
@@ -453,6 +455,29 @@ return function(client,parent)
    table.insert(stages,quiet);if quiet.connection then quiet.connection:Disconnect();quiet.connection=nil end
    quiet:settle(true);assert(quiet:isSettled(),"a quiet settle (a jump, a lost owner) is never held")
    held:destroy();quiet:destroy();host:Destroy()
+  end)
+  test("AERO-JUICE-BRIEF 3: the Bear's card is Sky with a grass horizon, white glass plate with ink, no gold; off is the old card",function()
+   local Rarity=require(client.HatchRarityCue);local Aero=Rarity.Aero
+   local gold=Color3.fromHex("#FFC14D");local sky=Aero.palette("Common")
+   local host=Instance.new("Frame");host.Size=UDim2.fromOffset(844,390);host.BackgroundTransparency=1;host.Parent=gui
+   local bear=Stage.show(host,{pet=Pets.byId.pip,tag="new",reduced=false,aero=true,buttons={{id="meet",text="Meet Bear",primary=true}}})
+   table.insert(stages,bear);if bear.connection then bear.connection:Disconnect();bear.connection=nil end
+   for _=1,12 do bear:step(.1)end
+   local b=bear.backdrop
+   assert(bear.aero and b.aeroParts and b.well.BackgroundColor3==sky.edge and b.core.ImageColor3==sky.core,"the Sky well")
+   assert(b.aeroParts.horizon and b.aeroParts.horizon.Size.X.Offset>0 and #b.aeroParts.bubbles==sky.bubbles,"grass and six bubbles")
+   assert(b.aeroParts.bubbles[1].stroke.Color==Aero.accent("companion",1),"bubble rims in the Companion Egg's accent")
+   assert(bear.plateBody.BackgroundColor3==Color3.new(1,1,1)and bear.plateBody.BackgroundTransparency==.15 and bear.name.TextColor3==Aero.Plate.ink,"white glass, ink name")
+   assert(bear.plateTag.TextColor3~=gold and bear.headline.tag.BackgroundColor3~=gold and bear.headline.shadow.TextColor3==sky.deep,"no gold on the card")
+   assert(bear.headline.label:FindFirstChild("AeroOutline")and bear.headline.label.AeroOutline.Color==sky.deep,"the headline's deep outline")
+   for _,seg in ipairs(bear.ringSegs)do assert(seg.BackgroundColor3==Color3.new(1,1,1))end
+   for _,piece in ipairs(bear.confettiPieces)do assert(piece.BackgroundColor3~=gold)end
+   assert(bear.pool[1].node.BackgroundColor3==sky.floor and bear.petGlow[1].BackgroundColor3==sky.core,"no warm lights")
+   bear:destroy()
+   local old=Stage.show(host,{pet=Pets.byId.pip,tag="new",reduced=false,aero=false,instant=true,buttons={{id="meet",text="Meet Bear",primary=true}}})
+   table.insert(stages,old);if old.connection then old.connection:Disconnect();old.connection=nil end
+   assert(not old.aero and old.backdrop.aeroParts==nil and old.plateBody.BackgroundColor3==gold and old.backdrop.well.BackgroundColor3==Rarity.Stage.Common.edge,"off: the old card")
+   old:destroy();host:Destroy()
   end)
  end)
  for _,stage in ipairs(stages)do pcall(function()stage:destroy()end)end

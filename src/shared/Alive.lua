@@ -18,11 +18,13 @@ Alive.PlaceId=107705084891479 -- Pocket Pals Beta
 -- (DriftLanternsClient). Missing = on.
 -- GARDEN-PLAY-BRIEF-2 (beta 35 notes 4 and 8): `fruit` is the 3D fruit, the tree shake, the five-bite snack and its Heart
 -- XP (GardenFruit, FruitHost); `keepout` is the pets going round the garden's solid props (GardenKeepOut). Missing = on.
+-- AERO-JUICE-BRIEF (beta 36) section 3: `aerohatch` is the Sky / Meadow / Aurora hatch and reveal cards (HatchAero,
+-- HatchItemStage, RevealStage); off is the old orange sunburst look. Missing = on.
 Alive.Features=table.freeze({"springs","menus","close","wind","life","scene","snack","windbed","asmr","wobble","balls","crunch","air",
- "fruit","keepout"})
+ "fruit","keepout","aerohatch"})
 local FlagNames=table.freeze({springs="AliveSprings",menus="AliveMenus",close="AliveClose",wind="AliveWind",life="AliveLife",
  scene="AliveScene",snack="AliveSnack",windbed="AliveWindbed",asmr="AliveAsmr",wobble="AliveWobble",balls="AliveBalls",
- crunch="AliveCrunch",air="AliveAir",fruit="AliveFruit",keepout="AliveKeepOut"})
+ crunch="AliveCrunch",air="AliveAir",fruit="AliveFruit",keepout="AliveKeepOut",aerohatch="AliveAeroHatch"})
 -- What a missing or malformed config value means, where it is not on.
 Alive.Defaults=table.freeze({windbed=false})
 
