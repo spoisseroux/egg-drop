@@ -5387,6 +5387,14 @@ do
  if ok and toys then gui.Destroying:Connect(function()toys:destroy()end)
  elseif not ok then warn("[CrunchToys] not mounted: "..tostring(toys))end
 end
+-- Drift lanterns over the garden (GARDEN-PLAY-BRIEF 2026-11-26 section 4, DriftLanternsClient): nil where the Alive `air`
+-- ceiling is closed (live).
+do
+ local ok,air=pcall(function()return require(script.DriftLanternsClient).mount({mode=function()return board:GetAttribute("Mode")end,
+  reduced=function()return reduceEffects()==true end})end)
+ if ok and air then gui.Destroying:Connect(function()air:destroy()end)
+ elseif not ok then warn("[DriftLanterns] not mounted: "..tostring(air))end
+end
 -- Things to do (Shared.Things): nothing at all with the build ceiling off; with the switch off only the switches are
 -- watched. clientUI.things is what the Pocket menu's page (MachineHub), the coach's last line (ThingsTips) and the trail
 -- (ThingsTrail) ask.

@@ -111,5 +111,7 @@ return table.freeze({PetTrail=true,FirstHelloBonus=true,RoundTwoNudge=true,ToyPi
  AliveAsmr=true,
  -- AliveCrunch (GARDEN-PLAY-BRIEF 2026-11-26 section 2): the crunchy toys round the garden (client only); beta and Studio only.
  AliveCrunch=true,
+ -- AliveAir (GARDEN-PLAY-BRIEF 2026-11-26 section 4): the drift lanterns and seed fluff (client only); beta and Studio only.
+ AliveAir=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
  PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,PlayerScale=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true,TierPets=true,ParkTopLawn=true})
