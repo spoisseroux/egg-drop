@@ -309,7 +309,7 @@ def den_recuts(Den, rows, shell):
 
 def rock_skin(name, where, steep=.65):
     """Fable world R1 fixes 2 and 9 (R2): the island's steep ground faces (W1_ground, tan in game) that show where the
-    sculpt took the rock in front of them get a rock skin 0.12 proud along their normals, in the island's cliff rock at
+    sculpt took the rock in front of them get a rock skin 0.12 proud (one welded surface), in the island's cliff rock at
     the hill's cell size. The ground faces stay behind it (nothing opens)."""
     import bmesh as _bm
     verts, faces = [], []
@@ -325,7 +325,7 @@ def rock_skin(name, where, steep=.65):
                 continue
             base = len(verts)
             for k in p.vertices:
-                verts.append(mw @ o.data.vertices[k].co + n * .12)
+                verts.append(mw @ o.data.vertices[k].co)
             faces.append(list(range(base, base + len(p.vertices))))
     if not faces:
         return None
@@ -336,6 +336,17 @@ def rock_skin(name, where, steep=.65):
     bm = _bm.new()
     bm.from_mesh(me)
     _bm.ops.remove_doubles(bm, verts=bm.verts, dist=1e-3)
+    # Round 5 (studio-r3/05: thin tan wedges along the path wall): weld first, then lift each vertex along its averaged
+    # normal, so neighbouring faces keep their shared edges. Offsetting each face along its own normal opened a crack
+    # wherever two faces met at an angle, and the ground showed through it.
+    bm.normal_update()
+    lifts = [(v, v.normal.copy()) for v in bm.verts if v.link_faces]
+    for v, nv in lifts:
+        # opposite-wound faces welded together cancel the averaged normal: leave such a vertex where it is
+        cos = min((nv.dot(f.normal) for f in v.link_faces), default=1.0)
+        if nv.length < .5 or cos <= .1:
+            continue
+        v.co += nv * (.12 / max(cos, .5))
     bm.to_mesh(me)
     bm.free()
     for p in me.polygons:
@@ -502,6 +513,7 @@ def slice_den():
     place["apronStones"] = Den.APRON_STONES
     place["tufts"] = Den.APRON_TUFTS
     place["paw"] = Den.PAW
+    place["frame"], place["cloth"] = Den.FRAME, Den.CLOTH
     # templates: lantern (cage + panes), crystal, flat stone
     cage, panes = Den.build_lantern()
     crystal = Den.build_crystal()

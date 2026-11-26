@@ -201,7 +201,7 @@ function Mount.dressDen(model,room,env)
 	local dress=slice and slice.dress
 	if not dress then return 0 end
 	local L=dress.lantern
-	local made,hide,recolour={},{},{}
+	local made,hide,recolour,cloth,framed={},{},{},{},0
 	local function add(template,cf,size)
 		local part=still(pack[template]:Clone())
 		part.Size,part.CFrame=size,cf
@@ -250,12 +250,49 @@ function Mount.dressDen(model,room,env)
 		elseif string.match(row.Name,"^W7D_bay%d+Deck$")then
 			-- Fable world R1 6: the propped Deck's body (its back fills CAM-DEN-BACK) takes the stump's dark wood
 			table.insert(recolour,row)
+		elseif dress.cloth and(string.match(row.Name,"^W7D_.+Sheet$")or string.match(row.Name,"^W7D_.+Drape$"))then
+			-- Fable world R1 18: the crates' dust sheets read as cloth, not speckled granite
+			table.insert(cloth,row)
 		end
+	end
+	-- Fable world R1 10: the lintel one plank row (its underside stays on the trim), the sign standing on it
+	local F,lintel,sign=dress.frame,model:FindFirstChild("W7D_FrameLintel"),model:FindFirstChild("W7D_Sign")
+	if F and lintel and sign then
+		local bottom=lintel.CFrame.Position.Y-lintel.Size.Y/2
+		local at=lintel.CFrame.Position
+		lintel.Size=Vector3.new(lintel.Size.X,F.lintel,lintel.Size.Z)
+		lintel.CFrame=CFrame.new(at.X,bottom+F.lintel/2,at.Z)*lintel.CFrame.Rotation
+		local s=sign.CFrame.Position
+		sign.Size=Vector3.new(F.sign[1],F.sign[2],sign.Size.Z)
+		sign.CFrame=CFrame.new(s.X,bottom+F.gap+F.sign[2]/2,s.Z)*sign.CFrame.Rotation
+		framed=2
 	end
 	for _,row in ipairs(hide)do row.Transparency=1 end
 	for _,row in ipairs(recolour)do row.Color=Color3.fromHex("#5C4330");row.Material=Enum.Material.Wood end
+	for _,row in ipairs(cloth)do
+		row.Color=Color3.fromHex(dress.cloth.color);row.Material=Enum.Material[dress.cloth.material]
+	end
 	for _,part in ipairs(made)do part.Parent=model end
-	return #hide+#recolour
+	return #hide+#recolour+#cloth+framed
+end
+
+-- The path's lip-stone kit for other builders (round 5, Fable world R1 20: the Top Lawn's rim boulders): the kit piece
+-- `k` (1..5) stretched to `size` (the stone it replaces: width, height, depth), on `at` (a Vector3 on the lawn; sunk as
+-- the kit is, 0.3 at kit scale), turned by `yaw`. Nil without the pack or the path slice's kit data (the caller keeps
+-- its own stone).
+function Mount.kitStone(k,at,size,yaw,env)
+	env=env or {}
+	local pack,slice=Mount.ready("path",env)
+	local kit=slice and slice.kit
+	if not kit then return nil end
+	local name="W7_F_Lip"..tostring(k).."__boulder_rock"
+	local t=kit[name]
+	if not(t and pack:FindFirstChild(name))then return nil end
+	local scale=size/vector(t.size)
+	local part=still(pack[name]:Clone())
+	part.Size=size
+	part.CFrame=CFrame.new(at)*CFrame.Angles(0,yaw,0)*CFrame.new(vector(t.centre)*scale)*Turn
+	return part
 end
 
 -- The terrace greybox's dress (TierHost, right after GreyboxRows.build, before parenting): only with the terrace slice

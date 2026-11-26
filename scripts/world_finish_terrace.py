@@ -38,16 +38,21 @@ def T(s, t, y=Y):
     return (x, y, z)
 
 
-def edge_offset(theta):
-    """How far the drawn edge stands outside the wall line, by angle round the terrace: 0.5 to 2.5, wandering (the
-    noise's period keeps straight runs under 12 studs)."""
-    p = np.array([[math.cos(theta) * 6, 0, math.sin(theta) * 6]])
-    return .5 + 2.0 * float(L.fbm(p, 3, seed=111)[0])
+def edge_offset(d, perimeter):
+    """How far the drawn edge stands outside the wall line, by distance d (studs) round the wall line: 0.5 to 2.5.
+    Round 5 (Fable world R1 13): driven by the distance walked, not the angle, so the long garden side wanders as much
+    as the ends do; three waves of about 10.5, 6.3 and 3.7 studs keep every straight run well under 12. Each wave is
+    snapped to a whole number of waves round the loop, so the edge closes without a step (code review)."""
+    w = 0.0
+    for amp, lam, ph in ((.75, 10.5, .4), (.45, 6.3, 1.9), (.25, 3.7, .2)):
+        lam = perimeter / max(1, round(perimeter / lam))
+        w += amp * math.sin(2 * math.pi * d / lam + ph)
+    return max(.5, min(2.5, 1.5 + w))
 
 
-def outline(n=96):
+def outline(n=160):
     """The bean: points (s, t) round the rectangle (rounded corners r 4), each pushed out by edge_offset."""
-    out = []
+    base = []
     a, b, r = HALF[0], HALF[1], 4.0
     for k in range(n):
         th = 2 * math.pi * k / n
@@ -58,10 +63,29 @@ def outline(n=96):
         ps, pt = rx * c, rx * s_
         ps = max(-a, min(a, ps))
         pt = max(-b, min(b, pt))
-        off = edge_offset(th)
         ln = math.hypot(c, s_ * a / b) or 1
-        out.append((ps + c / ln * off, pt + s_ * a / b / ln * off))
+        base.append((ps, pt, c / ln, s_ * a / b / ln))
+    dist = [0.0]
+    for k in range(1, n):
+        dist.append(dist[-1] + math.hypot(base[k][0] - base[k - 1][0], base[k][1] - base[k - 1][1]))
+    perimeter = dist[-1] + math.hypot(base[0][0] - base[-1][0], base[0][1] - base[-1][1])
+    out = []
+    for (ps, pt, ux, uy), d in zip(base, dist):
+        off = edge_offset(d, perimeter)
+        out.append((ps + ux * off, pt + uy * off))
     return out
+
+
+def edge_t(ol, s_):
+    """The garden-side edge's t at s: the nearest outline point to (s, the wall line) on the garden side."""
+    side = [p for p in ol if p[1] > 15]
+    return min(side, key=lambda p: math.hypot(p[0] - s_, p[1] - HALF[1]))[1]
+
+
+def lean_at(k, n):
+    """Round 5 (Fable world R1 13): the face leans back 15 to 26 degrees from upright, varying round the terrace."""
+    u = k / n * 2 * math.pi
+    return math.radians(max(15.0, min(26.0, 21.5 + 4.0 * math.sin(7 * u + 1.0) + 2.0 * math.sin(17 * u))))
 
 
 def near_path(x, z, grow=.6):
@@ -103,11 +127,11 @@ def cap_and_face():
         a, b = last + i, last + (i + 1) % n
         cap_f.append([a, base + i, base + (i + 1) % n, b][::-1])
     cap = L.mesh_object("W7_F_Terrace__grass", cap_v, cap_f)
-    # the face: from the lip ring down, leaning back 20 degrees, in 1.5-stud rows, to 0.6 under the ground
+    # the face: from the lip ring down, leaning back 15 to 26 degrees, in 1.5-stud rows, to 0.6 under the ground
     face = Pth.Mesh("W7_F_TerraceFace__cliff_rock")
-    lean = math.tan(math.radians(20))
     cols = []
-    for (x, y, z), (s_, t_) in zip(lip_ring, ol):
+    for k, ((x, y, z), (s_, t_)) in enumerate(zip(lip_ring, ol)):
+        lean = math.tan(lean_at(k, n))
         ln = math.hypot(s_, t_) or 1
         ox, oz = S.tier_xz(s_ / ln, t_ / ln)
         cx, cz = S.tier_xz(0, 0)
@@ -119,7 +143,7 @@ def cap_and_face():
             drop = y - yy
             px, pz = x + dx * drop * lean, z + dz * drop * lean
             g = S.ground(px, pz)
-            jitter = .25 * math.sin(px * .7 + pz * .5) * math.cos(yy * .9)
+            jitter = .45 * math.sin(px * .7 + pz * .5) * math.cos(yy * .9)
             col.append((px + dx * jitter, yy, pz + dz * jitter))
             if g is None or yy < g - .6 or yy < 12:
                 break
@@ -136,23 +160,46 @@ def cap_and_face():
 
 
 def tongues(cols, ol):
-    """Three grass tongues down the face at chosen angles (garden side, outer side, south-west end), 3 to 5 long."""
+    """Three grass tongues down the face, 3 to 5 long. Round 5 (Fable world R1 13: only one short one showed): all three
+    on the garden side, where the lawn sees them, between the lookout and the path's arrival; each narrows to its tip."""
+    # Fable round 5: one strip per tongue down the face (no loose squares), at least 4 segments, its sides ragged and
+    # closing to a point; laid on the face by interpolating its columns and rows, 0.08 proud.
     m = Pth.Mesh("W7_F_TerraceTongues__grass")
     n = len(ol)
-    for th, length, width in ((math.radians(100), 4.5, 3), (math.radians(250), 3.5, 3), (math.radians(345), 5.0, 2)):
-        i = int(round(th / (2 * math.pi) * n)) % n
-        for k in range(width):
-            c0, c1 = cols[(i + k) % n], cols[(i + k + 1) % n]
-            rows = min(len(c0), len(c1), int(length / 1.5) + 2)
-            for r in range(rows - 1):
-                taper = 1 - r / rows
-                if taper <= 0:
-                    break
-                lift = .06
-                pts = [c0[r], c1[r], c1[r + 1], c0[r + 1]]
-                if any(near_path(p[0], p[2])[0] for p in pts):
-                    continue
-                m.quad(*[(p[0], p[1] + lift, p[2]) for p in pts])
+
+    def at(ci, r):
+        i0 = math.floor(ci)
+        fi = ci - i0
+        out = []
+        for c in (cols[i0 % n], cols[(i0 + 1) % n]):
+            r0 = min(int(r), len(c) - 2)
+            fr = min(1.0, r - r0)
+            p, q = c[r0], c[r0 + 1]
+            out.append([p[j] + (q[j] - p[j]) * fr for j in range(3)])
+        a, b = out
+        return tuple(a[j] + (b[j] - a[j]) * fi for j in range(3))
+
+    for th, length, width in ((math.radians(62), 4.0, 3.2), (math.radians(97), 5.0, 4.2), (math.radians(128), 3.5, 3.0)):
+        ci = th / (2 * math.pi) * n                           # the tongue's centre column (fractional)
+        k0 = int(ci) % n
+        step = math.hypot(ol[(k0 + 1) % n][0] - ol[k0][0], ol[(k0 + 1) % n][1] - ol[k0][1]) or 1.4
+        half = width / 2 / step                               # its half width in columns
+        rows_avail = min(len(cols[math.floor(ci - half - 1) % n]), len(cols[math.ceil(ci + half + 1) % n])) - 1
+        r_end = min(length / 1.6, rows_avail - .01)
+        if r_end < 1.5:
+            continue
+        segs = max(4, math.ceil(r_end * 2))
+        strip = []
+        for j in range(segs + 1):
+            u = j / segs
+            hw = half * (1 - u) ** .7 * (1 + .18 * math.sin(j * 2.3 + th * 5))
+            left, right = at(ci - hw, u * r_end), at(ci + hw, u * r_end)
+            strip.append(((left[0], left[1] + .08, left[2]), (right[0], right[1] + .08, right[2])))
+        if any(near_path(p[0], p[2])[0] for pair in strip for p in pair):
+            continue
+        for j in range(segs):
+            (a, b), (d, c) = strip[j], strip[j + 1]
+            m.quad(a, b, c, d)
     return m
 
 
@@ -245,8 +292,10 @@ def lip_layout(ol):
         for _ in range(int(rnd.integers(2, 4))):
             kit = int(rnd.integers(1, 5))
             length = Pth.LIP_KIT[kit - 1][0]
-            if not (24 <= s_ <= 36 or -36.5 <= s_ <= -29.5):
-                x, _, z = T(s_ + length / 2, HALF[1] + 1.0 + float(rnd.uniform(-.3, .3)))
+            if not (24 <= s_ <= 36 or -36.5 <= s_ <= -29.5) and s_ + length <= HALF[0] - 1:
+                # round 5: on the wandering edge (0.6 inside it), not on a ruled line at t 23
+                t_ = max(HALF[1] + .3, edge_t(ol, s_ + length / 2) - .6) + float(rnd.uniform(-.2, .2))
+                x, _, z = T(s_ + length / 2, t_)
                 out.append({"kit": kit, "at": [round(x, 3), Y - .25, round(z, 3)],
                             "yaw": round(math.atan2(-S.TIER_D[1], S.TIER_D[0]) + math.radians(rnd.uniform(-25, 25)), 4)})
             s_ += length + float(rnd.uniform(.2, .6))
