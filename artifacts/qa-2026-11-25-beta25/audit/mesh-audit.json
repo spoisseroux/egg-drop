@@ -1,0 +1,658 @@
+{
+ "den": [
+  {
+   "name": "W7_CD_Crystals__glow_pink",
+   "faces": 90,
+   "boundary": 96,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    94.33,
+    95.71,
+    65.63
+   ]
+  },
+  {
+   "name": "W7_CD_Ground__grass",
+   "faces": 5564,
+   "boundary": 724,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    228.0,
+    210.0,
+    46.84
+   ]
+  },
+  {
+   "name": "W7_CD_Ground__ground",
+   "faces": 5388,
+   "boundary": 1268,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    261.0,
+    249.0,
+    55.65
+   ]
+  },
+  {
+   "name": "W7_CD_Region__cliff_rock",
+   "faces": 73,
+   "boundary": 71,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    78.26,
+    66.92,
+    22.42
+   ]
+  },
+  {
+   "name": "W7_CD_Region__grass",
+   "faces": 8,
+   "boundary": 18,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    20.44,
+    15.14,
+    16.69
+   ]
+  },
+  {
+   "name": "W7_F_DenApron__dirt_path",
+   "faces": 167,
+   "boundary": 108,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    30.0,
+    10.0,
+    0.82
+   ]
+  },
+  {
+   "name": "W7_F_DenLid__cliff_rock",
+   "faces": 1134,
+   "boundary": 110,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    32.75,
+    23.08,
+    9.54
+   ]
+  },
+  {
+   "name": "W7_F_DenMouth__cliff_rock",
+   "faces": 2335,
+   "boundary": 18,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    45.51,
+    8.44,
+    18.12
+   ]
+  },
+  {
+   "name": "W7_F_DenSkin__cliff_rock",
+   "faces": 90,
+   "boundary": 50,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    63.01,
+    21.21,
+    34.07
+   ]
+  },
+  {
+   "name": "W7_F_Den__crystal",
+   "faces": 13,
+   "boundary": 6,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    0.46,
+    0.4,
+    1.0
+   ]
+  },
+  {
+   "name": "W7_F_Den__floor",
+   "faces": 306,
+   "boundary": 76,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    30.4,
+    27.6,
+    0.35
+   ]
+  },
+  {
+   "name": "W7_F_Den__shellEast",
+   "faces": 976,
+   "boundary": 97,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    15.13,
+    22.58,
+    13.24
+   ]
+  },
+  {
+   "name": "W7_F_Den__shellWest",
+   "faces": 984,
+   "boundary": 97,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    15.05,
+    22.58,
+    13.21
+   ]
+  },
+  {
+   "name": "W7_F_Lantern__cage",
+   "faces": 67,
+   "boundary": 68,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    1.0,
+    1.0,
+    1.57
+   ]
+  },
+  {
+   "name": "W7_F_Lantern__pane",
+   "faces": 4,
+   "boundary": 16,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    0.66,
+    0.66,
+    0.92
+   ]
+  },
+  {
+   "name": "W7_F_OverLandmarks__cliff_rock_1916",
+   "faces": 98,
+   "boundary": 24,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    25.32,
+    16.67,
+    14.93
+   ]
+  },
+  {
+   "name": "W7_F_OverLandmarks__cliff_rock_2016",
+   "faces": 34,
+   "boundary": 14,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    11.97,
+    15.59,
+    15.01
+   ]
+  },
+  {
+   "name": "W7_F_OverRocks__cliff_rock_1916",
+   "faces": 36,
+   "boundary": 32,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    36.39,
+    26.54,
+    30.04
+   ]
+  },
+  {
+   "name": "W7_F_OverRocks__cliff_rock_2016",
+   "faces": 64,
+   "boundary": 40,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    37.61,
+    36.85,
+    36.45
+   ]
+  },
+  {
+   "name": "W7_F_Stone__flat",
+   "faces": 24,
+   "boundary": 8,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    0.9,
+    0.95,
+    0.54
+   ]
+  }
+ ],
+ "path": [
+  {
+   "name": "W7_CD_Ground__grass",
+   "faces": 5532,
+   "boundary": 720,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    228.0,
+    210.0,
+    46.84
+   ]
+  },
+  {
+   "name": "W7_CD_Ground__ground",
+   "faces": 5310,
+   "boundary": 1260,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    261.0,
+    249.0,
+    55.65
+   ]
+  },
+  {
+   "name": "W7_CD_Region__cliff_rock",
+   "faces": 53,
+   "boundary": 43,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    76.64,
+    66.92,
+    15.92
+   ]
+  },
+  {
+   "name": "W7_CD_Region__grass",
+   "faces": 3,
+   "boundary": 5,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    4.12,
+    1.79,
+    1.66
+   ]
+  },
+  {
+   "name": "W7_F_Lip1__boulder_rock",
+   "faces": 80,
+   "boundary": 0,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    1.18,
+    0.98,
+    0.9
+   ]
+  },
+  {
+   "name": "W7_F_Lip2__boulder_rock",
+   "faces": 80,
+   "boundary": 0,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    1.77,
+    0.96,
+    1.14
+   ]
+  },
+  {
+   "name": "W7_F_Lip3__boulder_rock",
+   "faces": 80,
+   "boundary": 0,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    2.28,
+    0.86,
+    1.33
+   ]
+  },
+  {
+   "name": "W7_F_Lip4__boulder_rock",
+   "faces": 80,
+   "boundary": 0,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    3.04,
+    0.89,
+    1.57
+   ]
+  },
+  {
+   "name": "W7_F_Lip5__boulder_rock",
+   "faces": 80,
+   "boundary": 0,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    3.14,
+    0.88,
+    1.69
+   ]
+  },
+  {
+   "name": "W7_F_PathFoot__dirt_path",
+   "faces": 82,
+   "boundary": 168,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    38.4,
+    29.58,
+    15.08
+   ]
+  },
+  {
+   "name": "W7_F_PathGrass__grass",
+   "faces": 55,
+   "boundary": 114,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    56.39,
+    38.29,
+    16.64
+   ]
+  },
+  {
+   "name": "W7_F_PathOverRocks__cliff_rock_1718",
+   "faces": 264,
+   "boundary": 48,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    36.85,
+    31.59,
+    31.61
+   ]
+  },
+  {
+   "name": "W7_F_PathOverRocks__cliff_rock_1817",
+   "faces": 204,
+   "boundary": 108,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    39.84,
+    37.8,
+    26.63
+   ]
+  },
+  {
+   "name": "W7_F_PathOverRocks__grass_1717",
+   "faces": 4,
+   "boundary": 6,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    11.01,
+    11.9,
+    3.83
+   ]
+  },
+  {
+   "name": "W7_F_PathOverRocks__grass_1817",
+   "faces": 1,
+   "boundary": 3,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    7.41,
+    7.07,
+    2.08
+   ]
+  },
+  {
+   "name": "W7_F_PathOverRocks__grass_1916",
+   "faces": 9,
+   "boundary": 15,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    13.47,
+    27.46,
+    23.88
+   ]
+  },
+  {
+   "name": "W7_F_PathRocks__cliff_rock",
+   "faces": 1729,
+   "boundary": 0,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    11.49,
+    27.43,
+    27.9
+   ]
+  },
+  {
+   "name": "W7_F_PathSkin__cliff_rock",
+   "faces": 78,
+   "boundary": 60,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    63.16,
+    54.07,
+    21.01
+   ]
+  },
+  {
+   "name": "W7_F_PathSteps__boulder_rock",
+   "faces": 252,
+   "boundary": 444,
+   "nonmanifold": 0,
+   "flipEdges": 26,
+   "tiny": 0,
+   "dims": [
+    64.18,
+    41.66,
+    24.93
+   ]
+  },
+  {
+   "name": "W7_F_PathWall__cliff_rock",
+   "faces": 415,
+   "boundary": 446,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    69.21,
+    56.19,
+    26.22
+   ]
+  },
+  {
+   "name": "W7_F_Path__dirt_path",
+   "faces": 56,
+   "boundary": 114,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    58.58,
+    40.86,
+    16.62
+   ]
+  },
+  {
+   "name": "W7_F_Stake__wood",
+   "faces": 5,
+   "boundary": 4,
+   "nonmanifold": 0,
+   "flipEdges": 4,
+   "tiny": 0,
+   "dims": [
+    0.35,
+    0.35,
+    2.97
+   ]
+  }
+ ],
+ "terrace": [
+  {
+   "name": "W7_F_TerraceEarth__dirt_path",
+   "faces": 14,
+   "boundary": 14,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    5.94,
+    5.71,
+    0.0
+   ]
+  },
+  {
+   "name": "W7_F_TerraceFace__cliff_rock",
+   "faces": 608,
+   "boundary": 420,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    95.22,
+    83.39,
+    17.28
+   ]
+  },
+  {
+   "name": "W7_F_TerraceLog__bark",
+   "faces": 12,
+   "boundary": 0,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    6.0,
+    0.9,
+    0.76
+   ]
+  },
+  {
+   "name": "W7_F_TerraceRocks__cliff_rock",
+   "faces": 1209,
+   "boundary": 51,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    46.86,
+    20.34,
+    5.8
+   ]
+  },
+  {
+   "name": "W7_F_TerraceSlab__boulder_rock",
+   "faces": 20,
+   "boundary": 10,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    6.05,
+    6.11,
+    0.62
+   ]
+  },
+  {
+   "name": "W7_F_TerraceTongues__grass",
+   "faces": 16,
+   "boundary": 35,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    27.29,
+    20.4,
+    5.15
+   ]
+  },
+  {
+   "name": "W7_F_TerraceTrunk__bark",
+   "faces": 24,
+   "boundary": 16,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    1.77,
+    1.6,
+    9.5
+   ]
+  },
+  {
+   "name": "W7_F_Terrace__grass",
+   "faces": 1120,
+   "boundary": 160,
+   "nonmanifold": 0,
+   "flipEdges": 0,
+   "tiny": 0,
+   "dims": [
+    85.76,
+    77.96,
+    1.25
+   ]
+  }
+ ]
+}
