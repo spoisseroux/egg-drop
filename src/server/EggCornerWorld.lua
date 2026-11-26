@@ -87,16 +87,18 @@ function World.dress(model,data)
 		local drop=egg:Clone()
 		drop.Name="DropEgg"
 		drop.Size=egg.Size*Corner.dropScale(data)
-		drop.CFrame=at(data.chute.top)
+		drop.CFrame=pivot*CFrame.new(Corner.dropPoints(data).from)
 		drop.Transparency=1
 		drop.Parent=model
 		egg:Destroy()
 	end
 	local body=model:FindFirstChild("Body")
 	if body then
-		local seat=v3(data.cup)+Vector3.new(0,(data.egg.size[2]*Corner.dropScale(data))/2,0)
-		local points={DialPivot=v3(data.pivots.Dial),SproutPivot=v3(data.pivots.Sprout),ChuteTop=v3(data.chute.top),
-			ChuteEnd=v3(data.chute["end"]),CupSeat=seat,GlobeLight=v3(data.light)}
+		-- Beta (34): the dropped egg's path comes out of the belly under the leaf, never down its centre line
+		-- (EggCorner.dropPoints); the attachments keep their names.
+		local drop=Corner.dropPoints(data)
+		local points={DialPivot=v3(data.pivots.Dial),SproutPivot=v3(data.pivots.Sprout),ChuteTop=drop.from,
+			ChuteEnd=drop.exit,CupSeat=drop.seat,GlobeLight=v3(data.light)}
 		for _,name in ipairs(World.Points)do
 			local a=Instance.new("Attachment")
 			a.Name=name

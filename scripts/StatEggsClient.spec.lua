@@ -105,6 +105,17 @@ return function(client)
 		assert(not intent:pending())
 	end)
 
+	test("beta (34): the machine's gate holds only the reveal it names; none set (live) holds nothing; a throwing gate never does",function()
+		local saved=Reveal.gate
+		local mine,other={},{}
+		Reveal.gate=nil
+		assert(not Reveal.gated(mine))
+		Reveal.gate=function(r)return r==mine end
+		assert(Reveal.gated(mine)and not Reveal.gated(other))
+		Reveal.gate=function()error("boom")end
+		assert(not Reveal.gated(mine))
+		Reveal.gate=saved
+	end)
 	test("words: the reveal, the boost line, the stat tile, refusal lines",function()
 		local w=Reveal.copy({stat="jump",size="snack",snackId=1},"Bear")
 		assert(w.name:find("Jump")and w.name:find("Snack")and w.boost:find("2")and w.boost:find("120"))

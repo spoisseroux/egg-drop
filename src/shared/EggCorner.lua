@@ -67,6 +67,27 @@ function Corner.dropScale(data)
 	data=data or Corner.machineData()
 	return if type(data.dropScale)=="number"and data.dropScale>0 then data.dropScale else Corner.DropScale
 end
+-- Beta (34) "the leaf at the bottom of the spout is clipping into the egg": the dropped egg's path, machine-local. The
+-- old path ran the egg's centre down the leaf chute's own centre line (chute top to chute end) and seated it in the
+-- cup's middle, so the leaf cut .35 deep into the 0.72 x 0.94 egg the whole roll and the curled tip stayed .156 inside
+-- the egg while it sat in the cup. The leaf's lower half hangs nearly upright through the cup's front half (its tip
+-- 0.2 to 0.26 in front of the cup's centre, 0.59 to 0.70 up), so the only clear seat is the cup's back right, and no
+-- path from the leaf reaches it without crossing the leaf (worked through in the spec on scripts/build_egg_machine.py's
+-- chute). The egg now comes out of the belly under the leaf: it starts hidden inside the base, slides out over the cup's
+-- back lip and settles in the back of the cup, the leaf's tip in front of it. Clearance to the leaf (the egg's own
+-- profile at dropScale against the chute's top and under faces): 0.019 or more all the way and seated, 0.013 at the
+-- landing rock's peak. The cup's straw lip brushes the egg's base as it slides over (0.19 at most, about 0.1 s).
+-- A path that rides the leaf needs the chute mesh changed (its tip out of the cup), not these numbers.
+-- ChuteTop / ChuteEnd / CupSeat keep their names (the client binds them): from, exit, seat.
+Corner.DropSeat=Vector3.new(.04,0,-.19)   -- from the cup's centre on the floor (+ half the dropped egg's height)
+Corner.DropFrom=Vector3.new(0,.431,-.96)  -- from the seat: hidden inside the belly
+Corner.DropExit=Vector3.new(0,.071,-.22)  -- from the seat: out of the belly, over the cup's back lip
+function Corner.dropPoints(data)
+	data=data or Corner.machineData()
+	local cup=data.cup
+	local seat=Vector3.new(cup[1],cup[2],cup[3])+Corner.DropSeat+Vector3.new(0,data.egg.size[2]*Corner.dropScale(data)/2,0)
+	return{from=seat+Corner.DropFrom,exit=seat+Corner.DropExit,seat=seat}
+end
 -- The buy actions (the press starts the buy crank) and the egg colour each drops. The Customization Egg wears the Hue art.
 Corner.BuyActions=table.freeze({toyBuy="Toy",hueBuy="Hue",lookBuy="Hue",materialBuy="Material",featureBuy="Feature",statEggBuy="Stat"})
 

@@ -49,9 +49,112 @@ return function(client)
 		assert(near(Machine.buyAngle(s,.6),360,1e-3))
 		assert(near(Machine.buyAngle(s,.6+.075),352,1e-3)and near(Machine.buyAngle(s,1),360))
 	end)
-	test("the roll: chute top to chute end on the leaf, then into the cup",function()
+	test("the roll: out of the belly, then into the cup (no hop: beta 34)",function()
 		local a,b,c=Vector3.new(0,1,0),Vector3.new(1,.5,0),Vector3.new(1.2,.3,0)
 		assert(Machine.rollAt(a,b,c,0)==a and(Machine.rollAt(a,b,c,Machine.RollSeconds)-c).Magnitude<1e-6)
+		assert(Machine.RollHop==0 and(Machine.rollAt(a,b,c,Machine.RollSeconds*.8)-b:Lerp(c,.5)).Magnitude<1e-6)
+	end)
+	-- Beta (34) "the leaf at the bottom of the spout is clipping into the egg": the leaf chute as
+	-- scripts/build_egg_machine.py builds it (build_body: the Bezier, its U trough and curled tip, the .04 underside) and
+	-- the dropped egg as it builds it (blunt_egg_profile .66 x .86, 7 rings, at dropScale), machine-local.
+	local function leafModel()
+		local function baseRadius(y)
+			local pts={{1.35,.37},{1.85,.7},{2.1,1.4},{2.0,2.0},{1.8,2.55},{1.6,2.95}}
+			for i=1,#pts-1 do
+				local r0,y0,r1,y1=pts[i][1],pts[i][2],pts[i+1][1],pts[i+1][2]
+				if y>=y0 and y<=y1 then return r0+(r1-r0)*(y-y0)/(y1-y0)end
+			end
+			return pts[#pts][1]
+		end
+		local p0=Vector3.new(1.05,1.1,baseRadius(1.1)*(1.8/2.1)*.93)
+		local p3=Vector3.new(1.25,.55,1.95)
+		local p1,p2=p0+Vector3.new(.15,-.05,.55),p3+Vector3.new(-.05,.35,-.2)
+		local function bez(t)return p0*(1-t)^3+p1*3*t*(1-t)^2+p2*3*t*t*(1-t)+p3*t^3 end
+		local side=(p3-p0):Cross(Vector3.new(0,1,0)).Unit
+		local grid={}
+		for k=0,7 do
+			local t=k/7
+			local c=bez(t)
+			local d=(bez(math.min(1,t+.01))-bez(math.max(0,t-.01))).Unit
+			local up=side:Cross(d).Unit
+			if up.Y<0 then up=-up end
+			local row={}
+			for s=0,5 do
+				local q=s/5*2-1
+				local w=.45*math.max(0,1-t)^.7
+				row[s]=c+side*(q*w)+up*(.18*q*q-.02+.1*t^3)
+			end
+			grid[k]=row
+		end
+		local points={}
+		for k=0,6 do for s=0,4 do
+			local a,b,c,d=grid[k][s],grid[k][s+1],grid[k+1][s+1],grid[k+1][s]
+			for i=0,4 do for j=0,4 do
+				local p=a:Lerp(b,i/4):Lerp(d:Lerp(c,i/4),j/4)
+				table.insert(points,p);table.insert(points,p-Vector3.new(0,.04,0))
+			end end
+		end end
+		return points
+	end
+	local function eggProfile(scale)
+		local out={}
+		for j=0,7 do
+			local th=math.pi*j/7
+			local r=.66*scale/2*math.sin(th)*(1+.1*math.cos(th))
+			out[j+1]={if j==0 or j==7 then 0 else r,-.86*scale/2*math.cos(th)}
+		end
+		return out
+	end
+	-- Signed distance from p to the upright egg centred at c (negative: inside it).
+	local function eggDistance(profile,c,p)
+		local rel=p-c
+		local rho,y=Vector2.new(rel.X,rel.Z).Magnitude,rel.Y
+		local best,inside=math.huge,false
+		for i=1,#profile-1 do
+			local a,b=Vector2.new(profile[i][1],profile[i][2]),Vector2.new(profile[i+1][1],profile[i+1][2])
+			local e=b-a
+			local u=math.clamp((Vector2.new(rho,y)-a):Dot(e)/e:Dot(e),0,1)
+			best=math.min(best,(Vector2.new(rho,y)-(a+e*u)).Magnitude)
+			if y>=a.Y and y<=b.Y and rho<a.X+(b.X-a.X)*(y-a.Y)/(b.Y-a.Y)then inside=true end
+		end
+		return if inside then -best else best
+	end
+	test("beta (34): the dropped egg clears the leaf chute all the way into the cup (the old path ran .35 inside it)",function()
+		local Corner=require(game:GetService("ReplicatedStorage").Shared.EggCorner)
+		local data=Corner.machineData()
+		local leaf=leafModel()
+		local profile=eggProfile(Corner.dropScale(data))
+		local function clearance(c)
+			local best=math.huge
+			for _,p in ipairs(leaf)do
+				if math.abs(p.X-c.X)<.8 and math.abs(p.Y-c.Y)<.8 and math.abs(p.Z-c.Z)<.8 then best=math.min(best,eggDistance(profile,c,p))end
+			end
+			return best
+		end
+		local function worst(a,b,c)
+			local least=math.huge
+			for i=0,40 do least=math.min(least,clearance(Machine.rollAt(a,b,c,Machine.RollSeconds*i/40)))end
+			return least
+		end
+		local function v3(t)return Vector3.new(t[1],t[2],t[3])end
+		local oldSeat=v3(data.cup)+Vector3.new(0,data.egg.size[2]*Corner.dropScale(data)/2,0)
+		-- The model sees the leaf: the old seat (the cup's middle) has the tip inside the egg.
+		assert(clearance(oldSeat)<-.1,"the old seat: "..clearance(oldSeat))
+		local drop=Corner.dropPoints(data)
+		local least=worst(drop.from,drop.exit,drop.seat)
+		assert(least>=.015,"the new path's least clearance to the leaf: "..least)
+		assert(clearance(drop.seat)>=.015,"seated")
+		-- Seated in the cup, on its floor: every ring of the egg below the rim inside the woven wall's inner face (the
+		-- lathe in build_body: r .5 at .1, .53 at .4, the lip .6 at .45).
+		local off=Vector2.new(drop.seat.X-data.cup[1],drop.seat.Z-data.cup[3]).Magnitude
+		assert(near(drop.seat.Y-data.egg.size[2]*Corner.dropScale(data)/2,data.cup[2]),"on the floor")
+		for _,ring in ipairs(profile)do
+			local y=drop.seat.Y+ring[2]
+			if y>=.1 and y<=.45 then
+				local inner=if y<=.4 then .5+.03*(y-.1)/.3 else .53+.07*(y-.4)/.05
+				assert(off+ring[1]<=inner,"the wall at "..y)
+			end
+		end
 	end)
 	test("open crank: clicks at 0 / 90 / 180 ms and one knock; a second press inside it is ignored; the corner off does nothing",function()
 		local r=rig()
@@ -317,6 +420,7 @@ return function(client)
 		local r={now=100,sounds={},pockets={},hud={},ghost={},on=true,capsule=options.capsule~=false,root=Vector3.new(-41,4.13,8),
 			blocked=options.blocked or function()return false end}
 		r.cinematic={}
+		r.statReveal={}
 		r.camera={CameraType="Custom",CFrame=CFrame.new(-30,10,20)}
 		local lounge=Instance.new("Folder");lounge.Name="EggDropLounge"
 		if options.model~=false then
@@ -326,7 +430,7 @@ return function(client)
 			local pivot=Instance.new("Attachment");pivot.Name="DialPivot";pivot.WorldCFrame=CFrame.new(-41,6,3.7);pivot.Parent=body
 			model.Parent=lounge
 		end
-		r.machine=Machine.new({step=false,clock=function()return r.now end,cinematic=r.cinematic,corner=function()return r.on end,
+		r.machine=Machine.new({step=false,clock=function()return r.now end,cinematic=r.cinematic,statReveal=r.statReveal,corner=function()return r.on end,
 			room=function()return lounge end,tagged=function()return{}end,random=Random.new(9),reduced=function()return r.reduced==true end,
 			root=function()return r.root end,capsule=function()return r.capsule end,cameraObject=function()return r.camera end,
 			hud=function(visible)table.insert(r.hud,visible)end,ghost=function(alpha)table.insert(r.ghost,alpha)end,
@@ -343,6 +447,15 @@ return function(client)
 			assert(r.machine:bought(action or "toyBuy",id))
 			local reveal={}
 			r.cinematic.onPlay(reveal)
+			return reveal
+		end
+		-- The Stat Egg (init): armed by the send, confirmed by its Saved answer with its reveal (the StatEggReveal).
+		function r.buyStat(reveal)
+			r.at=r.now
+			reveal=reveal or {}
+			assert(r.machine:bought("statEggBuy",nil))
+			r.cinematic.onPlay({}) -- another reveal starting never confirms it
+			assert(r.machine:confirm(reveal))
 			return reveal
 		end
 		return r
@@ -394,19 +507,18 @@ return function(client)
 		r.buy("h-4")
 		assert(r.machine.shot.sched==Machine.Shots.first,"the camera had gone back: Shot A again")
 	end)
-	test("capsule: the pocket version: no model, more than 24 studs off, both line checks blocked, or the Stat Egg",function()
-		for _,case in ipairs({{model=false},{far=true},{blocked=function()return true end},{stat=true}})do
+	test("capsule: the pocket version: no model, more than 24 studs off, both line checks blocked (the Stat Egg too)",function()
+		for _,case in ipairs({{model=false},{far=true},{blocked=function()return true end},{model=false,stat=true}})do
 			local r=capsuleRig({model=case.model,blocked=case.blocked})
 			if case.far then r.root=Vector3.new(-41,4,40)end
 			r.at=r.now
-			if case.stat then r.machine:bought("statEggBuy",nil);r.machine:confirm(nil)
-			else r.buy("p-1","hueBuy")end
+			local reveal
+			if case.stat then reveal=r.buyStat()
+			else reveal=r.buy("p-1","hueBuy")end
 			assert(r.machine.shot.mode=="pocket"and r.camera.CameraType=="Custom"and #r.hud==0,"no camera, no tuck")
-			if not case.stat then
-				assert(r.pockets[1].kind=="hue","the preview well's drop, in the bought type")
-				local gate=r.machine.gate
-				assert(near(gate.release-r.at,1.0),"the reveal at 1.0 s")
-			end
+			assert(r.pockets[1].kind==(if case.stat then "stat"else "hue"),"the preview well's drop, in the bought type")
+			local gate=r.machine.gate
+			assert(near(gate.release-r.at,1.0)and gate.owner==reveal,"the reveal at 1.0 s")
 		end
 		local Corner=require(game:GetService("ReplicatedStorage").Shared.EggCorner)
 		local frame=Corner.frame(4.13)
@@ -421,6 +533,70 @@ return function(client)
 		assert(r.machine.shot.mode=="reduced"and r.camera.CameraType=="Custom"and #r.hud==0)
 		r.advance(.6);assert(r.cinematic.gate(reveal));r.advance(.05);assert(not r.cinematic.gate(reveal))
 		assert(near(r.heard("land"),.62,.02))
+	end)
+	-- Beta (34) "the stats egg just cuts straight to the hatching animation": the Stat Egg plays the machine's beat.
+	test("beta (34): the Stat Egg plays the same shot: tuck, Shots A and B, its reveal held to 2.0 s, one thud; only its own close ends it",function()
+		local r=capsuleRig()
+		local reveal=r.buyStat()
+		local shot=r.machine.shot
+		assert(shot and shot.mode=="shot"and shot.sched==Machine.Shots.first and r.camera.CameraType~="Custom"and r.hud[1]==false and r.ghost[1]==1)
+		assert(r.statReveal.gate(reveal),"its reveal's clock is held (its own gate)")
+		assert(not r.statReveal.gate({})and not r.cinematic.gate({}),"no other reveal is caught")
+		-- SnackHost closes the Hatch eggs screen under the reveal: that never ends the Stat Egg's shot.
+		r.machine:revealClosed("screen")
+		r.advance(.3)
+		assert((r.camera.CFrame.Position-shot.frames.A.Position).Magnitude<.05,"Shot A by .30")
+		r.advance(1.6)
+		assert(r.machine.shot==shot and r.camera.CameraType~="Custom","the shot plays on")
+		assert(near(r.heard("land")or -1,1.35,.03)and near(r.heard("crank_clunk")or -1,.90,.03)and near(r.heard("egg_roll")or -1,.95,.03))
+		assert(r.statReveal.gate(reveal),"still held at 1.9")
+		r.advance(.12)
+		assert(not r.statReveal.gate(reveal),"its hatch starts at 2.0")
+		local lands=0;for _,s in ipairs(r.sounds)do if s.name=="land"then lands+=1 end end
+		assert(lands==1)
+		-- Hatch another on its result card: the 2nd schedule from Shot B.
+		r.advance(.5)
+		local second=r.buyStat()
+		assert(r.machine.shot.sched==Machine.Shots.second and r.statReveal.gate(second))
+		r.advance(1.25);assert(r.statReveal.gate(second));r.advance(.1);assert(not r.statReveal.gate(second))
+		r.advance(1)
+		assert(r.camera.CameraType~="Custom","Shot B while its result is up")
+		r.machine:revealClosed("stat");r.advance(.4)
+		assert(r.camera.CameraType=="Custom"and r.machine.shot==nil and r.ghost[#r.ghost]==0,"given back on its close")
+		r.machine:destroy()
+		assert(r.statReveal.gate==nil and r.statReveal.onGateSkip==nil)
+	end)
+	test("beta (34): the Stat Egg: Reduced Motion holds its hatch to the thud (.62); capsule off, to the .85 landing",function()
+		local r=capsuleRig()
+		r.reduced=true
+		local reveal=r.buyStat()
+		assert(r.machine.shot.mode=="reduced"and r.camera.CameraType=="Custom"and #r.hud==0)
+		r.advance(.6);assert(r.statReveal.gate(reveal));r.advance(.05);assert(not r.statReveal.gate(reveal))
+		assert(near(r.heard("land"),.62,.02))
+		local off=capsuleRig({capsule=false})
+		local held=off.buyStat()
+		assert(off.machine.shot==nil and off.camera.CameraType=="Custom")
+		off.advance(.8);assert(off.statReveal.gate(held));off.advance(.1);assert(not off.statReveal.gate(held),"released at the landing")
+		-- A regular egg's screen closing never touches the Stat Egg's buy, and the Stat Egg's close never a regular one.
+		local toy=capsuleRig()
+		toy.buy("x-1");toy.advance(2.2)
+		toy.machine:revealClosed("stat");toy.advance(.4)
+		assert(toy.camera.CameraType~="Custom","a Stat close leaves a Toy Egg's shot alone")
+		toy.machine:revealClosed();toy.advance(.4)
+		assert(toy.camera.CameraType=="Custom")
+	end)
+	test("beta (34): the Stat Egg's skip: never its first drop; then its reveal's own skip jumps the shot to the landing",function()
+		local r=capsuleRig()
+		local reveal=r.buyStat()
+		reveal.canSkip=function()return false end
+		r.advance(.2)
+		r.statReveal.onGateSkip(reveal)
+		assert(not r.machine.shot.skipped,"the first Stat Egg plays in full")
+		reveal.canSkip=function()return true end
+		r.statReveal.onGateSkip(reveal)
+		assert(r.machine.shot.skipped)
+		r.advance(.02);assert(r.heard("land"),"the thud is never skipped")
+		r.advance(.08);assert(r.statReveal.gate(reveal));r.advance(.05);assert(not r.statReveal.gate(reveal),"its hatch .12 s later")
 	end)
 	test("capsule: skip jumps to the landing (the thud plays, the reveal .12 s later); never the first drop of a type",function()
 		local r=capsuleRig()

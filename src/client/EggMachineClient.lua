@@ -11,12 +11,13 @@
 --          the server refuses (Studio check R8: Hatch another on a Toy result came back "This toy was not changed")
 --          turns nothing and never counts toward a streak: it gets the hello nudge and one click (Fable R8), as soon
 --          as the press is known refused (deps.rejected(action), or refuse() from the Stat Egg's answer). Then a full turn and 5 clicks (.6 s), clunk, the bought
---          colour's egg rolls down the chute and lands in the cup .85 after the confirmation with the landing thud
+--          colour's egg comes out of the belly under the leaf chute (beta 34: it never touches the leaf,
+--          EggCorner.dropPoints) and lands in the cup .85 after the confirmation with the landing thud
 --          (once). Hatch another within 20 s of the last landing: a half turn (.45 s, 3 clicks), then a quarter (.25 s,
 --          1 click). A press while a buy crank runs merges into it; a retried send of the same action never arms another.
 --   hold   HatchCinematic.gate holds the clock of the reveal that confirmed the buy until the egg lands, at most 1 s
---          after the confirmation (the hold starts with the crank); a skip is refused meanwhile. The Stat Egg's reveal
---          is never held.
+--          after the confirmation (the hold starts with the crank); a skip is refused meanwhile. Beta (34): the Stat
+--          Egg's reveal is held the same way (StatEggReveal.gate, owned by the reveal init passes to confirm).
 --          Reduced Motion: the reveal shows its static card at once (the cinematic never asks the hold); the crank,
 --          its sounds and the egg still play.
 -- Sounds play flat with the screen (Fable R2 F6); the world motion only within Range of the camera. The old station's
@@ -31,9 +32,9 @@
 --   onboarding v3 part `capsule`): on the confirmation the Hatch eggs panel tucks away, the camera looks at the machine
 --   (Shot A, then the cup, Shot B), the dial turns, the egg rolls .40 s into the cup with the landing thud, a .4 s beat,
 --   and the panel rises with the reveal, whose clock starts only then (2.0 s; Hatch another 1.30 s then .95 s; a hard
---   cap .2 s after). Bought away from the machine (not bound whole, more than 24 studs off, or both line checks
---   blocked), or the Stat Egg: the pocket version (the panel stays up, the preview egg slips out and the bought egg drops
---   in, the reveal at 1.0 s). Reduced Motion: no tuck, no camera; the 3rd-in-a-row sounds and the reveal's static card
+--   cap .2 s after). Beta (34): the Stat Egg too (it used to cut straight to its hatch). Bought away from the machine
+--   (not bound whole, more than 24 studs off, or both line checks blocked): the pocket version (the panel stays up, the
+--   preview egg slips out and the bought egg drops in, the reveal at 1.0 s). Reduced Motion: no tuck, no camera; the 3rd-in-a-row sounds and the reveal's static card
 --   on the thud (.62 s). A tap / click / A / Space / Enter during the shot jumps to the landing (never the first drop of
 --   an egg type). The camera stays at Shot B while the reveal is up and is always given back (the screen closing,
 --   respawn, the model unbinding, the corner or capsule off, destroy). Off: the crank and 1 s hold as before.
@@ -43,7 +44,8 @@
 --   (Hatch another is waiting: the camera stays at Shot B through the gap).
 -- deps: room() -> the lounge or nil, root() -> Vector3?, camera() -> Vector3?, reduced(), audio {play(name, speed,
 --   volume)}, haptic(strength) (optional), corner() (the switch), clock (default os.clock), random (default Random.new()),
---   cinematic (the HatchCinematic module; default required), step=false (specs call :step).
+--   cinematic (the HatchCinematic module; default required), statReveal (the StatEggReveal module, optional: its
+--   reveal's gate and skip), step=false (specs call :step).
 local RunService=game:GetService("RunService")
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Corner=require(Shared:WaitForChild("EggCorner"))
@@ -143,8 +145,11 @@ function Machine.buyAngle(sched,t)
 	if s<.15 then return sched.turn-Machine.SpringBack*math.sin(s/.15*math.pi)end
 	return sched.turn
 end
--- Where the dropped egg is along the chute at t seconds into its roll (0 .. RollSeconds): a, b, c are ChuteTop, ChuteEnd,
--- CupSeat; the leaf is the first 60% of the time, the drop into the cup the rest.
+-- Where the dropped egg is at t seconds into its roll (0 .. RollSeconds): a, b, c are the ChuteTop, ChuteEnd and CupSeat
+-- attachments (beta 34: EggCorner.dropPoints, out of the belly under the leaf): out of the belly the first 60% of the
+-- time, over the cup's back lip into its seat the rest. RollHop lifts that last part (it was .12 off the leaf's tip;
+-- under the leaf there is no room: a hop of .12 put the egg .11 into the leaf).
+Machine.RollHop=0
 function Machine.rollAt(a,b,c,t,seconds)
 	local p=math.clamp(t/(seconds or Machine.RollSeconds),0,1)
 	if p<.6 then
@@ -152,7 +157,7 @@ function Machine.rollAt(a,b,c,t,seconds)
 		return a:Lerp(b,q*q)
 	end
 	local q=(p-.6)/.4
-	return b:Lerp(c,q)+Vector3.new(0,.12*math.sin(q*math.pi),0)
+	return b:Lerp(c,q)+Vector3.new(0,Machine.RollHop*math.sin(q*math.pi),0)
 end
 
 -- ── Instance ─────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -170,6 +175,13 @@ function Machine.new(deps)
 		self.cinematic.onPlay=function(c)self:claim(c)end
 		-- A skip pressed on the held reveal: the capsule shot jumps to the landing (LOOK 1, Skip).
 		self.cinematic.onGateSkip=function()self:skipShot()end
+	end
+	-- Beta (34) "the stats egg cuts straight to the hatching": the Stat Egg's reveal (StatEggReveal, its own module) is
+	-- held the same way, by its instance (init passes it to confirm with the Saved answer).
+	self.statReveal=deps.statReveal or nil
+	if self.statReveal then
+		self.statReveal.gate=function(r)return self:holds(r)end
+		self.statReveal.onGateSkip=function()self:skipShot()end
 	end
 	if deps.step~=false then
 		self.heartbeat=RunService.Heartbeat:Connect(function(dt)
@@ -228,7 +240,8 @@ function Machine:bought(action,id)
 	return true
 end
 -- The armed press is confirmed (its reveal started, or the Stat Egg's Saved answer): the crank turns now. `cinematic`
--- (the reveal that confirmed it) is the one the gate holds. False with nothing armed, or an armed press that lapsed.
+-- (the reveal that confirmed it; for the Stat Egg its StatEggReveal, or nil) is the one the gate holds. False with
+-- nothing armed, or an armed press that lapsed.
 function Machine:confirm(cinematic)
 	local armed=self.armed
 	local now=self.clock()
@@ -240,8 +253,9 @@ function Machine:confirm(cinematic)
 	if self.crank and not self.crank.done then self:finish(self.crank)end
 	if self:capsuleOn()then return self:startShot(cinematic,armed,now)end
 	self.crank={kind="buy",at=now,pressed=armed.at,sched=sched,type=armed.type,fired={},claimed=true}
-	-- Review 2: the Stat Egg's reveal is not the cinematic: no gate, so no other reveal is ever caught by it.
-	self.gate=if cinematic and not armed.unclaimed then {from=now,cap=now+Machine.Cap,owner=cinematic,crank=self.crank}else nil
+	-- Review 2: the Stat Egg's reveal is not the cinematic: its gate is owned by its own reveal (beta 34), so no other
+	-- reveal is ever caught by it; confirmed with no owner, no gate.
+	self.gate=if cinematic then {from=now,cap=now+Machine.Cap,owner=cinematic,crank=self.crank}else nil
 	return true
 end
 -- The armed press was refused (Fable R8): no crank, no streak step; the hello nudge and one click instead.
@@ -565,8 +579,13 @@ function Machine:step(dt)
 		if not shown and drop.part.Transparency~=1 then drop.part.Transparency=1;drop.part.CFrame=drop.rest end
 	end
 end
--- The reveal the buy started has ended: the egg in the cup fades FadeAfter later.
-function Machine:revealClosed()
+-- The reveal the buy started has ended: the egg in the cup fades FadeAfter later. `source` is "stat" for the Stat Egg's
+-- own reveal, anything else for the hatch screens. Beta (34): each closes only its own buy: the Stat Egg's buy closes
+-- the Hatch eggs screen under its reveal (SnackHost closeShop), which must not end its shot.
+function Machine:revealClosed(source)
+	local crank=self.crank
+	local stat=crank~=nil and crank.kind=="buy"and Machine.Unclaimed[crank.type]==true
+	if(source=="stat")~=stat then return end
 	self.revealEndedAt=self.clock()
 	-- Studio R15 (2): Hatch another closes the screen while it waits out the server's request spacing. The camera stays
 	-- at Shot B through that gap, so the next buy chains (the 2nd / 3rd schedule) instead of a new first shot.
@@ -630,7 +649,8 @@ end
 -- Which version plays for this confirmation: "reduced", "pocket" or "shot" (with its frames).
 function Machine:shotMode(kind)
 	if self:reduced()then return "reduced"end
-	if Machine.Unclaimed[kind]then return "pocket"end -- the Stat Egg: its own reveal, sounds only (LOOK 1, left alone)
+	-- Beta (34): the Stat Egg plays the same shot as every egg (LOOK 1 had left it to the pocket's sounds, "a later
+	-- slice"); `kind` no longer changes the version.
 	local parts=self:bind()
 	if not parts then return "pocket"end
 	local root=self.d.root and self.d.root()
@@ -672,13 +692,13 @@ function Machine:startShot(cinematic,armed,now)
 	local sched=Machine.shotSchedule(mode,streak)
 	self.crank={kind="buy",at=now,pressed=armed.at,sched=sched,type=armed.type,fired={},claimed=true,shot=true}
 	self.gap=nil
-	self.gate=if cinematic and not armed.unclaimed then {from=now,cap=now+sched.start+Machine.ShotCap,release=now+sched.start,owner=cinematic,crank=self.crank}else nil
+	self.gate=if cinematic then {from=now,cap=now+sched.start+Machine.ShotCap,release=now+sched.start,owner=cinematic,crank=self.crank}else nil
 	local previous=self.shot
 	local shot={mode=mode,at=now,sched=sched,cinematic=cinematic,kind=armed.type,frames=frames,crank=self.crank}
 	if previous and previous.camera then
 		if mode=="shot"then shot.camera=previous.camera
 		-- Code review of 071d8a6: the next buy is a pocket or Reduced Motion one (walked off, streamed out, blocked,
-		-- the Stat Egg): the camera held at Shot B goes back now, never left Scriptable.
+		-- Reduced Motion turned on): the camera held at Shot B goes back now, never left Scriptable.
 		else self:giveBack(previous)end
 	end
 	if previous and previous~=shot then self:restorePanel(previous)end
@@ -866,6 +886,7 @@ function Machine:destroy()
 		if self.cinematic.onPlay then self.cinematic.onPlay=nil end
 		if self.cinematic.onGateSkip then self.cinematic.onGateSkip=nil end
 	end
+	if self.statReveal then self.statReveal.gate=nil;self.statReveal.onGateSkip=nil end
 	pcall(self.rest,self)
 end
 return Machine

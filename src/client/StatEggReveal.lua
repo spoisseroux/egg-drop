@@ -76,6 +76,18 @@ function Reveal.pop(u,tier)
 end
 
 Reveal.scene=snackScene -- (scripts/RevealCaptureFixture.lua draws the Stat Egg with it)
+-- Beta (34) "the stats egg just cuts straight to the hatching": the egg machine (EggMachineClient) holds this reveal's
+-- clock while its egg comes out of the machine, exactly as HatchCinematic.gate holds the other eggs': Reveal.gate(reveal)
+-- -> held, Reveal.onGateSkip(reveal) (a skip meanwhile jumps the machine's shot to its landing). Both nil (live, the
+-- corner off): as before. Each instance's onClosed(reason) hears a real close (never Hatch another's hand-over).
+Reveal.gate=nil
+Reveal.onGateSkip=nil
+function Reveal:gated()
+	local gate=Reveal.gate
+	if gate==nil then return false end
+	local ok,held=pcall(gate,self)
+	return ok and held==true
+end
 function Reveal.new(playerGui,audio)
 	local gui=Instance.new("ScreenGui");gui.Name="EggDropStatReveal";gui.ResetOnSpawn=false;gui.DisplayOrder=16
 	gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;gui.ScreenInsets=Enum.ScreenInsets.None;gui.IgnoreGuiInset=true;gui.Enabled=false;gui.Parent=playerGui
@@ -141,6 +153,8 @@ function Reveal:show(receipt,info,callbacks)
 			{source=self.feedSource,primary=true,act=function()self:choose("feed")end}}end,
 		onSkip=function()self:skip()end,onClose=function()self:choose("keep")end})
 	self.stage=stage
+	-- The machine's shot asks before a skip (never the first Stat Egg: the stage's own rule).
+	self.canSkip=function()return self.stage~=stage or stage.skippable~=false end
 	self.card=stage.root
 	stage.root:SetAttribute("SnackId",receipt.snackId);stage.root:SetAttribute("Stat",receipt.stat);stage.root:SetAttribute("Size",receipt.size)
 	self.clock=RunService.RenderStepped:Connect(function(dt)self:step(dt)end)
@@ -169,7 +183,8 @@ function Reveal:step(dt)
 	-- The clock (and its sounds) wait for the 3D egg (Hatch another and Reduced Motion have no
 	-- lid to hold it); the scene times itself out at 3.5 s and then shows its settled frame.
 	local ready=self.scene.ready==true
-	if ready and not stage:holdsClock()then self.age+=math.clamp(dt,0,.1)end
+	-- The machine's hold (beta 34) too: the clock, its sounds and the burst wait for the egg in the cup.
+	if ready and not stage:holdsClock()and not self:gated()then self.age+=math.clamp(dt,0,.1)end
 	local reduced=self.reducedStart
 	local T=self.timing
 	if self.age>T.duration then self.age=T.duration end
@@ -190,6 +205,11 @@ function Reveal:step(dt)
 end
 -- A skip lands on the settled card (the first Stat Egg plays in full: the stage decides).
 function Reveal:skip()
+	-- Held by the machine: the skip jumps its shot to the landing instead, when its rule allows (as the cinematic's).
+	if self.stage and self:gated()then
+		if Reveal.onGateSkip then pcall(Reveal.onGateSkip,self)end
+		return false
+	end
 	if not self.stage or self.stage:inputOpen()or not self.stage.skippable then return false end
 	if self.cue then self.cue:cancel()end
 	if self.audio and self.audio.stopOwner then pcall(function()self.audio:stopOwner(self.owner)end)end
@@ -221,7 +241,7 @@ function Reveal:close(reason,handover)
 		if not stage:dismiss(gone,{handover=handover,pending=function()return self.againPressed==true end})then stage:destroy();gone()end
 	end
 	self.gui.Enabled=false
-	local _=reason
+	if reason~="replaced"and self.onClosed then pcall(self.onClosed,reason)end
 	return true
 end
 function Reveal:destroy()self:close("destroy");if self.unregisterCursor then self.unregisterCursor()end;self.gui:Destroy()end
