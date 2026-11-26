@@ -189,6 +189,8 @@ def xml_part(index, mesh, mesh_id, raw):
         f"        <bool name=\"CastShadow\">{'true' if shadow else 'false'}</bool>",
         f"        <bool name=\"DoubleSided\">{'true' if double else 'false'}</bool>",
         "        <token name=\"CollisionFidelity\">2</token>",
+        # round 6 (Spencer: "the water fall distance"): kit meshes keep full detail far off (not scriptable at runtime)
+        "        <token name=\"RenderFidelity\">1</token>",
         f"        <token name=\"Material\">{MATERIAL_TOKEN[material]}</token>",
         f"        <Color3uint8 name=\"Color3uint8\">{(0xFF << 24) | 0xFFFFFF}</Color3uint8>",
         "        <float name=\"Reflectance\">0.0</float>",  # LOOK-R4: no Reflectance on the falls either

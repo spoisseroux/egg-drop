@@ -6,6 +6,8 @@
 --
 -- Everything is built switched off; apply(state) turns layers on or off (never destroys them):
 --   on only for the falls nearest the camera, within Radius; mist off within MistKeepOut of its point;
+--   round 6 (Spencer: "can you improve the water fall distance too"): at level 0 the beams and lips (not the emitters
+--   or the rainbow) of every falls within FarRadius stay on, so a falls seen from across the island still moves;
 --   rainbow only while daylight > RainbowDaylight; level 1 keeps Level1 at Tumble only; level 2 or Reduced Motion: none.
 --   Touch-only devices start at level 1 (AliveBudget starts everyone at 0); the budget can still take them to 2.
 --   TextureSpeed is written once, at build: a beam that is off does not move, so nothing needs stopping.
@@ -379,12 +381,23 @@ function Falls.build(folder,data,kit)
 		return best
 	end
 	-- On or off, and whether the switch is Reduced Motion or the level (an emitter so switched is cleared, not faded).
-	function self.wants(layer,state,near)
+	-- Round 6: the falls within FarRadius of the camera (their beams and lips draw at level 0).
+	local function within(camera)
+		local out={}
+		if typeof(camera)~="Vector3"then return out end
+		for name,group in pairs(groups)do
+			if(group.anchor-camera).Magnitude<=Look.FarRadius then out[name]=true end
+		end
+		return out
+	end
+	function self.wants(layer,state,near,far)
 		local level=levelOf(state)
 		if state.reduced or level>=2 then return false,true end
 		local keep=if layer.level1~=nil then layer.level1 else Look.Level1[layer.name]
 		if level>=1 and(layer.group~="Tumble"or not keep)then return false,true end
-		if layer.group~=near then return false end
+		if layer.group~=near then
+			return level==0 and far~=nil and far[layer.group]==true and layer.kind~="emitter"and not layer.rainbow
+		end
 		if layer.keepOut and(layer.keepOut-state.camera).Magnitude<Look.MistKeepOut then return false end
 		if layer.rainbow and not(state.daylight>Look.RainbowDaylight)then return false end
 		return true
@@ -394,9 +407,10 @@ function Falls.build(folder,data,kit)
 		local state=self.state
 		for key,value in pairs(changes or {})do state[key]=value end
 		local near=nearest(state.camera)
+		local far=within(state.camera)
 		local level=levelOf(state)
 		for _,layer in ipairs(layers)do
-			local on,cut=self.wants(layer,state,near)
+			local on,cut=self.wants(layer,state,near,far)
 			local item=layer.item
 			if layer.kind=="beam"then
 				if item.Enabled~=on then item.Enabled=on end

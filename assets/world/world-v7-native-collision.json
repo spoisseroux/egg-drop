@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "nativePath": "assets/world/WorldAssetsNative.rbxm",
-  "nativeBytes": 326424,
-  "nativeSha256": "49973794a90b1d7d26259b7ad016fb3d18c8185533355659473dd099907ba9c0",
+  "nativeBytes": 326426,
+  "nativeSha256": "faa93c2d2ff16b7436610bb96cdaf06322e462f49a9d8666f0eca8027f5ea3ec",
   "xmlSha256": "d211cf689b4dc61f086fb9e04d4bc6c54525043fa08ceca8e29b5c909847efd4",
   "luaSha256": "4e0b78cd4f69c0ec66d930a42a8bc1b5901a68727ff4691b1578b17e8be021f8",
   "inputs": {
@@ -767,18 +767,30 @@
   },
   "promotion": "Explicit Eggs station split promotion (2026-11-24, artifacts/qa-2026-11-24-beta15/eggs-split/promote_native_eggs_split.py); validator never rewrites this manifest.",
   "fidelity": {
-    "note": "W7_Backdrop__* RenderFidelity Precise (scripts/world_backdrop_fidelity.py); only that property chunk moved",
-    "previousNativeSha256": "4f007fb7cb0067647cbef2fb49ea3add67650e5b9dc20cb3134931945ab3b33f",
+    "note": "W7_Backdrop__* and W7_Water__* RenderFidelity Precise (scripts/world_backdrop_fidelity.py); only that property chunk moved",
+    "previousNativeSha256": "49973794a90b1d7d26259b7ad016fb3d18c8185533355659473dd099907ba9c0",
     "changed": [
-      "W7_Backdrop__cloud_1: 0 -> 1",
-      "W7_Backdrop__cloud_2: 0 -> 1",
-      "W7_Backdrop__cloud_3: 0 -> 1",
-      "W7_Backdrop__cloud_4: 0 -> 1",
-      "W7_Backdrop__cloud_5: 0 -> 1",
-      "W7_Backdrop__far_peak_1: 0 -> 1",
-      "W7_Backdrop__far_peak_2: 0 -> 1",
-      "W7_Backdrop__far_peak_3: 0 -> 1"
-    ]
+      "W7_Water__water_stream: 0 -> 1",
+      "W7_Water__cloud: 0 -> 1",
+      "W7_Water__foam: 0 -> 1",
+      "W7_Water__water_pool: 0 -> 1",
+      "W7_Water__waterfall_sky: 0 -> 1",
+      "W7_Water__waterfall_tumble: 0 -> 1"
+    ],
+    "earlier": {
+      "note": "W7_Backdrop__* RenderFidelity Precise (scripts/world_backdrop_fidelity.py); only that property chunk moved",
+      "previousNativeSha256": "4f007fb7cb0067647cbef2fb49ea3add67650e5b9dc20cb3134931945ab3b33f",
+      "changed": [
+        "W7_Backdrop__cloud_1: 0 -> 1",
+        "W7_Backdrop__cloud_2: 0 -> 1",
+        "W7_Backdrop__cloud_3: 0 -> 1",
+        "W7_Backdrop__cloud_4: 0 -> 1",
+        "W7_Backdrop__cloud_5: 0 -> 1",
+        "W7_Backdrop__far_peak_1: 0 -> 1",
+        "W7_Backdrop__far_peak_2: 0 -> 1",
+        "W7_Backdrop__far_peak_3: 0 -> 1"
+      ]
+    }
   },
   "hashing": "Text inputs and outputs (.json, .rbxmx, .lua) are hashed with CRLF normalized to LF (content, not checkout line endings); binaries byte-exact. Re-signed 2026-11-24 from a raw-byte PASS of the same files."
 }

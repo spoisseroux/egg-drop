@@ -169,6 +169,8 @@ end
 Aero.Waterfall=table.freeze({
 	-- RainbowDaylight .7 (GARDEN-HOUR-LOOK 5): golden is .55 and would show it. Aero alone reads .9, so day keeps it.
 	Radius=120,MistKeepOut=16,RainbowDaylight=.7,
+	-- round 6: the beams and lips of every falls within FarRadius draw at level 0 (PC); emitters stay within Radius
+	FarRadius=360,
 	PoolTop=3.2, -- the pool's water top (world-v7-walk surface), where the lower sheet ends
 	Tiers={Water_TumbleFalls_Upper="Upper",Water_TumbleFalls_Lower="Lower"},
 	Sky="Water_SkyFalls",

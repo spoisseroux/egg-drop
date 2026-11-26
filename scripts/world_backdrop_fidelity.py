@@ -28,6 +28,9 @@ ROOT = Path(__file__).resolve().parents[1]
 NATIVE = ROOT / "assets/world/WorldAssetsNative.rbxm"
 PROOF = ROOT / "assets/world/world-v7-native-collision.json"
 PRECISE = 1  # Enum.RenderFidelity: Automatic 0, Precise 1, Performance 2
+# Round 6 (Spencer, beta 26: "can you improve the water fall distance too"): the water meshes (the falls' sheets, the
+# stream, the pool, the foam) join the backdrop: at Automatic a far camera drew their coarse LOD.
+PREFIXES = ("W7_Backdrop__", "W7_Water__")
 
 
 def interleaved_u32(data, count):
@@ -84,10 +87,10 @@ def patch(data):
     values = interleaved_u32(body[9 + name_len:], count)
     changed = []
     for i, name in enumerate(names):
-        if name.startswith("W7_Backdrop__") and values[i] != PRECISE:
+        if name.startswith(PREFIXES) and values[i] != PRECISE:
             changed.append(f"{name}: {values[i]} -> {PRECISE}")
             values[i] = PRECISE
-    backdrop = sum(1 for name in names if name.startswith("W7_Backdrop__"))
+    backdrop = sum(1 for name in names if name.startswith(PREFIXES))
     new_body = head + interleave_u32(values)
     out = bytearray(data[:HEADER])
     for index, part in enumerate(parts):
@@ -116,7 +119,7 @@ def main():
     if sha(native) != proof["nativeSha256"]:
         raise SystemExit("canonical native pack does not match its proof; refusing")
     result, changed, backdrop = patch(native)
-    print(f"backdrop meshes: {backdrop}; to change: {len(changed)}")
+    print(f"backdrop and water meshes: {backdrop}; to change: {len(changed)}")
     for line in changed:
         print("  " + line)
     if not changed:
@@ -127,8 +130,9 @@ def main():
     NATIVE.write_bytes(result)
     old = proof["nativeSha256"]
     proof["nativeBytes"], proof["nativeSha256"] = len(result), sha(result)
-    proof["fidelity"] = {"note": "W7_Backdrop__* RenderFidelity Precise (scripts/world_backdrop_fidelity.py); only that property chunk moved",
-                         "previousNativeSha256": old, "changed": changed}
+    earlier = proof.get("fidelity")
+    proof["fidelity"] = {"note": "W7_Backdrop__* and W7_Water__* RenderFidelity Precise (scripts/world_backdrop_fidelity.py); only that property chunk moved",
+                         "previousNativeSha256": old, "changed": changed, "earlier": earlier}
     PROOF.write_text(json.dumps(proof, indent=2) + "\n")
     print("wrote pack and proof")
 

@@ -570,7 +570,9 @@ return function(client,offline)
 			lounge(r.world);local before=picture(r.world)
 			r.aero.camera=function()return Vector3.new(60,8,-60)end
 			r.flip(true)
-			assert(built.falls.draws()==14 and built.folder.Parent==r.world and built.falls.folder.Parent==built.folder)
+			local farBeams=0 -- round 6: the other falls' beams and lips within FarRadius draw too (level 0)
+			for _,l in ipairs(built.falls.layers)do if l.group~="Tumble"and l.kind~="emitter"and not l.rainbow then farBeams+=1 end end
+			assert(built.falls.draws()==14+farBeams and built.folder.Parent==r.world and built.falls.folder.Parent==built.folder,built.falls.draws())
 			r.still=true;r.reducedChanged.fire();assert(built.falls.draws()==0)
 			r.still=false;r.reducedChanged.fire();r.lvl=1;r.tick();assert(built.falls.draws()<=8)
 			r.aero.camera=function()return Vector3.new(72.7+falls.Radius+5,8,-72.7)end;r.tick();assert(built.falls.draws()==0)
