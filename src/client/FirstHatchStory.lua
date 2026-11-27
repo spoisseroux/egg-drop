@@ -891,13 +891,17 @@ function Story:cleanup()
 				local params=RaycastParams.new()
 				params.FilterType=Enum.RaycastFilterType.Exclude
 				params.FilterDescendantsInstances={character}
+				-- Always a side view (never from the player's back: the follow camera centres the player, who would
+				-- hide the Bear); the side with more open room wins (the follow camera's popper handles the rest).
 				local side=Vector3.new(-d.Z,0,d.X)
-				local want=root.Position-d*11+Vector3.new(0,5,0)
+				local best,room=nil,-1
 				for _,s in ipairs({side,-side})do
-					local dir=(s*.8-d*.6).Unit*12+Vector3.new(0,4,0)
-					if not workspace:Raycast(focus,dir,params)then want=focus+dir;break end
+					local dir=(s*.9-d*.3).Unit*12+Vector3.new(0,4,0)
+					local hit=workspace:Raycast(focus,dir,params)
+					local free=if hit then(hit.Position-focus).Magnitude else 99
+					if free>room then best,room=dir,free end
 				end
-				camera.CFrame=CFrame.lookAt(want,focus)
+				camera.CFrame=CFrame.lookAt(focus+best,focus)
 			end)
 		end
 	end
