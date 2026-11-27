@@ -81,7 +81,10 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          "PetLead",
          # Onboarding v3 brief section 3: the one-time welcome gift (the rules, the save path, the request order) and
          # the live and base builds loading a save that holds the flag.
-         "WelcomeGift", "WelcomeGiftCrossVersion"]
+         "WelcomeGift", "WelcomeGiftCrossVersion",
+         # The onboarding fun pass section 2 (Onboard "gifts"): the gift chain's free eggs (the rules, the save path, the
+         # Snack's gift buy, the guard, a malformed field, the request order) and the live and base builds loading them.
+         "GiftEggs", "GiftEggCrossVersion"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
@@ -146,7 +149,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # Onboarding v3 brief sections 1 and 3: the lead's client half (BearNeeds, NestLead), the all-set card.
           "NestLead",
           # Onboarding v3 brief section 3: the all-set card's welcome gift (its clock, roll-up, cues and words).
-          "AllSetGift"]
+          "AllSetGift",
+          # The onboarding fun pass section 2 (Onboard "gifts"): the gift chain's client controller.
+          "GiftChain"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -225,7 +230,9 @@ def client_modules():
                     # GARDEN-B38-BRIEF 4b: the understory's builder and motion.
                     "UnderstoryClient.lua",
                     # Onboarding v3 brief: the lead's client half, its trail adapter and the all-set card.
-                    "NestLead.lua", "LeadTrail.lua", "AllSetCard.lua"):
+                    "NestLead.lua", "LeadTrail.lua", "AllSetCard.lua",
+                    # The gift chain: its controller.
+                    "GiftChain.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

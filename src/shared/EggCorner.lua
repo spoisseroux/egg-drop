@@ -167,10 +167,13 @@ end
 -- the reason; every other `...Buy` send in the game is in OtherBuys. scripts/EggDelivery.spec.lua fails for an
 -- EggModels type in neither table, a send in no table, or an Eggs row whose reveal is not routed.
 Corner.Eggs=table.freeze({
-	toy=table.freeze({drop="Toy",actions=table.freeze({"toyBuy"}),reveal="cinematic"}),
+	-- The gift chain (GiftEggs, Onboard "gifts"): the free Toy and Paint Eggs are cranked here too (giftToyBuy and
+	-- giftPaintBuy, the `giftEgg` request); the gift card (GiftReveal) opens through the machine's deliver once the egg
+	-- is in the cup. The Snack gift is a statEggBuy (the stat row).
+	toy=table.freeze({drop="Toy",actions=table.freeze({"toyBuy","giftToyBuy"}),reveal="cinematic"}),
 	material=table.freeze({drop="Material",actions=table.freeze({"materialBuy"}),reveal="cinematic"}),
 	-- The Customization Egg (lookBuy) wears the Hue art.
-	hue=table.freeze({drop="Hue",actions=table.freeze({"hueBuy","lookBuy"}),reveal="cinematic"}),
+	hue=table.freeze({drop="Hue",actions=table.freeze({"hueBuy","lookBuy","giftPaintBuy"}),reveal="cinematic"}),
 	feature=table.freeze({drop="Feature",actions=table.freeze({"featureBuy"}),reveal="cinematic"}),
 	-- `host`: the client module that opens a deferred reveal (through the machine's deliver).
 	stat=table.freeze({drop="Stat",actions=table.freeze({"statEggBuy"}),reveal="deferred",host="SnackHost"}),

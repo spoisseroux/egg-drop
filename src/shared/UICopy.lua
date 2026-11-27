@@ -309,6 +309,21 @@ local Table={
  -- are the pet's own voice (it asks, we do not order); thisWay is the nudge's word over "This way!".
  onbLead={pet="Pet me!",follow="This way!",followSub="A new egg is waiting",tuck="Tuck it in!",tuckSub="It hatches tomorrow",
   deck="Let's win Stars!",deckSub="Stars turn the crank!",thisWay="Come on!",toast="Sweet dreams! Come back tomorrow to hatch it."},
+ -- The gift chain (ONBOARDING-FUN-PASS section 2, Onboard "gifts"): the pet asks (its own voice), a headline of 16
+ -- characters or fewer and a sub-line of 28 or fewer; the gift card, the Things row and the parked lines.
+ onbGift={
+  paint="A gift for you!",paintSub="A free Paint Egg",toy="A toy for me?",toySub="A free Toy Egg",
+  snack="A snack for me?",snackSub="A free Snack Egg",pull="You can hatch one!",pullSub="Turn the crank",
+  park="Let's go play!",parkSub="The Pet Park is open",dash="Race time!",dashSub="Try the Garden Dash",
+  nest="It's hatching!",nestSub="Come and see",waiting="Gift waiting!",waitingSub="At the egg machine",
+  turn="Turn it!",turnSub="Tap to turn the crank",nudge="For you!",throw="Throw it!",
+  fetch="{pet} learned Fetch!",fetchSub="Throw the ball any time",
+  card={title="A gift for you!",paint="Paint {pet}!",play="Play!",later="Later",keep="Keep it",
+   pot="{name} paint pot",potOdds="Each colour: 1 in 4",toyOdds="Each toy you don't have: 1 in {count}",deeper="Deeper {name}!",
+   free="Free",snack="A snack for the racer!"},
+  row={name="Gift waiting",line="A free egg at the egg machine",lineSnack="A free Snack Egg at the machine"},
+  busy="Try again in a moment.",room="Make room in the pouch first.",bring="Bring {pet} out first.",
+ },
  -- Section 3 (Onboard "allset2"): the celebration card.
  -- gift: the one-time welcome gift's pill under the stamps, its Stars landing one by one up to 5 (shown only once the
  -- server paid it); giftSub replaces `sub` with it. hatch: the button when the Stars cover the cheapest egg (the fun pass).

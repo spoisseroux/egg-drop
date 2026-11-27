@@ -16,6 +16,11 @@ Page.Hit=44
 function Page.rows(ctx)
 	ctx=type(ctx)=="table"and ctx or {}
 	local rows={}
+	-- The gift chain (GiftChain, Onboard "gifts"): a gift waiting at the egg machine is the top row; Show me starts it.
+	if ctx.gift=="paint"or ctx.gift=="toy"or ctx.gift=="snack"then
+		table.insert(rows,{id="gift",icon="target",tint="garden",name=UICopy.get("onbGift.row.name"),
+			line=UICopy.get(if ctx.gift=="snack"then "onbGift.row.lineSnack"else "onbGift.row.line"),button=UICopy.get("things.show"),new=true})
+	end
 	-- The Play Den (PLAY-DEN-BUILD-PLAN): while it is open, a first row whose Show me leads to the cave mouth.
 	if ctx.den==true then
 		table.insert(rows,{id="den",icon="target",tint="garden",name=UICopy.get("things.den.name"),line=UICopy.get("things.den.line"),button=UICopy.get("things.show")})
