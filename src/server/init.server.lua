@@ -1681,6 +1681,9 @@ local function onBoardRequest(player, action, value, sticker)
 	elseif action=="firstStand"then
 		-- Beta (37) note 1: the first hatch's Bear stands where its egg opened (FirstHatchStory, Onboard "stork"), then
 		-- follows. Presentation only (GardenState:stand): a spot on solid ground near the owner, a few asks a session.
+		-- Only during the first hatch's hand-off: armed when the starter receipt's ack arrives (Meet; the nursery
+		-- request's "ack"), spent by the one stand it honours; any other time it is ignored.
+		if not board.firstStandArmed then return end
 		if type(value)~="table"or typeof(value.at)~="Vector3"or type(value.hold)~="number"or value.hold~=value.hold then return end
 		local okOn,storyOn=pcall(function()return require(ReplicatedStorage.Shared.Onboard).storyOn()end)
 		if not(okOn and storyOn)or not hasPet(board)or board.mode~="Room"or board.closing then return end
@@ -1700,7 +1703,9 @@ local function onBoardRequest(player, action, value, sticker)
 		if not hit or math.abs(hit.Position.Y-at.Y)>.6 then return end
 		local spot=Vector3.new(at.X,hit.Position.Y+.025,at.Z)
 		local toOwner=Vector3.new(root.Position.X-spot.X,0,root.Position.Z-spot.Z)
-		garden:stand(player.UserId,spot,if toOwner.Magnitude>.01 then math.atan2(toOwner.X,toOwner.Z)else nil,value.hold)
+		if garden:stand(player.UserId,spot,if toOwner.Magnitude>.01 then math.atan2(toOwner.X,toOwner.Z)else nil,value.hold)then
+			board.firstStandSpent,board.firstStandArmed=board.firstStandArmed,nil -- once per receipt (the ack's resends never re-arm it)
+		end
 		return
 	elseif action=="welcomeInput"then
 		if board.welcome and type(value)=="table"and value.sequence==board.runSequence and now-(board.welcomeInputAt or -math.huge)>=.1 then
@@ -2287,6 +2292,12 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	end
 	local isHue=HueState.isAction(action)
 	if action ~= "hatch" and action ~= "ack" and action ~= "daily" and not isHue then return end
+	-- The first hatch's Meet acks the starter receipt, then asks for the hand-off (firstStand): arm it (once) here, as the
+	-- ack arrives, whatever the save then says (the stand's ask does not wait for the ack's write).
+	do
+		local last = board.nursery and board.nursery.state and board.nursery.state.lastHatch
+		if action == "ack" and type(last) == "table" and last.starter == true and last.id == value and board.firstStandSpent ~= value then board.firstStandArmed = value end
+	end
 	local quote=if isHue and type(value)=="table"and type(value.id)=="string"and #value.id<=100 then{id=value.id,action=action,petId=value.petId}else nil
 	local pending=board.nursery.pending
 	local canonical=if isHue then HueState.quote(action,value,revision)else nil
