@@ -24,7 +24,7 @@ return function(client)
 	local KEYS={"Space","SPACE","Enter","Esc","Shift","Ctrl"," G "," L2","Press "}
 
 	test("the deck2 switch: appended to the Onboard tables; it needs egg3d too; off keeps today's tuck",function()
-		assert(Onboard.Features[#Onboard.Features]=="deck2","appended, nothing renumbered")
+		assert(Onboard.Features[14]=="deck2"and Onboard.Features[13]=="guide","appended, nothing renumbered")
 		assert(Onboard.attribute("deck2")=="Onboard_deck2"and Onboard.key("deck2")=="onboard_deck2")
 		V2.read=function()return false end
 		assert(not V2.deck2On()and V2.tuckAfter()==V2.Deck.tuckAfter,"all off: beta (37)")
