@@ -11,11 +11,12 @@ forward -Z, up Y (as the nest landmark), so Roblox imports each mesh turned by p
 its origin at its bounds centre; the manifest records each mesh's bounds centre from the foot and its size, so the
 client seats it: CFrame.new(foot) * yaw * CFrame.new(centre * scale) * Turn, Size = size * scale.
 
-Budget (Fable review round 1): a bush at most 190 triangles, reeds at most 38. Reed blades and stems and the bush's
-leaf sprays are cards: each face is doubled back to back with its own vertices (Roblox culls back faces; a merged pair
-would smooth its normal to nothing). The bush's normals are custom split normals out from one point (one soft mass),
-and its shade is a vertex colour (.45 at the foot to 1.0 at the top, darker where lobes tuck together), which a MeshPart's
-TextureID multiplies (memory: roblox-surfaceappearance-runtime; the Aero falls kit ships vertex colour the same way).
+Budget (Fable review round 2): a bush at most 320 triangles, reeds at most 38. Reed blades and stems are cards: each
+face is doubled back to back with its own vertices (Roblox culls back faces; a merged pair would smooth its normal to
+nothing). The bush's normals are custom split normals out from one point (one soft mass); they reach the FBX (checked
+by re-importing it: every bush corner normal is the custom one, none flat). Its shade is a subtle vertex colour (.7 at
+the foot to 1.0 at the top, a little darker where lobes tuck together), which a MeshPart's TextureID multiplies
+(memory: roblox-surfaceappearance-runtime; the Aero falls kit ships vertex colour the same way).
 
 Writes assets/world/understory/understory.fbx and understory-manifest.json (names unique to this slice: memory note
 world-finish-template-names); with --render, renders the three meshes beside a player-height post (4.2) and a pet-size
@@ -44,11 +45,10 @@ REGION = {"bush": (0, 0, 256, 256), "flower": (256, 0, 512, 256), "blades": (0, 
           "stem": (192, 256, 208, 512), "head": (208, 256, 256, 512)}
 INSET = 4.0                                   # pixels kept off each region's edge (mip bleed)
 NAMES = {"bush": "Understory_B38_Bush", "flower": "Understory_B38_BushFlower", "reeds": "Understory_B38_Reeds"}
-TRIS_CAP = {"bush": 190, "flower": 190, "reeds": 38}
+TRIS_CAP = {"bush": 320, "flower": 320, "reeds": 38}
 BUSH_ACROSS, BUSH_TALL = 3.0, 2.0             # design size; the client scales each bush to 2.5 / 4 across
 GROUND = -.15                                 # Roblox-local y the bush's skirt sinks to (it sits, never perches)
 NORMAL_FROM = (0, .4, 0)                      # Roblox-local: every bush normal points out from here (one soft mass)
-FRINGE = 28                                   # leaf-spray cards on the upper outline and the lobe joins
 SEED = 20261127
 
 
@@ -70,28 +70,35 @@ def region_uv(name, u, v):
 
 
 # ----------------------------------------------------------------------------------------------------------- bush
-# Fable review round 1 (FIX FIRST: "mossy boulders that perch on a point"): a subdiv-2 dome and four subdiv-1 shoulder
-# lobes pushed by stronger noise (.3); under each lobe's centre the shape stops tapering, keeps its radius (flare x 1.1)
-# and drops to the ground, and the faces left wholly under the lawn are deleted; 28 leaf-spray cards break the upper
-# outline and the joins; normals point out from one point so it shades as one soft mass; one continuous dome unwrap
-# round the bush's axis (its top at the region's centre); a vertex shade .45 at the foot to 1.0 at the top, darker
-# where one lobe tucks into another.
-LOBES = (  # Roblox-local centre, radius, vertical squash, icosphere subdivisions (bmesh: 2 = 80 faces, 1 = 20)
-    ((0, 1.0, 0), 1.18, .82, 2),
-    ((.92, .6, .32), .74, .86, 1), ((-.3, .58, .9), .72, .84, 1),
-    ((-.94, .62, -.2), .76, .86, 1), ((.2, .56, -.92), .72, .84, 1),
+# Fable review rounds 1 and 2: five lobes, every one an icosphere at subdivisions 2 (bmesh: 80 faces) pushed by seeded
+# noise (.3); under each lobe's centre the shape stops tapering, keeps its radius (flare x 1.1) and drops into the lawn,
+# and the faces left wholly under the lawn or buried in another lobe are deleted, so it sits, never perches. Two small
+# round puffs on the upper outline soften the silhouette (Fable asked for two or three; two fit the 320 cap). Round 2:
+# the softness is geometry, not cards (the leaf-spray cards read as thorns and are gone).
+# Normals are custom split normals out from one point, so it shades as one soft mass; one continuous dome unwrap round
+# the bush's axis (its top at the region's centre); a subtle vertex shade, .7 at the foot to 1.0 at the top, a little
+# darker where one lobe tucks into another.
+LOBES = (  # Roblox-local centre, radius, vertical squash, icosphere subdivisions, skirt to the ground
+    ((0, 1.0, 0), 1.18, .82, 2, True),
+    ((.92, .6, .32), .74, .86, 2, True), ((-.3, .58, .9), .72, .84, 2, True),
+    ((-.94, .62, -.2), .76, .86, 2, True), ((.2, .56, -.92), .72, .84, 2, True),
+    # the puffs: small, high, no skirt (they sit in the outline, not on the lawn)
+    ((.62, 1.42, .34), .42, .9, 1, False), ((-.58, 1.38, -.3), .4, .9, 1, False),
 )
+SHADE = (.7, 1.0)          # vertex shade at the foot and the top
+TUCK = .86                 # the shade where one lobe tucks deepest into another
 
 
-def lump(bm, centre, radius, squash, subdiv, seed):
+def lump(bm, centre, radius, squash, subdiv, seed, skirt=True):
     made = bmesh.ops.create_icosphere(bm, subdivisions=subdiv, radius=1.0)
     off = Vector((seed * 3.7, seed * 1.3, seed * 2.1))
     c = bl(centre)
+    amp = .3 if skirt else .18
     for vert in made["verts"]:
         d = vert.co.normalized()
-        bump = noise.noise(d * 1.4 + off) * .3 + noise.noise(d * 3.2 + off * 2) * .08
+        bump = noise.noise(d * 1.4 + off) * amp + noise.noise(d * 3.2 + off * 2) * .08
         r = radius * (1 + bump)
-        if d.z >= 0:
+        if d.z >= 0 or not skirt:
             vert.co = Vector((d.x * r, d.y * r, d.z * r * squash)) + c
         else:
             # below the centre: no taper, the full radius flared x 1.1, straight down into the lawn
@@ -113,61 +120,42 @@ def dome_uv(region, p, centre, theta_max):
 
 
 def build_bush(name, region):
-    rnd = random.Random(SEED + 7)
     bm = bmesh.new()
     uv = bm.loops.layers.uv.new("UVMap")
     col = bm.loops.layers.color.new("Col")
     owner = {}
-    for k, (centre, radius, squash, subdiv) in enumerate(LOBES):
-        for v in lump(bm, centre, radius, squash, subdiv, k + 1):
+    for k, (centre, radius, squash, subdiv, skirt) in enumerate(LOBES):
+        for v in lump(bm, centre, radius, squash, subdiv, k + 1, skirt):
             owner[v] = k
     bmesh.ops.triangulate(bm, faces=bm.faces)
     under = [f for f in bm.faces if all(v.co.z <= GROUND + 1e-4 for v in f.verts)]
     bmesh.ops.delete(bm, geom=under, context="FACES")
-    # where one lobe tucks into another: darker (a factor per vertex, applied with the height shade below)
+
+    # faces buried inside another lobe are never seen: dropped (inside = under .62 of that lobe's radius, in its own
+    # squashed frame, the most its noise can pull a surface in)
+    def buried(co, k):
+        for j, (centre, radius, squash, _, _) in enumerate(LOBES):
+            if j == k:
+                continue
+            d = co - bl(centre)
+            if math.sqrt(d.x * d.x + d.y * d.y + (d.z / squash) ** 2) < radius * .62:
+                return True
+        return False
+    hidden = [f for f in bm.faces if all(buried(v.co, owner.get(v)) for v in f.verts)]
+    bmesh.ops.delete(bm, geom=hidden, context="FACES")
+    # where one lobe tucks into another: a little darker (a factor per vertex, applied with the height shade below)
     tuck = {}
     for v in bm.verts:
         k = owner.get(v)
         f = 1.0
-        for j, (centre, radius, _, _) in enumerate(LOBES):
+        for j, (centre, radius, _, _, _) in enumerate(LOBES):
             if j == k:
                 continue
             dist = (v.co - bl(centre)).length / radius
             if dist < 1.15:
-                f = min(f, .72 + .28 * max(0.0, (dist - .6) / .55))
+                f = min(f, TUCK + (1 - TUCK) * max(0.0, (dist - .6) / .55))
         tuck[v] = f
-    # fringe anchors: core vertices on the upper outline (far out for their height) and at the lobe joins
     axis = bl(NORMAL_FROM)
-    bm.verts.index_update()
-    cands = []
-    for v in bm.verts:
-        if v.co.z < .45 or not v.link_faces:
-            continue
-        score = math.hypot(v.co.x, v.co.y) * .6 + v.co.z * .5 + (1 - tuck[v]) * 3 + rnd.random() * .4
-        cands.append((-score, v.index, v.co.copy(), (v.co - axis).normalized()))
-    cands.sort(key=lambda c: (c[0], c[1]))
-    anchors = []
-    for _, _, co, n in cands:
-        if all((co - a).length > .42 for a, _ in anchors):
-            anchors.append((co, n))
-        if len(anchors) == FRINGE:
-            break
-    assert len(anchors) == FRINGE, len(anchors)
-    up = Vector((0, 0, 1))
-    for co, n in anchors:
-        # a spray lies along the surface toward the outline and tips out about 30 degrees, its foot buried, so only the
-        # leaf tip breaks the silhouette (straight out, the cards read as thorns)
-        along = up - n * up.dot(n)
-        along = (along if along.length > 1e-4 else n.orthogonal()).normalized()
-        direction = (along * .82 + n * .5).normalized()
-        base = co - n * .14
-        tip = base + direction * (.5 + rnd.random() * .2)
-        t = n.cross(up)
-        t = (t if t.length > 1e-4 else Vector((1, 0, 0))).normalized()
-        t = (Matrix.Rotation(rnd.uniform(-.6, .6), 3, direction) @ t).normalized()
-        w = .2 + rnd.random() * .06
-        card(bm, uv, col, [rb(base - t * w), rb(base + t * w), rb(tip)], [(0, 0)] * 3, [1, 1, 1])
-    bmesh.ops.triangulate(bm, faces=bm.faces)
     # scale to the design size: 3 across; 2 tall from the sunk skirt (GROUND stays GROUND)
     xs = [v.co.x for v in bm.verts]
     ys = [v.co.y for v in bm.verts]
@@ -185,7 +173,7 @@ def build_bush(name, region):
             p = loop.vert.co
             loop[uv].uv = dome_uv(region, p, axis, theta_max)
             h = max(0.0, min(1.0, (p.z - GROUND) / (top - GROUND)))
-            k = (.45 + .55 * h) * tuck.get(loop.vert, 1.0)
+            k = (SHADE[0] + (SHADE[1] - SHADE[0]) * h) * tuck.get(loop.vert, 1.0)
             loop[col] = (k, k, k, 1.0)
     return finish(bm, name, normals_from=axis)
 

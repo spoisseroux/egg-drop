@@ -5,8 +5,9 @@
 
 Writes assets/world/understory/:
   understory-atlas.png  512 x 512 RGB, four 256 px regions (image y down; scripts/build_understory_meshes.py maps UVs):
-      A (0, 0)     round bush: about 25 leaf clusters (leaves 16 to 22 px), darker green than the lawn, matte, dark
-                   #1B3622 pockets between clusters, a rare brighter leaf. The bush's dome unwrap puts its top at the
+      A (0, 0)     round bush: about 25 leaf clusters (leaves 16 to 22 px), one step darker than the lawn, matte
+                   (Fable round 2: the region's mean is about #3F6E3A, highlights #6E9A55, never near-black), darker
+                   pockets between clusters. The bush's dome unwrap puts its top at the
                    region's centre and its foot at the rim.
       B (256, 0)   flowering bush: the same leaves (another seed) and seven sprays of three to five flowers (10 to 12 px,
                    70% cream, the rest coral) near the centre, where the unwrap puts the bush's top
@@ -38,9 +39,9 @@ COMP = (1.0, .9, .84)       # render compensation for the Aero sun (greens and b
 FLOWER_COMP = (1.0, .96, .9)
 SEED = 20261127
 
-GAP = "#1B3622"
-LEAVES = ["#2A5230", "#346333", "#3E7338", "#4A813E"]
-HIGHLIGHT = "#62924A"
+GAP = "#2C5336"
+LEAVES = ["#336740", "#407C44", "#4C904B", "#5AA153"]
+HIGHLIGHT = "#6EAB65"    # #6E9A55 after COMP
 
 
 def hexrgb(h):
@@ -87,14 +88,14 @@ def leaf_region(seed, flowers):
     # with dark pockets between them. A few clusters sit across the edges so the rim (the bush's foot) is leafy too.
     clusters = [(py.random() * n, py.random() * n) for _ in range(25)]
     for cx, cy in clusters:
-        rad = (34 + py.random() * 14) * SS
-        for _ in range(46):
+        rad = (40 + py.random() * 16) * SS
+        for _ in range(72):
             a = py.random() * math.tau
             r = rad * math.sqrt(py.random())
             x, y = cx + math.cos(a) * r, cy + math.sin(a) * r
             lit = .55 - (math.cos(a) * r + math.sin(a) * r) / (2.6 * rad)
             idx = int(max(0, min(3, round(lit * 3 + (py.random() - .5)))))
-            colour = HIGHLIGHT if (idx == 3 and py.random() < .07) else LEAVES[idx]
+            colour = HIGHLIGHT if (idx == 3 and py.random() < .14) else LEAVES[idx]
             length = (16 + py.random() * 6) * SS
             width = length * (.36 + py.random() * .1)
             # leaves point out from their cluster's middle, give or take

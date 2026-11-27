@@ -29,7 +29,7 @@ return function(client,offline)
 		return{Connect=function(_,fn)return b.Event:Connect(fn)end,Fire=function(_,...)b:Fire(...)end}
 	end
 
-	test("the brief's counts and budget: 24 bushes in eight threes, 8 flowering in pairs, 14 reeds; 46 parts, 6,164 tris",function()
+	test("the brief's counts and budget: 24 bushes in eight threes, 8 flowering in pairs, 14 reeds; 46 parts, 10,772 tris",function()
 		assert(#Data.Bushes==U.Counts.bushes and #Data.Flowering==U.Counts.flowering and #Data.Reeds==U.Counts.reeds)
 		assert(U.Budget.instances==#Data.Bushes+#Data.Flowering+#Data.Reeds)
 		assert(U.Budget.blobs==#Data.Bushes+#Data.Flowering)
@@ -114,8 +114,8 @@ return function(client,offline)
 	test("the art: placeholder ids draw nothing (never an error); a filled kind needs its mesh and the atlas",function()
 		for _,kind in ipairs(U.Kinds)do assert(Art.ready(kind)==Art.filled(Art.Meshes[kind].id)and Art.filled(Art.Atlas)==Art.ready(kind))end
 		local fake={Atlas="rbxassetid://5",Blob=nil,filled=Art.filled,ready=Art.ready,
-			Meshes={bush={id="rbxassetid://7",size=Art.Meshes.bush.size,centre=Art.Meshes.bush.centre,tris=176},
-				flower={id=nil,size=Art.Meshes.flower.size,centre=Art.Meshes.flower.centre,tris=176},
+			Meshes={bush={id="rbxassetid://7",size=Art.Meshes.bush.size,centre=Art.Meshes.bush.centre,tris=320},
+				flower={id=nil,size=Art.Meshes.flower.size,centre=Art.Meshes.flower.centre,tris=320},
 				reeds=Art.Meshes.reeds}}
 		assert(Art.ready("bush",fake)==true and Art.ready("flower",fake)==false)
 		assert(Art.ready("bush",{Atlas=nil,Meshes=fake.Meshes})==false,"no atlas, nothing")
@@ -151,8 +151,8 @@ return function(client,offline)
 		return c,state,changed,parent
 	end
 	local FILLED={Atlas="rbxassetid://11",Blob="rbxassetid://12",filled=Art.filled,ready=Art.ready,Meshes={
-		bush={id="rbxassetid://21",size=Art.Meshes.bush.size,centre=Art.Meshes.bush.centre,tris=176},
-		flower={id="rbxassetid://22",size=Art.Meshes.flower.size,centre=Art.Meshes.flower.centre,tris=176},
+		bush={id="rbxassetid://21",size=Art.Meshes.bush.size,centre=Art.Meshes.bush.centre,tris=320},
+		flower={id="rbxassetid://22",size=Art.Meshes.flower.size,centre=Art.Meshes.flower.centre,tris=320},
 		reeds={id="rbxassetid://23",size=Art.Meshes.reeds.size,centre=Art.Meshes.reeds.centre,tris=38}}}
 
 	test("the client: nothing on live or with scene off; the shipped placeholders build an empty folder, no error",function()
