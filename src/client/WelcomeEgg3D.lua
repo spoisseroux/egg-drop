@@ -8,6 +8,9 @@
 -- 3D shell is the one Hatch eggs shows. Until its meshes are in, `ready()` is false and the pixel egg stays.
 --   local egg=WelcomeEgg3D.new(meterWell, coachCard, {copy, play(cue, speed, gain), haptic(name), reduced()})
 --   egg:update({active, combos, drops}) ; egg:destroy()
+-- Onboarding v3 section 5 (Onboard "deck2", deps.deck2 read once when the round's egg is made): WelcomeDeck2 dresses
+-- both cards; a counted combo's pip then pops when its spark lands (egg:comboSpark), and the hop, chime and line follow
+-- the pop. deps also: sparkLayer(), wellRect() -> (position, size), scale(). Off: exactly as before.
 local RunService=game:GetService("RunService")
 local V2=require(script.Parent.OnboardV2)
 local Egg={};Egg.__index=Egg
@@ -73,7 +76,17 @@ function Egg.new(meter,coach,deps)
 		node("UITextSizeConstraint",label,{MinTextSize=D.textMin,MaxTextSize=D.textMax})
 		self.cover,self.line=cover,label
 	end
+	self.counted=0
+	if deps.deck2 then
+		local ok,deck=pcall(function()return require(script.Parent.WelcomeDeck2).new(self)end)
+		if ok then self.deck2=deck else warn("[Onboard] deck2: "..tostring(deck))end
+	end
 	return self
+end
+-- A combo's merge (WelcomePresentation:spark, chain 1): with deck2 its spark flies to the next pip.
+function Egg:comboSpark(from,tier)
+	if not self.alive or not self.deck2 or not self.shown then return false end
+	return self.deck2:comboSpark(from,tier)
 end
 function Egg:reduced()
 	if self.d.reduced then return self.d.reduced()==true end
@@ -100,6 +113,7 @@ function Egg:update(s)
 	local combos=math.clamp(math.floor(tonumber(s.combos)or 0),0,3)
 	-- The Bear is granted on combo 3; a snapshot may say so before it shows the third combo: finish the count.
 	if s.granted and self.shown and s.active~=true then combos=3 end
+	if self.deck2 then return self:updateDeck2(s,combos)end
 	if combos>self.combos then
 		for n=self.combos+1,combos do
 			self.beatAt=self.clock
@@ -120,12 +134,30 @@ function Egg:update(s)
 	self:setShown(show)
 	self:paint()
 end
+-- deck2's count: the server's combos are counted (their pips pop when the sparks land, WelcomeDeck2:step), the
+-- displayed count (self.combos) follows the pops. The egg stays up while a counted pip waits and through the finale.
+function Egg:updateDeck2(s,combos)
+	local deck=self.deck2
+	if combos>self.counted then
+		for n=self.counted+1,combos do deck:counted(n,self.clock)end
+	elseif combos<self.counted and s.active then
+		-- a new Welcome round (rejoin, replayed save): start over
+		self.finaleAt,self.beatAt=nil,nil;table.clear(self.pops);self.combos=0;deck:reset()
+	end
+	self.counted=if s.active then combos else math.max(self.counted,combos)
+	self.drops=s.drops or 0
+	local finaleLeft=self.finaleAt~=nil and self.clock-self.finaleAt<D.finale
+	local show=(s.active==true and not(self.finaleAt and not finaleLeft))or(self.shown and(finaleLeft or deck:pending()))
+	self:setShown(show)
+	self:paint()
+end
 function Egg:setShown(on)
 	on=on==true
 	if on==self.shown then return end
 	self.shown=on
-	self.well.Visible=on;self.pipRow.Visible=on
+	self.well.Visible=on;self.pipRow.Visible=on and not self.deck2
 	if self.cover then self.cover.Visible=on end
+	if self.deck2 then self.deck2:setShown(on)end
 	if on and not self.link then
 		self.link=RunService.Heartbeat:Connect(function(dt)self:step(dt)end)
 	elseif not on and self.link then self.link:Disconnect();self.link=nil end
@@ -133,6 +165,14 @@ end
 function Egg:step(dt)
 	if not self.alive then return end
 	self.clock+=math.clamp(dt or 0,0,.1)
+	if self.deck2 then
+		-- the pips pop when their sparks land; the hop, the chime and the line follow the pop
+		for _,n in ipairs(self.deck2:step(self.clock))do
+			self.beatAt=self.clock;self.pops[n]=self.clock;self:play(n)
+			self.combos=math.max(self.combos,n)
+			if n>=3 and not self.finaleAt then self.finaleAt=self.clock+V2.Deck2.finaleAt end
+		end
+	end
 	if self.finaleAt and self.clock-self.finaleAt>=D.finale and self.shown then
 		-- the finale is over: stay hidden until a new round
 		self:setShown(false)
@@ -148,8 +188,9 @@ function Egg:paint()
 		local key=V2.deckLine(self.drops,self.combos)
 		local ok,text=pcall(copy,key)
 		self.line.Text=if ok and type(text)=="string"then text else ""
-		if self.coach then self.cover.BackgroundColor3=self.coach.BackgroundColor3 end
+		if self.coach and not self.deck2 then self.cover.BackgroundColor3=self.coach.BackgroundColor3 end
 	end
+	if self.deck2 then self.deck2:paint(self.clock,self.combos,self.drops or 0,self.line and self.line.Text or "")end
 	for i,pip in ipairs(self.pips)do
 		local filled=V2.pip(i,self.combos)=="filled"
 		pip.frame.BackgroundColor3=if filled then D.pipFilled else D.pipEmpty
@@ -160,6 +201,7 @@ function Egg:paint()
 	if not preview or not preview.geo then return end
 	local beat=if self.beatAt then self.clock-self.beatAt else nil
 	local yaw,tilt,hop=V2.eggPose(self.clock,beat,reduced)
+	if self.deck2 then tilt+=self.deck2:knock(self.clock,self.combos)end
 	-- the egg's own light: a little brighter each combo, a brief flare on the hop, the finale's rise
 	local light,lift,fade=V2.glow(self.combos),0,0
 	if beat and beat<D.wobbleTime and not reduced then light+=D.lightFlare*(1-beat/D.wobbleTime)end
@@ -192,6 +234,7 @@ function Egg:destroy()
 	if not self.alive then return end
 	self.alive=false
 	if self.link then self.link:Disconnect();self.link=nil end
+	if self.deck2 then pcall(function()self.deck2:destroy()end);self.deck2=nil end
 	if self.preview then pcall(function()self.preview:destroy()end)end
 	self.well:Destroy();self.pipRow:Destroy()
 	if self.cover then self.cover:Destroy()end

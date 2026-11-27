@@ -290,7 +290,10 @@ local Table={
  -- Onboarding v2 (artifacts/qa-2026-11-26-beta35/ONBOARDING-V2.md): one instruction a step, 16 characters or fewer,
  -- never a key name (a phone shows a hand, a computer the words, a gamepad the button picture).
  onb2={
-  deck={drop="Drop a ball!",match="Match two!",two="2 more!",one="1 more!",hatching="It's hatching!",click="Click to drop"},
+  deck={drop="Drop a ball!",match="Match two!",two="2 more!",one="1 more!",hatching="It's hatching!",click="Click to drop",
+   -- Onboarding v3 section 5 (Onboard "deck2"): the punch word over the well on combos 1 and 2 (combo 3 says
+   -- `hatching`), and the big sun-gold numeral over "2 more!" / "1 more!".
+   nice="Nice!",close="So close!",numTwo="2",numOne="1"},
   stork={delivery="A delivery!",skip="Skip"},
   crack={tap="Tap the egg!",click="Click the egg!",pad="Crack it!"},
   card={meet="Meet {pet}"},

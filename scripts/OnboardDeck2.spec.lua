@@ -1,0 +1,162 @@
+-- Onboarding v3 section 5 (artifacts/qa-2026-11-27-beta37/ONBOARDING-V3-BRIEF.md, Onboard "deck2"): the cuter Welcome
+-- deck's pure rules (OnboardV2.Deck2; WelcomeDeck2 draws them). The switch and its tables, the words, the two step
+-- loops, the knock, the breathing pip, when a counted pip pops (its spark first), the pop and ring, the flash, the
+-- word, the arc, combo 3's flight, sweep and tuck, the bubbles, the grass and the egg outline; Reduced Motion each.
+-- Usage (Client): require(PlayerScripts.Client.ZZSpecs.OnboardDeck2)(PlayerScripts.Client)
+return function(client)
+	local Shared=game:GetService("ReplicatedStorage").Shared
+	local Onboard=require(Shared.Onboard)
+	local UICopy=require(Shared.UICopy)
+	local V2=require(client.OnboardV2)
+	local D=V2.Deck2
+	local cases={}
+	local function test(name,run)
+		local ok,problem=pcall(run)
+		V2.read=nil
+		assert(ok,name..": "..tostring(problem))
+		table.insert(cases,name)
+	end
+	local function near(a,b,eps)return math.abs(a-b)<=(eps or 1e-6)end
+	local function hexIs(c,hex)
+		local want=Color3.fromHex(hex)
+		return near(c.R,want.R,1e-3)and near(c.G,want.G,1e-3)and near(c.B,want.B,1e-3)
+	end
+	local KEYS={"Space","SPACE","Enter","Esc","Shift","Ctrl"," G "," L2","Press "}
+
+	test("the deck2 switch: appended to the Onboard tables; it needs egg3d too; off keeps today's tuck",function()
+		assert(Onboard.Features[#Onboard.Features]=="deck2","appended, nothing renumbered")
+		assert(Onboard.attribute("deck2")=="Onboard_deck2"and Onboard.key("deck2")=="onboard_deck2")
+		V2.read=function()return false end
+		assert(not V2.deck2On()and V2.tuckAfter()==V2.Deck.tuckAfter,"all off: beta (37)")
+		V2.read=function(name)return name=="deck2"end
+		assert(not V2.deck2On()and V2.tuckAfter()==V2.Deck.tuckAfter,"deck2 without egg3d: nothing")
+		V2.read=function(name)return name=="deck2"or name=="egg3d"end
+		assert(V2.deck2On()and V2.tuckAfter()==D.tuckAfter and D.tuckAfter>V2.Deck.tuckAfter,"on: the tuck waits for combo 3's tail")
+	end)
+	test("the words: Nice!, So close!, It's hatching!, each short with no key names; the sun-gold numerals",function()
+		local want={"Nice!","So close!","It's hatching!"}
+		for n=1,3 do
+			local text=UICopy.get(V2.comboWord(n))
+			assert(text==want[n],text)
+			assert(#text<=16)
+			for _,word in ipairs(KEYS)do assert(not string.find(" "..text.." ",word,1,true),text)end
+		end
+		assert(V2.comboWord(0)==V2.ComboWords[1]and V2.comboWord(9)==V2.ComboWords[3],"clamped")
+		assert(UICopy.get("onb2.deck.numTwo")=="2"and UICopy.get("onb2.deck.numOne")=="1")
+		assert(V2.picture(0,0)=="drop"and V2.picture(1,0)=="match"and V2.picture(4,1)=="two"and V2.picture(6,2)=="one"and V2.picture(8,3)=="hatching")
+		assert(V2.numeral("two")=="onb2.deck.numTwo"and V2.numeral("one")=="onb2.deck.numOne"and V2.numeral("drop")==nil and V2.numeral("hatching")==nil)
+	end)
+	test("the brief's colours and sizes",function()
+		assert(hexIs(D.skyTop,"#2FA8F0")and hexIs(D.skyBottom,"#0E5FB8"),"the left card's sky")
+		assert(hexIs(D.eggTop,"#C9F1FF")and hexIs(D.eggBottom,"#58B8F2"),"the egg card's sky")
+		assert(hexIs(D.gold,"#FFD86B")and hexIs(D.pipFilled,"#FFD86B")and hexIs(D.pipRing,"#9FC4FF"))
+		assert(D.numeral==64 and D.ball==40 and D.picture==.45 and D.pipH==26 and D.bubbles==3 and near(D.bubbleAlpha,.12))
+		assert(D.pipEmptyAlpha==.75,"empty pips white at 25%")
+		assert(D.punch==1.25 and D.tick.cue=="menu"and D.knock.gain==.15 and D.knockDeg==5)
+		assert(D.arc==.35 and D.beads==4 and D.popScale==1.4 and D.flash==.3 and D.wordTime==.6)
+	end)
+	test("Drop a ball!: a 1.6 s loop; it falls, squashes on landing and springs back, then fades; still when reduced",function()
+		local f0=V2.dropBall(0,false)
+		assert(f0==0,"starts at the top")
+		local f1=V2.dropBall(.45,false);assert(f1==1,"on the floor at 0.45 s")
+		local _,sx,sy=V2.dropBall(.52,false);assert(sx>1 and sy<1,"squashed")
+		local _,sx2,sy2,a2=V2.dropBall(.9,false);assert(sx2==1 and sy2==1 and a2==0,"at rest")
+		local _,_,_,a3=V2.dropBall(1.59,false);assert(a3>.9,"fades by 1.6 s")
+		local g,_,_,a4=V2.dropBall(1.6,false);assert(g==0 and a4==1,"loops")
+		local h,_,_,a5=V2.dropBall(.1,false);assert(h>0 and h<.1 and a5==0)
+		for _,t in ipairs({0,.3,.5,1.2})do
+			local r,rx,ry,ra=V2.dropBall(t,true)
+			assert(r==1 and rx==1 and ry==1 and ra==0,"reduced: resting, still")
+		end
+	end)
+	test("Match two!: the balls roll in and bump, the bigger one pops 0 -> 1.15 -> 1, a 2 s loop; still when reduced",function()
+		local l,r,grow=V2.matchBalls(0,false)
+		assert(near(l,-1.1)and near(r,1.1)and grow==0,"apart")
+		l,r,grow=V2.matchBalls(.55,false)
+		assert(near(l,-.5)and near(r,.5)and near(grow,0),"touching")
+		local peak=0;for i=55,85 do local _,_,g=V2.matchBalls(i/100,false);peak=math.max(peak,g)end
+		assert(near(peak,1.15,.01),"pops to 1.15: "..peak)
+		local _,_,rest,alpha=V2.matchBalls(1.2,false);assert(near(rest,1)and alpha==0,"the bigger one at rest")
+		local _,_,_,fade=V2.matchBalls(1.99,false);assert(fade>.9,"fades by 2 s")
+		local a,b,c,d=V2.matchBalls(.7,true);assert(a==-.5 and b==.5 and c==0 and d==0,"reduced: the two touching")
+	end)
+	test("the knock: every 4, 2.5, then 1.2 s as combos land, none after combo 3; a 5 degree twitch; none when reduced",function()
+		assert(V2.knockEvery(0)==4 and V2.knockEvery(1)==2.5 and V2.knockEvery(2)==1.2 and V2.knockEvery(3)==nil)
+		assert(not V2.knockDue(3.9,0,0,false)and V2.knockDue(4,0,0,false),"4 s")
+		assert(V2.knockDue(2.5,0,1,false)and not V2.knockDue(2.4,0,1,false),"2.5 s")
+		assert(V2.knockDue(1.2,0,2,false)and not V2.knockDue(100,0,3,false),"1.2 s, then none")
+		assert(not V2.knockDue(100,0,0,true),"reduced: none")
+		local peak=0;for i=0,40 do peak=math.max(peak,math.abs(V2.knockTwitch(i/100)))end
+		assert(peak<=5 and peak>2.5,"within 5 degrees: "..peak)
+		assert(V2.knockTwitch(nil)==0 and V2.knockTwitch(D.knockTime)==0 and V2.knockTwitch(0)==0)
+	end)
+	test("the next pip breathes 1.0 -> 1.12 at 1 Hz; still when reduced",function()
+		assert(near(V2.breathe(0,false),1)and near(V2.breathe(.5,false),1.12)and near(V2.breathe(1,false),1))
+		assert(V2.breathe(.5,true)==1)
+	end)
+	test("a counted combo's pip pops when its spark lands (at most 0.5 s on), a beat after the count with no spark, at once when reduced",function()
+		assert(V2.pipPopAt(nil,1,false)==nil,"not counted: never (a spark alone fills nothing)")
+		assert(V2.pipPopAt(2,2.3,false)==2.3,"waits for the spark")
+		assert(V2.pipPopAt(2,1.8,false)==2,"a spark that landed first: at the count")
+		assert(V2.pipPopAt(2,9,false)==2+D.popCap,"never more than popCap")
+		assert(V2.pipPopAt(2,nil,false)==2+D.popGrace,"no spark: a short beat")
+		assert(V2.pipPopAt(2,2.3,true)==2 and V2.pipPopAt(2,nil,true)==2,"reduced: at once")
+	end)
+	test("the pip pops 1.0 -> 1.4 -> 1.0 with a ring growing to 2.2 and fading; the border flash; none of the motion when reduced",function()
+		local s0=V2.pipPop(0,false);assert(s0==1)
+		local top=V2.pipPop(D.popTime/2,false);assert(near(top,1.4),"1.4 at the top")
+		local rest,ring,alpha=V2.pipPop(D.ringTime,false);assert(rest==1 and ring==1 and alpha==1,"done")
+		local _,r1,a1=V2.pipPop(D.ringTime*.5,false);assert(r1>1 and r1<2.2 and a1>0 and a1<1)
+		local _,r2=V2.pipPop(D.ringTime-.001,false);assert(near(r2,2.2,.01))
+		local a,b,c=V2.pipPop(.1,true);assert(a==1 and b==1 and c==1,"reduced")
+		assert(V2.flashAlpha(0)==0 and near(V2.flashAlpha(.15),.5)and V2.flashAlpha(.3)==1 and V2.flashAlpha(nil)==1,"0.3 s")
+	end)
+	test("the word punches 1.45 -> 1 in 0.12 s over the well and is gone by 0.6 s; no punch when reduced",function()
+		local on,scale,fade=V2.wordLook(0,false);assert(on and near(scale,1.45)and fade==0)
+		on,scale=V2.wordLook(.12,false);assert(on and scale==1)
+		local _,_,f=V2.wordLook(.59,false);assert(f>.9,"fading out")
+		assert(not V2.wordLook(.6,false)and not V2.wordLook(nil,false)and not V2.wordLook(-1,false))
+		on,scale=V2.wordLook(0,true);assert(on and scale==1,"reduced: the word, no punch")
+	end)
+	test("the spark arcs from the merge to its pip in 0.35 s (ease-in), rising over the line",function()
+		local a,b=Vector2.new(0,100),Vector2.new(100,100)
+		assert(V2.arc(a,b,0)==a and V2.arc(a,b,1)==b,"ends")
+		local mid=V2.arc(a,b,.5,50)
+		assert(near(mid.X,50)and near(mid.Y,75),"rises: "..mid.Y)
+		assert(V2.arcProgress(0)==0 and V2.arcProgress(D.arc)==1 and V2.arcProgress(9)==1)
+		assert(near(V2.arcProgress(D.arc/2),.25),"ease-in")
+	end)
+	test("combo 3: the pips fly into the egg one by one, then one light sweep, the rise, and the tuck after it all",function()
+		local u1=V2.pipFly(1,D.flyStart,false);assert(u1==0,"pip 1 leaves at flyStart")
+		local done,scale,fade=V2.pipFly(1,D.flyStart+D.flyTime,false)
+		assert(done==1 and near(scale,D.flyTo)and near(fade,1),"in the egg, small, gone")
+		assert(V2.pipFly(3,D.flyStart+D.flyTime,false)<1,"pip 3 a little behind")
+		local r,rs,rf=V2.pipFly(2,1,true);assert(r==0 and rs==1 and rf==1,"reduced: no flight, a fade")
+		assert(V2.sweep(D.sweepStart-.01,false)==nil and near(V2.sweep(D.sweepStart,false),-1)and near(V2.sweep(D.sweepStart+D.sweepTime,false),1))
+		assert(V2.sweep(D.sweepStart+D.sweepTime+.01,false)==nil and V2.sweep(.7,true)==nil,"once; none when reduced")
+		local flyEnd=D.flyStart+2*D.flyStagger+D.flyTime
+		assert(flyEnd<=D.sweepStart+D.sweepTime,"the pips are in before the sweep ends")
+		assert(D.finaleAt+V2.Deck.finale<=D.tuckAfter,"the rise ends before the tuck")
+		assert(D.sweepStart+D.sweepTime<=D.tuckAfter,"the sweep ends before the tuck")
+	end)
+	test("the left card's three bubbles rise inside the card at 12% at most; still when reduced",function()
+		for i=1,D.bubbles do
+			for t=0,20,.37 do
+				local u,sway,alpha=V2.cardBubble(i,t,false)
+				assert(u>=0 and u<=1 and math.abs(sway)<=D.bubbleSway+1e-9 and alpha>=1-D.bubbleAlpha-1e-9 and alpha<=1)
+			end
+			local a=V2.cardBubble(i,0,true);local b,s=V2.cardBubble(i,7,true)
+			assert(a==b and s==0,"reduced: still")
+		end
+	end)
+	test("the grass arc meets the egg's foot (about the bottom 18%); the egg pip's outline",function()
+		assert(V2.grassCrest(.82)==.82 and V2.grassCrest(.5)==.74 and V2.grassCrest(.99)==.88 and V2.grassCrest(nil)==1-D.grass)
+		local o=V2.eggOutline(20,26)
+		assert(#o==4)
+		assert(o[1][1]==10 and o[1][2]==0,"the top")
+		assert(o[3][1]==10 and o[3][2]==26,"the foot")
+		assert(o[2][1]==20 and o[4][1]==0 and near(o[2][2],26*.58),"widest below the middle")
+		assert(o[1][3]<0 and o[1][5]>0 and o[3][3]>0 and o[3][5]<0,"tangents run round")
+	end)
+	return{passed=#cases,cases=cases}
+end

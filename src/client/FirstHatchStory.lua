@@ -160,7 +160,8 @@ function Story:enter(state)self.state=state;self.since=0 end
 function Story:stepTuck()
 	local d=self.d
 	if d.mode and d.mode()~="Room"then
-		if self.since>=V2.Deck.tuckAfter and not self.asked then self.asked=true;pcall(d.toRoom)end
+		-- deck2 (onboarding v3 section 5): combo 3's pips, sweep and rise play first (V2.tuckAfter)
+		if self.since>=V2.tuckAfter()and not self.asked then self.asked=true;pcall(d.toRoom)end
 		if self.since>Story.RoomWait then error("the garden never came")end
 		return
 	end

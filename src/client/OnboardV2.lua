@@ -99,6 +99,212 @@ end
 -- crack: beta (36), the egg only cracks in the world.
 V2.ComboChime=table.freeze({cue="charge",pitches={1.12,1.26,1.5},gain=.45,haptic="settle"})
 
+-- ── Step 1, v3: the cuter Welcome deck (switch deck2, WelcomeDeck2) ─────────────────────────────────────────────────
+-- Fable, ONBOARDING-V3-BRIEF section 5 (Spencer, beta 37: "a cuter Welcome deck"). Inside the two existing cards; the
+-- board and its rules are untouched. It dresses the egg3d deck, so it needs both switches; off is exactly beta (37).
+-- Every number is in authored deck pixels (the deck's UIScale shrinks them on a phone) or seconds.
+V2.Deck2=table.freeze({
+	-- the left card: a glass sky, a 1 px white top highlight, three rising bubbles at 12%
+	skyTop=hex("#2FA8F0"),skyBottom=hex("#0E5FB8"),highlight=.35,
+	bubbles=3,bubbleAlpha=.12,bubbleRim=.7,bubbleSizes={9,13,16},bubbleX={.2,.56,.82},bubblePeriod={6,7.5,9.2},bubbleSway=4,
+	-- the top 45%: the step's looping picture (a 40 px ball, the 64 px sun-gold numeral)
+	picture=.45,ball=40,merged=1.3,dropLoop=1.6,matchLoop=2.0,numeral=64,gold=hex("#FFD86B"),
+	-- the line under it: each change punches 1.25 with a menu tick
+	punch=1.25,punchTime=.2,tick=table.freeze({cue="menu",pitch=1.2,gain=.3}),
+	-- the egg card: a sky fill, the hatch card's grass arc on about the bottom 18%, a soft shadow under the egg
+	eggTop=hex("#C9F1FF"),eggBottom=hex("#58B8F2"),grass=.18,shadow=hex("#1F6B33"),shadowAlpha=.62,shadowWidth=.46,
+	-- the knock from inside: a 5 degree twitch and a quiet tap every 4 s, then 2.5 s, then 1.2 s as combos land
+	knockEvery={4,2.5,1.2},knockDeg=5,knockTime=.32,knock=table.freeze({cue="egg_wobble",pitch=1.3,gain=.15}),
+	-- the pips: three eggs, 26 px tall; empty white at 25% with a 2 px ring, filled gold with a white glint
+	pipW=21,pipH=26,pipGap=10,pipPad=6,pipEmptyAlpha=.75,pipRing=hex("#9FC4FF"),pipFilled=hex("#FFD86B"),
+	breathe=.12,breatheHz=1,                               -- the next pip to fill breathes 1.0 -> 1.12 at 1 Hz
+	-- the combo moment
+	arc=.35,beads=4,beadGap=.045,arcLift=50,spark=16,      -- the spark to its pip: 0.35 s, 4 beads behind it
+	popGrace=.12,popCap=.5,                                -- a counted combo waits for its spark this long at most
+	popScale=1.4,popTime=.25,ringTime=.35,ringScale=2.2,   -- the pip pops 1.0 -> 1.4 -> 1.0 with a ring
+	flash=.3,                                              -- the egg card's border in the merged tier's light
+	wordTime=.6,wordPunch=1.45,wordIn=.12,wordOut=.18,     -- the word over the well
+	-- combo 3: the pips fly into the egg, one light sweep, then the egg's rise and the tuck
+	flyStart=.25,flyTime=.3,flyStagger=.05,flyTo=.3,
+	sweepStart=.55,sweepTime=.35,sweepAlpha=.45,
+	finaleAt=.55,                                          -- the old finale (glow, lift, fade) starts this long after pip 3
+	tuckAfter=1.2,                                         -- the deck tucks this long after combo 3 (Deck.tuckAfter off)
+})
+V2.ComboWords=table.freeze({"onb2.deck.nice","onb2.deck.close","onb2.deck.hatching"})
+-- Both switches: the cuter deck dresses the egg3d deck.
+function V2.deck2On()return V2.on("deck2")and V2.on("egg3d")end
+-- Step 2's tuck: Deck.tuckAfter as before, longer with deck2 (combo 3's pips, sweep and rise play first).
+function V2.tuckAfter()return if V2.deck2On()then V2.Deck2.tuckAfter else V2.Deck.tuckAfter end
+-- The left card's picture for this moment: "drop", "match", "two", "one" or "hatching" (V2.deckLine's moments).
+function V2.picture(drops,combos)
+	local key=V2.deckLine(drops,combos)
+	return(string.match(key,"([%a]+)$"))
+end
+-- The numeral over "2 more!" / "1 more!" (a UICopy key), or nil.
+function V2.numeral(picture)
+	if picture=="two"then return "onb2.deck.numTwo"end
+	if picture=="one"then return "onb2.deck.numOne"end
+	return nil
+end
+-- The punch word for combo n (1..3).
+function V2.comboWord(n)return V2.ComboWords[math.clamp(math.floor(tonumber(n)or 1),1,3)]end
+-- Pure: a 1 -> peak -> 1 punch `age` s into a `time` s punch (1 outside it).
+function V2.punch(age,peak,time)
+	if type(age)~="number"or age<0 or age>=time then return 1 end
+	return 1+(peak-1)*math.sin(age/time*math.pi)
+end
+-- Pure: the "Drop a ball!" loop at t: the ball's fall (0 at the top .. 1 on the floor), its squash (width, height
+-- scale) and see-through. 1.6 s: it falls (0.45 s, ease-in), squashes and settles (to 0.75 s), rests, fades by 1.6.
+-- Reduced Motion: resting on the floor, still.
+function V2.dropBall(t,reduced)
+	local D=V2.Deck2
+	if reduced then return 1,1,1,0 end
+	t=(t or 0)%D.dropLoop
+	local fall,sx,sy,alpha=1,1,1,0
+	if t<.45 then
+		local u=t/.45;fall=u*u
+		sx,sy=1-.08*u,1+.1*u                                 -- it stretches as it speeds up
+		alpha=if t<.08 then 1-t/.08 else 0
+	elseif t<.75 then
+		local u=(t-.45)/.3
+		local s=math.sin(u*math.pi)*(1-u)
+		sx,sy=1+.28*s,1-.24*s                                -- the squash on landing, springing back
+	elseif t>1.3 then alpha=(t-1.3)/.3 end
+	return fall,sx,sy,math.clamp(alpha,0,1)
+end
+-- Pure: the "Match two!" loop at t: the two balls' offsets from the middle (in ball widths, + right), the bigger
+-- ball's scale (0 hidden) and the picture's see-through. 2 s: they roll in and bump (0.55 s), the bigger one pops in
+-- 0 -> 1.15 -> 1 (to 0.85 s), rests, fades by 2.0. Reduced Motion: the two balls touching, still.
+function V2.matchBalls(t,reduced)
+	local D=V2.Deck2
+	if reduced then return -.5,.5,0,0 end
+	t=(t or 0)%D.matchLoop
+	if t<.55 then
+		local u=smooth(t/.55)
+		local gap=1.1-.6*u
+		return -gap,gap,0,if t<.1 then 1-t/.1 else 0
+	end
+	local u=math.clamp((t-.55)/.3,0,1)
+	local grow=if u<.6 then 1.15*smooth(u/.6)else 1.15-.15*smooth((u-.6)/.4)
+	return -.5,.5,grow,if t>1.7 then math.clamp((t-1.7)/.3,0,1)else 0
+end
+-- Pure: one rising bubble on the left card (i 1..3) at t: its height (0 the foot .. 1 the top, of the card), sideways
+-- sway (px) and see-through (the 12% body fades in at the foot and out at the top). Reduced Motion: still, part way up.
+function V2.cardBubble(i,t,reduced)
+	local D=V2.Deck2
+	local period=D.bubblePeriod[i]or 7
+	local u=if reduced then .25+.22*(i-1)else((t or 0)/period+(i-1)*.37)%1
+	local sway=if reduced then 0 else D.bubbleSway*math.sin(((t or 0)/period+i)*math.pi*2*1.5)
+	local fade=math.min(1,u/.12,(1-u)/.2)
+	return u,sway,1-D.bubbleAlpha*math.clamp(fade,0,1)
+end
+-- The knock: seconds between knocks with `combos` combos landed (nil: no more knocking).
+function V2.knockEvery(combos)return V2.Deck2.knockEvery[math.clamp(math.floor(tonumber(combos)or 0),0,3)+1]end
+-- Pure: is a knock due at `now` (the last at `last`)? Never under Reduced Motion or once combo 3 has landed.
+function V2.knockDue(now,last,combos,reduced)
+	local every=V2.knockEvery(combos)
+	if reduced or not every or type(now)~="number"then return false end
+	return now-(last or now)>=every
+end
+-- Pure: the knock's twitch (degrees) `age` s after it: a 5 degree jolt, damped, two swings over 0.32 s.
+function V2.knockTwitch(age)
+	local D=V2.Deck2
+	if type(age)~="number"or age<0 or age>=D.knockTime then return 0 end
+	local u=age/D.knockTime
+	return D.knockDeg*(1-u)*(1-u)*math.sin(u*math.pi*4)
+end
+-- Pure: the next pip's breath at t (1 at rest; 1.0 -> 1.12 at 1 Hz). Still under Reduced Motion.
+function V2.breathe(t,reduced)
+	if reduced then return 1 end
+	local D=V2.Deck2
+	return 1+D.breathe*(.5-.5*math.cos((t or 0)*D.breatheHz*math.pi*2))
+end
+-- Pure: when combo n's pip pops. counted: when the server's count reached n (nil: not yet, no pop); landAt: when its
+-- spark lands (nil: no spark yet). It waits for its spark, at most popCap s; with no spark it pops popGrace s after the
+-- count (a spark sent in that time is waited for). Reduced Motion (no arc): at once.
+function V2.pipPopAt(counted,landAt,reduced)
+	if type(counted)~="number"then return nil end
+	if reduced then return counted end
+	local D=V2.Deck2
+	if type(landAt)=="number"then return math.clamp(landAt,counted,counted+D.popCap)end
+	return counted+D.popGrace
+end
+-- Pure: a popped pip `age` s after its pop: its scale (1 -> 1.4 -> 1) and its ring's scale and see-through (1 gone).
+-- Reduced Motion: no pop, no ring.
+function V2.pipPop(age,reduced)
+	local D=V2.Deck2
+	if reduced or type(age)~="number"or age<0 then return 1,1,1 end
+	local scale=V2.punch(age,D.popScale,D.popTime)
+	if age>=D.ringTime then return scale,1,1 end
+	local u=age/D.ringTime
+	return scale,1+(D.ringScale-1)*(1-(1-u)*(1-u)),u
+end
+-- Pure: the egg card's border flash `age` s in: its see-through (1 gone).
+function V2.flashAlpha(age)
+	if type(age)~="number"or age<0 or age>=V2.Deck2.flash then return 1 end
+	return age/V2.Deck2.flash
+end
+-- Pure: the word over the well `age` s in: shown, its scale (1.45 -> 1 in 0.12 s; 1 under Reduced Motion) and
+-- see-through (it fades over the last 0.18 s).
+function V2.wordLook(age,reduced)
+	local D=V2.Deck2
+	if type(age)~="number"or age<0 or age>=D.wordTime then return false,1,1 end
+	local scale=if reduced or age>=D.wordIn then 1 else D.wordPunch-(D.wordPunch-1)*smooth(age/D.wordIn)
+	local fade=math.clamp((age-(D.wordTime-D.wordOut))/D.wordOut,0,1)
+	return true,scale,fade
+end
+-- Pure: the spark's point at u (0..1) on a curve rising `lift` px over the line from a to b (screen px, y down).
+function V2.arc(a,b,u,lift)
+	u=math.clamp(u,0,1)
+	local c=(a+b)/2-Vector2.new(0,lift or V2.Deck2.arcLift)
+	local v=1-u
+	return a*(v*v)+c*(2*v*u)+b*(u*u)
+end
+-- Pure: how far along its arc a spark is `age` s after it left (ease-in: it speeds into the pip); 1 = landed.
+function V2.arcProgress(age)
+	if type(age)~="number"or age<=0 then return 0 end
+	local u=math.clamp(age/V2.Deck2.arc,0,1)
+	return u*u
+end
+-- Pure: combo 3's flight of pip i (1..3) `age` s after pip 3 popped: progress (0 home .. 1 in the egg), scale and
+-- see-through. Reduced Motion: no flight; the pips fade where they are over the same time.
+function V2.pipFly(i,age,reduced)
+	local D=V2.Deck2
+	local start=D.flyStart+(i-1)*D.flyStagger
+	local u=math.clamp(((age or 0)-start)/D.flyTime,0,1)
+	if reduced then return 0,1,u end
+	local e=u*u
+	return e,1-(1-D.flyTo)*e,if u>.7 then(u-.7)/.3 else 0
+end
+-- Pure: combo 3's light sweep `age` s after pip 3 popped: the band's offset (-1 .. 1) or nil (not sweeping).
+function V2.sweep(age,reduced)
+	local D=V2.Deck2
+	if reduced or type(age)~="number"then return nil end
+	local u=(age-D.sweepStart)/D.sweepTime
+	if u<0 or u>1 then return nil end
+	return -1+2*smooth(u)
+end
+-- Pure: the grass arc's crest (a share of the egg card's height) for the egg's foot at `foot` (share): the arc meets
+-- the egg's foot, about the bottom 18% of the card, never under 12% or over 26%.
+function V2.grassCrest(foot)
+	local D=V2.Deck2
+	return math.clamp(tonumber(foot)or(1-D.grass),.74,.88)
+end
+-- Pure: an egg pip's outline as Path2D control points ({x, y, left dx, left dy, right dx, right dy} in px) for a pip
+-- `w` x `h`: round at the foot, a little narrower at the top (its widest at 58% down).
+function V2.eggOutline(w,h)
+	local k=.5523
+	local mid=h*.58
+	local up,down=mid,h-mid
+	local r=w/2
+	return{
+		{r,0,-k*r,0,k*r,0},
+		{w,mid,0,-k*up,0,k*down},
+		{r,h,k*r,0,-k*r,0},
+		{0,mid,0,k*down,0,-k*up},
+	}
+end
+
 -- ── Step 1 to 2: one hatch, never two (review B36) ──────────────────────────────────────────────────────────────────
 -- The deck's own hatch modal waits up to Hold s for the Bear's receipt (the stork plays it). A receipt that comes later
 -- finds the modal already let back: the stork then declines it for the session (the old path plays it), so the Bear
