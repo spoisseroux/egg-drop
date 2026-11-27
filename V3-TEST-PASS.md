@@ -76,6 +76,7 @@ Beta (33), 2026-11-26: player scale (row 60). Beta (32), 2026-11-26: the first e
 
 | # | Piece | Status | What to try |
 |---|---|---|---|
+| B38-1 | **Balloons: seven in three depths, none over the hub** (`GARDEN-B38-BRIEF.md` 2, note 13) | Built on the worktree branch | Stand on the hub: no balloon overhead. Two low ones (knoll stairs, fountain) carry the mascots; three bigger mid ones over the stream, west and east lawns; two big greyer ones far out past the north rim and the falls, drifting slowly. At night the far two flicker but give no light or sound. On a phone the far pair still shows. Switch: `/alive air off`. |
 
 ## Scoped, not built
 

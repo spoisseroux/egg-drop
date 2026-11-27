@@ -26,25 +26,31 @@ return function(client,offline)
 	local M=Lanterns.Motion
 	local B=Lanterns.Burn
 
-	test("every balloon: island ground under its whole drift, off the paths, water, blocked ground, parks, Dash and tree crowns; 13 to 25 over the ground at its own height and a mascot's",function()
+	test("every balloon: off the hub paving and the hatch tree's crown; the low pair on island ground under its whole drift, off the paths, water, blocked ground, parks, Dash and tree crowns; each in its layer's band over the ground (the low pair at a mascot's 14 too)",function()
 		local bad={}
-		local _,bottom=Lanterns.extent()
 		for _,p in ipairs(Lanterns.Places)do
-			local ok,why=Clear.check(p.x,p.z,Lanterns.reach(),true)
-			if not ok then table.insert(bad,string.format("%s (%.1f, %.1f): %s",p.id,p.x,p.z,why))end
-			-- Fable B35: 20 studs off the hatch tree's crown, 9 off any other (its spot).
-			local crown=Lanterns.crownClash(p.x,p.z)
-			if crown then table.insert(bad,string.format("%s (%.1f, %.1f): near %s",p.id,p.x,p.z,crown))end
-			-- Its centre within 13 to 25 over the ground through its bob and a burn's lift, anywhere on its drift, at its
-			-- own height and at the mascots' (any balloon may carry one); the basket's bottom never under 9.5.
-			for _,mascot in ipairs({false,true})do
-				local y=World.groundY(p.x,p.z)+Lanterns.over(p,mascot)
+			local _,bottom=Lanterns.extent(p)
+			local L=Lanterns.motion(p)
+			local clash=Lanterns.layerClash(p)
+			if clash then table.insert(bad,string.format("%s (%.1f, %.1f): %s",p.id,p.x,p.z,clash))end
+			if p.layer=="low"then
+				local ok,why=Clear.check(p.x,p.z,Lanterns.reach(p),true)
+				if not ok then table.insert(bad,string.format("%s (%.1f, %.1f): %s",p.id,p.x,p.z,why))end
+				-- Fable B35: 20 studs off the hatch tree's crown, 9 off any other (its spot); B38: the low two only.
+				local crown=Lanterns.crownClash(p.x,p.z)
+				if crown then table.insert(bad,string.format("%s (%.1f, %.1f): near %s",p.id,p.x,p.z,crown))end
+			end
+			-- Its centre within its layer's band through its bob and a burn's lift (none for the high pair), anywhere on
+			-- its drift, at its own height and (the low pair) at the mascots'; the basket's bottom never under 9.5.
+			local lift=if Lanterns.far(p)then 0 else B.lift
+			for _,mascot in ipairs(if p.mascot then {false,true}else {false})do
+				local y=Lanterns.groundAt(p,World)+Lanterns.over(p,mascot)
 				for k=0,15 do
 					local a=k*math.pi/8
-					local x,z=p.x+math.cos(a)*M.drift,p.z+math.sin(a)*M.drift
-					local g=World.groundY(x,z)
-					local low,high=y-M.bob-g,y+M.bob+B.lift-g
-					if low<Lanterns.MinOver or high>Lanterns.MaxOver or low-bottom<Lanterns.LowestOver then
+					local x,z=p.x+math.cos(a)*L.drift,p.z+math.sin(a)*L.drift
+					local g=Lanterns.groundAt(p,World,x,z)
+					local low,high=y-L.bob-g,y+L.bob+lift-g
+					if low<L.minOver or high>L.maxOver or high>Lanterns.MaxOver or low-bottom<Lanterns.LowestOver then
 						table.insert(bad,string.format("%s%s: centre %.1f to %.1f, basket %.1f over the ground at its drift",p.id,
 							if mascot then " (mascot)"else "",low,high,low-bottom))
 						break
@@ -58,18 +64,46 @@ return function(client,offline)
 		assert(#bad==0,table.concat(bad,"; "))
 	end)
 
-	test("nine: three groups of three, three of each accent, ids unique; 13 parts each; the budget and the switch (AliveAir, beta and Studio)",function()
-		local groups,accents,ids={}, {}, {}
+	test("seven in three depths (two low with the mascots, three mid, two high), every accent used and never the same on neighbours, ids unique; 13 parts each; the budget and the switch (AliveAir, beta and Studio)",function()
+		local layers,accents,ids={}, {}, {}
 		for _,p in ipairs(Lanterns.Places)do
-			groups[p.group]=(groups[p.group]or 0)+1
+			layers[p.layer]=(layers[p.layer]or 0)+1
 			accents[p.accent]=(accents[p.accent]or 0)+1
 			assert(not ids[p.id],p.id);ids[p.id]=true
+			assert(Lanterns.Layers[p.layer],p.id)
+			-- The mascots ride only the low pair; the high pair is skyline (greyer, far, scale 1.8).
+			assert((p.mascot==true)==(p.layer=="low"),p.id.." mascot")
+			assert(p.scale==({low=1,mid=1.25,high=1.8})[p.layer],p.id.." scale")
+			assert(Lanterns.far(p)==(p.layer=="high"),p.id.." far")
 		end
-		assert(#Lanterns.Places==9 and groups.hub==3 and groups.bridge==3 and groups.fountain==3)
-		assert(accents[1]==3 and accents[2]==3 and accents[3]==3 and #Lanterns.Look.accents==3)
-		-- Fable section 6: envelope, 4 gores, skirt, 4 ropes, basket, rim, flame = 13; 117 in all, plus fluff and sound.
+		assert(#Lanterns.Places==7 and layers.low==2 and layers.mid==3 and layers.high==2)
+		assert(accents[1]>=2 and accents[2]>=2 and accents[3]>=2 and #Lanterns.Look.accents==3)
+		-- Never the same accent on neighbours: each one's nearest, and every pair within 50 studs.
+		for i,p in ipairs(Lanterns.Places)do
+			local best,bestD=nil,math.huge
+			for j,q in ipairs(Lanterns.Places)do
+				if i~=j then
+					local d=Vector2.new(p.x-q.x,p.z-q.z).Magnitude
+					if d<bestD then best,bestD=q,d end
+					assert(d>=50 or p.accent~=q.accent,p.id.." and "..q.id.." share an accent")
+				end
+			end
+			assert(best.accent~=p.accent,p.id.." and its neighbour "..best.id)
+		end
+		-- The layers' drift speeds (Fable): .25, .45, .55 studs/s; far slower to the eye, further in studs.
+		for name,speed in pairs({low=.25,mid=.45,high=.55})do
+			local L=Lanterns.Layers[name]
+			assert(math.abs(2*math.pi*L.drift/L.driftPeriod-speed)<.01,name.." speed")
+		end
+		assert(Lanterns.MaxOver==100 and Lanterns.envelopeColour(Lanterns.Places[7])=="#EDE6D6"
+			and Lanterns.envelopeColour(Lanterns.Places[1])==Lanterns.Look.envelopeColour,"the haze")
+		assert(Lanterns.cullFor(Lanterns.Places[7],true)==Lanterns.FarCull and Lanterns.cullFor(Lanterns.Places[1],true)==90
+			and Lanterns.cullFor(Lanterns.Places[3],false)==150,"the high pair is exempt from the phone cull")
+		assert(Lanterns.layerClash({id="x",layer="mid",scale=1.25,x=-30,z=12})~=nil,"over the paving")
+		assert(Lanterns.layerClash({id="x",layer="high",scale=1.8,x=-36,z=-30})~=nil,"over the hatch tree")
+		-- Fable section 6: envelope, 4 gores, skirt, 4 ropes, basket, rim, flame = 13; 91 in all, plus fluff and sound.
 		assert(Lanterns.PartsEach==13 and Lanterns.Look.gores==4,"13 a balloon")
-		assert(Lanterns.partCount()==9*13+2 and Lanterns.Lights.count==4 and Lanterns.Mascot.count==3)
+		assert(Lanterns.partCount()==7*13+2 and Lanterns.Lights.count==4 and Lanterns.Mascot.count==2)
 		assert(near(Lanterns.SkirtBottom,-1.85)and near(Lanterns.BasketTop,-2.85)and near(Lanterns.BasketBottom,-3.55))
 		assert(Lanterns.Look.flameY<Lanterns.SkirtBottom and Lanterns.Look.flameY>Lanterns.BasketTop,"the flame under the skirt")
 		assert(Lanterns.crownClash(-36.1,-3)~=nil and Lanterns.crownClash(-37.6,7.8)==nil,"the hatch tree's 20")
@@ -110,8 +144,8 @@ return function(client,offline)
 		local pts={Vector3.new(10,0,0),Vector3.new(1,0,0),Vector3.new(5,0,0),Vector3.new(2,0,0)}
 		local n=Lanterns.nearest(pts,Vector3.zero,3)
 		assert(n[1]==2 and n[2]==4 and n[3]==3 and #n==3)
-		for i=1,9 do
-			for t=0,40,3.3 do assert(near(Lanterns.drift(i,t).Magnitude,M.drift,1e-9))end
+		for i,p in ipairs(Lanterns.Places)do
+			for t=0,40,3.3 do assert(near(Lanterns.drift(i,t).Magnitude,Lanterns.motion(p).drift,1e-9))end
 		end
 		assert(Lanterns.drift(1,0)~=Lanterns.drift(2,0),"own phases")
 		local random=Random.new(7)
@@ -121,17 +155,17 @@ return function(client,offline)
 		end
 	end)
 
-	test("the mascots: three a session, one per group, an imp and a cherub at least, roster pets only, horns or wings and a palette; the wave's rule and hop",function()
+	test("the mascots: two a session, one in each low balloon, an imp and a cherub, roster pets only, horns or wings and a palette; the wave's rule and hop",function()
 		local roster={"pip","blip"}
-		local seenPlaces={}
+		local seenPlaces,firstKinds={}, {}
 		for seed=1,40 do
 			local picks=Lanterns.pickMascots(Random.new(seed),roster)
-			assert(#picks==3,"three")
-			local groups,kinds={}, {}
+			assert(#picks==2,"two")
+			local places,kinds={}, {}
 			for _,pick in ipairs(picks)do
 				local p=Lanterns.Places[pick.place]
-				assert(p and not groups[p.group],"one per group")
-				groups[p.group]=true
+				assert(p and p.layer=="low"and not places[pick.place],"one per low balloon")
+				places[pick.place]=true
 				kinds[pick.kind]=(kinds[pick.kind]or 0)+1
 				assert(table.find(roster,pick.petId),"a roster pet")
 				local a=pick.appearance
@@ -144,14 +178,16 @@ return function(client,offline)
 				end
 				seenPlaces[pick.place]=true
 			end
-			assert((kinds.imp or 0)>=1 and(kinds.cherub or 0)>=1,"both kinds")
+			assert(kinds.imp==1 and kinds.cherub==1,"both kinds")
+			firstKinds[picks[1].kind]=true
 		end
 		local n=0;for _ in pairs(seenPlaces)do n+=1 end
-		assert(n>=7,"the carriers vary by session ("..n..")")
+		assert(n==2,"the low pair carry them ("..n..")")
+		assert(firstKinds.imp and firstKinds.cherub,"which carries which varies by session")
 		assert(#Lanterns.pickMascots(Random.new(1),{})==0,"no roster: none")
 		-- The same seed, the same session.
 		local a,b=Lanterns.pickMascots(Random.new(5),roster),Lanterns.pickMascots(Random.new(5),roster)
-		for i=1,3 do assert(a[i].place==b[i].place and a[i].kind==b[i].kind and a[i].petId==b[i].petId)end
+		for i=1,2 do assert(a[i].place==b[i].place and a[i].kind==b[i].kind and a[i].petId==b[i].petId)end
 		-- Beats: a look mostly, an emote now and then, never a sit or a wave.
 		local random=Random.new(3)
 		local looks,emotes=0,0
@@ -213,7 +249,7 @@ return function(client,offline)
 		return r
 	end
 
-	test("the client: nothing with the switch off; on: 13 parts a balloon, three mascots in baskets, a halo a cherub, nothing collides, queries or touches; four lights, one emitter",function()
+	test("the client: nothing with the switch off; on: 13 parts a balloon (the mid and high drawn larger, the high greyer), two mascots in the low baskets, a halo a cherub, nothing collides, queries or touches; four lights, one emitter",function()
 		local r=rig({on=false})
 		local ok,err=pcall(function()
 			assert(r.air and r.air.built==false and r.parent:FindFirstChild("DriftLanternsLocal")==nil,"off: nothing")
@@ -231,16 +267,25 @@ return function(client,offline)
 				elseif item.ClassName=="ParticleEmitter"then emitters+=1
 				elseif item.ClassName=="Sound"then sounds+=1 end
 			end
-			assert(#r.visuals==3 and #r.air.mascots==3,"three mascots")
-			assert(parts==Lanterns.partCount()+cherubs+3,"parts "..parts)
-			assert(folder:GetAttribute("AirParts")==Lanterns.partCount()+cherubs and folder:GetAttribute("AirMascots")==3)
+			assert(#r.visuals==2 and #r.air.mascots==2,"two mascots")
+			assert(parts==Lanterns.partCount()+cherubs+2,"parts "..parts)
+			assert(folder:GetAttribute("AirParts")==Lanterns.partCount()+cherubs and folder:GetAttribute("AirMascots")==2)
 			assert(lights==4 and emitters==1 and sounds==3)
 			for _,l in ipairs(r.air.lanterns)do
 				assert(#l.pieces==13,l.place.id)
+				assert(near(l.envelope.Size.X,Lanterns.Look.envelope*l.place.scale,1e-6),l.place.id.." scaled")
+				assert((l.mascot~=nil)==(l.place.layer=="low"),l.place.id.." mascot")
+				local basket=l.pieces[11]
+				assert(near((l.rest:Inverse()*basket.CFrame).Position.Y,(Lanterns.BasketTop-Lanterns.Look.basket.Y/2)*l.place.scale,1e-4),l.place.id.." basket")
+				if l.place.layer=="high"then
+					assert(near(l.envelope.Color.G,Color3.fromHex("#EDE6D6").G,1e-6),"the haze")
+					assert(l.nextBurn==math.huge,"no burn")
+				end
 				for _,p in ipairs(l.pieces)do assert(p.Material~=Enum.Material.Fabric,p.Name)end
 				assert(l.flame.Material==Enum.Material.Neon and l.envelope.Material==Enum.Material.SmoothPlastic)
 				-- A mascot's balloon hangs at 14.
 				local over=l.rest.Position.Y-World.groundY(l.place.x,l.place.z)
+				over=l.rest.Position.Y-Lanterns.groundAt(l.place,World)
 				assert(near(over,if l.mascot then 14 else l.place.over,1e-6),l.place.id.." over "..over)
 			end
 			for _,m in ipairs(r.air.mascots)do
@@ -281,8 +326,9 @@ return function(client,offline)
 			end
 			local n=0;for _ in pairs(hosts)do n+=1 end
 			assert(n==4,"four balloons")
-			-- Beside hub_1: every hub balloon's burner carries one.
-			for i=1,3 do assert(hosts[r.air.lanterns[i].flame],"hub "..i)end
+			-- The two low and the nearest mid carry them; the skyline pair never does.
+			for i=1,2 do assert(hosts[r.air.lanterns[i].flame],"low "..i)end
+			for _,f in ipairs(r.air.lanterns)do if f.place.layer=="high"then assert(not hosts[f.flame],"no light far")end end
 			-- The flicker moves the flame (outside a burn) and the lights.
 			local sizes,brights={}, {}
 			for _=1,30 do
@@ -344,6 +390,32 @@ return function(client,offline)
 			r.reduced=false
 			r.camera=Vector3.new(400,50,400);r.tick(.1)
 			assert(r.air.awake==false,"asleep with nothing near")
+		end)
+		r.done();assert(ok,err)
+	end)
+
+	test("the skyline pair: past every other balloon's cull it still drifts (at 1/10 s) on its wide, slow circle, never burns or sounds",function()
+		local r=rig()
+		local ok,err=pcall(function()
+			local far,low
+			for _,l in ipairs(r.air.lanterns)do
+				if l.place.id=="high_falls"then far=l elseif l.place.id=="low_fountain"then low=l end
+			end
+			r.camera=far.rest.Position+Vector3.new(0,0,250)
+			r.listener=far.rest.Position
+			r.tick(.2)
+			assert(r.air.awake==true,"awake for the skyline")
+			local farAt,lowAt=far.envelope.CFrame.Position,low.envelope.CFrame.Position
+			local moves,before=0,#r.sounds
+			for _=1,60 do
+				local was=far.envelope.CFrame.Position
+				r.tick(.05)
+				if far.envelope.CFrame.Position~=was then moves+=1 end
+			end
+			assert(far.envelope.CFrame.Position~=farAt,"it drifts")
+			assert(moves>=8 and moves<=40,"about ten steps a second ("..moves..")")
+			assert(low.envelope.CFrame.Position==lowAt,"the low ones past their cull stay still")
+			assert(#r.sounds==before and far.flame.Size.X>=Lanterns.Look.flame*1.8-1e-6,"no burn, no sound")
 		end)
 		r.done();assert(ok,err)
 	end)

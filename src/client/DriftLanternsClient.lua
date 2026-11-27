@@ -141,19 +141,24 @@ function Client:build()
 	self.lanterns={}
 	for i,place in ipairs(Lanterns.Places)do
 		local pick=picks[i]
-		local y=World.groundY(place.x,place.z)+Lanterns.over(place,pick~=nil)
+		local y=Lanterns.groundAt(place,World)+Lanterns.over(place,pick~=nil)
 		local bobPhase,_,swayPhase,flickerPhase=Lanterns.phases(i)
 		local rest=CFrame.new(place.x,y,place.z)*CFrame.Angles(0,bobPhase*math.pi,0)
 		local accent=L.accents[place.accent]
 		local pieces,offsets={}, {}
-		local function add(p,offset)table.insert(pieces,p);table.insert(offsets,offset);count+=1;return p end
+		-- B38: the mid and high layers are drawn larger (every size and offset times the place's scale).
+		local s=Lanterns.scale(place)
+		local function add(p,offset)
+			if s~=1 then offset=CFrame.new(offset.Position*s)*offset.Rotation;p.Size*=s;p.CFrame=rest*offset end
+			table.insert(pieces,p);table.insert(offsets,offset);count+=1;return p
+		end
 		local function cylinder(name,size,offset,colour,mat)
 			local p=add(part(name,size,rest*offset,colour,mat,folder),offset)
 			p.Shape=Enum.PartType.Cylinder
 			return p
 		end
 		-- The envelope and its four upright gore rings (a Cylinder's axis is X: each disc stands in a vertical plane).
-		local envelope=add(part(place.id.."_envelope",Vector3.new(L.envelope,L.envelope,L.envelope),rest,L.envelopeColour,smooth,folder),CFrame.new())
+		local envelope=add(part(place.id.."_envelope",Vector3.new(L.envelope,L.envelope,L.envelope),rest,Lanterns.envelopeColour(place),smooth,folder),CFrame.new())
 		envelope.Shape=Enum.PartType.Ball
 		for k=0,L.gores-1 do
 			cylinder(place.id.."_gore"..(k+1),Vector3.new(L.gore,L.goreAcross,L.goreAcross),CFrame.Angles(0,k*math.pi/L.gores,0),accent,smooth)
@@ -174,8 +179,9 @@ function Client:build()
 		local flame=add(part(place.id.."_flame",Vector3.new(L.flame,L.flame,L.flame),rest*flameOffset,L.flameColour,neon,folder),flameOffset)
 		flame.Shape=Enum.PartType.Ball;flame.Transparency=L.day.flameClear
 		table.insert(self.lanterns,{index=i,place=place,rest=rest,pieces=pieces,offsets=offsets,envelope=envelope,flame=flame,
-			bob=bobPhase,sway=swayPhase,flicker=flickerPhase,burnAt=-math.huge,nextBurn=self.now()+self.random:NextNumber(0,Lanterns.Burn.gapMax),
-			grow=1,flick=1,pick=pick})
+			bob=bobPhase,sway=swayPhase,flicker=flickerPhase,burnAt=-math.huge,
+			nextBurn=if Lanterns.far(place)then math.huge else self.now()+self.random:NextNumber(0,Lanterns.Burn.gapMax),
+			grow=1,flick=1,pick=pick,scale=s,far=Lanterns.far(place)})
 	end
 	-- Four lights, handed to the nearest balloons' burners at night.
 	self.lights={}
@@ -297,8 +303,8 @@ function Client:wanted()
 	if not self.built or self.mode()~="Room"then return false end
 	local camera=self.camera()
 	if typeof(camera)~="Vector3"then return false end
-	local reach=self:cull()
-	for _,l in ipairs(self.lanterns)do if(l.rest.Position-camera).Magnitude<=reach then return true end end
+	local phone=self.phone()
+	for _,l in ipairs(self.lanterns)do if(l.rest.Position-camera).Magnitude<=Lanterns.cullFor(l.place,phone)then return true end end
 	return false
 end
 function Client:wake()
@@ -384,7 +390,7 @@ end
 -- Motion --------------------------------------------------------------------------------------------------------
 -- Where balloon l is at t: its rest, drifted, bobbed and swayed about the envelope's centre.
 function Client:frame(l,t)
-	local M=Lanterns.Motion
+	local M=Lanterns.motion(l.place)
 	local at=l.rest+Lanterns.drift(l.index,t)
 	at=self.pose("bob",at,nil,M.bob,M.bobPeriod,l.bob,t)
 	return self.pose("sway",at,at.Position,M.sway,M.swayPeriod,l.sway,t)
@@ -401,16 +407,19 @@ function Client:look(camera,reduced)
 	self.lookNow=look
 	if key~=self.glowNow then
 		self.glowNow=key
-		for _,l in ipairs(self.lanterns)do l.envelope.Color=look.envelope end
+		for _,l in ipairs(self.lanterns)do l.envelope.Color=Lanterns.lookAt(glow,l.place).envelope end
 		if self.folder then self.folder:SetAttribute("AirGlow",if lit then math.floor(glow*100+.5)/100 else 0)end
 	end
 	self.lightHosts={}
 	if lit and typeof(camera)=="Vector3"then
-		local positions={}
-		for i,l in ipairs(self.lanterns)do positions[i]=l.flame.CFrame.Position end
+		-- The skyline pair never carries a light.
+		local positions,owners={}, {}
+		for _,l in ipairs(self.lanterns)do
+			if not l.far then table.insert(positions,l.flame.CFrame.Position);table.insert(owners,l)end
+		end
 		local picks=Lanterns.nearest(positions,camera,#self.lights)
 		for k,light in ipairs(self.lights)do
-			local l=self.lanterns[picks[k]]
+			local l=owners[picks[k]]
 			if light.Parent~=l.flame then light.Parent=l.flame end
 			self.lightHosts[k]=l
 			light.Enabled=true
@@ -427,7 +436,7 @@ function Client:burner(l,now,reduced)
 	local grow=if reduced then 1 else l.grow
 	local flick=if self.lit and not reduced then Lanterns.flicker(now,l.flicker)else 1
 	l.flick=flick
-	local size=L.flame*grow*flick
+	local size=L.flame*grow*flick*(l.scale or 1)
 	if l.flameSize~=size then l.flame.Size=Vector3.new(size,size,size);l.flameSize=size end
 	-- A burn by day shows the flame (its see-through falls with the growth).
 	local burning=math.clamp((grow-1)/(Lanterns.Burn.grow-1),0,1)
@@ -529,10 +538,14 @@ function Client:step(dt)
 		self:look(camera,reduced)
 	end
 	local listener=self.listener()
-	local reach=self:cull()
+	local phone=self.phone()
+	-- The skyline pair steps at FarRate.
+	self.farClock=(self.farClock or math.huge)+stepDt
+	local farStep=self.farClock>=Lanterns.FarRate
+	if farStep then self.farClock=0 end
 	local parts,frames={},{}
 	for _,l in ipairs(self.lanterns)do
-		local near=(l.rest.Position-camera).Magnitude<=reach
+		local near=(l.rest.Position-camera).Magnitude<=Lanterns.cullFor(l.place,phone)and(farStep or not l.far)
 		if near then
 			-- The burner: its schedule runs (and sounds) under Reduced Motion too; only the growth and lift are still.
 			if now>=l.nextBurn then
