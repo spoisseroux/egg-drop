@@ -195,6 +195,10 @@ function Panel:layoutMeter(width,compact)
  local row=Panel.row(self.state,self.petId)
  local key=tostring(self.petId)
  local fast=self.meterKey~=key;self.meterKey=key
+ -- Paint, Shine, Dress: the words are read each layout (UICopy's paint override follows the switch), so the meter
+ -- reads Soft / Normal / Shiny and See-through while it is on, today's words while it is off.
+ self.shineTitle.Text=c("shine");self.jellyTitle.Text=c("jellyAxis");self.helper.Text=c("helper")
+ self.endMatte.Text=c("jar.matte");self.endGloss.Text=c("jar.gloss");self.linkText.Text=c("eggLink")
  local titleSize=if compact then 15 else 17
  self.shineTitle.TextSize=titleSize;self.jellyTitle.TextSize=titleSize
  self.shineTitle.Position=UDim2.fromOffset(pad,pad);self.shineTitle.Size=UDim2.fromOffset(math.floor(shineW*.5),20)

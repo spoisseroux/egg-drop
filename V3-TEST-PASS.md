@@ -76,6 +76,7 @@ Beta (33), 2026-11-26: player scale (row 60). Beta (32), 2026-11-26: the first e
 
 | # | Piece | Status | What to try |
 |---|---|---|---|
+| 65 | **Paint, Shine, Dress** (`artifacts/qa-2026-11-27-beta37/PAINT-SHINE-DRESS-PLAN.md`) | Built, offline specs green; Studio check and Fable's render review next | Pet focus > **Dress up** (also the Companions hub's one Dress up tile). Colour: tap a swatch (the pet previews it), Paint with a pot or **Buy · 15★** (buys, then paints); Body and Tummy & ears; Back to white asks first. Shine: Shiny / Soft / See-through steps. Outfit opens the Wardrobe and Back comes back. Hatch eggs: Paint Egg and its "Pick a colour" pots under Looks, Snack Egg under Snacks. Switch: `/alive paint off` gives today's Customize, names and shop exactly. |
 
 ## Scoped, not built
 

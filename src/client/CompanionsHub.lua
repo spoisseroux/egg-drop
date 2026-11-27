@@ -52,11 +52,18 @@ Hub.Grid={x=368,y=84,w=456,h=452,gap=12,phoneX=232,phoneY=64,phoneGap=7,disc=56,
 Hub.DefaultRow=5 -- Customize the first time (section 1, Behaviour).
 
 -- Pure: the tiles this hub shows (Stats / Name drop out when their callback is switched off).
+-- Paint, Shine, Dress (PAINT-SHINE-DRESS-PLAN): while `callbacks.dressUp()` is true (the Alive `paint` switch) the
+-- Wardrobe and Customize tiles are one "Dress up" tile (id "customize": it opens Dress up, whose Outfit tab is the
+-- Wardrobe). Without the callback, or with it false, the rows are today's.
 function Hub.rowsFor(callbacks)
  callbacks=callbacks or {}
+ local paint=type(callbacks.dressUp)=="function"and callbacks.dressUp()==true
  local out={}
  for _,row in ipairs(Hub.Rows)do
-  if not(row.id=="stats"and callbacks.stats==false)and not(row.id=="name"and callbacks.names==false)then table.insert(out,row)end
+  if paint and row.id=="wardrobe"then continue end
+  if paint and row.id=="customize"then
+   table.insert(out,{id="customize",icon="wand",name=UICopy.get("paint.door"),line=UICopy.get("paint.hub.line")})
+  elseif not(row.id=="stats"and callbacks.stats==false)and not(row.id=="name"and callbacks.names==false)then table.insert(out,row)end
  end
  return out
 end
@@ -402,6 +409,8 @@ function Hub:buildHub(body,W,H,phone)
  end
  self.statsButton=nil;self.nameButton=nil
  local ctx=self:statusCtx()
+ -- Paint, Shine, Dress: the rows follow the switch on every build of the hub.
+ self.rowDefs=Hub.rowsFor(self.callbacks);self.rowIndex=math.clamp(self.rowIndex,1,#self.rowDefs)
  local defs=self.rowDefs
  for index,row in ipairs(defs)do
   local R=Hub.tileRect(index,#defs,W,H,phone)
