@@ -118,6 +118,15 @@ function Needs.resumable(state)
 	local f=Needs.facts(state,{})
 	return not Needs.closed("needDeck",f)or(type(state.nest)=="table"and not Needs.closed("needNest",f)and state.nest.ready~=true)
 end
+-- Pure: why the bubble hides now (ThingsTips.blocked, "shown"), or nil. guide: the guide's worded prompts are on. The
+-- guide's prompt is for a player who has not acted yet, so a still player keeps it: no input for Tips.Away s is not
+-- "away" for it (beta 38: the first "Pet Bear!" hid 20 s after Meet, before its own nudge at Guide.ignore s could
+-- ever fire). A window left behind still hides it.
+function Needs.blocked(gate,guide)
+	local why=Tips.blocked(gate,"shown")
+	if why=="away"and guide==true and type(gate)=="table"and gate.windowActive~=false then return nil end
+	return why
+end
 -- Pure: all three truly done. nestRequired false (the nest is off in this world): Pet and Stars.
 function Needs.trulyDone(f,nestRequired)
 	if not Needs.closed("needHi",f)or not Needs.closed("needDeck",f)then return false end
@@ -292,7 +301,7 @@ function Needs:step(now,dt)
 	if self.began==nil then self.began=Tips.returning(state)end
 	local owned=d.owned()or 0
 	local gate=d.gate()or {}
-	local blocked=Tips.blocked(gate,"shown")
+	local blocked=Needs.blocked(gate,self.guide==true)
 	if blocked==nil then self.freeSince=self.freeSince or now else self.freeSince=nil end
 	local freeFor=if self.freeSince then now-self.freeSince else 0
 	self.stepAt=now
