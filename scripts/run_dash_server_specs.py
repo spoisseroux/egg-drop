@@ -69,7 +69,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # AERO-JUICE-BRIEF (beta 36) section 3: the Aero hatch screens' palettes, contrast, bubbles and switch.
          "HatchAero",
          # "This week" (GARDEN-PLAY-BRIEF-2 section 8): the weekly wardrobe pick's rotation, prices, listing and purchase.
-         "ThisWeek"]
+         "ThisWeek",
+         # The petting screen (ONBOARDING-V3-BRIEF section 4, switch pet2): the heart, the lean, the mitten, the spots.
+         "PetCuddle"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
