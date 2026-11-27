@@ -18,6 +18,8 @@ local Coach=require(Shared:WaitForChild("CoachMarks"))
 local Toys=require(Shared:WaitForChild("ToyCatalog"))
 local Tips=require(script.Parent.ThingsTips)
 local V2=require(script.Parent.OnboardV2)
+local Lead=require(Shared:WaitForChild("PetLead"))
+local NestLead=require(script.Parent.NestLead)
 local Needs={};Needs.__index=Needs
 Needs.Order=table.freeze({"needHi","needToy","needDeck","needNest","needPark"})
 -- The First Hatch (Onboard "nestfirst"): tomorrow's egg straight after the first hello. Read once when the garden is
@@ -104,6 +106,35 @@ function Needs.guideDone(f,skip)
 	end
 	return true
 end
+-- Onboarding v3 brief section 1 (Onboard "lead", read once with the guide): the same three prompts in two lines, the
+-- nest prompt led by the pet (NestLead: 2a "Follow {pet}!", then 2b "Tuck the egg in!" on the nest), 2 s between two,
+-- and "Play for Stars!" done only by a round played (not by opening the deck). The guide is finished only when all
+-- three are truly done (never passed over, never a park). A returning save whose guide is unfinished (Pet done in an
+-- earlier session, Nest or Stars not yet) picks it up from its saved facts; a veteran gets none.
+-- Pure: may a returning save pick its unfinished guide back up? state: the owner snapshot.
+function Needs.resumable(state)
+	if type(state)~="table"or Coach.veteran(state.totalWins)then return false end
+	if not Coach.has(state.coachMask,"needHi")then return false end
+	local f=Needs.facts(state,{})
+	return not Needs.closed("needDeck",f)or(type(state.nest)=="table"and not Needs.closed("needNest",f)and state.nest.ready~=true)
+end
+-- Pure: all three truly done. nestRequired false (the nest is off in this world): Pet and Stars.
+function Needs.trulyDone(f,nestRequired)
+	if not Needs.closed("needHi",f)or not Needs.closed("needDeck",f)then return false end
+	return nestRequired==false or Needs.closed("needNest",f)
+end
+-- Pure: the v3 brief's words for a need (UICopy keys: headline, sub-line or nil) and its icon. view: NestLead's view
+-- for the nest prompt.
+function Needs.leadWords(id,view)
+	local P=Lead.Prompts
+	if id=="needNest"then
+		if type(view)=="table"and view.head then return view.head,view.sub,view.icon end
+		return P.tuck.head,P.tuck.sub,P.tuck.icon
+	end
+	local entry=P[id]
+	if entry then return entry.head,entry.sub,entry.icon end
+	return nil
+end
 -- Pure: the guide's words for a need (UICopy key and vars), nil when it has none.
 function Needs.guideWords(id,pet)
 	local key=V2.GuideCopy[id]
@@ -129,6 +160,9 @@ end
 --   trailActive(), trailTarget() (optional: the target the live trail was started with), prompt() (optional: a
 --   station prompt is in reach), sayHi(), playDeck(), quiet(on) (the pill), chirp(), react(id), bubble (NeedBubble:
 --   set(icon, visible), hop(), step(dt)).
+--   The v3 brief (all optional): lead() (Onboard.leadOn), allSet2() (Onboard "allset2"), nestOn() (Onboard "nest"),
+--   copy(key) (UICopy with {pet}), leadDeps (NestLead's deps); the bubble's chip(on) and set's fourth argument (the
+--   sub-line). Needs.bubbleOn says where the bubble hangs ("pet" or "nest"); Needs:chipTap() is the parked chip's tap.
 function Needs.new(deps)
 	return setmetatable({d=deps,live={},track={},restUntil=0,gardenFor=0,retryAt=0},Needs)
 end
@@ -156,6 +190,13 @@ function Needs:abandon()
 	end
 end
 function Needs:saidHi()self.live.saidHi=true end
+-- The v3 brief's parked chip was tapped: the lead again.
+function Needs:chipTap()
+	local lead=self.nestLead
+	if not lead or not lead:unpark()then return false end
+	self.forceNest=true
+	return true
+end
 -- The station that beckons alone while a need (or the first trail) points at it.
 function Needs:focus()
 	local key=self.pointing
@@ -276,13 +317,29 @@ function Needs:step(now,dt)
 			self.roundsAt=f.rounds
 			self.order=if d.nestFirst and d.nestFirst()==true then Needs.NestFirstOrder else nil
 			-- Onboarding v2 step 5: the guide's three prompts, read once here like the order
+			-- the v3 brief: an unfinished guide is picked up again from the saved facts (a veteran still gets none)
+			local leadOn=d.lead~=nil and d.lead()==true and d.guide~=nil and d.guide()==true
+			if returning and leadOn and Needs.resumable(state)then returning=false;self.returning=false;self.resumed=true end
 			self.guide=d.guide~=nil and d.guide()==true and not returning
 			if self.guide then self.order=Needs.GuideOrder;self.skipped={};self.shownFor={};self.nudgedAt={}end
+			self.lead=self.guide and leadOn
+			if self.lead and d.leadDeps then self.nestLead=NestLead.new(d.leadDeps)end
+			self.allSet2=self.guide and d.allSet2~=nil and d.allSet2()==true
 		else self:hide();d.bubble:step(dt);return end
 	end
 	if f.rounds>(self.roundsAt or f.rounds)then self.live.deckDone=true;f.deckDone=true end
-	-- The guide's "Play for Stars!" is done when the deck opens.
-	if self.guide and gate.mode=="Board"then self.live.deckDone=true;f.deckDone=true end
+	-- The guide's "Play for Stars!" is done when the deck opens (the v3 brief's lead: only when a round is played).
+	if self.guide and not self.lead and gate.mode=="Board"then self.live.deckDone=true;f.deckDone=true end
+	-- The v3 brief: a parked lead passes the nest prompt over for now; it comes back after the deck next closes.
+	local nestLead=self.nestLead
+	if nestLead then
+		if nestLead.parked and gate.mode=="Board"then self.parkSawDeck=true end
+		if nestLead.parked and self.parkSawDeck and gate.mode=="Room"then
+			self.parkSawDeck=false
+			if nestLead:unpark()then self.forceNest=true end
+		end
+		self.skipped.needNest=if nestLead.parked and not Needs.closed("needNest",f)then true else nil
+	end
 	local needsOn=(d.needs()==true or self.guide==true)and not self.returning
 	d.quiet(needsOn)
 	-- A: the garden step, the first trail, the idle hint's "follow" key ---------------------------------------------
@@ -303,6 +360,11 @@ function Needs:step(now,dt)
 	local following=new and not needsOn and not Coach.has(f.mask,"hatch")and not f.toyGiven
 	-- B: the bubbles -------------------------------------------------------------------------------------------------
 	local id=if needsOn then Needs.current(f,{on=true,owned=owned,order=self.order,skip=self.skipped})else nil
+	-- the chip tapped (or the deck closed after a park): the nest prompt again, before anything open
+	if self.forceNest then
+		if nestLead and not nestLead.parked and Needs.available("needNest",f)and not Needs.closed("needNest",f)then id="needNest";self.open=id
+		else self.forceNest=nil end
+	end
 	if needsOn and self.order then
 		if self.open and self.open~=id and Needs.available(self.open,f)and not Needs.closed(self.open,f)
 			and not(self.skipped and self.skipped[self.open])then
@@ -318,9 +380,14 @@ function Needs:step(now,dt)
 			if not Coach.has(f.mask,need)and Needs.available(need,f)and Needs.closed(need,f)then d.mark(need)end
 		end
 	end
+	-- The v3 brief: the nest prompt closed: the celebration once (a tuck), and the lead is over.
+	if nestLead and nestLead.begun and not nestLead.done and Needs.closed("needNest",f)then nestLead:finish(f.nestTucked==true)end
+	-- parked, but the player walked to the nest anyway: its prompt again, on the nest
+	if nestLead and nestLead.parked and nestLead.reached and nestLead:unpark()then self.forceNest=true end
 	if id~=self.open then
+		if self.open=="needNest"and nestLead and not nestLead.done and not nestLead.parked then nestLead:pause()end
 		if self.open~=nil then
-			self.restUntil=now+Needs.Rest;d.react(self.open)
+			self.restUntil=now+(if self.lead then Lead.Rest else Needs.Rest);d.react(self.open)
 			-- The guide's first pet: the hearts and purr are the petting's own; the settle buzz is the guide's.
 			if self.guide and self.open=="needHi"and Needs.closed("needHi",f)and d.firstPet then pcall(d.firstPet)end
 		end
@@ -330,13 +397,27 @@ function Needs:step(now,dt)
 	end
 	self.pointing=if id then id elseif following then "follow"else nil
 	-- Never over a machine's prompt (the bubble is always on top).
-	local show=id~=nil and now>=self.restUntil and blocked==nil and freeFor>=Needs.Return and not(d.prompt and d.prompt()==true)
-		-- the guide's bubble hangs over the pet: with none drawn (stowed, loading) it waits, its clock stopped
-		and not(self.guide and d.petShown~=nil and d.petShown()~=true)
+	local promptNear=d.prompt~=nil and d.prompt()==true
+	local leadNest=self.lead and id=="needNest"and nestLead~=nil
+	local show=id~=nil and now>=self.restUntil and blocked==nil and freeFor>=Needs.Return and not promptNear
+		-- the guide's bubble hangs over the pet: with none drawn (stowed, loading) it waits, its clock stopped (the v3
+		-- brief's nest prompt sits on the nest instead)
+		and not(self.guide and not leadNest and d.petShown~=nil and d.petShown()~=true)
+	-- The v3 brief: the lead runs (or pauses) while the nest prompt is open; a prompt in reach only hides the bubble.
+	local view=nil
+	if leadNest then
+		local leading=show or(promptNear and blocked==nil)
+		view=nestLead:step(now,dt,{shown=leading,blocked=if leading then nil else(blocked or "rest")})
+		if view and view.stage=="parked"then show=false end
+	elseif nestLead and nestLead.parked then nestLead:step(now,dt,{shown=true})end
+	self.bubbleOn=if view and view.on=="nest"then "nest"else "pet"
+	if d.bubble.chip then d.bubble:chip(nestLead~=nil and nestLead.parked==true and not Needs.closed("needNest",f))end
 	if show and self.guide then
 		-- The guide: the prompt in words, until it is done. Shown Guide.ignore s it nudges (beta 37 note 3: never skips).
 		self.shownFor[id]=(self.shownFor[id]or 0)+dt
-		if V2.nudgeDue(self.shownFor[id],self.nudgedAt[id],now)then
+		-- the lead's 2a has its own nudges (NestLead)
+		local ownNudges=view~=nil and view.stage=="follow"
+		if not ownNudges and V2.nudgeDue(self.shownFor[id],self.nudgedAt[id],now)then
 			self.nudgedAt[id]=now
 			self.nudges=(self.nudges or 0)+1
 			d.bubble:hop();d.chirp()
@@ -344,23 +425,30 @@ function Needs:step(now,dt)
 			if self.track.key~=id then self.track.key,self.track.count=id,0 end
 			self.track.lastAt=now
 		end
-		local words=nil
-		if d.words then words=d.words(id)end
+		local words,sub=nil,nil
 		local icon=V2.GuideIcon[id]or Needs.icon(id,f)
-		if not self.shown or self.shownIcon~=icon or self.shownWords~=words then d.bubble:set(icon,true,words)end
-		self.shownWords=words
-		-- A prompt that points somewhere far gets the dotted trail once.
-		if id=="needNest"and not self.nestTrail and d.far and d.far("Nest")==true then self.nestTrail=self:trailTo("Nest","auto")end
+		if self.lead then
+			local head,second,leadIcon=Needs.leadWords(id,view)
+			local function say(key)if not key then return nil end;if d.copy then return d.copy(key)end;return key end
+			words,sub,icon=say(head),say(second),leadIcon or icon
+		elseif d.words then words=d.words(id)end
+		if not self.shown or self.shownIcon~=icon or self.shownWords~=words or self.shownSub~=sub then d.bubble:set(icon,true,words,sub)end
+		self.shownWords,self.shownSub,self.shownIcon=words,sub,icon
+		-- A prompt that points somewhere far gets the dotted trail once (the lead lays its own).
+		if id=="needNest"and not self.lead and not self.nestTrail and d.far and d.far("Nest")==true then self.nestTrail=self:trailTo("Nest","auto")end
 		self.guideShown=true
 	end
 	if d.pulseDeck and self.guide then pcall(d.pulseDeck,show and id=="needDeck")end
-	if self.guide and self.guideShown and not self.allSet and Needs.guideDone(f,self.skipped)then
+	-- The end card. The v3 brief (lead or allset2): only when all three are truly done, in the garden, nothing open.
+	local strict=self.lead or self.allSet2
+	local finished=if strict then Needs.trulyDone(f,d.nestOn==nil or d.nestOn()==true)else Needs.guideDone(f,self.skipped)
+	if self.guide and self.guideShown and not self.allSet and finished and(not strict or(blocked==nil and gate.mode=="Room"and id==nil))then
 		self.allSet=true
 		if d.allSet then pcall(d.allSet)end
 	end
 	if show then
-		local icon=if self.guide then(V2.GuideIcon[id]or Needs.icon(id,f))else Needs.icon(id,f)
-		if not self.shown or self.shownIcon~=icon then d.bubble:set(icon,true,if self.guide then self.shownWords else nil)end
+		local icon=if self.guide then(self.shownIcon or V2.GuideIcon[id]or Needs.icon(id,f))else Needs.icon(id,f)
+		if not self.guide and(not self.shown or self.shownIcon~=icon)then d.bubble:set(icon,true,nil)end
 		self.shown,self.shownIcon=true,icon
 		if id=="needHi"then self.hiShown=true end
 		if self.autoPending and icon=="ball"and self:trailFree()then
@@ -368,8 +456,8 @@ function Needs:step(now,dt)
 			self.autoTrail=self:trailTo("Eggs","auto")
 		end
 	else self:hide()end
-	-- The idle hint: still this long with something open, at most IdleHints per need.
-	if self.pointing and blocked==nil and Tips.idleDue(self.track,self.pointing,gate.idleFor,now)then
+	-- The idle hint: still this long with something open, at most IdleHints per need (the lead's nest prompt has its own).
+	if self.pointing and blocked==nil and not leadNest and Tips.idleDue(self.track,self.pointing,gate.idleFor,now)then
 		d.chirp()
 		if self.shown then d.bubble:hop()end
 		self:trailTo(Needs.target(self.pointing,f),"idle")

@@ -1612,6 +1612,72 @@ local function onBoardRequest(player, action, value, sticker)
 		local ok,known=pcall(function()return require(ReplicatedStorage.Shared.Onboard).Events[value]==true end)
 		if type(value)=="string"and ok and known and board.firstSession and hasPet(board)then board.firstSession:record(value)end
 		return
+	elseif action=="petLead"then
+		-- Onboarding v3 brief section 1 (Onboard "lead"): the Bear leads the player to the nest (GardenState:lead, the
+		-- rules in Shared.PetLead). Presentation only: it moves the asker's own garden pet, nothing is granted or saved.
+		-- value = {kind = "start", route = {Vector3...}} (the trail route from the pet to the nest's prompt), or "back"
+		-- (a nudge), "stop" (paused, parked, done) or "cheer" (the jump-spin; also with `allset2`).
+		if type(value)~="table"or type(value.kind)~="string"then return end
+		local Lead=require(ReplicatedStorage.Shared.PetLead)
+		local okOn,leadOn,allSetOn=pcall(function()
+			local Onboard=require(ReplicatedStorage.Shared.Onboard)
+			return Onboard.leadOn(),Onboard.on("allset2")
+		end)
+		if not okOn or not hasPet(board)or board.mode~="Room"or board.closing then return end
+		local kind=value.kind
+		if kind=="cheer"then
+			if not(leadOn or allSetOn)or now-(board.leadCheerAt or -math.huge)<1 then return end
+			board.leadCheerAt=now
+			garden:leadCheer(player.UserId)
+			return
+		end
+		if not leadOn then return end
+		if kind=="stop"then garden:leadEnd(player.UserId);return end
+		-- each kind at most once every Asks.gap s, and a bounded number of starts a session
+		if kind~="back"and kind~="start"then return end
+		board.leadAskAt=board.leadAskAt or {}
+		if now-(board.leadAskAt[kind]or -math.huge)<Lead.Asks.gap then return end
+		board.leadAskAt[kind]=now
+		if kind=="back"then garden:leadBack(player.UserId);return end
+		board.leadStarts=(board.leadStarts or 0)+1
+		if board.leadStarts>Lead.Asks.starts then return end
+		local character=player.Character
+		local root=character and character:FindFirstChild("HumanoidRootPart")
+		local actor=garden.actors[player.UserId]
+		if not root or not actor then return end
+		local sample=require(ReplicatedStorage.Shared.GardenActivity).sample(actor,workspace:GetServerTimeNow())
+		local pet=sample and sample.position
+		if not pet or Lead.flat(pet,root.Position)>Lead.Far then return end
+		local Corner=require(ReplicatedStorage.Shared.EggCorner)
+		local nest=Corner.nestSpot()
+		local skip={}
+		for _,other in ipairs(Players:GetPlayers())do if other.Character then table.insert(skip,other.Character)end end
+		local groundParams=RaycastParams.new();groundParams.RespectCanCollide=true;groundParams.FilterType=Enum.RaycastFilterType.Exclude
+		groundParams.FilterDescendantsInstances=skip
+		local skipSolid=table.clone(skip);table.insert(skipSolid,workspace.Terrain)
+		local solidParams=RaycastParams.new();solidParams.RespectCanCollide=true;solidParams.FilterType=Enum.RaycastFilterType.Exclude
+		solidParams.FilterDescendantsInstances=skipSolid
+		local route=type(value.route)=="table"and value.route or nil
+		local raw={}
+		for i,point in ipairs(route or {})do if i>Lead.Route.max+1 then return end;raw[i]=point end
+		local points=Lead.clean(raw,{pet=pet,nest=nest,
+			ground=function(p)
+				local hit=workspace:Raycast(p+Vector3.new(0,Lead.Route.ground,0),Vector3.new(0,-Lead.Route.ground*2,0),groundParams)
+				return hit and hit.Position.Y
+			end,
+			-- a fence, a wall or a prop between two route points at the pet's body height (the ground is not one)
+			clear=function(a,b)
+				local up=Vector3.new(0,Lead.Route.body,0)
+				local d=(b+up)-(a+up)
+				return d.Magnitude<.05 or workspace:Raycast(a+up,d,solidParams)==nil
+			end})
+		if not points then return end
+		local goal=Lead.trim(points,Lead.Arrive)
+		goal=goal[#goal]
+		if Lead.flat(goal,nest)>Lead.Route.goalNear then return end
+		local ok=garden:lead(player.UserId,Lead.simplify(Lead.trim(points,Lead.Arrive)),goal,nest)
+		if ok and board.firstSession then pcall(function()board.firstSession:record("LeadStarted")end)end
+		return
 	elseif action=="firstStand"then
 		-- Beta (37) note 1: the first hatch's Bear stands where its egg opened (FirstHatchStory, Onboard "stork"), then
 		-- follows. Presentation only (GardenState:stand): a spot on solid ground near the owner, a few asks a session.

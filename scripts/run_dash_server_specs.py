@@ -76,7 +76,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          "PetCuddle",
          # Paint, Shine, Dress (PAINT-SHINE-DRESS-PLAN): the pot rules and request order, the save path, the live and base
          # builds loading a save with pots, and the words.
-         "PaintPotState", "PaintPotProgress", "PaintPotCrossVersion", "PaintCopy"]
+         "PaintPotState", "PaintPotProgress", "PaintPotCrossVersion", "PaintCopy",
+         # Onboarding v3 brief section 1 (qa-2026-11-27-beta37): the lead's shared rules and the server's garden pet.
+         "PetLead"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
@@ -137,7 +139,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # Paint, Shine, Dress: the door's switch and tabs, the Colour cards, the pot intent and its buy-then-paint chain.
           "DressUp",
           # GARDEN-B38-BRIEF 4b (P1): the understory's spots against every keep list, its budget, switch, art and motion.
-          "Understory"]
+          "Understory",
+          # Onboarding v3 brief sections 1 and 3: the lead's client half (BearNeeds, NestLead), the all-set card.
+          "NestLead"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -214,7 +218,9 @@ def client_modules():
                     # Paint, Shine, Dress: the switch and tabs, the Colour cards, the pot intent.
                     "DressUp.lua", "PaintPanel.lua", "PaintPotIntent.lua",
                     # GARDEN-B38-BRIEF 4b: the understory's builder and motion.
-                    "UnderstoryClient.lua"):
+                    "UnderstoryClient.lua",
+                    # Onboarding v3 brief: the lead's client half, its trail adapter and the all-set card.
+                    "NestLead.lua", "LeadTrail.lua", "AllSetCard.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

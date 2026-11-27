@@ -179,6 +179,14 @@ function Follow.activity(visual,actor,now,dt,state,reduced)
 	visual.origin,visual.reducedEffects=sample.position,reduced==true
     visual.yaw=sample.yaw;visual.gardenPivot=sample.pivot==true;visual.gardenPivotPhase=sample.pivotPhase or 0;visual.gardenPivotTurn=sample.pivotTurn or 0
     state.travelYaw=visual.yaw
+	-- The lead to the nest (Shared.PetLead, onboarding v3 brief section 1): its hops, the beckon, the arrival bounce
+	-- and the jump-spin, from the shared clock, the same on every screen. Reduced Motion: none.
+	local action=sample.action
+	if type(action)=="string"and string.sub(action,1,4)=="lead"and type(actor.startTime)=="number"then
+		local lift,spin=require(game:GetService("ReplicatedStorage").Shared.PetLead).pose(action,sampleTime-actor.startTime,reduced==true)
+		if lift~=0 then visual.origin+=Vector3.new(0,lift,0)end
+		if spin~=0 then visual.yaw+=spin end
+	end
 	local traveled=Vector2.new(visual.origin.X-old.X,visual.origin.Z-old.Z).Magnitude
 	if sample.mode=="Focus"or dt<=0 or traveled>8 then
 		Follow.rest(visual)

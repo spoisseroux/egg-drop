@@ -41,9 +41,18 @@ Bubble.Lip=table.freeze({drop=3,opacity=.25}) -- U7: px below the face, ink opac
 -- still under Reduced Motion).
 Bubble.WordFill=Color3.fromHex("#FFFFFF");Bubble.WordInk=Color3.fromHex("#1B2A4A");Bubble.Arrow=Color3.fromHex("#FFD86B")
 Bubble.WordSize=20;Bubble.WordH=60;Bubble.ArrowPx=6;Bubble.ArrowHz=1
--- Pure: the pill's width for these words (measure(text) -> px, else an estimate).
-function Bubble.wordWidth(text,measure)
-	local w=if type(measure)=="function"then measure(text)else #text*Bubble.WordSize*.55
+-- Onboarding v3 brief section 1 (Onboard "lead"): two lines, a headline (20 px ExtraBold) over a sub-line (14 px Bold,
+-- the ink at 70%). The parked lead's chip: a 36 px moon over the pet, a tap restarts the lead (options.onChip).
+Bubble.SubSize=14;Bubble.SubAlpha=.3;Bubble.TwoH=68
+Bubble.ChipSize=36;Bubble.ChipHit=52
+-- Pure: the pill's width for these words (measure(text, size) -> px, else an estimate); `sub` the second line.
+function Bubble.wordWidth(text,measure,sub)
+	local function width(t,size)
+		if type(measure)=="function"then return measure(t,size)end
+		return #t*size*.55
+	end
+	local w=width(text,Bubble.WordSize)
+	if type(sub)=="string"and sub~=""then w=math.max(w,width(sub,Bubble.SubSize))end
 	return math.ceil(62+w+16)
 end
 
@@ -177,7 +186,31 @@ function Bubble.new(options)
 	arrow.Size=UDim2.fromOffset(20,14);arrow.Font=Enum.Font.BuilderSansBold;arrow.TextSize=18;arrow.Text="▼"
 	arrow.TextColor3=Bubble.Arrow;arrow.Visible=false;arrow.ZIndex=3;arrow.Parent=art
 	local arrowEdge=Instance.new("UIStroke");arrowEdge.Color=Bubble.WordInk;arrowEdge.Thickness=1.5;arrowEdge.Parent=arrow
-	self.words,self.arrow,self.arrowEdge=words,arrow,arrowEdge
+	-- The v3 brief's sub-line, under the headline (hidden with one line).
+	local subline=Instance.new("TextLabel")
+	subline.Name="Sub";subline.BackgroundTransparency=1;subline.AnchorPoint=Vector2.new(0,0);subline.Position=UDim2.new(0,62,.5,4)
+	subline.Size=UDim2.new(1,-74,0,18);subline.Font=Enum.Font.BuilderSansBold;subline.TextSize=Bubble.SubSize;subline.TextColor3=Bubble.WordInk
+	subline.TextXAlignment=Enum.TextXAlignment.Left;subline.Text="";subline.Visible=false;subline.ZIndex=4;subline.Parent=art
+	self.words,self.arrow,self.arrowEdge,self.subline=words,arrow,arrowEdge,subline
+	-- The parked lead's chip (v3 brief section 1): a 36 px moon over the pet, its own billboard and tap.
+	local chip=Instance.new("BillboardGui")
+	chip.Name="EggDropLeadChip";chip.Size=UDim2.fromOffset(Bubble.ChipHit,Bubble.ChipHit);chip.AlwaysOnTop=true;chip.Active=true
+	chip.LightInfluence=0;chip.ResetOnSpawn=false;chip.Enabled=false;chip.MaxDistance=140
+	local chipArt=Instance.new("Frame")
+	chipArt.Name="Art";chipArt.AnchorPoint=Vector2.new(.5,.5);chipArt.Position=UDim2.fromScale(.5,.5);chipArt.Size=UDim2.fromOffset(Bubble.ChipSize,Bubble.ChipSize)
+	chipArt.BackgroundColor3=Bubble.WordFill;chipArt.BorderSizePixel=0;chipArt.Parent=chip
+	local chipRound=Instance.new("UICorner");chipRound.CornerRadius=UDim.new(.5,0);chipRound.Parent=chipArt
+	local chipEdge=Instance.new("UIStroke");chipEdge.Color=Bubble.WordInk;chipEdge.Thickness=2;chipEdge.Parent=chipArt
+	local chipIcon=Instance.new("ImageLabel")
+	chipIcon.Name="Icon";chipIcon.BackgroundTransparency=1;chipIcon.AnchorPoint=Vector2.new(.5,.5);chipIcon.Position=UDim2.fromScale(.5,.5)
+	chipIcon.Size=UDim2.fromScale(.7,.7);chipIcon.Image="rbxassetid://"..Bubble.IconIds.moon;chipIcon.Parent=chipArt
+	local chipScale=Instance.new("UIScale");chipScale.Scale=1;chipScale.Parent=chipArt
+	local chipHit=Instance.new("TextButton")
+	chipHit.Name="Hit";chipHit.Text="";chipHit.AutoButtonColor=false;chipHit.BackgroundTransparency=1;chipHit.Size=UDim2.fromScale(1,1)
+	chipHit.Selectable=true;chipHit.ZIndex=10;chipHit.Parent=chip
+	on(chipHit.Activated,function()if self.chipOn and options.onChip then options.onChip()end end)
+	chip.Parent=options.parent
+	self.chipGui,self.chipScale=chip,chipScale
 	local squash=Instance.new("UIScale");squash.Name="PressScale";squash.Scale=1;squash.Parent=art
 	anchor.Parent=options.world or workspace
 	gui.Parent=options.parent
@@ -193,21 +226,35 @@ function Bubble.nestFirst()
 	return ok and on==true
 end
 function Bubble:reduced()return self.options.reduced~=nil and self.options.reduced()==true end
--- The guide's words beside the icon (a white pill), or nil for the round icon bubble as before.
-function Bubble:setWords(text)
+-- The guide's words beside the icon (a white pill), or nil for the round icon bubble as before. sub: the v3 brief's
+-- second line (nil: one line, as before).
+function Bubble:setWords(text,sub)
 	local on=type(text)=="string"and text~=""
-	if on==(self.wordText~=nil)and(not on or self.wordText==text)then return end
+	local two=on and type(sub)=="string"and sub~=""
+	if on==(self.wordText~=nil)and(not on or self.wordText==text)and(if two then sub else nil)==self.subText then return end
 	self.wordText=if on then text else nil
+	self.subText=if two then sub else nil
 	local w=Bubble.Size
 	if on then
-		local measure=function(t)
-			local ok,size=pcall(function()return game:GetService("TextService"):GetTextSize(t,Bubble.WordSize,Enum.Font.BuilderSansBold,Vector2.new(1000,100))end)
-			return if ok and typeof(size)=="Vector2"then size.X else #t*Bubble.WordSize*.55
+		local measure=function(t,size)
+			size=size or Bubble.WordSize
+			local font=if size==Bubble.WordSize and two then Enum.Font.BuilderSansExtraBold else Enum.Font.BuilderSansBold
+			local ok,got=pcall(function()return game:GetService("TextService"):GetTextSize(t,size,font,Vector2.new(1000,100))end)
+			return if ok and typeof(got)=="Vector2"then got.X else #t*size*.55
 		end
-		w=Bubble.wordWidth(text,measure)
+		w=Bubble.wordWidth(text,measure,if two then sub else nil)
 		self.words.Text=text
 	end
-	local h=if on then Bubble.WordH else Bubble.Size
+	if self.subline then
+		self.subline.Visible=two
+		self.subline.Text=if two then sub else ""
+		-- two lines: the headline ExtraBold in the top half, the sub-line under it
+		self.words.Font=if two then Enum.Font.BuilderSansExtraBold else Enum.Font.BuilderSansBold
+		self.words.AnchorPoint=if two then Vector2.new(0,1)else Vector2.new(0,.5)
+		self.words.Position=if two then UDim2.new(0,62,.5,4)else UDim2.new(0,62,.5,0)
+		self.words.Size=if two then UDim2.new(1,-74,0,26)else UDim2.new(1,-74,1,-8)
+	end
+	local h=if two then Bubble.TwoH elseif on then Bubble.WordH else Bubble.Size
 	self.art.Size=UDim2.fromOffset(w,h);self.lip.Size=self.art.Size
 	self.gui.Size=UDim2.fromOffset(math.max(Bubble.HitSize,w+16),Bubble.HitSize)
 	self.words.Visible=on;self.arrow.Visible=on
@@ -223,9 +270,10 @@ function Bubble:setWords(text)
 		else glyph.AnchorPoint=Vector2.new(.5,.5);glyph.Position=UDim2.fromScale(.5,.54);glyph.Size=UDim2.fromScale(if glyph==self.image then .64 else .6,if glyph==self.image then .64 else .6)end
 	end
 end
--- Show `icon` (a Glyph key), or hide (visible false). words: the guide's prompt (nil: the icon alone).
-function Bubble:set(icon,visible,words)
-	if visible then self:setWords(words)end
+-- Show `icon` (a Glyph key), or hide (visible false). words: the guide's prompt (nil: the icon alone); sub: its
+-- second line (the v3 brief, nil: one line).
+function Bubble:set(icon,visible,words,sub)
+	if visible then self:setWords(words,sub)end
 	if visible and icon then
 		local id=Bubble.IconIds[icon]
 		self.image.Visible=id~=nil
@@ -244,6 +292,8 @@ end
 function Bubble:hop()
 	if not self:reduced()then self.hopAt=self.time end
 end
+-- The parked lead's moon chip over the pet (the v3 brief): on or off. It pulses gently; Reduced Motion: still.
+function Bubble:chip(on)self.chipOn=on==true end
 -- A taken tap (BearNeeds): a squash and a count on the billboard (Taps, beta diagnostics for a phone session).
 function Bubble:press()
 	self.taps=(self.taps or 0)+1
@@ -259,6 +309,7 @@ function Bubble:paint()
 	self.key.BackgroundTransparency=a;self.key.TextTransparency=a
 	self.eggBadge.BackgroundTransparency=a;self.eggEdge.Transparency=a
 	self.words.TextTransparency=a;self.arrow.TextTransparency=a;self.arrowEdge.Transparency=a
+	if self.subline then self.subline.TextTransparency=a+(1-a)*Bubble.SubAlpha end
 	for _,dot in ipairs(self.eggBadge:GetChildren())do if dot:IsA("Frame")then dot.BackgroundTransparency=a end end
 end
 function Bubble:step(dt)
@@ -314,11 +365,26 @@ function Bubble:step(dt)
 	if self.squash.Scale~=squash then self.squash.Scale=squash;self.lipSquash.Scale=squash end
 	self.gui.Enabled=adornee~=nil and self.alpha<1
 	self.button.Active=self.shown==true
+	if self.chipGui then
+		local chipAt=self.options.chipAdornee and self.options.chipAdornee()or adornee
+		local showChip=self.chipOn==true and chipAt~=nil
+		self.chipGui.Enabled=showChip
+		if showChip then
+			if self.chipGui.Adornee~=chipAt then self.chipGui.Adornee=chipAt end
+			-- beside the bubble when both hang on the pet, else where the bubble would be
+			local beside=self.gui.Enabled and self.gui.Adornee==chipAt
+			local px=if beside then self.gui.Size.X.Offset*.5+Bubble.ChipHit*.5 else 0
+			self.chipGui.SizeOffset=Vector2.new(-px/Bubble.ChipHit,0)
+			self.chipGui.StudsOffsetWorldSpace=Vector3.new(0,(self.top or 1.5)+Bubble.Lift,0)
+			self.chipScale.Scale=if reduced then 1 else 1+.075*(1-math.cos(self.time*math.pi*2/1.2))
+		end
+	end
 	-- Out of sight: the next showing starts over the Bear, not where it was.
 	if not self.gui.Enabled then self.spot.at=nil end
 end
 function Bubble:destroy()
 	if self.worldTap then self.worldTap:Disconnect();self.worldTap=nil end
 	self.gui:Destroy();self.anchor:Destroy()
+	if self.chipGui then self.chipGui:Destroy()end
 end
 return Bubble

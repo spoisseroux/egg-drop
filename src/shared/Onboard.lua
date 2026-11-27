@@ -28,6 +28,11 @@
 --   Onboard.on("trail2")    section 2, glow steps: every trail (PetTrail, ThingsTrail) draws glowing paws with a wave
 --                           toward a gold target ring, guide trails stay while their prompt is open, and a leading pet
 --                           lays its own prints (Shared.TrailGlow, client GlowSteps). Off is the trails as before.
+-- Onboarding v3 brief (artifacts/qa-2026-11-27-beta37/ONBOARDING-V3-BRIEF.md; Spencer's beta 37 notes 3 to 7):
+--   Onboard.on("lead")      section 1: the two-line bubble, the Bear runs to the nest and the player follows (PetLead,
+--                           NestLead, GardenState:lead), "Play for Stars!" closes on a round played (needs `guide`)
+--   Onboard.on("allset2")   section 3: the "You're all set!" celebration, only once all three are truly done (AllSetCard)
+-- Both off is beta (37) plus its bug fixes.
 -- ConfigService keys `onboard_follow`, `onboard_needs`, `onboard_nest` (server OnboardConfig): off until the config has
 -- loaded once, then missing or malformed = on. The server publishes `Onboard_<feature>` as its own value AND Things.on()
 -- and republishes when Things changes, so the attribute alone is the truth for clients; on() checks Things too, so a
@@ -39,14 +44,15 @@ local Flags=require(script.Parent.FeatureFlags)
 local Things=require(script.Parent.Things)
 local Onboard={}
 Onboard.PlaceId=107705084891479 -- Pocket Pals Beta
-Onboard.Features=table.freeze({"follow","needs","nest","corner","landmark","capsule","opener","crack","nestfirst","egg3d","stork","safecard","guide","deck2","trail2"})
+Onboard.Features=table.freeze({"follow","needs","nest","corner","landmark","capsule","opener","crack","nestfirst","egg3d","stork","safecard","guide","deck2","trail2","lead","allset2"})
 Onboard.Attributes=table.freeze({follow="Onboard_follow",needs="Onboard_needs",nest="Onboard_nest",corner="Onboard_corner",landmark="Onboard_landmark",capsule="Onboard_capsule",opener="Onboard_opener",crack="Onboard_crack",nestfirst="Onboard_nestfirst",
-	egg3d="Onboard_egg3d",stork="Onboard_stork",safecard="Onboard_safecard",guide="Onboard_guide",deck2="Onboard_deck2",trail2="Onboard_trail2"})
+	egg3d="Onboard_egg3d",stork="Onboard_stork",safecard="Onboard_safecard",guide="Onboard_guide",deck2="Onboard_deck2",trail2="Onboard_trail2",lead="Onboard_lead",allset2="Onboard_allset2"})
 Onboard.Keys=table.freeze({follow="onboard_follow",needs="onboard_needs",nest="onboard_nest",corner="onboard_corner",landmark="onboard_landmark",capsule="onboard_capsule",opener="onboard_opener",crack="onboard_crack",nestfirst="onboard_nestfirst",
-	egg3d="onboard_egg3d",stork="onboard_stork",safecard="onboard_safecard",guide="onboard_guide",deck2="onboard_deck2",trail2="onboard_trail2"})
+	egg3d="onboard_egg3d",stork="onboard_stork",safecard="onboard_safecard",guide="onboard_guide",deck2="onboard_deck2",trail2="onboard_trail2",lead="onboard_lead",allset2="onboard_allset2"})
 -- Onboarding v2's one-time events the client reports (the server records each name once, FirstSession:record, and only
 -- for a save that owns a pet). EggTapped, BearMet, FirstPet and NestTucked are already recorded where they happen.
-Onboard.Events=table.freeze({StorkShown=true,EggSetDown=true,AllSet=true,OnboardSkipped_Stork=true})
+-- Onboarding v3 brief (switch `lead`): LeadStarted, LeadParked, NestReached.
+Onboard.Events=table.freeze({StorkShown=true,EggSetDown=true,AllSet=true,OnboardSkipped_Stork=true,LeadStarted=true,LeadParked=true,NestReached=true})
 function Onboard.attribute(feature)return Onboard.Attributes[feature]end
 function Onboard.key(feature)return Onboard.Keys[feature]end
 
@@ -77,7 +83,7 @@ function Onboard.resolve(configValue,override,ceiling)
 end
 -- Server only (OnboardConfig): the resolved values every server check reads. Off until they are set.
 local switches={follow=false,needs=false,nest=false,corner=false,landmark=false,capsule=false,opener=false,crack=false,nestfirst=false,
-	egg3d=false,stork=false,safecard=false,guide=false,deck2=false,trail2=false}
+	egg3d=false,stork=false,safecard=false,guide=false,deck2=false,trail2=false,lead=false,allset2=false}
 function Onboard.setSwitch(feature,value)
 	if not RunService:IsServer()or switches[feature]==nil then return false end
 	switches[feature]=value==true
@@ -108,6 +114,8 @@ function Onboard.on(feature)
 end
 -- Onboarding v2 steps 2 and 3 need the Welcome opener (the egg hatches on 3 combos) and the crack (three taps).
 function Onboard.storyOn()return Onboard.on("stork")and Onboard.on("opener")and Onboard.on("crack")end
+-- The v3 brief's lead rides the v2 guide's prompts (BearNeeds reads both once a session).
+function Onboard.leadOn()return Onboard.on("lead")and Onboard.on("guide")end
 -- May a coach card that belongs to this part be shown and saved now? (CoachMarks.allows)
 function Onboard.allows(part)return Onboard.on(part)end
 

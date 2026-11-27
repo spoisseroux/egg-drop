@@ -15,19 +15,25 @@ function Hold:holding()
 	local ok,yes=pcall(holds)
 	return ok and yes==true
 end
--- words (onboarding v2's guide): the prompt in words beside the icon, or nil for the icon alone.
-function Hold:set(icon,visible,words)
-	self.icon,self.want,self.words=icon,visible==true,words
+-- words (onboarding v2's guide): the prompt in words beside the icon, or nil for the icon alone; sub: the v3 brief's
+-- second line.
+function Hold:set(icon,visible,words,sub)
+	self.icon,self.want,self.words,self.sub=icon,visible==true,words,sub
 	if visible and not self.real then self.real=self.make()end
 	self.held=self.want and self:holding()
-	if self.real then self.real:set(icon,visible and not self.held,words)end
+	if self.real then self.real:set(icon,visible and not self.held,words,sub)end
+end
+-- The v3 brief's parked chip (made with the bubble when it is first wanted).
+function Hold:chip(on)
+	if on and not self.real then self.real=self.make()end
+	if self.real and self.real.chip then self.real:chip(on)end
 end
 function Hold:hop()if self.real then self.real:hop()end end
 function Hold:press()if self.real then self.real:press()end end
 function Hold:step(dt)
 	if self.want and self.real then
 		local held=self:holding()
-		if held~=self.held then self.held=held;self.real:set(self.icon,not held,self.words)end
+		if held~=self.held then self.held=held;self.real:set(self.icon,not held,self.words,self.sub)end
 	end
 	if self.real then self.real:step(dt)end
 end
