@@ -5,6 +5,15 @@
 -- when the switch goes off, and when a new trail starts. Reduced Motion: no fades.
 -- deps: world, root() -> position or nil, free() -> bool (still in the garden), busy() -> bool (a menu is up),
 --   compute(from, to) -> points or nil (yields), reduced() -> bool, plus now, spawn, ground(point) and step for specs.
+--   glow() -> bool (optional): Glow steps (ONBOARDING-V3-BRIEF section 2, switch Onboard "trail2"), read at each start.
+-- Glow steps: the prints are GlowSteps' glowing paws with the wave toward the target, a gold ring at the target, and:
+--   target.guide = true      a guide trail (its prompt is open): no Seconds end, and a menu or a trip out of the garden
+--                            hides it instead of ending it (it comes back after). The caller stops it (trail:stop).
+--   trail:leadBy(petModel)   when a pet leads: the route's prints hide and the pet's own pop in under its feet with a
+--                            soft `pat`, the player's steps pop them with 2 sparkles, at most 12. leadBy(nil) ends it.
+--   trail:leadHold(on)       lay no new prints while on (the pet runs back to the player); pops go on.
+--   trail.points             the dry way once laid (the route a leading pet can run along), else nil.
+-- With glow off (or deps.glow missing) every line below runs as before; leadBy returns false.
 local RunService=game:GetService("RunService")
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local World=require(Shared:WaitForChild("HollowWorldLayout"))
@@ -188,13 +197,27 @@ function Trail:ensure()
 	anchor.Parent=folder
 	self.folder,self.marker,self.plate,self.pin,self.pointer,self.pinStroke=folder,anchor,plate,gui,point,stroke
 end
--- target = {position, name}. True when the marker is up (the prints follow once the way is known).
+-- The switch for this trail, read when it starts.
+function Trail:glowOn()
+	local glow=self.d.glow
+	if type(glow)~="function"then return false end
+	local ok,value=pcall(glow)
+	return ok and value==true
+end
+-- target = {position, name, guide}. True when the marker is up (the prints follow once the way is known).
 function Trail:start(target)
 	self:stop("new")
 	local root=self.d.root()
 	if type(target)~="table"or typeof(target.position)~="Vector3"or not root or self.d.free()~=true then return false end
 	self:ensure()
 	self.target,self.age=target,0
+	self.glow=self:glowOn()
+	self.startedAt=self.now()
+	self.guide=self.glow and target.guide==true
+	if self.glow then
+		if not self.steps then self.steps=require(script.Parent.GlowSteps).new({parent=self.folder,play=self.d.play})end
+		self.steps:target(target.position)
+	end
 	-- target.pinAt: where the pin stands, when not over the end of the way (the Sleepy Nest landmark's: 8.2 over the
 	-- bowl's centre, while the prints end at its prompt). Default: 4 over the target.
 	local pinAt=if typeof(target.pinAt)=="Vector3"then target.pinAt else nil
@@ -230,6 +253,8 @@ end
 function Trail:lay(points)
 	self.folder:SetAttribute("Way","prints")
 	self.laidAt=self.age
+	self.points=points
+	if self.glow then self:layGlow(points);return end
 	local reduced=self.d.reduced~=nil and self.d.reduced()==true
 	for index,entry in ipairs(Trail.prints(points,Trail.Parts))do
 		local part=self.pool[index]
@@ -249,18 +274,97 @@ function Trail:lay(points)
 		table.insert(self.live,part)
 	end
 end
+-- Glow steps: the route's prints as GlowSteps paws (toes along the way), fading in one after the other.
+function Trail:layGlow(points)
+	local steps=self.steps
+	local count=0
+	for index,entry in ipairs(Trail.prints(points,Trail.Parts))do
+		local at=entry.position
+		local y=self.d.ground and self.d.ground(at)
+		if y and math.abs(y-at.Y)<=1.5 then at=Vector3.new(at.X,y,at.Z)end
+		-- entry.yaw turns a part's +Z along the way; the paw's toes are its -Z, so half a turn more.
+		steps:place(index,CFrame.new(at+Vector3.new(0,.04,0))*CFrame.Angles(0,entry.yaw+math.pi+steps.Glow.TopFaceYaw,0))
+		count=index
+	end
+	steps:show(count)
+	self.glowCount=count
+	self:stepGlow(0,Trail.Seconds)
+end
+-- A guide trail out of view (a menu, a trip out of the garden): hidden, kept, back when it can show again.
+function Trail:hideGuide(hidden)
+	if self.hidden==hidden then return end
+	self.hidden=hidden
+	if self.folder then self.folder.Parent=if hidden then nil else(self.d.world or workspace)end
+end
+-- Glow steps each step: the fade in (and out, unless a guide), the wave, the ring, and a leading pet's prints.
+function Trail:stepGlow(since,left)
+	local steps=self.steps
+	if not steps then return end
+	local reduced=self.d.reduced~=nil and self.d.reduced()==true
+	local now=self.now()
+	if self.leader then
+		local model=self.leader
+		local pet=nil
+		if typeof(model)=="Instance"and model.Parent~=nil then
+			local ok,pivot=pcall(model.GetPivot,model)
+			if ok and pivot then pet=pivot.Position end
+		end
+		steps:leadStep(now,pet,self.d.root(),reduced,function(at)return self:groundUnder(at)end)
+	elseif self.glowCount then
+		local out=if self.guide then 1 else math.clamp(left/Trail.FadeOut,0,1)
+		for index=1,self.glowCount do
+			local shown=if reduced then 1 else math.clamp((since-index*Trail.FadeLag)/Trail.FadeIn,0,1)*out
+			steps:fade(index,1-shown)
+		end
+	end
+	steps:animate(now-(self.startedAt or now),reduced,workspace.CurrentCamera)
+end
+-- Under a leading pet: the ground with the pet and everyone's characters left out (one ray a print, not a frame).
+function Trail:groundUnder(at)
+	if self.d.groundUnder then return self.d.groundUnder(at,self.leader)end
+	local params=self.leadParams
+	if not params then params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;self.leadParams=params end
+	local skip={self.leader}
+	for _,other in ipairs(game:GetService("Players"):GetPlayers())do if other.Character then table.insert(skip,other.Character)end end
+	params.FilterDescendantsInstances=skip
+	local hit=workspace:Raycast(at+Vector3.new(0,2.5,0),Vector3.new(0,-7,0),params)
+	return hit and hit.Position.Y
+end
+-- When a pet leads (glow only): the pet's own prints instead of the route's. nil ends it. True when it took.
+function Trail:leadBy(model)
+	if not self.glow or not self.target or not self.steps then return false end
+	if model~=nil and typeof(model)~="Instance"then return false end
+	self.leader=model
+	self.steps:lead(model~=nil)
+	return true
+end
+function Trail:leadHold(on)
+	if self.steps then self.steps:hold(on)end
+end
 function Trail:step(dt)
 	local target=self.target
 	if not target then return end
 	self.age+=dt
 	local root=self.d.root()
-	if not root or self.d.free()~=true then self:stop("left");return end
-	if self.age>Trail.MenuGrace and self.d.busy()==true then self:stop("menu");return end
+	if not root or self.d.free()~=true then
+		if self.guide then self:hideGuide(true);return end
+		self:stop("left");return
+	end
+	if self.age>Trail.MenuGrace and self.d.busy()==true then
+		if self.guide then self:hideGuide(true);return end
+		self:stop("menu");return
+	end
+	if self.guide then self:hideGuide(false)end
 	local distance=flat(root,target.position)
 	local near=distance<=Trail.Arrive
 	if near and(not self.spot or self.age>=Trail.Near)then self:stop("arrived");return end
 	self:paintPin(distance)
 	local left=Trail.Seconds-self.age
+	if self.glow then
+		if left<=0 and not self.guide then self:stop("time");return end
+		self:stepGlow(if self.laidAt then self.age-self.laidAt else 0,left)
+		return
+	end
 	if left<=0 then self:stop("time");return end
 	local reduced=self.d.reduced~=nil and self.d.reduced()==true
 	local since=if self.laidAt then self.age-self.laidAt else 0
@@ -289,6 +393,8 @@ function Trail:stop(reason)
 	if self.connection then self.connection:Disconnect();self.connection=nil end
 	local was=self.target~=nil
 	self.target,self.laidAt,self.painted,self.spot=nil,nil,nil,nil
+	self.points,self.leader,self.glowCount,self.guide,self.hidden=nil,nil,nil,nil,nil
+	if self.steps then self.steps:lead(false);self.steps:hold(false);self.steps:show(0);self.steps:target(nil)end
 	for _,part in ipairs(self.live)do part.Parent=nil end
 	table.clear(self.live)
 	if self.folder then self.folder.Parent=nil end
@@ -299,6 +405,7 @@ function Trail:destroy()
 	self:stop("destroy")
 	for _,part in ipairs(self.pool)do part:Destroy()end
 	table.clear(self.pool)
+	if self.steps then self.steps:destroy();self.steps=nil end
 	if self.folder then self.folder:Destroy();self.folder=nil end
 end
 return Trail

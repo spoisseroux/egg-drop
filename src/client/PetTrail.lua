@@ -4,6 +4,9 @@
 -- chip on the screen edge on the pet's side. It shows with G1's say-hi line (CoachCards.trailDue) and goes on the
 -- first hello, after 30 s, or when a menu, a machine or the deck opens. Client only, pooled parts, no remotes.
 -- The top half is pure (spec-checked offline); the view below builds the parts on first use.
+-- Glow steps (ONBOARDING-V3-BRIEF section 2, switch Onboard "trail2", read once per trail at start): the prints, ring
+-- and wave are GlowSteps (Shared.TrailGlow's numbers), the chip pulses with the wave, and it is a guide trail: no 30 s
+-- end, hidden (not ended) while a menu or the deck is up. Off: everything below exactly as before.
 local Trail={}
 Trail.__index=Trail
 Trail.Size=1.1          -- print size, studs
@@ -122,6 +125,24 @@ function Trail.edge(size,point,inset)
 	return{x=cx+dx*k,y=cy+dy*k,angle=math.deg(math.atan2(dy,dx))}
 end
 
+-- The switch for one trail: options.glow (a boolean or a function), read when the trail starts.
+function Trail.glowOn(options)
+	local glow=options and options.glow
+	if type(glow)=="function"then
+		local ok,value=pcall(glow)
+		return ok and value==true
+	end
+	return glow==true
+end
+-- Why the trail ends now, as endReason, for a trail drawn with `glow` (a guide trail: "hide" while a menu or the deck
+-- is up, no time end; the first hello still ends it). Without glow: endReason exactly.
+local GlowRules
+function Trail.endsFor(age,ctx,glow)
+	if not glow then return Trail.endReason(age,ctx)end
+	GlowRules=GlowRules or require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("TrailGlow"))
+	return GlowRules.guideEnd(Trail.endReason(0,ctx),true)
+end
+
 -- ── View ────────────────────────────────────────────────────────────────────
 
 local function part(parent,name,size)
@@ -180,9 +201,12 @@ function Trail:build()
 	local ring,ringStroke=circle("Ring",6,.1)
 	local ripple,rippleStroke=circle("Ripple",4,1)
 	self.ring={part=ringPart,surface=surface,ring=ring,ringStroke=ringStroke,ripple=ripple,rippleStroke=rippleStroke,span=span}
-	-- The screen-edge chip: a round raised disc with the paw in the companions tint and a small pointer.
+	self:buildChip(Kit)
+end
+-- The screen-edge chip: a round raised disc with the paw in the companions tint and a small pointer.
+function Trail:buildChip(Kit)
 	local gui=self.options.gui
-	if gui then
+	if gui and not self.chip then
 		local chip=Instance.new("Frame");chip.Name="PetTrailChip";chip.AnchorPoint=Vector2.new(.5,.5);chip.Size=UDim2.fromOffset(Trail.Chip,Trail.Chip)
 		chip.BackgroundColor3=Kit.color("raised");chip.BorderSizePixel=0;chip.Visible=false;chip.Active=false;chip.ZIndex=30;round(chip)
 		chip.Parent=gui
@@ -193,8 +217,23 @@ function Trail:build()
 		self.chip,self.pointer=chip,pointer
 	end
 end
+-- Glow steps: the GlowSteps pool and the chip (with a UIScale for its pulse); the old prints and ring are never built.
+function Trail:buildGlow()
+	if self.steps then return end
+	local Kit=require(script.Parent.DeckKit)
+	local Steps=require(script.Parent.GlowSteps)
+	local folder=Instance.new("Folder");folder.Name="PetTrailPresentation";folder.Parent=workspace
+	self.glowFolder=folder
+	self.steps=Steps.new({parent=folder,play=self.options.play})
+	self:buildChip(Kit)
+	if self.chip and not self.chipScale then
+		local grow=Instance.new("UIScale");grow.Parent=self.chip
+		self.chipScale=grow
+	end
+end
 function Trail:start(now)
-	self:build()
+	self.glow=Trail.glowOn(self.options)
+	if self.glow then self:buildGlow()else self:build()end
 	self.active,self.leaving,self.startedAt,self.drawn=true,nil,now,nil
 	self.count=0
 end
@@ -204,16 +243,21 @@ function Trail:stop(now)
 	self.leaving=now
 	if self.chip then self.chip.Visible=false end
 	if self.ring then self.ring.surface.Enabled=false end
+	if self.steps then self.steps:target(nil)end
 end
 function Trail:hideAll()
 	for _,p in ipairs(self.prints)do p.surface.Enabled=false end
 	if self.ring then self.ring.surface.Enabled=false end
 	if self.chip then self.chip.Visible=false end
+	if self.steps then self.steps:hide()end
 end
+-- Why this trail ends now (Trail.endsFor with its own switch): "hide" only for a glow trail.
+function Trail:ends(age,ctx)return Trail.endsFor(age,ctx,self.glow==true)end
 -- ctx: {player (feet Vector3), pet (ground Vector3), visible (the garden is free to show it), camera, viewport
 -- (Vector2), reducedMotion, ground (function(x, z, lineY) -> hit table or nil)}. Returns false once fully gone.
 function Trail:step(now,ctx)
 	if not self.active then return false end
+	if self.glow then return self:stepGlow(now,ctx)end
 	if self.leaving then
 		local age=now-self.leaving
 		for i=1,self.count do
@@ -270,9 +314,52 @@ function Trail:step(now,ctx)
 	end
 	return true
 end
+-- Glow steps: the same draw (where, when it redraws, the chip's place) through GlowSteps, the wave and the pulse.
+function Trail:stepGlow(now,ctx)
+	local steps=self.steps
+	if self.leaving then
+		local age=now-self.leaving
+		for i=1,self.count do steps:fade(i,Trail.fade(age,i,self.count))end
+		if age>=Trail.FadeTime then self.active=false;self:hideAll();return false end
+		return true
+	end
+	if not ctx.visible or not ctx.player or not ctx.pet then self:hideAll();self.drawn=nil;return true end
+	local t=now-self.startedAt
+	if Trail.moved(self.drawn,ctx.player,ctx.pet)then
+		self.drawn={player=ctx.player,pet=ctx.pet}
+		local list=Trail.prints(ctx.player,ctx.pet)
+		local heading=Trail.heading(ctx.player,ctx.pet)
+		local count=0
+		for _,print in ipairs(list)do
+			local hit=ctx.ground and ctx.ground(print.position.X,print.position.Z,print.lineY)
+			if hit then
+				count+=1
+				steps:place(count,Trail.frame(hit.position+Vector3.new(0,.03,0),heading,hit.normal)*CFrame.Angles(0,Trail.TopFaceYaw,0))
+			end
+		end
+		steps:show(count)
+		self.count=count
+		steps:target(ctx.pet)
+	end
+	local count=steps:animate(t,ctx.reducedMotion==true,ctx.camera)
+	if self.chip and ctx.camera and ctx.viewport then
+		local point=ctx.camera:WorldToViewportPoint(ctx.pet+Vector3.new(0,1,0))
+		local edge=Trail.edge(ctx.viewport,point)
+		self.chip.Visible=edge~=nil
+		if edge then
+			self.chip.Position=UDim2.fromOffset(edge.x,edge.y)
+			local a=math.rad(edge.angle);local r=Trail.Chip/2
+			self.pointer.Position=UDim2.fromOffset(r+math.cos(a)*r,r+math.sin(a)*r)
+			if self.chipScale then self.chipScale.Scale=steps.Glow.chip(t,count,ctx.reducedMotion==true)end
+		end
+	end
+	return true
+end
 function Trail:destroy()
 	self.active=false
 	if self.folder then self.folder:Destroy();self.folder=nil end
+	if self.steps then self.steps:destroy();self.steps=nil end
+	if self.glowFolder then self.glowFolder:Destroy();self.glowFolder=nil end
 	if self.chip then self.chip:Destroy();self.chip=nil end
 	self.prints={};self.ring=nil
 end

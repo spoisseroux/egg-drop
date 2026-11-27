@@ -76,6 +76,7 @@ Beta (33), 2026-11-26: player scale (row 60). Beta (32), 2026-11-26: the first e
 
 | # | Piece | Status | What to try |
 |---|---|---|---|
+| 65 | **Glow steps: every trail glows and pulses toward where it leads** (ONBOARDING-V3-BRIEF section 2) | Built offline (worktree branch), not on the beta | Garden at night and day: the paw prints to your pet after the hatch and every Things to do Show me trail are bigger cream paws with a soft gold ring, readable at night; a wave runs along them toward the target every 1.2 s, the target has a gold ring that ripples as the wave lands, and the pet's screen-edge chip pulses with it. The pet trail no longer ends after 30 s; a menu or the deck hides it and it comes back. Reduced Motion: no swell or ripple, the prints breathe. Switch: `/onboard trail2 off` is today's trails. The Bear's lead to the nest (its own prints popping in under its feet, `pat` tick, sparkles where you step) arrives with the `lead` slice. |
 
 ## Scoped, not built
 
@@ -90,7 +91,7 @@ World pass (`WORLD-PASS-2026-11-22.md`): 1-hour garden day/night, crowns swaying
 
 ## Known stand-ins and gaps
 
-Sparkle and pop sound are placeholders; no pet sniff on finds; no pet reaction to birds; bubble and wing sounds not made; Garden Dash has no ghost, cup or art; translations exported, not synced (synced at the next live publish).
+Sparkle and pop sound are placeholders; the glow steps' `pat` tick is the `desc_tick` placeholder pitched up; no pet sniff on finds; no pet reaction to birds; bubble and wing sounds not made; Garden Dash has no ghost, cup or art; translations exported, not synced (synced at the next live publish).
 
 ## Before any of this goes live (not yours to test; listed so nothing is forgotten)
 
