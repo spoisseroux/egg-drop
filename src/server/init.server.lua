@@ -1618,6 +1618,8 @@ local function onBoardRequest(player, action, value, sticker)
 		-- value = {kind = "start", route = {Vector3...}} (the trail route from the pet to the nest's prompt), or "back"
 		-- (a nudge), "stop" (paused, parked, done) or "cheer" (the jump-spin; also with `allset2`).
 		if type(value)~="table"or type(value.kind)~="string"then return end
+		-- a stop always ends the lead, whatever the switches say now (ConfigService may turn `lead` off mid-lead)
+		if value.kind=="stop"then garden:leadEnd(player.UserId);return end
 		local Lead=require(ReplicatedStorage.Shared.PetLead)
 		local okOn,leadOn,allSetOn=pcall(function()
 			local Onboard=require(ReplicatedStorage.Shared.Onboard)
@@ -1632,7 +1634,6 @@ local function onBoardRequest(player, action, value, sticker)
 			return
 		end
 		if not leadOn then return end
-		if kind=="stop"then garden:leadEnd(player.UserId);return end
 		-- each kind at most once every Asks.gap s, and a bounded number of starts a session
 		if kind~="back"and kind~="start"then return end
 		board.leadAskAt=board.leadAskAt or {}
@@ -1652,7 +1653,9 @@ local function onBoardRequest(player, action, value, sticker)
 		local nest=Corner.nestSpot()
 		local skip={}
 		for _,other in ipairs(Players:GetPlayers())do if other.Character then table.insert(skip,other.Character)end end
+		-- water is hit (IgnoreWater false) so the ground below refuses it: no route point, and so no poof, on water
 		local groundParams=RaycastParams.new();groundParams.RespectCanCollide=true;groundParams.FilterType=Enum.RaycastFilterType.Exclude
+		groundParams.IgnoreWater=false
 		groundParams.FilterDescendantsInstances=skip
 		local skipSolid=table.clone(skip);table.insert(skipSolid,workspace.Terrain)
 		local solidParams=RaycastParams.new();solidParams.RespectCanCollide=true;solidParams.FilterType=Enum.RaycastFilterType.Exclude
@@ -1663,7 +1666,8 @@ local function onBoardRequest(player, action, value, sticker)
 		local points=Lead.clean(raw,{pet=pet,nest=nest,
 			ground=function(p)
 				local hit=workspace:Raycast(p+Vector3.new(0,Lead.Route.ground,0),Vector3.new(0,-Lead.Route.ground*2,0),groundParams)
-				return hit and hit.Position.Y
+				if not hit or hit.Material==Enum.Material.Water then return nil end
+				return hit.Position.Y
 			end,
 			-- a fence, a wall or a prop between two route points at the pet's body height (the ground is not one)
 			clear=function(a,b)

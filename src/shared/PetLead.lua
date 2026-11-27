@@ -95,6 +95,46 @@ function Lead.simplify(points,turn,gap)
 	table.insert(out,points[n])
 	return out
 end
+-- Pure (the client, before it sends): the trail's route (pathfinding's points about 4 studs apart, a bridge's two ends
+-- the span's length apart) made to fit the server's caps (Route.max points, Route.step studs a leg): the ends of every
+-- long leg (a bridge) kept, fewer corners, then any leg over the step cut into even pieces. Coarser passes follow
+-- until it fits; nil when even the coarsest does not (Route.length still refuses a route too long to lead along).
+Lead.Fit=table.freeze({turn=math.rad(15),gap=12,long=8,rise=1,margin=1})
+function Lead.fit(points)
+	local R,F=Lead.Route,Lead.Fit
+	if type(points)~="table"or #points<2 then return nil end
+	for _,p in ipairs(points)do if not vec(p)then return nil end end
+	local n=#points
+	local keep={[1]=true,[n]=true}
+	for i=2,n do if flat(points[i-1],points[i])>F.long then keep[i-1]=true;keep[i]=true end end
+	local cap=R.step-F.margin
+	local function pass(turn,gap,rise)
+		local out={points[1]}
+		local since=0
+		for i=2,n-1 do
+			local a,b,c=out[#out],points[i],points[i+1]
+			since+=flat(points[i-1],b)
+			local u=Vector2.new(b.X-a.X,b.Z-a.Z);local v=Vector2.new(c.X-b.X,c.Z-b.Z)
+			local bend=0
+			if u.Magnitude>1e-3 and v.Magnitude>1e-3 then bend=math.acos(math.clamp(u.Unit:Dot(v.Unit),-1,1))end
+			if keep[i]or bend>turn or since>=gap or math.abs(c.Y-a.Y)>rise then table.insert(out,b);since=0 end
+		end
+		table.insert(out,points[n])
+		local spaced={out[1]}
+		for i=2,#out do
+			local a,b=out[i-1],out[i]
+			local parts=math.max(1,math.ceil(flat(a,b)/cap))
+			for k=1,parts-1 do table.insert(spaced,a:Lerp(b,k/parts))end
+			table.insert(spaced,b)
+		end
+		return spaced
+	end
+	for _,try in ipairs({{F.turn,F.gap,F.rise},{F.turn*2,F.gap*1.5,F.rise*2},{F.turn*3,cap,R.ground},{math.pi,cap,math.huge}})do
+		local out=pass(try[1],try[2],try[3])
+		if #out<=R.max then return out end
+	end
+	return nil
+end
 -- Pure (the server's check of the client's route). raw: the route the client sent (Vector3s from the pet to the nest's
 -- prompt). ctx: {pet (the pet's position now), nest (where the nest stands), ground(point) -> y or nil, clear(a, b) ->
 -- true when nothing solid stands between the two at the pet's body height}. Returns the grounded points, or nil and why.

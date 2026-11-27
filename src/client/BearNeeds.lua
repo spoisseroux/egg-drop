@@ -243,6 +243,9 @@ function Needs:tap()
 	local icon=Needs.icon(id,self.f)
 	if id=="needHi"then return self.d.sayHi()==true end
 	if icon=="deck"then return self.d.playDeck()==true end
+	-- the lead's 2a ("Follow {pet}!"): the pet's own prints are the way; a tap (or G) only hops the bubble and chirps,
+	-- never today's Show me trail on top of the lead's (beta 38 review C6)
+	if id=="needNest"and self.leadStage=="follow"then bubble:hop();self.d.chirp();return true end
 	local where=Needs.target(id,self.f)
 	local again=self.trail~=nil and self.d.trailActive()==true and self.d.trailTarget~=nil and self.d.trailTarget()==self.trail
 		and self.trail.name~=nil and select(2,self.d.place(where))==self.trail.name
@@ -410,6 +413,7 @@ function Needs:step(now,dt)
 		view=nestLead:step(now,dt,{shown=leading,blocked=if leading then nil else(blocked or "rest")})
 		if view and view.stage=="parked"then show=false end
 	elseif nestLead and nestLead.parked then nestLead:step(now,dt,{shown=true})end
+	self.leadStage=view and view.stage or nil
 	self.bubbleOn=if view and view.on=="nest"then "nest"else "pet"
 	if d.bubble.chip then d.bubble:chip(nestLead~=nil and nestLead.parked==true and not Needs.closed("needNest",f))end
 	if show and self.guide then

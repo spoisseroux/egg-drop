@@ -603,6 +603,11 @@ function Garden:leadStep(actor,input,position,now)
     if Lead.flat(position,input.position)>Lead.MaxGap then
         actor.lead=nil;actor.idleSince=now;self:transition(actor,"follow",input.anchor,.6);return
     end
+    -- arrived at the nest, or lost and waiting by the owner, while the owner walks off (the client stopped asking): the
+    -- lead ends past Lead.Far and it follows (beta 38 review C2)
+    if(lead.phase=="arrive"or lead.lost)and Lead.flat(position,input.position)>Lead.Far then
+        actor.lead=nil;actor.idleSince=now;self.dirty=true;self:transition(actor,"follow",input.anchor,.6);return
+    end
     local nest=lead.nest or lead.goal
     -- poofed off its route: it waits by the owner for the client's new route (never a run off the route)
     local next=if lead.lost then nil else Lead.decide(lead,{now=now,pet=position,owner=input.position,goal=lead.goal,moving=now<actor.endTime})

@@ -51,6 +51,8 @@ function NestLead:start(now,from,nest)
 	local function done(points)
 		if self.gen~=mine then return end
 		self.planning=false
+		-- the trail's raw route thinned and re-spaced to the server's caps (Lead.fit: bridge ends kept)
+		if type(points)=="table"then points=Lead.fit(points)end
 		if type(points)~="table"or #points<2 then self:failed(self.now or now);return end
 		self.askedAbove=self.seenSeq
 		self:send("start",{route=points})
@@ -155,6 +157,14 @@ function NestLead:step(now,dt,ctx)
 		-- arrived: the pet's prints end with the trail (trail:leadBy(nil) and stop); 2b shows on the nest
 		self.holdAt,self.sawBack=nil,nil
 		if d.trail then d.trail:stop()end
+		-- a lead the server has not taken (planning, or sent and unanswered) or one lost by the player (waiting there
+		-- for a route that never comes now) ends: the pet follows. One that runs or waits on its route arrives by itself.
+		local held=self:serverLead()
+		if self.planning or(self.leading and(not self.acked or(held and held.lost)))then
+			self.gen+=1;self.planning=false
+			if self.leading then self:send("stop")end
+			self.leading,self.acked=false,false
+		end
 	end
 	local speed=0
 	if typeof(root)=="Vector3"and typeof(self.lastRoot)=="Vector3"and(dt or 0)>0 then speed=Lead.flat(root,self.lastRoot)/dt end

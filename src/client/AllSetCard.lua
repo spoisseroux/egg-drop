@@ -82,16 +82,29 @@ local function node(class,parent,props)
 	for k,v in pairs(props or {})do n[k]=v end
 	n.Parent=parent;return n
 end
+local build
+-- The card, or nil when building it threw: then nothing is left on screen (no full-screen tap catcher swallowing taps).
 function Card.show(parent,deps)
 	deps=deps or {}
+	local gui=node("ScreenGui",parent,{Name="EggDropAllSet2",ResetOnSpawn=false,DisplayOrder=14,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,
+		ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,IgnoreGuiInset=false})
+	local self=setmetatable({gui=gui,open=true,t=0,deps=deps},Card)
+	local ok,problem=pcall(build,self,gui,deps)
+	if not ok then
+		warn("[AllSet] build: "..tostring(problem))
+		self.open=false
+		if self.link then pcall(function()self.link:Disconnect()end)end
+		if self.action then pcall(function()game:GetService("ContextActionService"):UnbindAction(self.action)end)end
+		pcall(function()gui:Destroy()end)
+		return nil
+	end
+	return self
+end
+build=function(self,gui,deps)
 	local RunService=game:GetService("RunService")
 	local ContextActionService=game:GetService("ContextActionService")
 	local copy=function(key,vars)local ok,t=pcall(deps.copy,key,vars);return if ok and type(t)=="string"then t else ""end
 	local reduced=deps.reduced~=nil and deps.reduced()==true
-	local gui=node("ScreenGui",parent,{Name="EggDropAllSet2",ResetOnSpawn=false,DisplayOrder=14,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,
-		ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,IgnoreGuiInset=false})
-	local self=setmetatable({gui=gui,open=true,t=0,deps=deps},Card)
-	local hit=node("TextButton",gui,{Name="TapToClose",Text="",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),AutoButtonColor=false,ZIndex=1})
 	-- the rising bubbles and confetti
 	local rise=node("Frame",gui,{Name="Rise",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=2,Active=false})
 	self.bits={}
@@ -174,6 +187,8 @@ function Card.show(parent,deps)
 		if deps.next then pcall(deps.next)end
 	end)
 	local function tryClose()if Card.closable(self.t)then self:close()end end
+	-- the full-screen tap catcher last (under everything: ZIndex 1), once the rest is built
+	local hit=node("TextButton",gui,{Name="TapToClose",Text="",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),AutoButtonColor=false,ZIndex=1})
 	hit.Activated:Connect(tryClose)
 	card.InputBegan:Connect(function(input)
 		if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then tryClose()end
@@ -191,7 +206,6 @@ function Card.show(parent,deps)
 		last=self.t
 		if not good then warn("[AllSet] "..tostring(problem));self:close()end
 	end)
-	return self
 end
 function Card:step(dt,last,reduced)
 	self.t+=dt
