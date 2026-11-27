@@ -117,6 +117,8 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           "DeckNetFeel",
           # Onboarding v2 (qa-2026-11-26-beta35/ONBOARDING-V2.md): the five steps' rules, the safe reveal card.
           "OnboardV2", "RevealLayout", "EggCrackPaths",
+          # Onboarding v3 section 5 (qa-2026-11-27-beta37/ONBOARDING-V3-BRIEF.md, Onboard "deck2"): the cuter Welcome deck.
+          "OnboardDeck2",
           # AERO-JUICE-BRIEF 1 and 2: the Aero Glass palette and shading, the Pocket Deck juice pass, the UI counters.
           "AeroJuice"]
 SPECS += CLIENT

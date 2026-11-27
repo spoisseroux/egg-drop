@@ -30,7 +30,7 @@ return function(client)
 			assert(table.find(Onboard.Features,name),name)
 			assert(Onboard.attribute(name)=="Onboard_"..name and Onboard.key(name)=="onboard_"..name,name)
 		end
-		assert(#Onboard.Features==13,"appended, nothing renumbered")
+		assert(Onboard.Features[13]=="guide"and #Onboard.Features>=13,"appended, nothing renumbered") -- v3 appends after (deck2)
 		V2.read=function()return false end
 		for _,name in ipairs({"egg3d","stork","safecard","guide"})do assert(not V2.on(name),name)end
 		V2.read=function(name)return name=="guide"end

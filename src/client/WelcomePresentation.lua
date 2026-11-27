@@ -175,7 +175,9 @@ function View:update(snapshot)
 	if s.combo==true and not self.egg3d and coach and coach.Name=="Goals"and V2.on("egg3d")then
 		local ok,egg=pcall(function()
 			return require(script.Parent.WelcomeEgg3D).new(self.hosts.meter,self.hosts.skip.Parent,{copy=self.d.copy,play=self.d.play,
-				reduced=function()return self.snapshot~=nil and self.snapshot.reduced==true end})
+				reduced=function()return self.snapshot~=nil and self.snapshot.reduced==true end,
+				-- onboarding v3 section 5 (Onboard "deck2"): the cuter deck, read once for this round's egg
+				deck2=V2.deck2On(),sparkLayer=self.d.sparkLayer,wellRect=self.d.wellRect,scale=self.d.scale})
 		end)
 		if ok then self.egg3d=egg else warn("[Onboard] egg3d: "..tostring(egg))end
 	end
@@ -191,7 +193,12 @@ function View:update(snapshot)
 end
 function View:input()self.interacted=true;self.ghost.Visible=false;self.glyph.Visible=false end
 -- A merge at `from` (absolute screen pixels), in `color`. Only the showing egg takes it; false when nothing flies.
-function View:spark(from,color,pitch)
+-- chain, tier: the server's chain count and the merged tier. With deck2 (onboarding v3 section 5) a combo's merge
+-- (chain 1, the one the server counts) sends its spark to the next pip instead (WelcomeDeck2).
+function View:spark(from,color,pitch,chain,tier)
+	if self.alive and chain==1 and self.egg3d and self.egg3d.deck2 and self.egg3d.shown then
+		return self.egg3d:comboSpark(from,tier)
+	end
 	local egg3d=self.egg3d~=nil and self.egg3d.shown
 	if not self.alive or not self.active or not(self.egg.Visible or egg3d)or typeof(from)~="Vector2"then return false end
 	if self.snapshot and self.snapshot.reduced then return false end

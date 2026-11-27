@@ -3581,18 +3581,20 @@ do
    local gui=player.PlayerGui:FindFirstChild("EggDropWelcomeSparks")
    if not gui then gui=make("ScreenGui","EggDropWelcomeSparks",{ResetOnSpawn=false,DisplayOrder=11,IgnoreGuiInset=false,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},player.PlayerGui)end
    return gui
-  end}
+  end,
+  -- Onboarding v3 section 5 (WelcomeDeck2): the board's well on screen, for the combo words over it.
+  wellRect=function()return viewport.AbsolutePosition,viewport.AbsoluteSize end}
  -- Set before RoomView can start the initial deck boot, not on its first frame.
  clientUI.deck.boot.maxMs=if(board:GetAttribute("OwnedPets")or 0)==0 then 1200 else nil
  local legacy=Welcome.new({meter=meter,gesture=legacyGesture,skip=legacySkip},dependencies)
  -- The First Hatch (Onboard "opener"): a Welcome merge sends a spark in its tier's colour to the egg.
- clientUI.welcomeSpark=function(position,tier)
+ clientUI.welcomeSpark=function(position,tier,chain)
   if type(board:GetAttribute("WelcomeComboTarget"))~="number"or(board:GetAttribute("OwnedPets")or 0)>0 or clientUI.attr("FieldPhase")~="Welcome"then return end
   local at=viewport.AbsolutePosition+project(position)
   local palette=clientUI.JellyPalette.byTier[tier]
   local pitch=1.1+.1*(tonumber(tier)or 1)
-  if clientUI.deck.welcomeView then clientUI.deck.welcomeView:spark(at,palette and palette.body,pitch)end
-  legacy:spark(at,palette and palette.body,pitch)
+  if clientUI.deck.welcomeView then clientUI.deck.welcomeView:spark(at,palette and palette.body,pitch,chain,tier)end
+  legacy:spark(at,palette and palette.body,pitch,chain,tier)
  end
  local context={}
  clientUI.welcomeInput=function()
@@ -4583,7 +4585,7 @@ table.insert(rendererPresentation.connections,feedback.OnClientEvent:Connect(fun
  if clientUI.boardNet.active()then clientUI.netScoreKick()end
  if late>clientUI.boardNet.LateLimit or not rendererPresentation.canPresent(serial)then clientUI.ballFaces:merged(id,os.clock());return end
  local now=os.clock()
- if clientUI.welcomeSpark then clientUI.welcomeSpark(position,tier)end
+ if clientUI.welcomeSpark then clientUI.welcomeSpark(position,tier,chain)end
  if predicted then
   -- The blob, burst, jolt and merge sound played at the prediction: only the score popup
   -- and the chain accent (the server's chain) remain.

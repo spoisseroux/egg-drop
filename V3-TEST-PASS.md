@@ -76,6 +76,7 @@ Beta (33), 2026-11-26: player scale (row 60). Beta (32), 2026-11-26: the first e
 
 | # | Piece | Status | What to try |
 |---|---|---|---|
+| - | **Onboarding v3 section 5: the cuter Welcome deck** (`ONBOARDING-V3-BRIEF.md` 5, switch `/onboard deck2`, needs `egg3d`) | Built on the worktree branch, offline specs pass; not looked at in Studio | `/freshsave`, then the Welcome round: the left card is a glass sky with bubbles and a looping picture (a ball drops and squashes; two balls bump into a bigger one; a big gold 2 then 1), the line punches on each change. The egg card is sky over a grass arc with a shadow; the egg knocks from inside, faster as combos land. Each combo's spark arcs to its egg pip, the pip pops with a ring, the border flashes, "Nice!", "So close!", "It's hatching!" over the well; combo 3's pips fly into the egg, a light sweep, then the tuck. Try a phone (812 x 354) and Reduced Motion. `/onboard deck2 off` = beta (37). |
 
 ## Scoped, not built
 
