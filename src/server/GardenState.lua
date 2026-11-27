@@ -33,6 +33,7 @@ function Garden:transition(actor,behavior,target,duration,action,actionId,via,pr
     local now=self.options.now();local sample=Activity.sample(actor,now)
     local from=sample and sample.position or self.inputs[actor.ownerId].anchor
     local continuing=actor.behavior==behavior and actor.action==action and behavior=="follow"
+    if action~="firstStand"then actor.standUntil=nil end -- any other action ends the first hatch's stand
     local previousTarget=Activity.vector(actor.to)
     if not continuing then actor.generation+=1 end
     actor.behavior,actor.action=behavior,action
@@ -153,8 +154,10 @@ function Garden:sync(inputs,freshOwnerId)
         if distance(actor.lastOwner,input.position)>.65 then
             actor.lastOwner,actor.idleSince=input.position,self.options.now()
             actor.wanderCount,actor.nextWanderAt=0,nil
-            -- Park pets stay in the playground while their owner walks around the kerb.
-            if actor.mode=="Room" and actor.behavior~="follow" and not actor.park and not actor.dash then self:release(actor);self:transition(actor,"follow",input.anchor,.5) end
+            -- Park pets stay in the playground while their owner walks around the kerb. The first hatch's stand
+            -- (Garden:stand) holds until its beat is over.
+            local standing=actor.standUntil~=nil and self.options.now()<actor.standUntil
+            if actor.mode=="Room" and actor.behavior~="follow" and not actor.park and not actor.dash and not standing then self:release(actor);self:transition(actor,"follow",input.anchor,.5) end
         end
         if actor.care and self.care then self.care:tick(actor,input)end
     end
@@ -211,10 +214,10 @@ function Garden:greeting(now,ordered)
         local i=((self.greetingCursor or 0)+offset-1)%#ordered+1
         local first=ordered[i]
         -- Park pets greet only through the park director (6 s cadence, 45 s per pair).
-        if first.mode~="Room" or first.pairId or first.park or first.dash or(first.behavior~="follow" and first.behavior~="rest") then continue end
+        if first.mode~="Room" or first.pairId or first.park or first.dash or first.action=="firstStand" or(first.behavior~="follow" and first.behavior~="rest") then continue end
         for delta=1,#ordered-1 do
             local second=ordered[(i+delta-1)%#ordered+1]
-            if second.mode~="Room" or second.pairId or second.park or second.dash or(second.behavior~="follow" and second.behavior~="rest") then continue end
+            if second.mode~="Room" or second.pairId or second.park or second.dash or second.action=="firstStand" or(second.behavior~="follow" and second.behavior~="rest") then continue end
             local a,b=self:position(first,now),self:position(second,now)
             if distance(a,b)>9 then continue end
             -- Pets go up: never across floors (a pet on the cliff path and one on the lawn under it). nil: as before.
@@ -469,6 +472,27 @@ function Garden:carry(id,spot,leavePark)
     self:transition(actor,"rest",spot,Catchup.Rest,"catchup",nil,nil,{path=nil,duration=Catchup.Rest})
     actor.from=Activity.pack(spot);actor.to=Activity.pack(spot)
     actor.hop={seq=(actor.hop and actor.hop.seq or 0)+1,from=Activity.pack(position),why="passage"}
+    actor.catch={}
+    return true
+end
+-- Beta (37) note 1, the first hatch (Onboarding v2 "stork"): the Bear stands where its egg opened. The pet rests at
+-- `spot` facing `yaw` for `hold` seconds (at most StandMax), no path, no hop (nothing poofs: the client keeps it hidden
+-- until it is drawn there, where the story's own Bear stands), and an owner who moves during the hold does not pull it
+-- away (the owner-moved release in sync waits for standUntil). Then the rest ends and it follows as usual. A pet in
+-- the park, in care, racing, holding the toy or in Focus is refused (it stays where it is, as before).
+Garden.StandMax=10
+function Garden:stand(id,spot,yaw,hold)
+    local actor=self.actors[id]
+    if not actor or typeof(spot)~="Vector3"or not self.inputs[id]or type(hold)~="number"or hold~=hold then return false end
+    if actor.park or actor.care or actor.dash or actor.toyReservation or actor.mode~="Room"then return false end
+    hold=math.clamp(hold,.05,Garden.StandMax)
+    local now=self.options.now()
+    self:release(actor)
+    actor.idleSince=now+hold
+    self:transition(actor,"rest",spot,hold,"firstStand",nil,nil,{path=nil,duration=hold})
+    actor.from=Activity.pack(spot);actor.to=Activity.pack(spot)
+    actor.yaw=if type(yaw)=="number"and yaw==yaw then yaw else actor.yaw
+    actor.standUntil=now+hold
     actor.catch={}
     return true
 end

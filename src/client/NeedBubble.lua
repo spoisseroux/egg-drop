@@ -12,6 +12,10 @@
 --  * the bubble hangs on its own local anchor that follows the Bear on a spring (Bubble.follow): a move under Dead studs
 --    is ignored, a bigger one is chased smoothly until it is within Settle, a jump over Snap studs (a teleport) snaps;
 --  * a small key cap shows the keyboard or gamepad key (options.keyHint) that does the same as a tap.
+-- Beta (37) note 2 ("tuck the egg in ui thing doesnt constantly follow the pet, it like waits and then catches up"):
+-- that was the Dead zone and the spring above. The guide's worded bubble (Onboard "guide") is now pinned: the billboard
+-- hangs on the pet's own part (the engine places it every rendered frame, so it never trails even a frame behind the
+-- walk), its hop and the arrow's bounce on top. The icon-only bubble (guide off) keeps the spring, as before.
 -- The bubble is gamepad-selectable. Fades in and out, pops in with a small hop and hops on the idle hint; Reduced Motion:
 -- fades only, and the anchor follows at once (still ignoring small moves).
 -- options: {parent = PlayerGui, adornee() -> the pet's part or nil, onTap(), reduced() -> bool, keyHint() -> text or nil,
@@ -62,6 +66,8 @@ function Bubble.follow(state,target,dt,reduced)
 	return at
 end
 
+-- Pure (beta 37 note 2): does the bubble hang on the pet itself (words shown) rather than on the sprung anchor?
+function Bubble.pinned(words)return type(words)=="string"and words~=""end
 -- Pure (beta 14 B3b): does a screen tap at `tap` land on a bubble drawn round `centre` (both Vector2, px)?
 function Bubble.hits(tap,centre)
 	if typeof(tap)~="Vector2"or typeof(centre)~="Vector2"then return false end
@@ -156,7 +162,8 @@ function Bubble.new(options)
 			if processed or not self.shown or not self.gui.Enabled then return end
 			local camera=workspace.CurrentCamera
 			if not camera then return end
-			local point,onScreen=camera:WorldToViewportPoint(self.anchor.Position+self.gui.StudsOffsetWorldSpace)
+			local base=self.gui.Adornee or self.anchor
+			local point,onScreen=camera:WorldToViewportPoint(base.Position+self.gui.StudsOffsetWorldSpace)
 			if onScreen and point.Z>0 and Bubble.hits(Vector2.new(position.X,position.Y),Vector2.new(point.X,point.Y))then tapped()end
 		end)
 	end
@@ -269,9 +276,18 @@ function Bubble:step(dt)
 	local reduced=self:reduced()
 	-- A finger on the bubble holds it still, for a second at most (a lost InputEnded never pins it).
 	if self.holding and(not self.shown or os.clock()-self.holding.at>1)then self.holding=nil end
-	if adornee and not self.holding then
-		local at=Bubble.follow(self.spot,adornee.Position+Vector3.new(0,(self.top or 1.5)+Bubble.Lift,0),dt,reduced)
-		self.anchor.CFrame=CFrame.new(at)
+	local rise=0
+	if adornee and Bubble.pinned(self.wordText)then
+		-- pinned: on the pet's part, over its head (a finger on it never holds it back from the pet)
+		if self.gui.Adornee~=adornee then self.gui.Adornee=adornee end
+		self.spot.at,self.spot.chasing=nil,false
+		rise=(self.top or 1.5)+Bubble.Lift
+	else
+		if self.gui.Adornee~=self.anchor then self.gui.Adornee=self.anchor end
+		if adornee and not self.holding then
+			local at=Bubble.follow(self.spot,adornee.Position+Vector3.new(0,(self.top or 1.5)+Bubble.Lift,0),dt,reduced)
+			self.anchor.CFrame=CFrame.new(at)
+		end
 	end
 	local fade=if reduced then 1 else dt/Bubble.Fade
 	if self.alpha<self.target then self.alpha=math.min(self.target,self.alpha+fade)
@@ -285,7 +301,7 @@ function Bubble:step(dt)
 		local t=(self.time-self.hopAt)/Bubble.HopTime
 		if t>=1 or reduced then self.hopAt=nil else lift=math.sin(t*math.pi)*Bubble.HopHeight end
 	end
-	self.gui.StudsOffsetWorldSpace=Vector3.new(0,lift,0)
+	self.gui.StudsOffsetWorldSpace=Vector3.new(0,rise+lift,0)
 	if self.arrow.Visible then
 		local bounce=if reduced then 0 else Bubble.ArrowPx*(.5-.5*math.cos(self.time*Bubble.ArrowHz*math.pi*2))
 		self.arrow.Position=UDim2.new(.5,0,1,8+bounce)

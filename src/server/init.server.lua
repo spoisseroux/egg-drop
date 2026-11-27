@@ -1596,6 +1596,30 @@ local function onBoardRequest(player, action, value, sticker)
 		local ok,known=pcall(function()return require(ReplicatedStorage.Shared.Onboard).Events[value]==true end)
 		if type(value)=="string"and ok and known and board.firstSession and hasPet(board)then board.firstSession:record(value)end
 		return
+	elseif action=="firstStand"then
+		-- Beta (37) note 1: the first hatch's Bear stands where its egg opened (FirstHatchStory, Onboard "stork"), then
+		-- follows. Presentation only (GardenState:stand): a spot on solid ground near the owner, a few asks a session.
+		if type(value)~="table"or typeof(value.at)~="Vector3"or type(value.hold)~="number"or value.hold~=value.hold then return end
+		local okOn,storyOn=pcall(function()return require(ReplicatedStorage.Shared.Onboard).storyOn()end)
+		if not(okOn and storyOn)or not hasPet(board)or board.mode~="Room"or board.closing then return end
+		board.firstStands=(board.firstStands or 0)+1
+		if board.firstStands>4 then return end
+		local character=player.Character
+		local root=character and character:FindFirstChild("HumanoidRootPart")
+		local at=value.at
+		if not root or at.X~=at.X or at.Y~=at.Y or at.Z~=at.Z then return end
+		local flat=Vector3.new(at.X-root.Position.X,0,at.Z-root.Position.Z)
+		if flat.Magnitude>14 or math.abs(at.Y-root.Position.Y)>8 then return end
+		local params=RaycastParams.new();params.RespectCanCollide=true;params.FilterType=Enum.RaycastFilterType.Exclude
+		local skip={}
+		for _,other in ipairs(Players:GetPlayers())do if other.Character then table.insert(skip,other.Character)end end
+		params.FilterDescendantsInstances=skip
+		local hit=workspace:Raycast(at+Vector3.new(0,3,0),Vector3.new(0,-6,0),params)
+		if not hit or math.abs(hit.Position.Y-at.Y)>.6 then return end
+		local spot=Vector3.new(at.X,hit.Position.Y+.025,at.Z)
+		local toOwner=Vector3.new(root.Position.X-spot.X,0,root.Position.Z-spot.Z)
+		garden:stand(player.UserId,spot,if toOwner.Magnitude>.01 then math.atan2(toOwner.X,toOwner.Z)else nil,value.hold)
+		return
 	elseif action=="welcomeInput"then
 		if board.welcome and type(value)=="table"and value.sequence==board.runSequence and now-(board.welcomeInputAt or -math.huge)>=.1 then
 			board.welcomeInputAt=now;board.welcome:input();publishWelcome(board)

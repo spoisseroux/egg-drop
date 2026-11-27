@@ -1702,6 +1702,8 @@ do
   ack=function(id)nurseryRequest:FireServer("ack",id,nurseryState and nurseryState.revision or 0)end,
   companion=function()if board:GetAttribute("CompanionId")~="pip"then request:FireServer("companion","pip")end end,
   event=function(name)request:FireServer("onboardEvent",name)end,
+  -- Beta (37) note 1: the garden Bear stands where the egg opened (the server checks the spot and owns the pet).
+  stand=function(at,seconds)request:FireServer("firstStand",{at=at,hold=seconds})end,
   -- Anything went wrong: the receipt goes the old way (Hatch eggs plays it), so the Bear is always met.
   fallback=function(result)
    task.spawn(function()
@@ -5855,6 +5857,7 @@ do
     gate=function()local since=clientUI.coach.roomSince;return Needs.gate(gate(if since then os.clock()-since else 0),Things.on())end,
     greeting=function()return roomView.focusing==true end,inPark=function()return Attract.parkMember(rootPosition())end,
     nest=function()return nestAt()~=nil end,park=function()return Attract.parkAnchor()~=nil end,
+    petShown=function()return petPart()~=nil end, -- beta (37) note 3: the guide waits for a drawn pet
     prompt=function()return roomView:stationInReach()==true end,
     place=function(where)
      if where=="Eggs"then

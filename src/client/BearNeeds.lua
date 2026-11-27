@@ -52,6 +52,7 @@ function Needs.facts(state,live)
 	return{mask=Coach.merge(state.coachMask,live.mask),totalWins=tonumber(state.totalWins)or 0,stars=tonumber(state.nectar)or 0,
 		toyGiven=toyGiven,toyBought=toyBought,rounds=tonumber(stats.rounds)or 0,
 		nest=nest,nestShown=nest~=nil and live.nest==true,nestTucked=nest~=nil and(nest.tucked==true or(tonumber(nest.n)or 0)>0),
+		nestReady=nest~=nil and nest.ready==true,
 		playDates=tonumber(playDate.count)or 0,parkOn=live.park~=false,saidHi=live.saidHi==true,deckDone=live.deckDone==true,inPark=live.inPark==true}
 end
 -- Is this need done (its bit saved, or the thing itself already true)?
@@ -64,9 +65,11 @@ function Needs.closed(id,f)
 	if id=="needPark"then return f.inPark or f.playDates>0 or Coach.has(f.mask,"park")end
 	return true
 end
--- Can it be asked for at all? needNest only once the nest is really there, needPark only with a park.
+-- Can it be asked for at all? needNest only once the nest is really there with an egg to tuck in (beta 37 note 3: an
+-- egg already ready only hatches, its prompt says Hatch, so "Tuck the egg in!" could never be done), needPark only
+-- with a park.
 function Needs.available(id,f)
-	if id=="needNest"then return f.nestShown==true end
+	if id=="needNest"then return f.nestShown==true and f.nestReady~=true end
 	if id=="needPark"then return f.parkOn~=false end
 	return Needs.Icon[id]~=nil
 end
@@ -81,9 +84,18 @@ function Needs.current(f,ctx)
 end
 -- Onboarding v2 step 5 (Onboard "guide", ONBOARDING-V2.md; Spencer: "it didnt say anything after hatching the bear, just
 -- to press g on it??"): three worded prompts, one at a time (Pet Bear!, Tuck the egg in!, Play for Stars!), no key caps
--- on a computer, a trail to anything far, a prompt ignored for Guide.ignore s shrinks to its icon and the next shows,
--- and after the third the end card ("You're all set!"). Never locked; the toy and the park are found through Things
--- to do, as today. Off: today's bubbles exactly.
+-- on a computer, a trail to anything far, and after the third the end card ("You're all set!"). Beta (37) note 3: a
+-- prompt stays until it is done; shown Guide.ignore s it nudges (a hop and a soft chirp, at most every Guide.nudge s).
+-- Never locked, never a soft block: each prompt shows only when it can be done (below) and the game is free
+-- around it. The toy and the park are found through Things to do, as today. Off: today's bubbles exactly.
+--   needHi    done by a greeting, petting, or a tap on the bubble or the Bear. No pet drawn (stowed, its rig loading):
+--             no bubble and no clock.
+--   needNest  done when the egg is tucked in, or once one has hatched. No nest drawn, no egg in it (none landed yet,
+--             or between hatches) or the egg already ready (its prompt is Hatch): not asked; the next prompt shows
+--             (after NestWait for the nest to be drawn).
+--   needDeck  done when the deck opens (its button, the bubble or the Bear) or a round ends.
+--   All: hidden, with the clock stopped, while ThingsTips.blocked says so (the deck or a menu open, a mini game, the
+--   park, care, a card, the greeting shot) or a station prompt is in reach; back 2.5 s after.
 Needs.GuideOrder=V2.Guide.order
 -- Pure: is the guide finished (every prompt closed or passed over)? f: facts, skip: the passed-over ids.
 function Needs.guideDone(f,skip)
@@ -112,7 +124,8 @@ end
 -- deps: state() snapshot, owned() pets, mask() the coach mask, mark(id), finishIntro() (CoachCards:finishGarden),
 --   follow() (Onboard.sessionFollow), needs() (Onboard.on "needs"), returning() (this session began as a returning
 --   player), gate() the ThingsTips.blocked table (with roomFor, idleFor), greeting() (the Bear's greeting shot is up),
---   inPark(), nest() (the garden nest is drawn), park() (optional: false when there is no Pet Park), place(name) -> position, label, trail(target, how) -> bool,
+--   inPark(), nest() (the garden nest is drawn), park() (optional: false when there is no Pet Park), petShown() (optional:
+--   the pet is drawn in the garden; the guide waits while it is not), place(name) -> position, label, trail(target, how) -> bool,
 --   trailActive(), trailTarget() (optional: the target the live trail was started with), prompt() (optional: a
 --   station prompt is in reach), sayHi(), playDeck(), quiet(on) (the pill), chirp(), react(id), bubble (NeedBubble:
 --   set(icon, visible), hop(), step(dt)).
@@ -264,7 +277,7 @@ function Needs:step(now,dt)
 			self.order=if d.nestFirst and d.nestFirst()==true then Needs.NestFirstOrder else nil
 			-- Onboarding v2 step 5: the guide's three prompts, read once here like the order
 			self.guide=d.guide~=nil and d.guide()==true and not returning
-			if self.guide then self.order=Needs.GuideOrder;self.skipped={};self.shownAt={}end
+			if self.guide then self.order=Needs.GuideOrder;self.skipped={};self.shownFor={};self.nudgedAt={}end
 		else self:hide();d.bubble:step(dt);return end
 	end
 	if f.rounds>(self.roundsAt or f.rounds)then self.live.deckDone=true;f.deckDone=true end
@@ -312,20 +325,27 @@ function Needs:step(now,dt)
 			if self.guide and self.open=="needHi"and Needs.closed("needHi",f)and d.firstPet then pcall(d.firstPet)end
 		end
 		self.open=id
-		self.shrinking=nil
 		-- The first trail starts by itself after Say hi (the ball bubble), once.
 		if id=="needToy"and self.follow and not self.autoTrail then self.autoPending=true end
 	end
 	self.pointing=if id then id elseif following then "follow"else nil
 	-- Never over a machine's prompt (the bubble is always on top).
 	local show=id~=nil and now>=self.restUntil and blocked==nil and freeFor>=Needs.Return and not(d.prompt and d.prompt()==true)
+		-- the guide's bubble hangs over the pet: with none drawn (stowed, loading) it waits, its clock stopped
+		and not(self.guide and d.petShown~=nil and d.petShown()~=true)
 	if show and self.guide then
-		-- The guide: the prompt in words; ignored for Guide.ignore s it shrinks to its icon, then the next shows.
-		self.shownAt[id]=self.shownAt[id]or now
-		if not self.shrinking and V2.ignored(self.shownAt[id],now)then self.shrinking={id=id,at=now}end
-		if self.shrinking and now-self.shrinking.at>=V2.Guide.shrink then self.skipped[id]=true end
+		-- The guide: the prompt in words, until it is done. Shown Guide.ignore s it nudges (beta 37 note 3: never skips).
+		self.shownFor[id]=(self.shownFor[id]or 0)+dt
+		if V2.nudgeDue(self.shownFor[id],self.nudgedAt[id],now)then
+			self.nudgedAt[id]=now
+			self.nudges=(self.nudges or 0)+1
+			d.bubble:hop();d.chirp()
+			-- one hop and chirp at a time: the idle hint waits its own gap after a nudge
+			if self.track.key~=id then self.track.key,self.track.count=id,0 end
+			self.track.lastAt=now
+		end
 		local words=nil
-		if not self.shrinking and d.words then words=d.words(id)end
+		if d.words then words=d.words(id)end
 		local icon=V2.GuideIcon[id]or Needs.icon(id,f)
 		if not self.shown or self.shownIcon~=icon or self.shownWords~=words then d.bubble:set(icon,true,words)end
 		self.shownWords=words

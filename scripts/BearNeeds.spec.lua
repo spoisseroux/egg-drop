@@ -98,7 +98,8 @@ return function(client)
 			quiet=function(on)r.quiet=on end,chirp=function()r.chirps+=1 end,react=function(id)table.insert(r.reacts,id)end,
 			-- Onboarding v2 step 5 (the guide): off unless a test sets r.guide.
 			guide=function()return r.guide==true end,words=function(id)return "W:"..id end,far=function()return r.far==true end,
-			pulseDeck=function(on)r.pulse=on end,allSet=function()r.allSets=(r.allSets or 0)+1 end,firstPet=function()r.pets=(r.pets or 0)+1 end})
+			pulseDeck=function(on)r.pulse=on end,allSet=function()r.allSets=(r.allSets or 0)+1 end,firstPet=function()r.pets=(r.pets or 0)+1 end,
+			petShown=function()return r.petShown~=false end})
 		r.t=0
 		function r.run(seconds,dt)
 			dt=dt or .25
@@ -193,6 +194,27 @@ return function(client)
 		assert(Bubble.pressScale(-1)==nil and Bubble.pressScale(Bubble.Press.down+.7)==nil,"settled")
 		local low=1;for t=0,.6,.01 do low=math.min(low,Bubble.pressScale(t)or 1)end
 		assert(low>=Bubble.Press.low-1e-6,"never below the squash")
+	end)
+	-- Beta (37) note 2: "tuck the egg in ui thing doesnt constantly follow the pet, it like waits and then catches up".
+	test("beta 37: the guide's worded bubble hangs on the pet itself every frame; the icon bubble keeps its spring",function()
+		assert(Bubble.pinned("Tuck the egg in!")and not Bubble.pinned(nil)and not Bubble.pinned(""))
+		local host,world=Instance.new("Folder"),Instance.new("Folder")
+		local pet={Position=Vector3.new(0,5,0),Size=Vector3.new(2,2,2),FindFirstAncestorWhichIsA=function()return nil end}
+		local bubble=Bubble.new({parent=host,world=world,adornee=function()return pet end})
+		bubble:set("moon",true,"Tuck the egg in!");bubble:step(1/60)
+		assert(bubble.gui.Adornee==pet,"on the pet's own part")
+		local over=bubble.gui.StudsOffsetWorldSpace.Y
+		assert(over>=1+Bubble.Lift-1e-6,"over its head: "..over)
+		-- the pet walks a step (under the old Dead zone): the bubble goes with it, the same frame
+		pet.Position=Vector3.new(1.2,5,0);bubble:step(1/60)
+		assert(bubble.gui.Adornee==pet and bubble.spot.at==nil,"no anchor, no wait, no catch-up")
+		-- the hop rides on top of it
+		bubble:hop();bubble:step(Bubble.HopTime*.5)
+		assert(bubble.gui.StudsOffsetWorldSpace.Y>over+.1,"the hop lifts it")
+		-- the icon bubble (guide off): the anchor and its spring, as before
+		bubble:set("ball",true,nil);bubble:step(1/60)
+		assert(bubble.gui.Adornee==bubble.anchor,"back on the sprung anchor")
+		bubble:destroy()
 	end)
 	test("each one tap away: the ball lays the prints, the deck opens a round",function()
 		local r=rig({state={coachMask=Coach.with(0,"needHi")}})
@@ -408,13 +430,48 @@ return function(client)
 		assert(r.allSets==1 and r.pulse==false,"the deck opened: all set, once")
 		r.gate.mode="Room";r.run(30);assert(r.allSets==1)
 	end)
-	test("guide: a prompt ignored for 20 s shrinks to its icon, then the next shows; nothing is marked done for it",function()
+	-- Beta (37) note 3: "it said youre all set before i even did anything. it just timed out?"
+	test("guide: a prompt is never skipped; ignored 20 s it nudges (a hop, a soft chirp), again every 15 s at most",function()
+		local V2=require(client.OnboardV2)
 		local r=rig({guide=true,nest=true,state={nest={n=0,at=1}}})
 		r.run(Needs.Return+.5);assert(r.bubble.words=="W:needHi")
-		r.run(require(client.OnboardV2).Guide.ignore-1);assert(r.bubble.words=="W:needHi","still asking")
-		r.run(1.25);assert(r.bubble.icon=="hand"and r.bubble.words==nil,"shrunk to its icon")
-		r.run(Needs.Rest+2);assert(r.bubble.icon=="moon","the next: "..tostring(r.bubble.icon))
-		assert(not table.find(r.marked,"needHi"),"passed over, not done")
+		local hops,chirps=r.bubble.hops,r.chirps
+		r.run(V2.Guide.ignore-1);assert(r.bubble.hops==hops and r.chirps==chirps,"no nudge yet")
+		r.run(1.5);assert(r.bubble.hops==hops+1 and r.chirps==chirps+1,"the first nudge")
+		r.run(V2.Guide.nudge-2);assert(r.bubble.hops==hops+1,"at most every 15 s")
+		r.run(2);assert(r.bubble.hops==hops+2 and r.chirps==chirps+2,"the second")
+		r.run(120)
+		assert(r.bubble.icon=="hand"and r.bubble.words=="W:needHi","still asking after two minutes, in words")
+		assert(not table.find(r.marked,"needHi")and r.allSets==nil,"never passed over, never all set")
+		assert(V2.nudgeDue(20,nil,5)and not V2.nudgeDue(19.9,nil,5)and not V2.nudgeDue(25,10,24)and V2.nudgeDue(25,10,25))
+		-- done at last: the next one, and the nudges start over for it
+		r.needs:saidHi();r.run(Needs.Rest+1.5);assert(r.bubble.icon=="moon"and r.bubble.words=="W:needNest")
+		local before=r.bubble.hops;r.run(V2.Guide.ignore-3);assert(r.bubble.hops==before,"its own clock")
+	end)
+	test("guide: the clock runs only while the prompt shows; hidden (blocked, no pet drawn) it waits, never skipped",function()
+		local V2=require(client.OnboardV2)
+		local r=rig({guide=true,nest=true,state={nest={n=0,at=1}}})
+		r.run(Needs.Return+.5);assert(r.bubble.words=="W:needHi")
+		r.gate.mode="Board";r.run(60);assert(r.bubble.icon==nil,"the deck open: hidden")
+		r.gate.mode="Room";r.petShown=false;r.run(60);assert(r.bubble.icon==nil,"the pet stowed: no bubble")
+		r.petShown=true;local hops=r.bubble.hops
+		r.run(Needs.Return+V2.Guide.ignore-5);assert(r.bubble.words=="W:needHi"and r.bubble.hops==hops,"back, the clock where it was")
+		assert(r.allSets==nil and not table.find(r.marked,"needHi"))
+	end)
+	test("guide: a nest prompt that could never be done is not asked (no egg in it, or the egg already ready)",function()
+		for _,case in ipairs({{why="no egg in the nest",nest=nil},{why="the egg is ready (Hatch, not Tuck in)",nest={n=0,at=1,ready=true}}})do
+			local r=rig({guide=true,nest=true,state={nest=case.nest}})
+			r.run(Needs.Return+.5);r.needs:saidHi()
+			r.run(Needs.Rest+Needs.NestWait+2)
+			assert(r.bubble.icon=="deck"and r.bubble.words=="W:needDeck",case.why..": "..tostring(r.bubble.icon))
+			r.gate.mode="Board";r.run(.5)
+			assert(r.allSets==1,case.why..": all set once the deck opens")
+		end
+		-- the egg there and growing: asked, and done by tucking it in
+		local r=rig({guide=true,nest=true,state={nest={n=0,at=1,ready=false}}})
+		r.run(Needs.Return+.5);r.needs:saidHi();r.run(Needs.Rest+1.5)
+		assert(r.bubble.icon=="moon")
+		r.state.nest={n=0,at=1,tucked=true};r.run(Needs.Rest+1.5);assert(r.bubble.icon=="deck")
 	end)
 	return{passed=#cases,cases=cases}
 end
