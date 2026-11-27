@@ -28,6 +28,8 @@ local Eggs=require(Shared.EggCatalog)
 local Stats=require(script.Parent.StatState)
 local Guard=require(script.Parent.HatchGuard)
 local MedalEggs=require(script.Parent.MedalEggs)
+-- The gift chain's Snack Egg (GiftEggs, Onboard "gifts"): an explicit `c.gift` buy, never a fall-back.
+local GiftEggs=require(Shared.GiftEggs)
 
 local State={}
 local integer=Catalog.integer
@@ -181,10 +183,21 @@ end
 -- pending candidate, so a retried write rolls the same snack). `today` is the callback's clock.
 -- Levels matter (2026-11-22): c.medals (frozen with the candidate) lets a free egg come from the
 -- medals when the bank is empty; the bank is always used first. The receipt says source="medal".
+-- The gift chain (architect review 1): c.gift (with c.free) opens the save's Snack gift and nothing else. GiftEggs.due is
+-- checked again here, on the transaction's snapshot: already given is AlreadyGranted, not yet earned NotDue, and
+-- either is a refusal, never the bank or a medal egg instead. No write under another open reservation or reveal
+-- (RevealPending). The bank and the medal eggs are untouched, `gifts.snack` is written in the same write and the
+-- receipt says source="gift". A buy without c.gift never reads or spends the gift.
 function State.buy(state,c,today)
 	if not Catalog.Enabled then return false,"Disabled"end
 	local saved=State.receipt(state,c.op)
 	if saved then return false,if saved.digest==c.digest then "AlreadySaved"else "OperationConflict"end
+	if c.gift then
+		if not c.free then return false,"InvalidStatEgg"end
+		if Guard.other(state,nil)then return false,"RevealPending"end
+		local due,why=GiftEggs.due(state,"snack",today,{})
+		if not due then return false,why end
+	end
 	if not Eggs.isOwned(state.inventoryMask or 0,c.petId)then return false,"Unowned"end
 	if c.day~=today then return false,"ExpiredDay"end
 	local boughtDay=field(state,"boughtDay",nil)
@@ -195,7 +208,8 @@ function State.buy(state,c,today)
 	if State.quoteKey(state,c.petId,c.mode)~=c.quoteKey then return false,"PoolChanged"end
 	local bought=State.boughtToday(state,today)
 	local fromMedal=false
-	if c.free then
+	if c.gift then -- the gift itself (checked above): neither the bank nor a medal egg
+	elseif c.free then
 		if State.free(state)<1 then
 			if c.medals~=true or MedalEggs.left(state)<1 then return false,"NoFreeEgg"end
 			fromMedal=true
@@ -221,7 +235,8 @@ function State.buy(state,c,today)
 	local changes={serial=serial,misses=if size=="feast"then 0 else math.min(misses+1,Catalog.MissesLimit)}
 	if nextCycle then changes.cycleIndex=nextCycle;changes.statCursor=nextCursor end
 	local cost=0
-	if fromMedal then -- the medal count moved in MedalEggs.spend
+	if c.gift then -- `gifts.snack` below is the spend
+	elseif fromMedal then -- the medal count moved in MedalEggs.spend
 	elseif c.free then changes.free=State.free(state)-1
 	else
 		cost=Catalog.Price;state.nectar-=cost
@@ -229,7 +244,8 @@ function State.buy(state,c,today)
 	end
 	writeEgg(state,changes)
 	pushReceipt(state,{op=c.op,kind="buy",digest=c.digest,snackId=serial,stat=stat,size=size,petId=c.petId,free=c.free==true,cost=cost,mode=c.mode,day=today,
-		source=if fromMedal then "medal"else nil})
+		source=if c.gift then "gift"elseif fromMedal then "medal"else nil})
+	if c.gift then GiftEggs.with(state,"snack",{op=c.op,day=today,snackId=serial,stat=stat,size=size,petId=c.petId})end
 	return true
 end
 

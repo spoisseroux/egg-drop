@@ -63,9 +63,12 @@ function Intent:onResult(message)
 	if message.status=="Retrying"then self.unsettled[message.id]=w end
 	w.callback(message)
 end
--- quote: the key the card showed (statEgg.quotes[petId].key).
-function Intent:buy(petId,free,quote,callback)
-	return self:send("statEggBuy",{petId=petId,free=free==true,quote=quote},callback,Intent.BuyTimeout)
+-- quote: the key the card showed (statEgg.quotes[petId].key). gift: the gift chain's free Snack Egg (an explicit ask,
+-- always free; the server never falls back to the bank or a medal egg).
+function Intent:buy(petId,free,quote,callback,gift)
+	local value={petId=petId,free=free==true or gift==true,quote=quote}
+	if gift==true then value.gift=true end
+	return self:send("statEggBuy",value,callback,Intent.BuyTimeout)
 end
 function Intent:feed(snackId,petId,callback)
 	return self:send("snackFeed",{snackId=snackId,petId=petId},callback,Intent.FeedTimeout)

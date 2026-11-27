@@ -183,6 +183,38 @@ function Host.mount(deps)
 		return true
 	end
 
+	-- The gift chain's free Snack Egg (GiftChain, Onboard "gifts"): the gift buy, its reveal through the machine as any
+	-- Stat Egg's. A stale quote (PoolChanged) is asked again once with the fresh key. done(status, reason).
+	function api.buyGift(done)
+		local petId=deps.activeId()
+		if api.buying or not petId then if done then done("Rejected",if petId then "Busy"else "PetNotOut")end;return false end
+		local retried=false
+		local function ask()
+			local q=Odds.quote(deps.state(),petId)
+			if not q then if done then done("Rejected","PetNotOut")end;return end
+			api.buying=true
+			intent:buy(petId,true,q.key,function(message)
+				api.buying=false
+				if message.status=="Saved"and type(message.receipt)=="table"then
+					local receipt=message.receipt
+					present(function()
+						reveal:show(receipt,api.revealInfo(petId),{
+							feed=function(r)api.feedNow(r.snackId)end,keep=function()notify(UICopy.get("hatch.stat.reveal.kept"),true)end})
+					end)
+					if done then done("Saved")end
+				elseif message.reason=="PoolChanged"and not retried then
+					retried=true
+					task.delay(.6,ask)
+				else
+					if done then done(message.status or "Rejected",message.reason)end
+				end
+				if api.onChanged then api.onChanged()end
+			end,true)
+		end
+		ask()
+		return true
+	end
+
 	-- One feed. where = "panel" (the stats panel's preview; options.visual, options.overlay) or
 	-- "garden" (the garden pet in focus). The offer plays at once; the bites only after the receipt.
 	function api.feed(snackId,where,options)

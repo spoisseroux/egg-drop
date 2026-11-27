@@ -28,6 +28,8 @@ function Tips.blocked(g,started)
 	if g.modal then return "menu"end
 	if g.hatch then return "hatch"end
 	if g.card then return "card"end
+	-- The gift chain (GiftChain, Onboard "gifts"): its bubble, lead, crank or card holds every other prompt back.
+	if g.gift then return "gift"end
 	if g.tour then return "tour"end
 	if g.greeting then return "greeting"end
 	if g.engaged then return "race"end

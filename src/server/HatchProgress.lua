@@ -37,6 +37,8 @@ local StarterBonus=require(ReplicatedStorage.Shared.StarterBonus)
 local FirstHello=require(ReplicatedStorage.Shared.FirstHello)
 -- Onboarding v3 section 3 (2026-11-27): the one-time +5 welcome gift on "You're all set!" (optional `welcomeGift`).
 local WelcomeGift=require(ReplicatedStorage.Shared.WelcomeGift)
+-- The gift chain (ONBOARDING-FUN-PASS section 2, Onboard "gifts"): the optional `gifts` field and its free eggs.
+local GiftEggs=require(ReplicatedStorage.Shared.GiftEggs)
 local BoardConfig=require(ReplicatedStorage.Shared.BoardConfig)
 local HeatPayout=require(ReplicatedStorage.Shared.HeatPayout)
 local StampCard=require(ReplicatedStorage.Shared.StampCard)
@@ -571,6 +573,8 @@ function Hatching.public(handle)
 	public.catalogVersion=require(ReplicatedStorage.Shared.HueCatalog).CatalogVersion
 	-- Paint pots: the last receipt, only once a pot was bought (an untouched snapshot is unchanged).
 	for key,value in pairs(PaintPots.public(state))do public[key]=value end
+	-- The gift chain (Onboard "gifts"): only while the switch is on (off: no key, the snapshot as before).
+	if Onboard.on("gifts") then public.gifts = Hatching.giftsPublic(handle, { nest = Onboard.on("nest") }) end
 	return public
 end
 
@@ -1086,7 +1090,9 @@ end
 
 -- `owed` (Onboard "allset2" on, read by the caller): this brand-new save is owed the welcome gift (`welcomeGift` = 0,
 -- in this same write). Saves whose Bear came earlier, or with the switch off, are never owed it.
-function Hatching.grantStarter(handle, owed)
+-- `giftsOwed` (Onboard "gifts" on, read by the caller): this brand-new save is owed the gift chain (`gifts.v`, in this
+-- same write; GiftEggs.mark). The same rule: never an older save, never one whose Bear came with the switch off.
+function Hatching.grantStarter(handle, owed, giftsOwed)
 	if Catalog.isOwned(handle.state.inventoryMask, "pip") then return true, "AlreadyOwned" end
 	return transact(handle, "starter", handle.state.revision, function(state, candidate)
 		if Catalog.isOwned(state.inventoryMask, "pip") then return true end
@@ -1100,8 +1106,9 @@ function Hatching.grantStarter(handle, owed)
 		state.lastHatch = { id = candidate.id, petId = "pip", duplicate = false,
 			family = "pip", mastery = state.mastery.pip, rare = false, starter = true, stars = stars }
 		if candidate.welcome then WelcomeGift.mark(state) end
+		if candidate.gifts then GiftEggs.mark(state) end
 		return true
-	end, { id = handle.adapter.guid(), welcome = owed == true })
+	end, { id = handle.adapter.guid(), welcome = owed == true, gifts = giftsOwed == true })
 end
 
 -- The welcome gift (ONBOARDING-V3-BRIEF section 3; Spencer 2026-11-27): +WelcomeGift.Bonus Stars once per save, ever,
@@ -1127,6 +1134,123 @@ function Hatching.welcomeGift(handle, ctx)
 	end, candidate, nil, nil, "welcome:" .. WelcomeGift.Bonus)
 	if not ok and reason == "AlreadyGranted" then return true, reason end
 	return ok, reason
+end
+
+-- The gift chain's Paint and Toy Eggs (GiftEggs; ONBOARDING-FUN-PASS section 2, Onboard "gifts"). One free crank each,
+-- once per save, only when its trigger is true in the save. ctx = {nest (false: the nest is off in this world), mask}.
+-- -> ok, reason, record (GiftEggs.publicRecord; for AlreadyGranted, the record already saved, so an unseen reveal can
+-- still show). Exactly once: the kind's record is the proof, read and written in the same UpdateAsync as the pot or
+-- the toy. The candidate (its op, the roll or the fixed pick, the day) is frozen, so a retry after a store error
+-- resumes it and draws the same item; an ambiguous write is proved by lastOperation (id + digest); a replay, a rejoin
+-- or a second server meets the record and is AlreadyGranted with nothing written. Nothing is written under another
+-- open reservation or reveal (HatchGuard: RevealPending, which the host waits on), so operationSeq never moves
+-- under a saved toy or look reservation.
+function Hatching.giftEgg(handle, kind, ctx)
+	if type(kind) ~= "string" or not GiftEggs.Crankable[kind] then return false, "InvalidGift" end
+	ctx = if type(ctx) == "table" then ctx else {}
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local signature = "gift:" .. kind
+	local resuming = handle.pending and handle.pending.signature == signature
+	if not resuming then
+		if GiftEggs.granted(handle.state, kind) then
+			return true, "AlreadyGranted", GiftEggs.publicRecord(kind, GiftEggs.record(handle.state, kind))
+		end
+		if handle.pending then return false, "Pending" end
+	end
+	local candidate
+	if resuming then candidate = handle.pending.candidate
+	else
+		local fixed = isRestricted(handle)
+		candidate = table.freeze({ kind = kind, op = handle.adapter.guid(), day = dayOf(handle.adapter.now()), nest = ctx.nest ~= false,
+			mask = Coach.mask(ctx.mask), fixed = fixed, unit = if fixed then nil else handle.adapter.random() })
+	end
+	local found -- the record the authoritative snapshot already holds (a stale copy here, another server's grant)
+	local ok, reason = transact(handle, signature, handle.state.revision, function(state, c)
+		if Guard.other(state, nil) then return false, "RevealPending" end
+		local due, why = GiftEggs.due(state, c.kind, dayOf(handle.adapter.now()), { nest = c.nest, mask = c.mask })
+		if not due then
+			if why == "AlreadyGranted" then found = GiftEggs.record(state, c.kind) end
+			return false, why
+		end
+		local item = GiftEggs.draw(state, c)
+		if not item then return false, "InvalidRoll" end
+		if c.kind == "paint" then
+			if type(state.hueInventory) ~= "table" then return false, "InvalidData" end
+			local before = state.hueInventory[item] or 0
+			if not integer(before, HueCatalog.StackLimit) or before >= HueCatalog.StackLimit then return false, "StackLimit" end
+			local stock = table.clone(state.hueInventory); stock[item] = before + 1; state.hueInventory = stock
+			local bit = LookEgg.bit(item)
+			local mask = if integer(state.lookFound, LookEgg.FoundLimit) then state.lookFound else 0
+			if bit then state.lookFound = bit32.bor(mask, bit) end
+		else
+			if type(state.toyUnlocks) ~= "table" then return false, "InvalidData" end
+			local unlocks = table.clone(state.toyUnlocks); unlocks[item] = true; state.toyUnlocks = unlocks
+		end
+		GiftEggs.with(state, c.kind, { op = c.op, item = item, day = c.day, rev = state.revision + 1, seq = state.operationSeq + 1 })
+		return true
+	end, candidate, candidate.op, nil, "gift:" .. kind .. ":" .. candidate.op)
+	if ok then return true, reason, GiftEggs.publicRecord(kind, GiftEggs.record(handle.state, kind)) end
+	if reason == "AlreadyGranted" then
+		return true, reason, GiftEggs.publicRecord(kind, found or GiftEggs.record(handle.state, kind))
+	end
+	return false, reason
+end
+-- The gift's reveal was seen ("Paint {pet}!", "Play!" or Later): `seen` goes true, never back. Idempotent: already seen
+-- answers at once with no write; no record (or a broken field) is NoGift. Never under another open reveal.
+function Hatching.giftSeen(handle, kind)
+	if type(kind) ~= "string" or not GiftEggs.Crankable[kind] then return false, "InvalidGift" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local signature = "giftSeen:" .. kind
+	local resuming = handle.pending and handle.pending.signature == signature
+	local r = GiftEggs.record(handle.state, kind)
+	if not resuming then
+		if not r then return false, "NoGift" end
+		if r.seen == true then return true, "AlreadySaved" end
+		if handle.pending then return false, "Pending" end
+	end
+	local candidate = if resuming then handle.pending.candidate else table.freeze({ kind = kind, op = r.op })
+	local ok, reason = transact(handle, signature, handle.state.revision, function(state, c)
+		if Guard.other(state, nil) then return false, "RevealPending" end
+		local saved = GiftEggs.record(state, c.kind)
+		if not saved or saved.op ~= c.op then return false, "NoGift" end
+		if saved.seen == true then return false, "AlreadySaved" end
+		local copy = clone(saved); copy.seen = true
+		GiftEggs.with(state, c.kind, copy)
+		return true
+	end, candidate, nil, nil, "giftSeen:" .. kind .. ":" .. candidate.op)
+	if not ok and reason == "AlreadySaved" then return true, reason end
+	return ok, reason
+end
+-- The gift ready now (the first of paint, toy, snack whose trigger holds and that can be delivered), or nil. The
+-- Snack also needs the Stat Egg on sale, room in the pouch and a stat left to grow for the pet that is out (never
+-- advertise a gift that cannot be given: architect review 5). ctx = {nest, mask, petId}.
+function Hatching.giftReady(handle, ctx)
+	ctx = if type(ctx) == "table" then ctx else {}
+	local state = handle.state
+	if type(state) ~= "table" then return nil end
+	local today = dayOf(handle.adapter.now())
+	for _, kind in ipairs(GiftEggs.Kinds) do
+		local due = GiftEggs.due(state, kind, today, { nest = ctx.nest, mask = ctx.mask })
+		if due and kind == "snack" then
+			local petId = ctx.petId or statPet(handle) or "pip"
+			due = StatEggCatalog.Enabled == true and #StatEggs.pouch(state) < StatEggCatalog.PouchSize
+				and Catalog.isOwned(state.inventoryMask, petId) and #StatEggs.eligible(state, petId) > 0
+		end
+		if due then return kind end
+	end
+	return nil
+end
+-- What the owner's client sees (only while Onboard "gifts" is on): owed, which kinds are granted, the one ready now,
+-- an unseen Paint or Toy record (its reveal replays) and the Snack record.
+function Hatching.giftsPublic(handle, ctx)
+	local state = handle.state
+	local view = GiftEggs.read(state)
+	local granted = {}
+	for _, kind in ipairs(GiftEggs.Kinds) do granted[kind] = GiftEggs.granted(state, kind) end
+	local unseenKind, unseen = GiftEggs.unseen(state)
+	return { owed = view.owed, granted = granted, fetch = view.fetch, ready = if view.owed then Hatching.giftReady(handle, ctx) else nil,
+		unseen = if unseenKind then GiftEggs.publicRecord(unseenKind, unseen) else nil,
+		snack = GiftEggs.publicRecord("snack", GiftEggs.record(state, "snack")) }
 end
 
 -- Earned pets (overnight 2026-11-14, slice E; SYSTEMS-SCOPE 1.3). Grants `petId` once its
@@ -1807,20 +1931,39 @@ end
 -- Stars or, when `free`, one banked free egg (then one medal egg, while medals are on). `quoteKey` is the key the player's card showed
 -- (StatEggCatalog.quoteKey): any change to the pool, price, mode, promise or position is
 -- "PoolChanged" with no charge. A restricted (or unknown) policy draws no random number.
-function Hatching.statEggBuy(handle, operationId, petId, free, quoteKey)
+-- `gift` (the gift chain's Snack Egg, GiftEggs; needs `free`): an explicit request, in the digest, that opens only the
+-- gift (StatEggState.buy re-checks GiftEggs.due and never falls back to the bank or a medal egg). Without it the gift is
+-- never touched. A replay of the gift's own op answers from `gifts.snack` (the Stat Egg receipt ring keeps 32).
+function Hatching.statEggBuy(handle, operationId, petId, free, quoteKey, gift)
 	if type(operationId) ~= "string" or #operationId < 1 or #operationId > 80 or type(petId) ~= "string" or #petId > 32
-		or not Pets.byId[petId] or type(free) ~= "boolean" or type(quoteKey) ~= "string" or #quoteKey > 64 then return false, "InvalidStatEgg" end
+		or not Pets.byId[petId] or type(free) ~= "boolean" or type(quoteKey) ~= "string" or #quoteKey > 64
+		or (gift ~= nil and type(gift) ~= "boolean") or (gift == true and not free) then return false, "InvalidStatEgg" end
+	gift = gift == true
 	local signature = "statEgg:" .. operationId
-	local digest = "egg:" .. petId .. ":" .. (if free then "1" else "0") .. ":" .. quoteKey
+	local digest = "egg:" .. petId .. ":" .. (if free then "1" else "0") .. ":" .. quoteKey .. (if gift then ":gift" else "")
+	if gift and not(handle.pending and handle.pending.signature == signature) then
+		local record = GiftEggs.record(handle.state, "snack")
+		if record and record.op == operationId and not StatEggs.receipt(handle.state, operationId) then
+			return true, "AlreadySaved", Hatching.giftSnackReceipt(record)
+		end
+	end
 	return snackOperation(handle, signature, operationId, digest, function()
 		local mode = StatEggCatalog.selectionMode(handle.restricted)
 		local random = mode == "random"
 		return table.freeze({ op = operationId, digest = digest, petId = petId, free = free, quoteKey = quoteKey, mode = mode,
-			day = dayOf(handle.adapter.now()), medals = Levels.on("medals"),
+			day = dayOf(handle.adapter.now()), medals = Levels.on("medals"), gift = gift,
 			unitStat = if random then handle.adapter.random() else nil, unitSize = if random then handle.adapter.random() else nil })
 	end, function(state, c)
 		return StatEggs.buy(state, c, dayOf(handle.adapter.now()))
 	end)
+end
+
+-- The Snack gift's receipt as the client reads a Stat Egg one, from `gifts.snack` (the replay of its own op once the
+-- Stat Egg receipt has left the ring).
+function Hatching.giftSnackReceipt(record)
+	if type(record) ~= "table" then return nil end
+	return { op = record.op, kind = "buy", snackId = record.snackId, stat = record.stat, size = record.size, petId = record.petId,
+		free = true, cost = 0, source = "gift", day = record.day }
 end
 
 -- Feed one snack from the pouch to `petId`. The host checks the live conditions first (the pet is

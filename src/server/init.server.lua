@@ -93,6 +93,8 @@ local featureResult=child("RemoteEvent","FeatureResult",remotes)
 local potResult=child("RemoteEvent","PotResult",remotes)
 -- The welcome gift on "You're all set!" (ONBOARDING-V3-BRIEF section 3): the owner's one reply {status, reason, stars}.
 local welcomeGiftResult=child("RemoteEvent","WelcomeGiftResult",remotes)
+-- The gift chain (GiftEggs, Onboard "gifts"): the owner's replies to giftEgg / giftSeen {kind, action, status, reason, gift}.
+local giftResult=child("RemoteEvent","GiftResult",remotes)
 local appearanceResult = child("RemoteEvent", "AppearanceResult", remotes)
 local faceplateResult = child("RemoteEvent", "FaceplateResult", remotes)
 local wearableResult = child("RemoteEvent", "WearableResult", remotes)
@@ -1951,7 +1953,7 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	end
 	if not board.profileReady then return end
 	-- (the welcome gift neither: its own loop waits for a free save, and it must not hold the coach bits' flush back)
-	if action ~= "coachMark" and action ~= "welcomeGift" then board.lastNurseryCommand = os.clock() end
+	if action ~= "coachMark" and action ~= "welcomeGift" and action ~= "giftEgg" then board.lastNurseryCommand = os.clock() end
 	-- Faceplate Star purchase (UI-SPEC 5.5): fixed price, server-validated,
 	-- idempotent by the client's operation id. Success equips the plate.
 	if action=="faceplateBuy"then
@@ -2073,10 +2075,13 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		local function reply(status,reason,receipt)snackResult:FireClient(player,{id=opId,action=action,status=status,reason=reason,receipt=receipt,revision=board.nursery.state.revision})end
 		if not opId or not petId then reply("Rejected","InvalidSnack");return end
 		local saved=StatEggState.receipt(board.nursery.state,opId)
-		if saved then
+		-- The gift chain's Snack Egg (v.gift): its own op replays from `gifts.snack` (the receipt ring keeps 32).
+		local giftSnack=action=="statEggBuy"and v.gift==true and require(ReplicatedStorage.Shared.GiftEggs).record(board.nursery.state,"snack")or nil
+		if giftSnack and giftSnack.op~=opId then reply("Rejected","AlreadyGranted");return end
+		if saved or giftSnack then
 			-- Read-only proof; Hatching checks the digest (same request or OperationConflict).
 			local ok,reason,receipt
-			if action=="statEggBuy"then ok,reason,receipt=Nursery.statEggBuy(board.nursery,opId,petId,v.free==true,if type(v.quote)=="string"then v.quote else "")
+			if action=="statEggBuy"then ok,reason,receipt=Nursery.statEggBuy(board.nursery,opId,petId,v.free==true,if type(v.quote)=="string"then v.quote else "",v.gift==true)
 			else ok,reason,receipt=Nursery.snackFeed(board.nursery,opId,v.snackId,petId)end
 			reply(if ok then "Saved"else "Rejected",reason,receipt);return
 		end
@@ -2094,8 +2099,9 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		local walletBefore=board.nursery.state.nectar
 		local ok,reason,receipt
 		if action=="statEggBuy"then
-			if type(v.free)~="boolean"or type(v.quote)~="string"or #v.quote>64 then ok,reason=false,"InvalidStatEgg"
-			else ok,reason,receipt=Nursery.statEggBuy(board.nursery,opId,petId,v.free,v.quote)end
+			if type(v.free)~="boolean"or type(v.quote)~="string"or #v.quote>64 or(v.gift~=nil and type(v.gift)~="boolean")then ok,reason=false,"InvalidStatEgg"
+			elseif v.gift==true and not require(ReplicatedStorage.Shared.Onboard).on("gifts")then ok,reason=false,"NotReady"
+			else ok,reason,receipt=Nursery.statEggBuy(board.nursery,opId,petId,v.free,v.quote,v.gift==true)end
 		else
 			ok,reason,receipt=Nursery.snackFeed(board.nursery,opId,v.snackId,petId)
 		end
@@ -2144,6 +2150,62 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		board.nurseryBusy=false;if boards[player]~=board then return end
 		publishNursery(board);publishState(board)
 		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason,receipt);return
+	end
+
+	-- The gift chain's Paint and Toy cranks (GiftEggs, Onboard "gifts"; ONBOARDING-FUN-PASS section 2). The client asks
+	-- when the player turns the machine for a gift. GiftEggHost owns the order (a saved record first, the switch, one loop
+	-- a board, the tries); HatchProgress.giftEgg gives it once per save inside UpdateAsync, only when its trigger holds.
+	-- giftSeen: the gift card was closed (its reveal replays on a rejoin until then).
+	if action=="giftEgg"or action=="giftSeen"then
+		local v=if type(value)=="table"then value else {}
+		local kind=if type(v.kind)=="string"and require(ReplicatedStorage.Shared.GiftEggs).Crankable[v.kind]then v.kind else nil
+		local opId=if type(v.id)=="string"and #v.id>=1 and #v.id<=80 then v.id else nil
+		local function reply(status,reason,record)
+			if boards[player]==board then giftResult:FireClient(player,{id=opId,kind=kind,action=action,status=status,reason=reason,gift=record,revision=board.nursery.state.revision})end
+		end
+		if not kind then reply("Rejected","InvalidGift");return end
+		local Gifts=require(ReplicatedStorage.Shared.GiftEggs)
+		if action=="giftEgg"then
+			if os.clock()-(board.lastGiftAsk or -math.huge)<.5 then reply("Rejected","Throttled");return end
+			board.lastGiftAsk=os.clock()
+		end
+		if action=="giftSeen"then
+			-- once per gift (seen never goes back), so a replay costs no write; still spaced from other saves
+			if os.clock()-(board.lastGiftSeen or -math.huge)<.5 then reply("Rejected","Throttled");return end
+			board.lastGiftSeen=os.clock()
+			if board.nurseryBusy or board.payoutPending or not canProgress(board)then reply("Rejected","Busy");return end
+			board.nurseryBusy=true
+			local called,ok,reason=pcall(Nursery.giftSeen,board.nursery,kind)
+			board.nurseryBusy=false
+			if boards[player]~=board then return end
+			if not called then warn("[Gift] "..tostring(ok));reply("Rejected","Unavailable");return end
+			publishNursery(board)
+			reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
+		end
+		task.spawn(function()
+			local ok,problem=pcall(require(script.GiftEggHost).request,{
+				saved=function()return Gifts.publicRecord(kind,Gifts.record(board.nursery.state,kind))end,
+				on=function()return require(ReplicatedStorage.Shared.Onboard).on("gifts")end,
+				running=function()return board.giftRunning==true end,
+				setRunning=function(on)board.giftRunning=on==true end,
+				alive=function()return boards[player]==board and not board.closing end,
+				free=function()return canProgress(board)and not board.nurseryBusy and not board.nursery.busy and not board.payoutPending end,
+				grant=function()
+					board.nurseryBusy=true
+					local okNest,nestOn=pcall(function()return require(ReplicatedStorage.Shared.Onboard).on("nest")end)
+					local called,granted,why,record=pcall(Nursery.giftEgg,board.nursery,kind,{nest=not okNest or nestOn==true,mask=board.coachPending})
+					board.nurseryBusy=false -- always freed, even when the call threw
+					if not called then warn("[Gift] "..tostring(granted));return false,"Unavailable"end
+					if granted and why=="Saved"and type(record)=="table"then Economy.event(player,"EggOpened_gift",1,{kind,tostring(record.item)})end
+					return granted,why,record
+				end,
+				wait=function(seconds)task.wait(seconds)end,
+				publish=function()if boards[player]==board then publishNursery(board);publishState(board)end end,
+				reply=reply,
+			})
+			if not ok then board.giftRunning=false;warn("[Gift] "..tostring(problem));reply("Rejected","Unavailable")end
+		end)
+		return
 	end
 
 	-- The welcome gift (ONBOARDING-V3-BRIEF section 3, Onboard "allset2"; Spencer OK'd it 2026-11-27): the client asks
@@ -2468,7 +2530,9 @@ grantWelcome=function(player,board)
 				local walletBefore=handle.state.nectar
 				-- Onboard "allset2" (beta and Studio only): this new save is owed the one-time welcome gift.
 				local okGift,owed=pcall(function()return require(ReplicatedStorage.Shared.Onboard).on("allset2")end)
-				local ok,reason=Nursery.grantStarter(handle,okGift and owed==true)
+				-- Onboard "gifts" (beta and Studio only): this new save is owed the gift chain's three free cranks.
+				local okChain,chain=pcall(function()return require(ReplicatedStorage.Shared.Onboard).on("gifts")end)
+				local ok,reason=Nursery.grantStarter(handle,okGift and owed==true,okChain and chain==true)
 				if boards[player]~=board or board.closing or board.nursery~=handle then break end
 				-- The save is authoritative even if a reset happened during the yielding write.
 				-- A stale Welcome owner cannot replay a cinematic or another reward.

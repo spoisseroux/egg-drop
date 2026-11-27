@@ -5763,7 +5763,8 @@ do
     local saved=type(state.finds)=="table"and state.finds or {}
     finds={waiting=finds.waiting,count=tonumber(saved.count)or 0,limit=tonumber(saved.limit)or Finds.DailyLimit}
    end
-   return{den=denNow()~=nil,park=Attract.parkAnchor()~=nil,playDate=state.playDate,finds=finds,dash=dashNow(),prizes=Dash.prizes(),saved=state.dash,new=things.new()}
+   return{den=denNow()~=nil,park=Attract.parkAnchor()~=nil,playDate=state.playDate,finds=finds,dash=dashNow(),prizes=Dash.prizes(),saved=state.dash,new=things.new(),
+    gift=clientUI.giftRow} -- the gift chain's parked gift (GiftChain), nil without one
   end
   function things.seen(id)
    if id=="dash"and Things.on()and not Coach.has(clientUI.coach.mask,"dashSeen")then clientUI.coach:mark("dashSeen")end
@@ -5804,6 +5805,12 @@ do
   end
   function things.act(id)
    if not Things.on()or not closeMenu then return false end
+   -- The gift chain's row: the parked gift starts (the lead to the machine, or the crank there).
+   if id=="gift"then
+    if not clientUI.gifts then return false end
+    closeMenu()
+    return clientUI.gifts:resume()==true
+   end
    -- Nothing waiting: no trail to lay, so the page stays.
    if id=="finds"then local finds=findsNow();if not(finds and finds.nearest)then return false end end
    closeMenu()
@@ -5814,14 +5821,14 @@ do
    return true
   end
   -- The tips (CoachCards options.things) -------------------------------------------------------------------------
-  local function gate(roomFor)
+  local function gate(roomFor,noGift)
    local ctx=clientUI.coach.stepCtx or {}
    local pet=roomView.shownPet
    local actor=if pet and roomView.garden then roomView.garden:renderActor(player.UserId,pet.id,player.Character)else nil
    return{on=Things.tips(),mode=board:GetAttribute("Mode"),canRoam=roomView.canRoam(),revealPending=clientUI.coach.revealPending==true,
     modal=clientUI.anyModalOpen()==true or(clientUI.names~=nil and clientUI.names.isOpen())or clientUI.deckResults.visible==true,
     hatch=clientUI.arrivalHatch:isOpen()or(clientUI.snacks~=nil and clientUI.snacks.reveal~=nil and clientUI.snacks.reveal:isOpen()),
-    card=How.isOpen()or Confirm.isOpen(),tour=clientUI.coach.tourOpen==true or clientUI.coach.replaying==true,
+    card=How.isOpen()or Confirm.isOpen()or require(script.GiftReveal).isOpen(),gift=not noGift and clientUI.gifts~=nil and clientUI.gifts:holds(),tour=clientUI.coach.tourOpen==true or clientUI.coach.replaying==true,
     greeting=roomView.focusing==true or roomView.greetingCamera~=nil and roomView.greetingCamera~=false or roomView.focusTransitioning==true,
     engaged=clientUI.dash~=nil and clientUI.dash:engaged(),action=actor and actor.action,parkPending=board:GetAttribute("ParkGamesPending"),
     care=actor~=nil and(actor.care~=nil or actor.mode=="Carried"or actor.mode=="Docked"),
@@ -6105,6 +6112,163 @@ do
    clientUI.needs=needs
    -- pet2's first visit (PetCuddle.First): the petting screen opened while the guide's "Pet me!" is the open prompt
    roomView.cuddleFirst=function()return needs.guide==true and needs.open=="needHi"end
+   -- The gift chain (ONBOARDING-FUN-PASS section 2, Onboard "gifts"; GiftChain): one idea at a time, every step ends in
+   -- a hatch. Off (no `gifts` in the snapshot): a look twice a second and nothing drawn.
+   local okGifts,giftsProblem=pcall(function()
+    local Chain=require(script.GiftChain)
+    local Reveal=require(script.GiftReveal)
+    local Hue=require(ReplicatedStorage.Shared.HueCatalog)
+    local ToyCatalog=require(ReplicatedStorage.Shared.ToyCatalog)
+    local playerGui=player:WaitForChild("PlayerGui")
+    local reducedNow=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end
+    local toaster
+    local function toast(key)
+     toaster=toaster or require(script.DeckKit).toaster(overlayGui)
+     toaster.show(Copy.get(key,{pet=petName()}))
+    end
+    -- the ribbon hangs over the machine (an invisible part over the Hatch eggs trail's end)
+    local ribbonPart
+    local function machinePart()
+     local at=clientUI.eggCornerPlace and clientUI.eggCornerPlace()
+     if typeof(at)~="Vector3"then return nil end
+     if not(ribbonPart and ribbonPart.Parent)then
+      ribbonPart=Instance.new("Part");ribbonPart.Name="EggDropGiftRibbonAnchor";ribbonPart.Size=Vector3.new(1,1,1);ribbonPart.Transparency=1
+      ribbonPart.Anchored,ribbonPart.CanCollide,ribbonPart.CanQuery,ribbonPart.CanTouch,ribbonPart.CastShadow=true,false,false,false,false
+      ribbonPart.Parent=workspace
+     end
+     local want=at+Vector3.new(0,6,0)
+     if(ribbonPart.Position-want).Magnitude>.05 then ribbonPart.CFrame=CFrame.new(want)end
+     return ribbonPart
+    end
+    local chain
+    local seenWaiting={} -- giftSeen asks the server has not saved yet, by id
+    local giftBubble=require(script.GiftBubble).new({parent=playerGui,adornee=petPart,machine=machinePart,reduced=reducedNow,
+     text=function(key)return Copy.get(key,{pet=petName()})end,
+     onTap=function()if chain then chain:tap()end end,onClose=function()if chain then chain:close()end end,
+     onChip=function()if chain then chain:resume()end end})
+    local drop={paint="Hue",toy="Toy"}
+    local pressAction={paint="giftPaintBuy",toy="giftToyBuy"}
+    local function petId()local shown=roomView.shownPet;return shown and shown.id or "pip"end
+    -- the card, opened by the machine once the egg is in the cup (the standing rule), or at once with the corner off
+    local function present(record)
+     local open=function()
+      local pool=#ToyCatalog.remaining(nurseryState and nurseryState.toyUnlocks)+1
+      Reveal.show(playerGui,record,{text=function(key,vars)vars=vars or {};vars.pet=vars.pet or petName();return Copy.get(key,vars)end,
+       pet=petName(),color=Hue.ById[record.item]and Hue.ById[record.item].color or nil,
+       itemName=if record.kind=="paint"then(Hue.ById[record.item]and Hue.ById[record.item].name or record.item)else(ToyCatalog.ById[record.item]and ToyCatalog.ById[record.item].name or record.item),
+       poolSize=pool,play=function(name)return audio:play(name,1,.6)end,
+       act=function(r)
+        if r.kind=="paint"then clientUI.hueIntent:use(petId(),"main",r.item,nil)
+        else clientUI.toyIntent:equip(petId(),r.item,nil)end
+        pcall(function()require(script.Haptics).play("settle")end)
+       end,
+       seen=function(r)
+        local id=HttpService:GenerateGUID(false)
+        seenWaiting[id]={kind=r.kind,tries=0}
+        nurseryRequest:FireServer("giftSeen",{kind=r.kind,id=id})
+       end,
+       closed=function()if chain then chain:revealed()end end})
+     end
+     local machine=clientUI.eggMachine
+     local took=machine~=nil and select(2,pcall(machine.deliver,machine,drop[record.kind]or "Hue",open,nil))==true
+     if not took then open()end
+    end
+    local waiting={}
+    local result=remotes:WaitForChild("GiftResult")
+    result.OnClientEvent:Connect(function(packet)
+     if type(packet)=="table"and packet.action=="giftSeen"and type(packet.id)=="string"then
+      -- seen is told until the server has it (a busy save or a throttle asks again, a few times)
+      local s=seenWaiting[packet.id]
+      if not s then return end
+      if packet.status~="Saved"and(packet.reason=="Busy"or packet.reason=="Throttled"or packet.status=="Retrying")and s.tries<5 then
+       s.tries+=1
+       task.delay(1.5,function()if seenWaiting[packet.id]==s then nurseryRequest:FireServer("giftSeen",{kind=s.kind,id=packet.id})end end)
+      else seenWaiting[packet.id]=nil end
+      return
+     end
+     if type(packet)~="table"or packet.action~="giftEgg"or type(packet.id)~="string"then return end
+     local w=waiting[packet.id]
+     if not w then return end
+     if packet.status~="Saved"and(packet.reason=="Throttled"or packet.reason=="Busy")and not w.again then
+      w.again=true
+      task.delay(.8,function()if waiting[packet.id]==w then nurseryRequest:FireServer("giftEgg",{kind=w.kind,id=packet.id})end end)
+      return
+     end
+     waiting[packet.id]=nil
+     if packet.status=="Saved"and type(packet.gift)=="table"then
+      present(packet.gift)
+      w.done("Saved")
+     else
+      local machine=clientUI.eggMachine
+      if machine then pcall(machine.refuse,machine)end
+      w.done(packet.status,packet.reason)
+     end
+    end)
+    chain=Chain.new({state=function()return nurseryState end,clock=os.clock,
+     gate=function()
+      local since=clientUI.coach.roomSince
+      return Needs.blocked(Needs.gate(gate(if since then os.clock()-since else 0,true),Things.on()),true)
+     end,
+     busy=function()
+      return needs.shown==true or playerGui:FindFirstChild("EggDropAllSet2")~=nil or playerGui:FindFirstChild("EggDropAllSet")~=nil
+     end,
+     bubble={set=function(visible,head,sub)giftBubble:set(visible,head,sub)end,hop=function()giftBubble:hop()end,chip=function(value)giftBubble:chip(value)end},
+     ribbon=function(value)giftBubble:ribbon(value)end,
+     row=function(kind)clientUI.giftRow=kind end,
+     near=function()
+      local at=clientUI.eggCornerPlace and clientUI.eggCornerPlace()
+      local from=rootPosition()
+      return typeof(at)=="Vector3"and from~=nil and(at-from).Magnitude<=Chain.Near
+     end,
+     lead=function(target)
+      if target=="Eggs"then
+       local at=clientUI.eggCornerPlace and clientUI.eggCornerPlace()
+       if typeof(at)=="Vector3"then trail:start({position=at,name=Copy.get("r5.station.Eggs.name"),guide=true})end
+      elseif target=="Park"then things.show("park")
+      elseif target=="Nest"then things.show("nest")
+      elseif target=="Dash"then things.show("dash")end
+     end,
+     crank=function(kind,done)
+      if kind=="snack"then
+       local snacks=clientUI.snacks
+       if not(snacks and snacks.buyGift)then done("Rejected","Unavailable");return end
+       snacks.buyGift(done)
+       return
+      end
+      local id=HttpService:GenerateGUID(false)
+      local w={kind=kind,done=done}
+      waiting[id]=w
+      pcall(clientUI.eggPressed,pressAction[kind],{id=id})
+      nurseryRequest:FireServer("giftEgg",{kind=kind,id=id})
+      task.delay(30,function()if waiting[id]==w then waiting[id]=nil;done("Timeout","Timeout")end end)
+     end,
+     replay=function(record)present(record)end,
+     refused=function(reason)
+      toast(if reason=="PouchFull"then "onbGift.room"elseif reason=="PetNotOut"then "onbGift.bring"else "onbGift.busy")
+     end,
+     inPark=function()return Attract.parkMember(rootPosition())end,
+     park=function()return Attract.parkAnchor()~=nil end,
+     throwTip=function()toast("onbGift.throw")end,
+     fetchCard=function()
+      toast("onbGift.fetch")
+      pcall(function()roomView:cheerPet("cheer")end)
+     end,
+     event=function(name)request:FireServer("onboardEvent",name)end,
+     mask=function()return clientUI.coach.mask end})
+    clientUI.gifts=chain
+    local nextLook=0
+    local beatGifts=RunService.Heartbeat:Connect(function(dt)
+     local state=nurseryState
+     if not(type(state)=="table"and type(state.gifts)=="table")and not chain.active then
+      if os.clock()<nextLook then return end
+      nextLook=os.clock()+.5
+     end
+     local good,why=pcall(function()chain:step(os.clock());giftBubble:step(dt)end)
+     if not good then warn("[Gift] "..tostring(why))end
+    end)
+    gui.Destroying:Connect(function()beatGifts:Disconnect();giftBubble:destroy()end)
+   end)
+   if not okGifts then warn("[Gift] not mounted: "..tostring(giftsProblem))end
    clientUI.coach.options.follow=function()return Onboard.sessionFollow()end
    -- Live growth cuts on the beta: with the need bubbles on, the needHi bubble is the one hello prompt (no say-hi line)
    -- and the paw prints lead to the pet while it asks (the Bear's own prints to the machine start after it).
