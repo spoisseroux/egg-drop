@@ -238,6 +238,55 @@ return function(server)
 		for _,x in ipairs({b,n,c,off,p,o,f})do assert(heart(x.state)==0,"nothing written")end
 	end)
 
+	test("beta 38 (GARDEN-B38-BRIEF 3): the Heart XP rules and the server's shake reach, gap and window unchanged; the prompt reaches no further than the server allows; five slots (Blossom Point seven); three warm varieties; the tree size settles to the ground size on the first bounce; one shake in four drops a second fruit",function()
+		-- The rules the server pays and checks by, as before.
+		assert(Fruit.XP==2 and Fruit.Gap==60 and Fruit.DailyLimit==12 and Fruit.Window==45 and Fruit.Reach==14)
+		assert(Fruit.Shake.reach==1.6 and Fruit.Shake.slack==2 and Fruit.Shake.gap==75 and Fruit.Shake.speed==4)
+		assert(Fruit.Shake.hidden+Fruit.Shake.grow>=Fruit.Shake.gap,"the client's rest (the prompt off) outlasts the server's gap")
+		-- The look's new numbers.
+		assert(Fruit.Shake.leaves==12 and Fruit.Shake.rock==8 and Fruit.Shake.rocks==3 and Fruit.Shake.rockTime==.7)
+		-- The prompt: never past the server's shake reach (a prompt shake is never Far), and never past Fable's 6.
+		for _,tree in ipairs(Fruit.trees())do
+			local reach=Fruit.promptReach(tree)
+			assert(reach<=Fruit.Prompt.reach and reach<tree.trunk+Fruit.Shake.reach+Fruit.Shake.slack,tree.tree.." prompt reach")
+			assert(reach>tree.trunk+Fruit.Shake.reach,"further than the bump")
+			assert(Fruit.promptShakes(tree,tree.x+reach-.01,tree.z)and not Fruit.promptShakes(tree,tree.x+reach+.01,tree.z))
+			-- Whatever the prompt allows the server's own check passes.
+			assert(Fruit.shakes(tree,tree.x+reach,tree.z,nil,Fruit.Shake.slack),"the server agrees")
+			assert(Fruit.slotsFor(tree.tree)==(if tree.tree=="Landmark_BlossomPointTree"then 7 else 5))
+		end
+		assert(not Fruit.promptShakes(nil,0,0)and not Fruit.promptShakes(Fruit.trees()[1],nil,0))
+		-- Three varieties on the seven blossom trees, golden on Blossom Point; every one warm (no green or blue fruit).
+		local seen={}
+		for _,tree in ipairs(Fruit.trees())do
+			local v=Fruit.variety(tree.tree)
+			seen[Fruit.VarietyOf[tree.tree]]=(seen[Fruit.VarietyOf[tree.tree]]or 0)+1
+			for _,hex in ipairs({v.body,v.blush})do
+				local c=Color3.fromHex(hex)
+				assert(c.R>=c.G and c.R>c.B+.15,tree.tree.." warm "..hex)
+			end
+		end
+		assert(seen.sunset==3 and seen.berry==3 and seen.pear==1 and seen.golden==1,"3 + 3 + 1 and Blossom Point")
+		assert(Fruit.variety("nope")==Fruit.Varieties.sunset and Fruit.Varieties.sunset.body==Fruit.Look.body.colour)
+		assert(Fruit.Varieties.pear.tall==1.2)
+		-- Size: 1.15 in the tree and through the fall; .9 after the first bounce, eased between.
+		local tree=Fruit.Canopy.size/Fruit.Look.body.size
+		local function near(a,b)return math.abs(a-b)<1e-6 end
+		assert(near(Fruit.sizeAt(10,nil,nil),tree)and near(Fruit.sizeAt(10,11,11.34),tree)and near(Fruit.sizeAt(11,11,11.34),tree))
+		assert(near(Fruit.sizeAt(11.34,11,11.34),1)and near(Fruit.sizeAt(20,11,11.34),1))
+		local mid=Fruit.sizeAt(11.17,11,11.34)
+		assert(mid<tree and mid>1,"eases down")
+		-- Drops: the first on the second swing; a second .3 later about one shake in four.
+		local seconds=0
+		for count=1,2000 do
+			local t=Fruit.dropTimes(100,count)
+			assert(near(t[1],100+Fruit.Drops.first),"the second swing")
+			if t[2]then seconds+=1;assert(near(t[2]-t[1],Fruit.Drops.second))end
+			assert(#Fruit.dropTimes(100,count)==#t,"the same on a re-run")
+		end
+		assert(seconds>350 and seconds<650,"about one in four ("..seconds..")")
+	end)
+
 	test("the host never errors and never pays a bad packet (a fuzz of 3,000)",function()
 		local r=rig({now=yes})
 		local random=Random.new(35)

@@ -45,7 +45,8 @@ local Side=Vector3.new(-Wind.Direction.Z,0,Wind.Direction.X)
 -- A tree shake (GARDEN-PLAY-BRIEF-2 section 5): GardenLife marks a crown part when the player walks into its trunk, and
 -- the crown rocks Rock degrees Rocks times over RockTime about its pivot, on top of its sway, fading as it goes. Weak
 -- keys; os.clock() times. A crown not bound here (no wind, too far) simply does not rock.
-Client.Shake=table.freeze({rock=6,rocks=3,time=.6})
+-- Beta 38 (GARDEN-B38-BRIEF 3b): 8 degrees at the crown, three swings in .7 s, easing out (GardenFruit.Shake).
+Client.Shake=table.freeze({rock=8,rocks=3,time=.7})
 Client.Shakes=setmetatable({},{__mode="k"})
 function Client.shake(part,at)
 	if typeof(part)=="Instance"then Client.Shakes[part]=at or os.clock()end
@@ -54,7 +55,7 @@ end
 function Client.rock(t)
 	local S=Client.Shake
 	if type(t)~="number"or t<0 or t>=S.time then return nil end
-	return S.rock*math.sin(TAU*S.rocks*t/S.time)*(1-t/S.time)
+	return S.rock*math.sin(TAU*S.rocks*t/S.time)*(1-t/S.time)^2
 end
 
 -- Degrees for a wind of 0 to 1: nothing in still air, Rest at the breeze, Peak at full wind (a bush's, or rest/peak).

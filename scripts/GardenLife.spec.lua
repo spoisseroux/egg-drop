@@ -1016,9 +1016,19 @@ return function(client)
 			local rustles=0
 			for _,sound in ipairs(r.sounds)do if string.sub(sound.cue,1,10)=="asmr_flake"then rustles+=1 end end
 			assert(rustles==Fruit.Sounds.rustles and r.buzzed[1]==Fruit.Buzz)
-			assert(#r.life.shakeDrops==1 and r.life.shakeDrops[1].shake==true,"one fruit drops")
+			-- Beta 38: one fruit (one shake in four, two) lets go on the second swing.
+			local drops=#r.life.shakeDrops
+			assert((drops==1 or drops==2)and r.life.shakeDrops[1].shake==true,"one fruit drops")
+			assert(drops==#Fruit.dropTimes(0,r.life.shakeCount),"a second only on the one-in-four")
 			local key=r.life.shakeDrops[1].key
+			local start=r.life.shakeDrops[1].start
+			assert(start-r.now<=Fruit.Drops.first+1e-6,"on the second swing")
+			if r.now<start then assert(r.life:shakenScale(key,r.now)==nil,"it hangs on till it lets go")end
+			r.step(.4)
 			assert(r.life:shakenScale(key,r.now)==0,"its slot hangs empty")
+			local plucked=false
+			for _,sound in ipairs(r.sounds)do if sound.cue==Fruit.Sounds.pluck then plucked=true end end
+			assert(plucked,"the stem's pluck")
 			r.step(2)
 			local landed=false
 			for _,sound in ipairs(r.sounds)do if sound.cue==Fruit.Sounds.land then landed=true end end
@@ -1032,6 +1042,85 @@ return function(client)
 			r.player=trunk+Vector3.new(TREE.trunk+5,0,0);r.step(.1)
 			walkIn()
 			assert(#r.shakes==2,"grown back, it shakes again")
+		end)
+		test("beta 38: the Shake prompt at each fruit tree's trunk (E, gamepad X, clickable), on only while a shake is allowed; a press within reach shakes like a bump and tells the server; out of reach nothing; resting: off and ignored",function()
+			local r=fruitRig()
+			r.step(.5)
+			local prompts=r.life.shakePrompts
+			local count=0
+			for i,entry in pairs(prompts)do
+				count+=1
+				local p=entry.prompt
+				assert(p.ClassName=="ProximityPrompt"and p.HoldDuration==0 and p.RequiresLineOfSight==false,"prompt "..i)
+				assert(p.ActionText=="Shake"and p.ObjectText=="Fruit tree","the words")
+				assert(math.abs(p.MaxActivationDistance-Fruit.promptReach(r.life.fruitTrees[i]))<1e-9,"the reach")
+				local at=entry.anchor.CFrame.Position
+				local tree=r.life.fruitTrees[i]
+				assert(math.abs(at.X-tree.x)<1e-6 and math.abs(at.Z-tree.z)<1e-6,"at the trunk")
+				assert(p.Enabled==true,"allowed: on")
+			end
+			assert(count==#Fruit.trees(),"one a fruit tree")
+			-- Out of reach: a press does nothing.
+			local trunk=Vector3.new(TREE.x,5,TREE.z)
+			r.player=trunk+Vector3.new(Fruit.promptReach(TREE)+.5,0,0)
+			assert(r.life:askShake(1))
+			r.step(.1)
+			assert(#r.shakes==0,"out of reach")
+			-- Within reach, standing still (no bump): the press shakes and the server is told, the prompt goes off.
+			r.player=trunk+Vector3.new(Fruit.promptReach(TREE)-.3,0,0)
+			r.step(.1)
+			r.life:askShake(1)
+			r.step(.1)
+			assert(#r.shakes==1 and r.shakes[1]==1,"shaken, the same message")
+			assert(prompts[1].prompt.Enabled==false,"resting: off")
+			local rustles=0
+			for _,sound in ipairs(r.sounds)do if string.sub(sound.cue,1,10)=="asmr_flake"then rustles+=1 end end
+			assert(rustles==Fruit.Sounds.rustles,"the rustles")
+			-- Resting: a press is ignored.
+			r.life:askShake(1);r.step(.1)
+			assert(#r.shakes==1,"ignored while resting")
+			r.now+=Fruit.Shake.hidden+Fruit.Shake.grow+1
+			r.step(.1)
+			assert(prompts[1].prompt.Enabled==true,"back on when it may shake again")
+			-- Parked (the deck): every prompt off.
+			r.life:park()
+			for _,entry in pairs(prompts)do assert(entry.prompt.Enabled==false,"parked: off")end
+		end)
+		test("beta 38: the canopy fruit: five a tree drawn in the tree's variety at 1.15, the seated ones with a leaf disc and sprig; an empty tree still shakes (leaves, lower rustles, nothing falls, no creak)",function()
+			local r=fruitRig()
+			r.step(2)
+			assert(r.life.grove.world.canopy==true and #r.life.grove.stems[1]==Fruit.slotsFor(TREE.tree),"the canopy's slots")
+			local seated,hanging=0,0
+			local variety=Fruit.variety(TREE.tree)
+			for _,entry in ipairs(r.life.fruitPool)do
+				if entry.key and entry.key>0 then
+					hanging+=1
+					assert(entry.variety and entry.variety.body,"a variety")
+					assert(math.abs(entry.body.Size.X-Fruit.Canopy.size)<.01 or entry.w<1.2,"the 1.15 body")
+					if entry.seatShown then
+						seated+=1
+						assert(not hidden(entry.shadow)and not hidden(entry.sprig),"leaf disc and sprig")
+						local want=Color3.fromHex(Fruit.Canopy.shadow.colour)
+						assert(math.abs(entry.shadow.Color.G-want.G)<1e-6 and math.abs(entry.shadow.Color.R-want.R)<1e-6,"the darker leaf green")
+					end
+				end
+			end
+			assert(hanging>0 and seated>0,"hanging "..hanging.." seated "..seated)
+			-- Empty the tree: take every fruit off, then shake it.
+			local now=r.now
+			for _,slot in ipairs(r.life.grove.stems[1])do r.life.shaken[slot.key]=now end
+			local base=#r.sounds
+			local plan=r.life:shake(1,r.life.grove.crowns[1],now,false,function()end)
+			assert(plan==nil and #r.life.shakeDrops==0,"nothing falls")
+			local creaks,low=0,0
+			for k=base+1,#r.sounds do
+				local s=r.sounds[k]
+				if s.cue==Fruit.Sounds.creak then creaks+=1 end
+				if string.sub(s.cue,1,10)=="asmr_flake"and s.pitch<1 then low+=1 end
+			end
+			assert(creaks==0 and low>=1,"lower rustles, no creak")
+			assert(#r.shakes>=1,"still tells the server")
+			assert(variety.body==Fruit.Varieties[Fruit.VarietyOf[TREE.tree]or "sunset"].body)
 		end)
 		test("the shake, Reduced Motion: the rustle and the buzz only; nothing rocks or falls",function()
 			local r=fruitRig()

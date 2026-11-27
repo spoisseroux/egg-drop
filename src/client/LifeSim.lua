@@ -1261,9 +1261,10 @@ end
 -- its width out (FRUIT-LOOK 2; beta 14 B5), in the crown's own frame (crown.cframe: a kit crown, yawed; else its axes),
 -- pulled in so it lies inside the crown's ellipsoid at `stemIn` of its radius at that height. `local` is the tip in the
 -- crown's frame (GardenLife moves hanging fruit with the crown's sway from it).
-function Sim.fruitStems(i,crown)
+function Sim.fruitStems(i,crown,canopy)
 	local out={}
 	if type(i)~="number"or type(crown)~="table"or typeof(crown.position)~="Vector3"or typeof(crown.size)~="Vector3"then return out end
+	if canopy then return Sim.fruitCanopy(i,crown)end
 	local size=crown.size
 	local frame=if typeof(crown.cframe)=="CFrame"then crown.cframe else CFrame.new(crown.position)
 	local hx,hy,hz=size.X/2,size.Y/2,size.Z/2
@@ -1284,16 +1285,73 @@ function Sim.fruitStems(i,crown)
 	end
 	return out
 end
+-- Beta 38 (GARDEN-B38-BRIEF 3a; the `fruit` switch, Grove world.canopy): fruit in the canopy. Crown i's slots, all
+-- filled: GardenFruit.slotsFor(tree) of them (5, Blossom Point 7). The first Canopy.under hang under the skirt as
+-- above (the same maths at angles 1 and 2); the rest are seated on the crown's outer face, spread evenly round it (a
+-- seeded turn and a little jitter, so two or three face any camera), Canopy.seatFrom to seatTo degrees under its widest
+-- line, on the leaves' face (Canopy.hull of the bounding ellipsoid) with the body sunk Canopy.sunk into them. Every
+-- slot hangs the 1.15 body (`hang` from its stem tip, so Sim.fruitHang puts the body's centre on the seat), sways on
+-- its own period (GardenFruit.Sway; the seated ones `amp` half), and a seated one carries its outward `normal` (world,
+-- at rest) for the leaf disc behind it.
+function Sim.fruitCanopy(i,crown)
+	local C,S=Fruit.Canopy,Fruit.Sway
+	local out={}
+	local size=crown.size
+	local frame=if typeof(crown.cframe)=="CFrame"then crown.cframe else CFrame.new(crown.position)
+	local hx,hy,hz=size.X/2,size.Y/2,size.Z/2
+	if hx<=0 or hy<=0 or hz<=0 then return out end
+	local n=math.clamp(Fruit.slotsFor(crown.tree),1,7) -- fruitKey holds 7 a crown
+	local under=math.min(C.under,n)
+	local hang=F.hang*C.size/Fruit.Look.body.size
+	local base=Wind.hash(i,12)*360
+	for k=1,n do
+		local seed=i*8+k
+		local period=S.periodMin+(S.periodMax-S.periodMin)*Wind.hash(seed,19)
+		if k<=under then
+			local a=math.rad(F.angles[k]+base)
+			local x,z=F.out*size.X*math.cos(a),F.out*size.Z*math.sin(a)
+			local q=math.sqrt((x/hx)^2+(z/hz)^2)
+			local most=math.min(F.stemIn,F.skirt)
+			if q>most then x,z,q=x*most/q,z*most/q,most end
+			local tip=Vector3.new(x,-hy*math.sqrt(math.max(0,1-q*q))-F.under,z)
+			table.insert(out,table.freeze({k=k,key=Sim.fruitKey(i,k),stem=frame*tip,tip=tip,hang=hang,period=period,amp=1}))
+		else
+			local j,seats=k-under,n-under
+			local a=math.rad(base+F.angles[1]+180/seats+360*(j-1)/seats+(Wind.hash(seed,20)-.5)*20)
+			local lat=math.rad(C.seatFrom+(C.seatTo-C.seatFrom)*Wind.hash(seed,22))
+			local d=Vector3.new(math.cos(lat)*math.cos(a),-math.sin(lat),math.cos(lat)*math.sin(a))
+			local face=Vector3.new(d.X*hx,d.Y*hy,d.Z*hz)*C.hull
+			local normal=Vector3.new(d.X/hx,d.Y/hy,d.Z/hz).Unit
+			local r=C.size/2
+			-- Sunk `sunk` of the body's depth into the leaves: its centre (.5 - sunk) * size out along the normal.
+			local centre=face+normal*(r-2*r*C.sunk)
+			local tip=centre+Vector3.new(0,hang,0)
+			table.insert(out,table.freeze({k=k,key=Sim.fruitKey(i,k),stem=frame*tip,tip=tip,hang=hang,period=period,
+				amp=S.seated,seated=true,centre=frame*centre,face=frame*face,normal=frame:VectorToWorldSpace(normal)}))
+		end
+	end
+	return out
+end
 -- The hanging pendulum, degrees toward Wind.Direction; 0 when still (Reduced Motion, budget level 1).
 function Sim.fruitSway(k,now,wind,still)
 	if still or type(now)~="number"then return 0 end
 	wind=if type(wind)=="number"and wind==wind then math.clamp(wind,0,1)else 0
 	return(F.swayMin+F.swayGust*wind)*math.sin(now*F.swayHz+k)
 end
--- The image centre for a stem tip, swung `angle` degrees downwind, at `scale` (the stem tip stays put).
-function Sim.fruitHang(stem,angle,scale)
+-- A slot's pendulum: a canopy slot (Sim.fruitCanopy) swings Sway.rest at rest to Sway.gust in a gust on its own
+-- period, times its `amp`; any other slot is Sim.fruitSway's.
+function Sim.fruitSwayOf(slot,now,wind,still)
+	if type(slot)~="table"or type(slot.period)~="number"then return Sim.fruitSway(if type(slot)=="table"then slot.k else 0,now,wind,still)end
+	if still or type(now)~="number"then return 0 end
+	wind=if type(wind)=="number"and wind==wind then math.clamp(wind,0,1)else 0
+	local S=Fruit.Sway
+	return(S.rest+(S.gust-S.rest)*wind)*(slot.amp or 1)*math.sin(math.pi*2*now/slot.period+slot.k)
+end
+-- The image centre for a stem tip, swung `angle` degrees downwind, at `scale` (the stem tip stays put); `hang` the
+-- stem-to-centre length (nil: F.hang; a canopy slot's own).
+function Sim.fruitHang(stem,angle,scale,hang)
 	local a=math.rad(angle or 0)
-	local r=F.hang*(scale or 1)
+	local r=(hang or F.hang)*(scale or 1)
 	return stem+Wind.Direction*(r*math.sin(a))-Vector3.new(0,r*math.cos(a),0)
 end
 -- The ground under a landing, or nil and why: no number, too far below the crown (water, off the island), or not
@@ -1341,7 +1399,7 @@ function Sim.fruitPlan(i,crown,slot,n,letgo,world)
 	local dir=Wind.Direction
 	local seed=n*16+i
 	local crownY=crown.position.Y
-	local release=Sim.fruitHang(slot.stem,F.tug,1)
+	local release=Sim.fruitHang(slot.stem,F.tug,1,slot.hang)
 	local function land(at)
 		local g,why=Sim.fruitGround(at.X,at.Z,crownY,world)
 		if not g then return nil,why end
@@ -1366,8 +1424,8 @@ function Sim.fruitPlan(i,crown,slot,n,letgo,world)
 	local t4=t3+F.bounces[2].time
 	local t5=t4+F.roll
 	local t6=t5+F.rest
-	return table.freeze({id=slot.key..":"..n,i=i,key=slot.key,k=slot.k,n=n,stem=slot.stem,crownY=crownY,start=letgo,
-		sway=Sim.fruitSway(slot.k,letgo,Wind.at(crown.position,letgo),false),release=release,p1=p1,p2=p2,p3=p3,p4=p4,
+	return table.freeze({id=slot.key..":"..n,i=i,key=slot.key,k=slot.k,n=n,stem=slot.stem,hang=slot.hang,crownY=crownY,start=letgo,
+		sway=Sim.fruitSwayOf(slot,letgo,Wind.at(crown.position,letgo),false),release=release,p1=p1,p2=p2,p3=p3,p4=p4,
 		heading=heading,length=length,t1=t1,t2=t2,t3=t3,t4=t4,t5=t5,t6=t6,gone=t6+F.fade})
 end
 -- Gust n at crown i, before the slot rule: the seeded chance, the trigger, the seeded slot (of all its stems), the
@@ -1443,7 +1501,7 @@ function Sim.fruitPose(plan,now)
 	if now<plan.t1 then
 		local u=math.clamp((now-plan.start)/F.letGo,0,1)
 		local angle=plan.sway+(F.tug-plan.sway)*u
-		position,rotation,phase=Sim.fruitHang(plan.stem,angle,1),-angle*plan.dot,"tug"
+		position,rotation,phase=Sim.fruitHang(plan.stem,angle,1,plan.hang),-angle*plan.dot,"tug"
 	elseif now<plan.t2 then
 		local u=(now-plan.t1)/F.fall
 		local a,b=plan.release,plan.p1
@@ -1585,7 +1643,8 @@ Grove.Every=1   -- seconds between refreshes (GardenLife)
 -- world.breath: the big breath's drops too (the Alive `scene` switch; GardenLife makes a new grove when it flips).
 function Grove.new(crowns,world)
 	local self=setmetatable({crowns=crowns or {},world=world or {},stems={},cands={},bcands={},drops={},at=nil},Grove)
-	for i,crown in ipairs(self.crowns)do self.stems[i]=Sim.fruitStems(i,crown);self.cands[i]={};self.bcands[i]={};self.drops[i]={}end
+	-- world.canopy (beta 38, the `fruit` switch): the canopy's slots (Sim.fruitCanopy).
+	for i,crown in ipairs(self.crowns)do self.stems[i]=Sim.fruitStems(i,crown,self.world.canopy==true);self.cands[i]={};self.bcands[i]={};self.drops[i]={}end
 	return self
 end
 -- Gust numbers whose let-go can fall within [a, b] at this place.
