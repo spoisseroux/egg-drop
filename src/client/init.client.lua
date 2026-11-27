@@ -5589,7 +5589,7 @@ do
   end
   clientUI.life=require(script.GardenLife).mount({ambient=clientUI.ambient,
    -- GARDEN-PLAY-BRIEF-2: a tree I shook (the server's check of a fruit from it).
-   shook=function(i)fruitSend({kind="shake",tree=i})end,
+   shook=function(i,drops)fruitSend({kind="shake",tree=i,drops=drops})end,
    notice=function(loose,now)
     local pet=clientUI.lifePet
     return pet~=nil and pet:notice(loose,now)==true

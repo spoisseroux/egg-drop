@@ -208,6 +208,31 @@ return function(server)
 		assert(w.eat()and heart(w.state)==2)
 	end)
 
+	test("the host: a shake that drops two opens two claims (each within the minute's and the day's caps); never more than two",function()
+		assert(Fruit.shakeClaims(nil)==1 and Fruit.shakeClaims(0)==1 and Fruit.shakeClaims(2)==2 and Fruit.shakeClaims(9)==Fruit.MaxDrops
+			and Fruit.shakeClaims(1.5)==1 and Fruit.shakeClaims(0/0)==1 and Fruit.MaxDrops==2)
+		local r=rig()
+		assert(r.send({kind="shake",tree=1,drops=2}))
+		assert(r.eat(),"the first fruit")
+		assert(select(2,r.eat())=="Rate","the second inside the minute: the minute's cap")
+		local shake=r.host.records[r.board].shaken[1]
+		assert(shake and shake.left==1,"one claim left for the second fruit")
+		-- the second fruit's claim, inside the window and past the gap (a test gap)
+		r.host.records[r.board].paidAt=-math.huge;shake.at=r.clock-1
+		assert(r.eat(),"the second fruit")
+		assert(r.host.records[r.board].shaken[1]==nil,"both used")
+		r.host.records[r.board].paidAt=-math.huge
+		assert(select(2,r.eat())=="NoFruit","never a third")
+		assert(heart(r.state)==2*Fruit.XP)
+		-- one fruit (or an old client that says nothing): one claim
+		local o=rig()
+		assert(o.send({kind="shake",tree=1}))
+		assert(o.eat());o.host.records[o.board].paidAt=-math.huge
+		assert(select(2,o.eat())=="NoFruit")
+		local m=rig()
+		assert(m.send({kind="shake",tree=1,drops=50}))
+		assert(m.host.records[m.board].shaken[1].left==Fruit.MaxDrops,"capped")
+	end)
 	test("the host: one a minute, twelve a day; the pet near the fruit, the player near; busy, no pet, off",function()
 		local r=rig({now=yes})
 		assert(r.eat())

@@ -1629,7 +1629,7 @@ function Life:shake(i,crown,now,reduced,put)
 	end
 	if full then self:fruitSound(Sounds.creak,under,Sounds.creakVolume,Sounds.creakPitch)end
 	pcall(self.buzz,Fruit.Buzz)
-	if self.shook then pcall(self.shook,i)end
+	if self.shook then pcall(self.shook,i,#plans)end -- the server opens a claim per fruit that falls
 	if reduced then return nil end
 	local follow=self.follow and self.follow[i]
 	if follow and follow.part.Parent then pcall(self.rock,follow.part)end

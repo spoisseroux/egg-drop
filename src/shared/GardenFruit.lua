@@ -72,6 +72,13 @@ Fruit.Sway=table.freeze({rest=3,gust=10,periodMin=2.2,periodMax=3,seated=.5})
 -- The shake's beats (3b): the first fruit lets go `first` s in (the second swing), and one shake in `secondChance` a
 -- second fruit `second` s after it. A fruit's landing ticks `landBuzz`.
 Fruit.Drops=table.freeze({first=.3,second=.3,secondChance=.25})
+Fruit.MaxDrops=2 -- the most one shake lets go (dropTimes)
+-- Pure: how many claims a shake opens on the server: the fruit the client says fell (1 when it says nothing or nonsense:
+-- older clients, Reduced Motion), never more than a shake can drop. Each still pays within Gap and DailyLimit.
+function Fruit.shakeClaims(drops)
+	if type(drops)~="number"or drops~=drops or drops%1~=0 then return 1 end
+	return math.clamp(drops,1,Fruit.MaxDrops)
+end
 Fruit.LandBuzz="drop"
 -- The prompt (3b): a "Shake" pill at the trunk while a shake is allowed for me. Fable asks for 6 studs; the server's
 -- shake reach (trunk + Shake.reach + Shake.slack, unchanged) is the limit, so the pill shows within half the slack of
