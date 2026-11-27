@@ -8,7 +8,7 @@ After the Bear, every step ends in a hatch. There are three free cranks (Paint, 
 
 ## Server design
 
-**Why not the existing buys.** A `lookBuy` receipt must have `cost == price` and a price in `Prices{12}`. A `toyBuy` receipt must pass `charged(20|8)`. `pendingHueResult` and `pendingToyResult` need such a receipt. A cost-0 receipt, a new pool version or a new action in those rings would make HueState and ToyState `valid()` fail on beta (38) and on live, so those builds could not load the save. A gift therefore writes only fields every build already accepts, and keeps its own receipt in a new top-level field that old builds ignore and keep. That is the `welcomeGift` and `paintPots` precedent, proved by a cross-version spec.
+**Why not the existing buys.** Old builds reject a cost-0 `lookBuy` or `toyBuy` receipt: the cost must match the price (`Prices{12}`, `charged(20|8)`), and the pending results need such a receipt. A cost-0 receipt, a new pool or a new action would fail HueState or ToyState `valid()` on beta (38) and live, and the save would not load. So a gift writes only fields every build accepts and keeps its receipt in a new top-level field that old builds ignore and keep (the `welcomeGift` and `paintPots` precedent).
 
 **Save field `gifts`** (hatching v11, no version bump). It is never part of `HatchProgress.valid`, and every read is tolerant (the NestState and DashState pattern). A malformed field reads as "not owed", so it fails closed and pays nothing.
 
@@ -27,17 +27,12 @@ gifts = { v=1,                                   -- owed marker
   - **toy**: the paint receipt exists, and either `stats.rounds >= 3` (the Welcome round plus two) or `today > paint.day`. There is no saved session counter, so "session 2" is read as a later server day (open question 3). At least one toy must be left (`ToyCatalog.remaining`).
   - **snack**: the paint receipt exists and a Dash race has finished (`dash.ribbons` sum > 0).
   - **all**: no other reveal open (`Guard.other(state, nil)`), otherwise `RevealPending`, which the host waits on.
-- **Exactly once.** The kind's receipt is the proof. It is read and written in the same UpdateAsync as the item. The pending candidate `{kind, op, unit|fixed, day}` is frozen, so a retry rolls the same pot. A replayed request, a rejoin or a second server (lease fence, `fenced`) meets the existing receipt and answers `AlreadyGranted` with the stored item, so the client can still show an unseen reveal. An ambiguous write is proved by `lastOperation` or by the receipt's own op.
-- **Paint (pots-only pool).** `GiftEggs.Pools.paint = HueCatalog.RollOrder`, 25% each, with its own odds line. A random account uses `Hue.roll(unit)`. A restricted account (`isRestricted`) uses `Hue.fixedNext(hueInventory)`. The apply sets `hueInventory[pot] += 1` and the `lookFound` bit and writes `gifts.paint`. It does not touch `lookCharmMisses`, because a gift is not a paid pull.
-- **Toy.** The apply picks from `ToyCatalog.remaining`: `roll` for random accounts, `fixedNext` for restricted ones. It sets `toyUnlocks[id] = true` and writes `gifts.toy`. "The Bear plays with it" is the existing `toyEquip` with `resultId` nil, a cost-0 receipt every build accepts.
-- **Snack.** This one rides the existing free Stat Egg. `StatEggs.buy`'s free path gets a third source, the gift. While it is ready it is spent first, before the bank and the medal eggs. It is frozen into the candidate as `c.gift` (as `c.medals` is), the receipt gets `source="gift"`, and `gifts.snack` is written in the same write. Old builds never see the credit, because it is derived. They also accept the receipt, because StatEggState checks only op, kind and digest.
-- **Seen.** `giftSeen {kind}` sets `seen = true`, OR-only and idempotent, so an unseen reveal replays after a rejoin. "Paint {pet}!" is the existing `hueUse` on the main channel (`pendingResultId` nil) followed by `giftSeen`.
-- **Host** `src/server/GiftEggHost.lua` copies the WelcomeGiftHost order:
-  1. A saved receipt replays (Saved AlreadyGranted plus the item).
-  2. The switch: NotReady.
-  3. One loop per board.
-  4. Up to N tries while the board is free. `RevealPending`, Busy, Pending, Retrying and RevisionChanged wait. NotDue, AllOwned and Veteran answer at once.
-  It is rate-limited like PaintPotCatalog.allow. There are two new remotes, `GiftEgg` and `GiftResult`.
+- **Exactly once.** The kind's receipt is the proof, written in the same UpdateAsync as the item. The candidate `{kind, op, unit|fixed, day}` is frozen, so a retry rolls the same pot. A replay, a rejoin or a second server (lease fence) meets the receipt and answers `AlreadyGranted` with the stored item, so an unseen reveal can still show. An ambiguous write is proved by `lastOperation` or the receipt's op.
+- **Paint (pots only).** `GiftEggs.Pools.paint = HueCatalog.RollOrder`, 25% each, shown as its own odds. `Hue.roll(unit)`, or `Hue.fixedNext(hueInventory)` for restricted accounts. The apply sets `hueInventory[pot] += 1`, sets the `lookFound` bit and writes `gifts.paint`. It leaves `lookCharmMisses` alone (not a paid pull).
+- **Toy.** Picked from `ToyCatalog.remaining` (`roll`, or `fixedNext` for restricted accounts). It sets `toyUnlocks[id] = true` and writes `gifts.toy`. The Bear playing with it is the existing `toyEquip` (`resultId` nil, cost 0).
+- **Snack.** It rides the existing free Stat Egg. The gift becomes the first free source in `StatEggs.buy` (before the bank and medals), frozen as `c.gift` like `c.medals`. The receipt gets `source="gift"` and `gifts.snack` is written in the same write. Old builds never see the derived credit and accept the receipt (only op, kind and digest are checked).
+- **Seen.** `giftSeen {kind}` is OR-only, so an unseen reveal replays after a rejoin. "Paint {pet}!" is the existing `hueUse` (main channel, `pendingResultId` nil), then `giftSeen`.
+- **Host** `src/server/GiftEggHost.lua` copies the WelcomeGiftHost order: a saved receipt replays first, then the switch (NotReady), one loop per board, and N tries while the board is free. RevealPending, Busy, Pending, Retrying and RevisionChanged wait; NotDue, AllOwned and Veteran answer at once. It is rate-limited, with two new remotes, `GiftEgg` and `GiftResult`.
 
 ## Component changes
 
@@ -75,8 +70,7 @@ The pure rules are spec-checked and the controller follows the BearNeeds shape. 
 
 | Case | Behaviour |
 |---|---|
-| Invite ignored | One nudge, then it parks. The gift waits forever, because it is derived |
-| "x" | Parks at once, not asked again this session |
+| Ignored or "x" | Ignored: one nudge, then it parks. "x": parks at once, not asked again this session. Either way it waits forever (derived) |
 | Returning mid-chain | Resumes from the saved receipts and facts. An unseen reveal replays first |
 | Veteran or old save | Not owed (`gifts.v` missing): no chip, no lead (open question 1) |
 | Switch off mid-chain | No new opens (NotReady). Invites, chip and ribbon hidden. Receipts and items kept; turning it on resumes |
@@ -93,30 +87,16 @@ The veteran "normal pool" Paint gift, the Sleepy Egg from the machine, the tier 
 
 ## Spec plan
 
-- **New specs:**
-  - `GiftEggs.spec`: rules per kind, owed, veteran, triggers, fixed versus roll, tolerant reads.
-  - `GiftEggHost.spec`: order and wait reasons.
-  - `GiftEggSave.spec`: fake adapter; once only, ambiguous-write retry, rejoin, second handle, RevealPending, AllOwned, `giftSeen`.
-  - `GiftEggCrossVersion.spec`: beta (38) validators load and keep a gifted save.
-  - `GiftChain.spec`: one at a time, nudge then park, "x", the 3-minute gap, two per session, step 6 first, veteran ribbon only, switch off.
-- **Updated specs:** `StatEggState` (gift spent first, digest, source), `EggDelivery.spec` (new actions routed), ThingsPage row, `AllSetGift` and `WelcomeGift` (unchanged behaviour).
-- **How to run:** through the ZZSpecs copies (`scripts/run_dash_server_specs.py` list).
+New: `GiftEggs.spec` (rules per kind, owed, veteran, triggers, fixed or roll), `GiftEggHost.spec` (order, wait reasons), `GiftEggSave.spec` (fake adapter: once, ambiguous retry, rejoin, second handle, RevealPending, AllOwned, seen), `GiftEggCrossVersion.spec` (beta 38 validators load and keep a gifted save), `GiftChain.spec` (one at a time, park, "x", gap, two a session, step 6 first, veterans, switch off). Updated: StatEggState (gift first, source), `EggDelivery.spec`, the ThingsPage row, AllSetGift and WelcomeGift unchanged. Run through the ZZSpecs copies.
 
 ## Studio checks
 
-1. Fresh beta save, all switches on: tuck, Peek, gift bubble, lead, three-tap crank, pot out of the machine, reveal, "Paint Bear!".
-2. Rejoin during the reveal: it replays.
-3. "x" then the Things row starts the gift.
-4. Turn `gifts` off mid-chain, then on again.
-5. Toy after two rounds, then the Bear plays with it.
-6. The park "Throw it!" ends in the Fetch card.
-7. A Dash finish, then the free Snack crank.
-8. Captures for Fable at 600 x 360: the Peek, the gift crank and the paint.
+Fresh beta save, all switches on, run the whole chain: Peek, gift bubble, lead, tap-turn, pot out of the machine, reveal, "Paint Bear!", Toy after two rounds, Fetch card, Dash finish to the Snack crank. Then: rejoin mid-reveal, "x" then the Things row, and `gifts` off and on mid-chain. Captures for Fable at 600 x 360.
 
 ## Risks
 
-- **Reveal adapter.** HueEggView and HatchFlow are built around `pendingHueResult` and `pendingToyResult`, so GiftReveal must feed the reveal stages directly. That is the biggest client unknown, and I will prove it in Studio first.
-- **No server-side reveal guard.** A gift has no Guard field, so a paid buy could start during a gift reveal. The client keeps the machine busy. The data cannot be harmed.
-- **Step 1 ordering** against the concurrent BearNeeds and NestLead work depends on the `blocked` hook holding.
-- **"Session 2"** read as a later day is a proxy.
-- **Step 6 mismatch.** The brief says the nest egg gives a second pet, but the code's welcome-week nest eggs pay items or Stars.
+- **Reveal adapter.** HueEggView and HatchFlow are built around `pendingHueResult` and `pendingToyResult`. GiftReveal must feed the reveal stages directly; this is the biggest client unknown, so I will prove it in Studio first.
+- **No reveal guard.** A gift has no Guard field, so a paid buy could start during its reveal. The client keeps the machine busy, and the data cannot be harmed.
+- **Step 1 ordering** depends on the `blocked` hook holding against the concurrent BearNeeds and NestLead work.
+- **"Session 2" proxy.** It is read as a later server day.
+- **Step 6 mismatch.** The brief says a second pet, but welcome-week nest eggs pay items or Stars.
