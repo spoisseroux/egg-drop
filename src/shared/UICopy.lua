@@ -251,6 +251,8 @@ local Table={
   nest={title="Napping egg",sign="{pet}'s egg",signPlain="Your egg",how="{pet}'s egg naps for {hours} hours. Come back to hatch a gift.",
    howPlain="This egg naps for {hours} hours. Come back to hatch a gift.",
    inside="Inside: {item} and {stars} Stars.",insideStars="Inside: {stars} Stars.",
+   -- The gift chain (Onboard "gifts", GIFT-ART-BRIEF 4): the gift's name waits for the hatch; the Peek's pill.
+   insideKind="Inside: {kind} and {stars} Stars.",kind={hat="a hat",neck="a neck piece",toy="a toy",charm="a charm"},sweet="Sweet dreams!",
    hours="Hatches in {hours} h",tomorrow="Hatches tomorrow",minutes="Hatches in {minutes} min",ready="Hatch me!",tuck="Tuck in",hatch="Hatch",
    tuckedFirst="Tucked in! Come back in {hours} hours to hatch a gift.",
    tucked="Sleep tight. It naps while you're away.",next="A new egg is napping. Come back in {hours} hours.",count="Egg {count} of 7",
@@ -318,7 +320,8 @@ local Table={
   nest="It's hatching!",nestSub="Come and see",waiting="Gift waiting!",waitingSub="At the egg machine",
   turn="Turn it!",turnSub="Tap to turn the crank",nudge="For you!",throw="Throw it!",
   fetch="{pet} learned Fetch!",fetchSub="Throw the ball any time",
-  card={title="A gift for you!",paint="Paint {pet}!",play="Play!",later="Later",keep="Keep it",
+  freeEgg="Free egg!",wipe="{pet} is {colour}!",
+  card={title="A gift for you!",from="A gift from {pet}!",paint="Paint {pet}!",play="Play!",later="Later",keep="Keep it",
    pot="{name} paint pot",potOdds="Each colour: 1 in 4",toyOdds="Each toy you don't have: 1 in {count}",deeper="Deeper {name}!",
    free="Free",snack="A snack for the racer!"},
   row={name="Gift waiting",line="A free egg at the egg machine",lineSnack="A free Snack Egg at the machine"},

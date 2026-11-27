@@ -76,7 +76,7 @@ Beta (33), 2026-11-26: player scale (row 60). Beta (32), 2026-11-26: the first e
 
 ## Built, not on the beta yet
 
-Nothing: everything built for beta (39) is on the beta.
+- **Gift art and the nest Peek** (switch `gifts`; GIFT-ART-BRIEF): fresh save, tuck the egg in: the egg rocks, a crack of light opens, a "?" disc shows the gift's kind and its Stars (no name), the Bear gasps, "Sweet dreams!". Then the gift chip over the pet (bobs, the bow wiggles every 6 s), the pink ribbon and "Free egg!" tag on the machine's dial; crank it: the bow unties and the sash falls on the first tick. The wrapped gift card (sash, bow, "A gift from Bear!", headshot, the pot, the key in the pot's colour). "Paint Bear!": the card folds into the pot, it flies to the Bear, the paint pours and sweeps crown to feet, the ring, the shake, the paw check, the spin, "Bear is Rose!". Try with Reduced Motion on too.
 
 ## Scoped, not built
 

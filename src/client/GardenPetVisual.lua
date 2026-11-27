@@ -313,6 +313,13 @@ function Visual:update(dt)
  -- pet2 (PetCuddleUI): the head follows the mitten and the rubbed spot answers; nil whenever that screen is closed.
  local cuddle=self.cuddle
  if cuddle then headYaw+=cuddle.headYaw or 0;headPitch+=cuddle.headPitch or 0;eye*=cuddle.eye or 1;bodyStretch+=cuddle.stretch or 0 end
+ -- The gift chain's moments (GIFT-ART-BRIEF 3 and 4: the paint wipe's look up, shake, paws and jump-spin; the Bear's
+ -- lean and gasp at the nest Peek): a local overlay set by GiftPaintWipe / NestClient, nil the rest of the time.
+ local gift=self.giftPose
+ if gift then
+  headYaw+=gift.headYaw or 0;headPitch+=gift.headPitch or 0;eye*=gift.eye or 1
+  beatHandL+=gift.paws or 0;beatHandR+=gift.paws or 0
+ end
  -- Beta (34): the look round or sniff in the pause after a stroll (PetWalkBeats, set by PetFollow.activity).
  if not reduced and self.gardenAction=="wanderPause"then headYaw+=self.walkLookYaw or 0;headPitch+=self.walkLookPitch or 0 end
  -- Ears roll about their base anchors and the tail yaws about its anchor (C1).
@@ -343,7 +350,8 @@ function Visual:update(dt)
  local gait=if reduced then 0 else(self.gaitWeight or 0)
  local step=math.sin(self.gaitPhase or 0)*gait
  local shove=if self.gardenAction=="shove"then math.sin(math.clamp(self.actionPhase or 0,0,1)*math.pi*4)else 0
- local root=CFrame.new(self.origin)*CFrame.Angles(0,self.yaw or 0,0)*CFrame.Angles(self.carePitch or 0,0,0)
+ local root=CFrame.new(self.origin)*CFrame.Angles(0,(self.yaw or 0)+(if gift then gift.spin or 0 else 0),0)*CFrame.Angles(self.carePitch or 0,0,0)
+ if gift and gift.back and gift.back~=0 then root*=CFrame.new(0,0,-gift.back)end
  local u=((self.gaitPhase or 0)/(math.pi*2))%1;local support=0
  if not reduced and not self.focusPose and not self.gardenFocus then
   if u>.08 and u<.50 then support=-math.sin((u-.08)/.42*math.pi)
@@ -361,7 +369,8 @@ function Visual:update(dt)
  local hipAnchor=v(self.definition.anchors.Body)*self.scale
  -- Walk body (B2): lean 4 degrees into travel; sitting lowers 0.22 and leans back 6.
  -- Beta (34): and a touch more forward as a walk gets going, back as it settles (PetFollow.lean).
- local lean=math.rad(4)*gait-Sit.Pitch*sit+(if reduced then 0 else(self.accelLean or 0))
+ local lean=math.rad(4)*gait-Sit.Pitch*sit+(if reduced then 0 else(self.accelLean or 0))+(if gift then gift.lean or 0 else 0)
+ if gift and gift.roll then weightRoll+=gift.roll end
  local upper=root*CFrame.new(weightX,-(self.careBodyLower or 0)-Sit.Lower*self.scale*sit,0)*CFrame.new(hipAnchor)*CFrame.Angles(lean+(if cuddle then cuddle.pitch or 0 else 0),if cuddle then cuddle.sway or 0 else 0,weightRoll+(beatHip or 0)+(if cuddle then cuddle.roll or 0 else 0))*CFrame.new(-hipAnchor)
  -- A 0.12 s settle squash at half the boop when a walk stops.
  if(self.lastGait or 0)>.3 and gait<.05 and not reduced then self.settleAt=os.clock()end
@@ -371,10 +380,11 @@ function Visual:update(dt)
  local boop=if boopAge and boopAge>=0 and boopAge<.15 then math.sin(boopAge/.15*math.pi)else 0
  local settleAge=if self.settleAt and not reduced then os.clock()-self.settleAt else nil
  if settleAge and settleAge>=0 and settleAge<.12 then boop=math.max(boop,.5*math.sin(settleAge/.12*math.pi))end
+ if gift and gift.squash then boop=math.max(boop,gift.squash)end
  self.boopSquash=boop
  -- Head nods 2 degrees a quarter cycle behind the two-bounce walk.
  headPitch+=math.rad(2)*math.sin(2*(self.gaitPhase or 0)-math.pi*.5)*gait
- local hop=(greet*.11+reactHop*.11-boop*.05+(self.movementBob or 0)+(beatRise or 0)+(if cuddle then cuddle.hop or 0 else 0))*self.scale
+ local hop=(greet*.11+reactHop*.11-boop*.05+(self.movementBob or 0)+(beatRise or 0)+(if cuddle then cuddle.hop or 0 else 0))*self.scale+(if gift then gift.hop or 0 else 0)
  local headAnchor=v(self.definition.anchors.Head)*self.scale
  local head=upper*CFrame.new(0,hop+(pose.head+breath)*self.scale,0)*CFrame.new(headAnchor)*CFrame.Angles(-greet*.08+shove*.15+headPitch+cooNod+(self.careHeadPitch or 0),headYaw,pose.tilt-weightRoll*.5+(self.affectionTilt or 0)*.08+cooRoll+(self.careHeadRoll or 0)+Sit.side(self)*Sit.HeadTilt*sit+(if cuddle then cuddle.headRoll or 0 else 0))*CFrame.new(-headAnchor)
  Bounds.begin(self);Bounds.begin(self.bodyHull)
@@ -459,6 +469,12 @@ function Visual:update(dt)
    cf=root*CFrame.new(localFrame.Position*factor)*localFrame.Rotation;size*=factor
   end
   Face.paintSurface(entry,self,daylight)
+  -- The paint wipe (GiftPaintWipe): a body piece shows the old colour, the bright edge or the new one as the sweep
+  -- passes it. Face, eyes and the secondary palette never tint.
+  if gift and gift.tint and entry.colorRole=="body"and not isFace and not entry.faceRole then
+   local tinted=gift.tint(entry,cf,size)
+   if tinted and part.Color~=tinted then part.Color=tinted end
+  end
   if entry.faceRole then
    local tint=if entry.faceRole=="cheek"then entry.color:Lerp(self.colors.blush,math.clamp(pose.blush+(self.affectionBlush or 0)+(if cuddle then cuddle.blush or 0 else 0),0,1))else nil
    Face.paint(entry,self.worldContext,tint,daylight)

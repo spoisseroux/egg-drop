@@ -84,7 +84,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          "WelcomeGift", "WelcomeGiftCrossVersion",
          # The onboarding fun pass section 2 (Onboard "gifts"): the gift chain's free eggs (the rules, the save path, the
          # Snack's gift buy, the guard, a malformed field, the request order) and the live and base builds loading them.
-         "GiftEggs", "GiftEggCrossVersion"]
+         "GiftEggs", "GiftEggCrossVersion",
+         # GIFT-ART-BRIEF (beta 40): the chip, ribbon, card, paint wipe and nest Peek's pure rules.
+         "GiftArt"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
@@ -231,8 +233,8 @@ def client_modules():
                     "UnderstoryClient.lua",
                     # Onboarding v3 brief: the lead's client half, its trail adapter and the all-set card.
                     "NestLead.lua", "LeadTrail.lua", "AllSetCard.lua",
-                    # The gift chain: its controller.
-                    "GiftChain.lua"):
+                    # The gift chain: its controller; GIFT-ART-BRIEF: the wrapped egg's drawing and the machine's ribbon.
+                    "GiftChain.lua", "GiftEggArt.lua", "GiftRibbon.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

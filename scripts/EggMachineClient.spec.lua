@@ -508,6 +508,37 @@ return function(client)
 		r.machine:bought("toyBuy","a-4");r.advance(Machine.ConfirmWindow+.1)
 		assert(not r.machine:confirm({}),"an armed press lapses after the confirm window")
 	end)
+	test("GIFT-ART-BRIEF 1: the ribbon stays tied for a paid crank and unties on the gift crank's first tick; refused, it fades",function()
+		local r=rig()
+		assert(r.machine:giftRibbon(true,{})==true and r.machine.ribbonView~=nil,"tied on")
+		local view=r.machine.ribbonView
+		assert(r.machine:bought("toyBuy","paid-1"));r.cinematic.onPlay({});r.advance(2)
+		assert(view.untieAt==nil and view.offAt==nil,"a paid crank leaves it tied")
+		r.now+=30
+		r.machine:giftCrank()
+		r.machine:giftRibbon(false) -- GiftChain hides it the moment it cranks
+		assert(view.offAt==nil,"armed: it waits for the tick")
+		assert(r.machine:bought("toyBuy","gift-1"));r.advance(.2)
+		assert(view.untieAt==nil,"no tick before the confirmation")
+		r.cinematic.onPlay({});r.advance(1/60)
+		assert(view.untieAt~=nil,"the first tick unties it")
+		local rustle
+		for _,s in ipairs(r.sounds)do if s.name=="blanket_rustle"then rustle=s end end
+		assert(rustle and rustle.speed==1.3,"blanket_rustle at 1.3")
+		r.machine:destroy()
+		local again=rig()
+		again.machine:giftRibbon(true,{})
+		local second=again.machine.ribbonView
+		again.machine:giftCrank();again.machine:giftRibbon(false)
+		assert(second.offAt==nil)
+		again.machine:giftCrank(false)
+		assert(second.offAt~=nil and second.untieAt==nil,"refused: it fades instead")
+		-- the dial's face: the ribbon sits on the greybox dial's front, as wide as the dial
+		local Ribbon=require(client.GiftRibbon)
+		local face,diameter=Ribbon.face({dialPivot=CFrame.new(0,1.95,1.7014),dial={part={Size=Vector3.new(.3,1.7,1.7)},
+			rest=CFrame.new(0,1.95,1.8514)*CFrame.Angles(0,math.pi/2,0)}})
+		assert(near(diameter,1.7,1e-6)and near(face.Position.Z,1.7014+.3+.03,1e-6),tostring(face.Position.Z))
+	end)
 	test("destroy takes the hold off the cinematic",function()
 		local r=rig()
 		assert(type(r.cinematic.gate)=="function"and type(r.cinematic.onPlay)=="function")
