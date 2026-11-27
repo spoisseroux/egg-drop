@@ -73,10 +73,11 @@ Beta (33), 2026-11-26: player scale (row 60). Beta (32), 2026-11-26: the first e
 | 64 | **Aero Glass balls, deck juice, Aero hatch screens, the cathartic 3D crack, This week** (`artifacts/qa-2026-11-26-beta36/TEST-PASS-B37.md`) | (37) | Follow TEST-PASS-B37 rows 1-9. Switches: `/alive deckjuice`, `/alive aerohatch`, `/thisweek`. | |
 | 65 | **Spencer's beta (37) notes: the Bear stays and leads you to the nest, no guide timeouts, glow trails, cuter Welcome deck, Nintendogs-style petting, You're all set, Paint Shine Dress, balloons, bigger trees, ball patterns, fruit in trees + Shake, bushes and reeds** (`artifacts/qa-2026-11-27-beta37/TEST-PASS-B38.md`) | (38) | Follow TEST-PASS-B38 sections A-D. Switches: `/onboard deck2|trail2|lead|allset2`, `/alive pet2|paint|air|balls|fruit|scene` |
 | 66 | **Gacha-first onboarding: pots only from eggs, +5 welcome gift, the fun pass, free Paint/Toy/Snack eggs** (`artifacts/qa-2026-11-27-beta37/TEST-PASS-B39.md`) | (39) | Follow TEST-PASS-B39 A-C. Switches: `/onboard gifts|lead|allset2|stork|deck2`, `/alive pet2|paint` |
+| 67 | **The free-egg moments' art and the nest Peek; the first petting closes itself; the deck egg's soft shadow** (`artifacts/qa-2026-11-27-beta37/GIFT-ART-BRIEF.md`) | (40) | `/freshsave`: no grey bar under the deck egg; first petting closes after its burst; after the tuck the nest egg rocks and peeks (a "?" with what's inside, name hidden); a wrapped-egg chip over the pet, a pink sash with "Free egg!" on the machine that unties when you crank; the gift card "A gift from Bear!"; the paint pours down the Bear and he shakes it off. Switch `/onboard gifts` |
 
 ## Built, not on the beta yet
 
-- **Gift art and the nest Peek** (switch `gifts`; GIFT-ART-BRIEF): fresh save, tuck the egg in: the egg rocks, a crack of light opens, a "?" disc shows the gift's kind and its Stars (no name), the Bear gasps, "Sweet dreams!". Then the gift chip over the pet (bobs, the bow wiggles every 6 s), the pink ribbon and "Free egg!" tag on the machine's dial; crank it: the bow unties and the sash falls on the first tick. The wrapped gift card (sash, bow, "A gift from Bear!", headshot, the pot, the key in the pot's colour). "Paint Bear!": the card folds into the pot, it flies to the Bear, the paint pours and sweeps crown to feet, the ring, the shake, the paw check, the spin, "Bear is Rose!". Try with Reduced Motion on too.
+Nothing: everything built for beta (40) is on the beta.
 
 ## Scoped, not built
 
