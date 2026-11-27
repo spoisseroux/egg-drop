@@ -1099,7 +1099,8 @@ clientUI.hueIntent=clientUI.HueIntent.new({
  send=function(action,value,revision)clientUI.sendNursery(action,value,revision)end,
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})
 -- Paint, Shine, Dress (PAINT-SHINE-DRESS-PLAN): the switch's words go into UICopy.get (off: today's text), and the
--- paint pot intent (potBuy over HatchRequest, replies on Remotes.PotResult).
+-- paint pot intent (replies on Remotes.PotResult). Nothing calls its buy now: pots come only from the Paint Egg (beta 38),
+-- and the server refuses a potBuy unless it replays one that already committed.
 clientUI.DressUp=require(script.DressUp)
 clientUI.DressUp.install()
 clientUI.potIntent=require(script.PaintPotIntent).new({id=function()return HttpService:GenerateGUID(false)end,
@@ -1108,8 +1109,6 @@ clientUI.potIntent=require(script.PaintPotIntent).new({id=function()return HttpS
   if clientUI.hueView then clientUI.hueView:refresh()end
   if nurseryView and nurseryView.shade and nurseryView.shade.Visible then nurseryView:renderBody()end
  end})
--- Hatch eggs' "Pick a colour" strip (EggHatchView:layoutPotStrip, drawn only while the switch is on).
-nurseryView.paintPots={buy=function(itemId)return clientUI.potIntent:buy(itemId)end,intent=clientUI.potIntent}
 clientUI.materialIntent=require(script.MaterialIntent).new({id=function()return HttpService:GenerateGUID(false)end,
  available=function()return clientUI.itemAvailable("material")end,send=function(action,value,revision)clientUI.sendNursery(action,value,revision)end,
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})

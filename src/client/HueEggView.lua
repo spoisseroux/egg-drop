@@ -1805,7 +1805,8 @@ function View:layoutChrome()
  self.layingOut=false;self:fitPortrait()
 end
 -- Paint, Shine, Dress: the Colour tab while the switch is on. Ten swatches (PaintPanel), then Back to white (today's
--- free clear with its confirm). One tap selects and previews; the pane's button (or a second tap) paints or buys.
+-- free clear with its confirm). One tap selects and previews; the pane's button (or a second tap) paints, or on a
+-- locked swatch (no pot of it) opens Hatch eggs on the Paint Egg. Pots come only from the egg: no price, no buy.
 function View:paintReady()
  local pot=self.options.potIntent
  return self:canCustomize()and not self.intent.pending and not(pot and pot.pending)
@@ -1837,7 +1838,7 @@ function View:layoutPaint(grid,gw,g,compact,y,index,pane,allowed,a,petName)
   else
    local b=self.paintCards[c.id];b.Visible=true;Cards.place(b,rects[i])
    Cards.dress(b,{name=c.name,status=c.status,tone=if c.action=="full"then "accent"elseif c.stock>0 then "soft"else "dim",swatch=c.color,focused=i==index,compact=compact})
-   b:SetAttribute("PaintAction",c.action);b:SetAttribute("Pips",c.pips);b:SetAttribute("Pot",c.pot)
+   b:SetAttribute("PaintAction",c.action);b:SetAttribute("Pips",c.pips);b:SetAttribute("Pot",c.pot);b:SetAttribute("Locked",c.locked==true)
    local id=c.id
    table.insert(focus,{button=b,id=id,act=function()return self:paintAct(id)end})
   end
@@ -1859,7 +1860,7 @@ function View:layoutPaint(grid,gw,g,compact,y,index,pane,allowed,a,petName)
   pane.status=if armed then UICopy.get("paint.whiteConfirmLine")else ""
  elseif item then
   pane.name=item.name;pane.line=item.line;pane.button=item.button;pane.enabled=item.enabled and allowed
-  pane.chip=if item.action=="buy"then {tostring(require(Shared.PaintPotCatalog).Price).."★","accent"}else {"×"..item.stock,"plain"}
+  pane.chip=if item.locked then {UICopy.get("paint.lockedChip"),"plain"}else {"×"..item.stock,"plain"}
   pane.status=""
  end
  if pot and pot.pending then pane.status=UICopy.get(if pot.pending.thenDo then "paint.painting"else "paint.saving");pane.enabled=false
@@ -1873,11 +1874,14 @@ end
 function View:paintAct(id)
  if not self:canCustomize()then return false end
  local card=PaintPanel.card(id,self.state,self.petId,self.channel,self:paintReady())
- local petId,channel=self.petId,self.channel
- local ok=PaintPanel.act(card,{hue=self.intent,pot=self.options.potIntent},petId,channel,self.state,function()
-  return not self.destroyed and self.shade.Visible and self.petId==petId and self.channel==channel and self.tab=="hue"
- end)
- self:layout();return ok
+ -- Locked: the same route as the egg links (close "shop", then Hatch eggs with the Paint Egg selected).
+ local function hatch()
+  if not self.options.shop then return false end
+  self:close("shop");self.options.shop();return true
+ end
+ local ok=PaintPanel.act(card,{hue=self.intent,hatch=hatch},self.petId,self.channel,self.state)
+ if self.shade.Visible and not self.destroyed then self:layout()end
+ return ok
 end
 -- Tap / click on a chrome card: the first tap selects (and previews), the second acts.
 function View:chromeTap(tab,id)

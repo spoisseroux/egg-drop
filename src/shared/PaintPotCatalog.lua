@@ -1,12 +1,15 @@
 -- Paint pots (artifacts/qa-2026-11-27-beta37/PAINT-SHINE-DRESS-PLAN.md, Fable's CUSTOMIZE-AUDIT). Shared and pure.
--- A pot is a hue jar bought outright at one fixed price: the server adds it to `hueInventory` (the field an egg jar
--- fills) and painting is the existing `hueUse`. Its receipt lives in its own optional save field (PaintPotState),
--- never in the Customization Egg's receipt ring, so every older build still loads a save that holds one.
+-- A pot is a hue jar: `hueInventory` (the field an egg jar fills), and painting is the existing `hueUse`.
+-- Spencer, beta (38), 2026-11-27: "we want a gacha focused game". Pots come only from the Paint Egg: `Sold` is false,
+-- so the server refuses every `potBuy` (PaintPotHost, after a saved receipt replays) and the client shows no price and
+-- no buy. Beta (38) sold them at `Price`: those receipts stay in their own optional save field (PaintPotState), never in
+-- the Customization Egg's receipt ring, so every build still loads a save that holds one and replays it.
 -- Tunable: Price, ReceiptLimit, PerMinute. Frozen stored bounds (never retuned down): Prices, StoredLimit, IdLimit,
 -- DigestLimit. Prices only grows: a stored receipt keeps the price it was charged.
 local Hue=require(script.Parent.HueCatalog)
 local Catalog={
-	Price=15, -- [PLACEHOLDER] Stars (Fable's suggestion, unconfirmed by Spencer): one constant
+	Sold=false, -- pots are never sold for Stars (gacha only); a frozen rule, not a tunable
+	Price=15, -- the beta (38) price: kept for its stored receipts and their digests, never charged again
 	Prices=table.freeze({[15]=true}),
 	Items=table.freeze(table.clone(Hue.RollOrder)), -- rose, tide, citrus, iris
 	ReceiptLimit=16, -- receipts this build keeps (oldest dropped)

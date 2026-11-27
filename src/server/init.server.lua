@@ -23,10 +23,9 @@ local RunDay = require(script.RunDay)
 local RewardRetry = require(script.RewardRetry)
 local HueState = require(script.HueState)
 local MaterialState=require(script.MaterialState)
--- Paint pots (PAINT-SHINE-DRESS-PLAN): the potBuy rules and the request order.
+-- Paint pots (PAINT-SHINE-DRESS-PLAN): the potBuy replay rules; every new buy is refused (pots come from the Paint Egg).
 local PaintPotState=require(script.PaintPotState)
 local PaintPotHost=require(script.PaintPotHost)
-local PaintPotCatalog=require(game:GetService("ReplicatedStorage").Shared.PaintPotCatalog)
 local ToyState=require(script.ToyState)
 local FeatureState=require(script.FeatureState)
 local MaterialCatalog=require(ReplicatedStorage.Shared.MaterialCatalog)
@@ -2246,29 +2245,14 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
   publishNursery(board);publishState(board)
   sendItemResult(board,itemKind,quote,if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason,saved);return
  end
-	-- Paint pots (PAINT-SHINE-DRESS-PLAN): the order (receipt first, then the switch, rate limits and Busy) is
-	-- PaintPotHost's; this only hands it the board.
+	-- Paint pots (PAINT-SHINE-DRESS-PLAN): never sold now (Spencer, beta 38: "we want a gacha focused game"; pots come
+	-- only from the Paint Egg). PaintPotHost answers a buy that already committed (beta 38) and refuses every other one
+	-- as NotSold: no charge, no write. This only hands it the board.
 	if PaintPotState.isAction(action)then
 		PaintPotHost.request({
 			state=function()return board.nursery.state end,
-			on=function()return require(ReplicatedStorage.Shared.Alive).on("paint")end,
-			samePending=function(quote)local p=board.nursery.pending;return p~=nil and p.kind=="pot"and p.candidate.quote.id==quote.id end,
-			busy=function()return board.nurseryBusy or board.nursery.busy or board.payoutPending end,
-			recent=function()return os.clock()-(board.lastHatchRequest or -math.huge)<.3 end,
-			mark=function()board.lastHatchRequest=os.clock()end,
-			allow=function()board.potTimes=board.potTimes or {};return PaintPotCatalog.allow(board.potTimes,os.clock())end,
-			command=function()
-				board.nurseryBusy=true;publishNursery(board)
-				local walletBefore=board.nursery.state.nectar
-				local ok,reason,saved=Nursery.potCommand(board.nursery,action,value,revision)
-				if ok and reason~="AlreadySaved"then Economy.command(player,action,walletBefore,board.nursery.state.nectar,board.nursery.state)end
-				board.nurseryBusy=false
-				return ok,reason,saved
-			end,
 			publish=function()publishNursery(board);publishState(board)end,
 			reply=function(quote,status,reason,receipt)sendPotResult(board,quote,status,reason,receipt)end,
-			waiting=function(quote)board.potWaiting=quote end,
-			alive=function()return boards[player]==board end,
 		},action,value,revision)
 		return
 	end

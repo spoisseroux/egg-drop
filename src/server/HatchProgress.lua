@@ -860,6 +860,8 @@ end
 -- the digest and the sequence prove it (PaintPotState.proof). A saved receipt replays first; a new operation checks
 -- the revision and the live price; the Stars and every refusal are checked again inside UpdateAsync (apply). The
 -- switch, the rate limits and Busy are the host's (PaintPotHost), after the receipt lookup.
+-- Beta (38), gacha only: no request reaches this now (PaintPotHost refuses every new buy as NotSold). It stays for the
+-- beta (38) receipts' proof (`committed`, kind "pot") and for the save-path and cross-version specs.
 function Hatching.potCommand(handle,action,value,revision)
 	local quote=PaintPots.quote(action,value,revision)
 	if not quote then return false,"InvalidPot"end

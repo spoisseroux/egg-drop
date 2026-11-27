@@ -1,5 +1,6 @@
 -- Paint, Shine, Dress, the client (PAINT-SHINE-DRESS-PLAN): the door's switch and tabs (DressUp), the Colour tab's
--- cards and acts (PaintPanel), and the pot intent with its buy-then-paint chain (PaintPotIntent).
+-- cards and acts (PaintPanel), and the pot intent (PaintPotIntent). Beta (38), gacha only: pots come only from the
+-- Paint Egg, so a swatch with no pot is locked (previewed, "Hatch a Paint Egg"), nothing shows a price, nothing buys.
 -- Offline: scripts/run_dash_server_specs.py (client). Studio: require(PlayerScripts.Client.ZZSpecs.DressUp)(Client).
 return function(client)
 	local DressUp=require(client.DressUp)
@@ -8,6 +9,7 @@ return function(client)
 	local Shared=game:GetService("ReplicatedStorage").Shared
 	local Pots=require(Shared.PaintPotCatalog)
 	local Alive=require(Shared.Alive)
+	local Copy=require(Shared.UICopy)
 	local cases={}
 	local function test(name,run)run();table.insert(cases,name)end
 	local function state(extra)
@@ -28,22 +30,54 @@ return function(client)
 		DressUp.forced=nil
 	end)
 
-	test("cards: ten swatches; paint with a pot, buy without one, full at 5; the mix paints its lower pot",function()
+	test("cards: ten swatches; paint with a pot, locked without one (Hatch a Paint Egg), full at 5; a mix paints its lower pot",function()
 		local cards=Panel.cards(state(),"pip","main",true);assert(#cards==10)
 		local byId={};for _,c in ipairs(cards)do byId[c.id]=c end
-		assert(byId.tide.action=="paint"and byId.tide.enabled and byId.tide.pips==1 and byId.tide.stock==2)
-		assert(byId.rose.action=="buy"and byId.rose.enabled and byId.rose.button==("Buy · "..Pots.Price.."★"))
+		assert(byId.tide.action=="paint"and byId.tide.enabled and byId.tide.pips==1 and byId.tide.stock==2 and not byId.tide.locked)
+		local rose=byId.rose
+		assert(rose.action=="hatch"and rose.locked and rose.enabled and rose.button=="Hatch a Paint Egg","locked: "..tostring(rose.button))
+		assert(rose.line=="Win it from a Paint Egg."and rose.status=="0/5 · Locked",rose.line.." / "..rose.status)
 		local green=byId["citrus:tide"];assert(green.mix and green.pot=="citrus"and green.action=="paint"and green.pips==0)
-		local violet=byId["rose:tide"];assert(violet.pot=="rose"and violet.action=="buy")
+		local violet=byId["rose:tide"];assert(violet.pot=="rose"and violet.action=="hatch"and violet.locked and string.find(violet.line,"Pink pot",1,true),violet.line)
 		local full=state();full.petHues.pip.main.tide=5
 		assert(Panel.card("tide",full,"pip","main",true).action=="full"and not Panel.card("tide",full,"pip","main",true).enabled)
-		assert(not Panel.card("tide",state(),"pip","main",false).enabled,"not ready: nothing enabled")
-		local poor=Panel.card("rose",state({nectar=3}),"pip","main",true)
-		assert(poor.action=="buy"and not poor.enabled and string.find(poor.line,"12"),"short by 12: "..poor.line)
+		assert(not Panel.card("tide",state(),"pip","main",false).enabled and not Panel.card("rose",state(),"pip","main",false).enabled,"not ready: nothing enabled")
+		-- the wallet never matters: a locked swatch is the same with no Stars or a fortune
+		local poor,rich=Panel.card("rose",state({nectar=0}),"pip","main",true),Panel.card("rose",state({nectar=99999}),"pip","main",true)
+		assert(poor.action=="hatch"and poor.enabled and rich.action=="hatch"and poor.line==rich.line and poor.button==rich.button)
 		assert(Panel.painted(state(),"pip","main")and not Panel.painted(state(),"pip","secondary"))
 	end)
 
-	-- A fake pair of intents.
+	test("gacha only: no card, wallet or stock shows a price or a buy; the Colour words have no price or Buy in them",function()
+		for _,wallet in ipairs({0,3,15,40,99999})do
+			for _,stock in ipairs({0,1})do
+				local s=state({nectar=wallet,hueInventory={rose=stock,tide=stock,citrus=stock,iris=stock,reset=0}})
+				for _,channel in ipairs({"main","secondary"})do
+					for _,c in ipairs(Panel.cards(s,"pip",channel,true))do
+						assert(c.action~="buy","no buy action: "..c.id)
+						for _,text in ipairs({c.button,c.line,c.status,c.name})do
+							assert(type(text)=="string"and not string.find(text,"★",1,true)and not string.find(text,"Star",1,true)and not string.find(text,"Buy",1,true),c.id..": "..tostring(text))
+						end
+					end
+				end
+			end
+		end
+		local function walk(node,path)
+			for key,value in pairs(node)do
+				local at=path.."."..key
+				if type(value)=="table"then walk(value,at)
+				elseif type(value)=="string"then
+					assert(not string.find(value,"{price}",1,true)and not string.find(value,"Buy",1,true),at.." still sells: "..value)
+				end
+			end
+		end
+		walk(Copy.Table.paint,"paint")
+		assert(Copy.get("paint.hatch")=="Hatch a Paint Egg"and Copy.get("paint.lockedLine")=="Win it from a Paint Egg.")
+		assert(Copy.get("paint.reason.NotSold")~="")
+		assert(Pots.Sold==false,"the catalogue says pots are not sold")
+	end)
+
+	-- A fake hue intent and the real pot intent (replies only now).
 	local function intents(s)
 		local sent={}
 		local hue={state=s,pending=nil,use=function(self,petId,channel,item,resultId)table.insert(sent,{"hueUse",petId,channel,item,resultId});return true end}
@@ -53,40 +87,32 @@ return function(client)
 	end
 
 	test("act: paint is one hueUse on the pot the swatch needs; a pending egg jar of that pot is acknowledged",function()
-		local s=state();local hue,pot,sent=intents(s)
-		assert(Panel.act(Panel.card("citrus:tide",s,"pip","main",true),{hue=hue,pot=pot},"pip","main",s))
+		local s=state();local hue,_,sent=intents(s)
+		assert(Panel.act(Panel.card("citrus:tide",s,"pip","main",true),{hue=hue},"pip","main",s))
 		assert(#sent==1 and sent[1][1]=="hueUse"and sent[1][4]=="citrus"and sent[1][5]==nil)
 		s.pendingHueResult={id="r1",itemId="tide"};hue.state=s
-		assert(Panel.act(Panel.card("tide",s,"pip","main",true),{hue=hue,pot=pot},"pip","main",s))
+		assert(Panel.act(Panel.card("tide",s,"pip","main",true),{hue=hue},"pip","main",s))
 		assert(sent[2][4]=="tide"and sent[2][5]=="r1")
 	end)
 
-	test("buy and paint: two saves; the paint goes out only once the pot is saved and the snapshot has it",function()
-		local s=state();local hue,pot,sent=intents(s)
-		assert(Panel.act(Panel.card("rose",s,"pip","main",true),{hue=hue,pot=pot},"pip","main",s,function()return true end))
-		assert(#sent==1 and sent[1][1]=="potBuy"and sent[1][2].itemId=="rose"and sent[1][2].price==Pots.Price and sent[1][2].id=="8:pot-g1")
-		assert(pot.pending and not Panel.card("rose",s,"pip","main",false).enabled)
-		-- Saved, but the snapshot is still revision 8: no paint yet.
-		assert(pot:receive({id="8:pot-g1",action="potBuy",status="Saved",receipt={id="8:pot-g1",revision=9,itemId="rose"}}))
-		assert(pot.pending and #sent==1)
-		local after=state({revision=9,nectar=25});after.hueInventory.rose=1;hue.state=after
-		pot:update(after)
-		assert(not pot.pending and pot.status=="Saved"and #sent==2 and sent[2][1]=="hueUse"and sent[2][4]=="rose")
+	test("act: a locked swatch opens the Paint Egg (the hatch route) and sends nothing; no route, nothing happens",function()
+		local s=state();local hue,_,sent=intents(s)
+		local opened=0
+		assert(Panel.act(Panel.card("rose",s,"pip","main",true),{hue=hue,hatch=function()opened+=1;return true end},"pip","main",s))
+		assert(opened==1 and #sent==0,"the egg machine opened, no request went out")
+		assert(not Panel.act(Panel.card("rose",s,"pip","main",true),{hue=hue},"pip","main",s)and #sent==0)
+		assert(not Panel.act(Panel.card("rose",s,"pip","main",false),{hue=hue,hatch=function()opened+=1;return true end},"pip","main",s)and opened==1,"not ready")
 	end)
 
-	test("intent: Retrying resends the same id; NotReady drops the buy and its chained paint; local blocks",function()
-		local s=state();local hue,pot,sent=intents(s)
-		local painted=false
-		assert(pot:buy("iris",function()painted=true end))
-		assert(pot:receive({id="8:pot-g1",action="potBuy",status="Retrying",reason="Busy"})and pot.status=="Retrying")
-		assert(pot:retry()and #sent==2 and sent[2][2].id==sent[1][2].id)
-		assert(pot:receive({id="8:pot-g1",action="potBuy",status="Rejected",reason="NotReady"}))
-		assert(not pot.pending and pot.reason=="NotReady"and type(pot.message)=="string")
-		pot:update(state({revision=9}));assert(not painted,"no paint after NotReady")
-		assert(Intent.blocked(state({nectar=1}),"rose")=="NeedStars"and Intent.blocked(state(),"gloss")=="InvalidPot")
-		assert(Intent.blocked(state({lastHatch={id="h"}}),"rose")=="RevealPending"and Intent.blocked(state(),"rose",{})=="Busy")
-		assert(Intent.blocked(state(),"rose")==nil)
-		local _=hue
+	test("intent: buy is refused as NotSold and sends nothing, whatever the wallet; a stray reply with nothing pending is dropped",function()
+		local s=state({nectar=99999});local _,pot,sent=intents(s)
+		for _,item in ipairs(Pots.Items)do
+			assert(Intent.blocked(s,item)=="NotSold")
+			assert(not pot:buy(item,function()error("never chained")end))
+		end
+		assert(#sent==0 and pot.pending==nil and pot.reason=="NotSold"and pot.message==Copy.get("paint.reason.NotSold"))
+		assert(not pot:receive({id="8:pot-g1",action="potBuy",status="Saved",receipt={id="8:pot-g1",revision=9,itemId="rose"}}))
+		assert(not pot:retry())
 	end)
 
 	return {passed=#cases,cases=cases}

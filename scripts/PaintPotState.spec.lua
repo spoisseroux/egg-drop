@@ -1,6 +1,7 @@
 -- Paint pots, the pure rules (PAINT-SHINE-DRESS-PLAN, architect review 2026-11-27): the catalogue, the quote, apply's
 -- refusals (any open reservation or reveal first), the receipt ring, the tolerant validator and load repair (newer
--- data kept), and the request order (PaintPotHost: a saved receipt replays before the switch, the rate limits and Busy).
+-- data kept), and the request order (PaintPotHost: a saved receipt replays first; beta 38, gacha only: everything else
+-- is refused NotSold and never reaches the save).
 -- Offline: scripts/run_dash_server_specs.py. Studio: require(ServerScriptService.Server.ZZSpecs.PaintPotState)(Server).
 return function(server)
 	local Shared=game:GetService("ReplicatedStorage").Shared
@@ -117,7 +118,7 @@ return function(server)
 	end
 	local function send(d,id,item)return Host.request(d,"potBuy",{id=id or "7:pot-a",itemId=item or "tide",price=15},7)end
 
-	test("host: a committed id replays Saved before the switch, the gap, the cap and Busy (review item 1)",function()
+	test("host: a committed (beta 38) id still replays Saved before any refusal; another request on that id is a conflict",function()
 		local s=state();assert(S.apply(s,candidate()))
 		local d=deps({state=s,on=false,recent=true,busy=true,allow=false})
 		assert(send(d)=="AlreadySaved"and d.calls==0)
@@ -126,17 +127,21 @@ return function(server)
 		assert(send(c,"7:pot-a","rose")=="OperationConflict"and c.reply_.status=="Rejected"and c.calls==0)
 	end)
 
-	test("host: then pending-and-busy Retrying, the switch, the gap, the cap, Busy, the command",function()
-		local d=deps({samePending=true,busy=true});assert(send(d)=="Busy"and d.reply_.status=="Retrying"and d.calls==0)
-		d=deps({on=false});assert(send(d)=="NotReady"and d.reply_.status=="Rejected"and d.calls==0)
-		d=deps({on=false,samePending=true});assert(send(d)=="Saved"and d.calls==1,"a pending buy finishes after the switch goes off")
-		d=deps({recent=true});assert(send(d)=="Throttled"and d.calls==0)
-		d=deps({allow=false});assert(send(d)=="Throttled"and d.calls==0)
-		d=deps({busy=true});assert(send(d)=="Busy"and d.reply_.status=="Rejected"and d.calls==0)
-		d=deps({});assert(send(d)=="Saved"and d.calls==1 and d.reply_.status=="Saved"and d.log[#d.log]=="publish")
-		d=deps({result={false,"Retrying"}});assert(send(d)=="Retrying"and d.reply_.status=="Retrying"and d.waited.id=="7:pot-a")
-		d=deps({result={false,"NeedStars"}});assert(send(d)=="NeedStars"and d.reply_.status=="Rejected")
-		d=deps({});assert(Host.request(d,"potBuy",{id="7:x",itemId="gloss",price=15},7)=="InvalidPot"and d.reply_.status=="Rejected")
+	test("host: gacha only, every new buy is Rejected NotSold and the command never runs, whatever the board says",function()
+		assert(Pots.Sold==false and Host.Refusal=="NotSold")
+		for _,over in ipairs({{},{on=false},{samePending=true},{samePending=true,busy=true},{recent=true},{allow=false},{busy=true},
+			{result={true,"Saved",{id="x"}}},{result={false,"Retrying"}}})do
+			for _,item in ipairs(Pots.Items)do
+				local d=deps(over)
+				local before=copy(d.state())
+				assert(send(d,"7:pot-"..item,item)=="NotSold"and d.reply_.status=="Rejected"and d.reply_.reason=="NotSold")
+				assert(d.calls==0 and #d.log==0 and d.waited==nil,"no command, no mark, no publish, no wait")
+				assert(d.reply_.tag.id=="7:pot-"..item and d.reply_.receipt==nil)
+				local after=d.state();assert(after.nectar==before.nectar and after.hueInventory[item]==before.hueInventory[item]and after.paintPots==nil)
+			end
+		end
+		local d=deps({});assert(Host.request(d,"potBuy",{id="7:x",itemId="gloss",price=15},7)=="InvalidPot"and d.reply_.status=="Rejected")
+		d=deps({});assert(Host.request(d,"potBuy",{id="7:x",itemId="rose",price=15,extra=1},7)=="InvalidPot"and d.calls==0)
 	end)
 
 	return {passed=#cases,cases=cases}
