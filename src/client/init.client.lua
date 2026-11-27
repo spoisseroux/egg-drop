@@ -6129,8 +6129,10 @@ do
     return if needs:key()then Enum.ContextActionResult.Sink else Enum.ContextActionResult.Pass
    end,false,Enum.ContextActionPriority.Medium.Value,Enum.KeyCode.G,Enum.KeyCode.ButtonL2)
    clientUI.needs=needs
-   -- pet2's first visit (PetCuddle.First): the petting screen opened while the guide's "Pet me!" is the open prompt
-   roomView.cuddleFirst=function()return needs.guide==true and needs.open=="needHi"end
+   -- pet2's first visit (PetCuddle.First): owed from the guide's "Pet me!" until the first visit's burst (the greeting
+   -- itself closes "Pet me!", so the open prompt is never read here: beta 39)
+   roomView.cuddleFirst=function()return needs:firstCuddle()end
+   roomView.cuddleFirstDone=function()needs:firstCuddleDone()end
    -- The gift chain (ONBOARDING-FUN-PASS section 2, Onboard "gifts"; GiftChain): one idea at a time, every step ends in
    -- a hatch. Off (no `gifts` in the snapshot): a look twice a second and nothing drawn.
    local okGifts,giftsProblem=pcall(function()

@@ -112,8 +112,10 @@ V2.Deck2=table.freeze({
 	picture=.45,ball=40,merged=1.3,dropLoop=1.6,matchLoop=2.0,numeral=64,gold=hex("#FFD86B"),
 	-- the line under it: each change punches 1.25 with a menu tick
 	punch=1.25,punchTime=.2,tick=table.freeze({cue="menu",pitch=1.2,gain=.3}),
-	-- the egg card: a sky fill, the hatch card's grass arc on about the bottom 18%, a soft shadow under the egg
-	eggTop=hex("#C9F1FF"),eggBottom=hex("#58B8F2"),grass=.18,shadow=hex("#1F6B33"),shadowAlpha=.62,shadowWidth=.46,
+	-- the egg card: a sky fill, the hatch card's grass arc on about the bottom 18%, a soft shadow under the egg. Beta 39:
+	-- the shadow is a radial blob (UnderstoryArt.Blob, dark green, alpha peaking at shadowPeak) stretched to an ellipse,
+	-- 25% dark at its centre fading to nothing, 60% of the egg's width, `shadowAspect` as tall, on the grass top
+	eggTop=hex("#C9F1FF"),eggBottom=hex("#58B8F2"),grass=.18,shadowAlpha=.25,shadowWidth=.6,shadowAspect=.28,shadowPeak=229/255,
 	-- the knock from inside: a 5 degree twitch and a quiet tap every 4 s, then 2.5 s, then 1.2 s as combos land
 	knockEvery={4,2.5,1.2},knockDeg=5,knockTime=.32,knock=table.freeze({cue="egg_wobble",pitch=1.3,gain=.15}),
 	-- the pips: three eggs, 26 px tall; empty white at 25% with a 2 px ring, filled gold with a white glint
@@ -308,6 +310,19 @@ function V2.sweep(age,reduced)
 	local u=(age-D.sweepStart)/D.sweepTime
 	if u<0 or u>1 then return nil end
 	return -1+2*smooth(u)
+end
+-- Pure: the egg card's soft shadow (beta 39: it was a hard grey pill). cx: the egg's centre across, eggW: its width,
+-- crestY: the grass top (card px); rise: how far the egg is lifted (px: a hop, the finale's rise), fade: the egg's own
+-- fade (0..1). Returns the ellipse's centre x, y, width, height and the blob's ImageTransparency: it lies on the grass
+-- top, and shrinks and fades as the egg lifts (gone at one egg width up).
+function V2.eggShadow(cx,eggW,crestY,rise,fade)
+	local D=V2.Deck2
+	eggW=math.max(0,tonumber(eggW)or 0)
+	local up=if eggW>0 then math.clamp((tonumber(rise)or 0)/eggW,0,1)else 0
+	local w=math.max(4,math.floor(eggW*D.shadowWidth*(1-.4*up)+.5))
+	local h=math.max(3,math.floor(w*D.shadowAspect+.5))
+	local alpha=D.shadowAlpha*(1-up)*(1-math.clamp(tonumber(fade)or 0,0,1))
+	return math.floor((tonumber(cx)or 0)+.5),math.floor((tonumber(crestY)or 0)+h*.25+.5),w,h,math.clamp(1-alpha/D.shadowPeak,0,1)
 end
 -- Pure: the grass arc's crest (a share of the egg card's height) for the egg's foot at `foot` (share): the arc meets
 -- the egg's foot, about the bottom 18% of the card, never under 12% or over 26%.
