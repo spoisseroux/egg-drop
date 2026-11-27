@@ -69,7 +69,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # AERO-JUICE-BRIEF (beta 36) section 3: the Aero hatch screens' palettes, contrast, bubbles and switch.
          "HatchAero",
          # "This week" (GARDEN-PLAY-BRIEF-2 section 8): the weekly wardrobe pick's rotation, prices, listing and purchase.
-         "ThisWeek"]
+         "ThisWeek",
+         # Onboarding v3 brief (qa-2026-11-27-beta37) section 2: the glow steps' pure rules (TrailGlow).
+         "TrailGlow"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
@@ -120,7 +122,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # Onboarding v3 section 5 (qa-2026-11-27-beta37/ONBOARDING-V3-BRIEF.md, Onboard "deck2"): the cuter Welcome deck.
           "OnboardDeck2",
           # AERO-JUICE-BRIEF 1 and 2: the Aero Glass palette and shading, the Pocket Deck juice pass, the UI counters.
-          "AeroJuice"]
+          "AeroJuice",
+          # Onboarding v3 brief section 2: the glow steps' view, ThingsTrail's guide and lead, PetTrail's switch.
+          "GlowSteps"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -191,7 +195,9 @@ def client_modules():
                     # Onboarding v2: the steps' pure rules (BearNeeds reads the guide's) and the reveal card's layout.
                     "OnboardV2.lua", "RevealLayout.lua", "EggCrackPaths.lua", "EggCrack3D.lua",
                     # AERO-JUICE-BRIEF 1 and 2: the bubble shading, the deck juice layer, its UI half and the faces.
-                    "AeroShade.lua", "AeroJuice.lua", "AeroUI.lua", "BallFaces.lua"):
+                    "AeroShade.lua", "AeroJuice.lua", "AeroUI.lua", "BallFaces.lua",
+                    # Onboarding v3 brief section 2: the glow steps' view.
+                    "GlowSteps.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

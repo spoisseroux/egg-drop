@@ -3493,7 +3493,10 @@ do
  if Flags.PetTrail==true then
   local Trail=require(script.PetTrail)
   local Kit=require(script.DeckKit)
-  local trail=Trail.new({gui=overlayGui,ringColor=Kit.Tint.companions,chipColor=Kit.Tint.companions})
+  -- Glow steps (ONBOARDING-V3-BRIEF 2, Onboard "trail2", beta and Studio): read when the trail starts.
+  local Onboard=require(ReplicatedStorage.Shared.Onboard)
+  local trail=Trail.new({gui=overlayGui,ringColor=Kit.Tint.companions,chipColor=Kit.Tint.companions,
+   glow=function()return Onboard.on("trail2")end,play=function(name,speed,gain)return audio:play(name,speed,gain)end})
   local state={pet=nil}
   local function face(visual)
    if state.pet and state.pet~=visual then state.pet.faceOwner=nil;state.pet.poseDirty=true end
@@ -3540,13 +3543,15 @@ do
    -- the machine end it too: never two trails at once.
    local needs=clientUI.needs
    local greeted=needs~=nil and((needs.f~=nil and needs.f.saidHi==true)or(needs.autoTrail~=nil and needs.autoTrail~=false))
-   local reason=Trail.endReason(now-trail.startedAt,{hello=clientUI.petSavedAt~=state.savedBefore or greeted,menu=menu,deck=board:GetAttribute("Mode")~="Room"})
-   if reason then trail:stop(now);release()end
+   -- Glow steps: a guide trail; a menu or the deck hides it ("hide") instead of ending it. Off: endReason as before.
+   local reason=trail:ends(now-trail.startedAt,{hello=clientUI.petSavedAt~=state.savedBefore or greeted,menu=menu,deck=board:GetAttribute("Mode")~="Room"})
+   local hidden=reason=="hide"
+   if reason and not hidden then trail:stop(now);release()end
    local character=player.Character
    local root=character and character:FindFirstChild("HumanoidRootPart")
    local humanoid=character and character:FindFirstChildOfClass("Humanoid")
    local pet=roomView.pet
-   local visible=not trail.leaving and roomView.canRoam()and root~=nil and humanoid~=nil and pet~=nil and pet.model and pet.model.Parent~=nil
+   local visible=not hidden and not trail.leaving and roomView.canRoam()and root~=nil and humanoid~=nil and pet~=nil and pet.model and pet.model.Parent~=nil
    if visible and not trail.leaving then face(pet)elseif not trail.leaving then release()end
    local camera=workspace.CurrentCamera
    trail:step(now,{visible=visible,player=if visible then root.Position-Vector3.new(0,humanoid.HipHeight+root.Size.Y*.5,0)else nil,
@@ -5662,7 +5667,10 @@ do
    return best
   end
   local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude
+  local Onboard=require(ReplicatedStorage.Shared.Onboard)
   local trail=require(script.ThingsTrail).new({world=workspace,root=rootPosition,reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
+   -- Glow steps (ONBOARDING-V3-BRIEF 2, Onboard "trail2"): read at each start; the lead's `pat` through the deck audio.
+   glow=function()return Onboard.on("trail2")end,play=function(name,speed,gain)return audio:play(name,speed,gain)end,
    free=function()
     return Things.on()and board:GetAttribute("Mode")=="Room"and roomView.mode=="Room"and roomView.target=="Room"and not roomView.busy
      and not roomView.dashHeld and(clientUI.dash==nil or clientUI.dash.seat==nil or clientUI.dash.seat.phase=="gather")
@@ -5677,6 +5685,8 @@ do
     local hit=workspace:Raycast(at+Vector3.new(0,2.5,0),Vector3.new(0,-6,0),params)
     return hit and hit.Position.Y
    end})
+  -- The Show me trail for the onboarding lead (BearNeeds): trail:start({position, name, guide=true}), trail:leadBy(model).
+  clientUI.thingsTrail=trail
   -- The page (MachineHub's callbacks.things) ---------------------------------------------------------------------
   things.on=Things.on
   function things.new()return dashNow()~=nil and not Coach.has(clientUI.coach.mask,"dashSeen")end
