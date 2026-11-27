@@ -304,7 +304,7 @@ ui.hatch.look.charmShort,Charm · {each} each,,Hatch eggs screen; e.g. Charm · 
 ui.hatch.look.jar.gloss,Gloss jar,,Hatch eggs screen; also catalog.BookCatalog.Pages.toys.items.7.name
 ui.hatch.look.jar.jelly,Jelly jar,,Hatch eggs screen; also catalog.BookCatalog.Pages.toys.items.9.name
 ui.hatch.look.jar.matte,Matte jar,,Hatch eggs screen; also catalog.BookCatalog.Pages.toys.items.8.name
-ui.hatch.look.later,Later,,Hatch eggs screen
+ui.hatch.look.later,Later,,Hatch eggs screen; also ui.onbGift.card.later
 ui.hatch.look.missing,Charms are {each} each. Still to find: {shapes}.,,Hatch eggs screen; e.g. Charms are {each} each. Still to find: {shapes}.
 ui.hatch.look.notReady,Customization Eggs are not ready yet.,,Hatch eggs screen; also ui.hatch.look.reason.NotReady
 ui.hatch.look.openSaved.charm,Open saved charm,,Hatch eggs screen
@@ -341,7 +341,7 @@ ui.hatch.result.allToys,Every toy found,,Hatch eggs screen
 ui.hatch.result.hatching,Hatching…,,Hatch eggs screen; also ui.names.egg.hatching
 ui.hatch.result.inThisEgg,IN THIS EGG,,Hatch eggs screen
 ui.hatch.result.more,+{count} more,,Hatch eggs screen; e.g. +3 more
-ui.hatch.result.need,{count} more Stars needed,,"Hatch eggs screen; e.g. 3 more Stars needed; also ui.paint.short, ui.qa.shortfall"
+ui.hatch.result.need,{count} more Stars needed,,Hatch eggs screen; e.g. 3 more Stars needed; also ui.qa.shortfall
 ui.hatch.result.pouchFull,Pouch is full. Feed a snack first.,,Hatch eggs screen
 ui.hatch.result.soldOut,Back tomorrow,,Hatch eggs screen; also ui.hatch.stat.soldOut
 ui.hatch.result.stamp.rare,RARE!,,Hatch eggs screen
@@ -616,20 +616,22 @@ ui.onb2.crack.pad,Crack it!,,Menu text
 ui.onb2.crack.tap,Tap the egg!,,Menu text; also ui.onboarding.crack.tap
 ui.onb2.deck.click,Click to drop,,Menu text
 ui.onb2.deck.close,So close!,,Menu text
+ui.onb2.deck.cracking,It's cracking!,,Menu text
 ui.onb2.deck.drop,Drop a ball!,,Menu text
-ui.onb2.deck.hatching,It's hatching!,,Menu text
+ui.onb2.deck.hatching,It's hatching!,,Menu text; also ui.onbGift.nest
 ui.onb2.deck.match,Match two!,,Menu text
+ui.onb2.deck.moved,It moved!,,Menu text
 ui.onb2.deck.numOne,1,,Menu text
 ui.onb2.deck.numTwo,2,,Menu text
 ui.onb2.deck.one,1 more!,,Menu text
 ui.onb2.deck.two,2 more!,,Menu text
 ui.onb2.guide.allSet,You're all set!,,Menu text; also ui.onbAllSet.title
 ui.onb2.guide.ballIcon,Ball,,"Menu text; also catalog.ToyCatalog.ById.ball.name, catalog.BookCatalog.Pages.toys.items.1.name"
-ui.onb2.guide.deck,Play for Stars!,,Menu text; also ui.onbLead.deck
+ui.onb2.guide.deck,Play for Stars!,,Menu text
 ui.onb2.guide.deckIcon,Deck,,Menu text
 ui.onb2.guide.eggsIcon,Eggs,,Menu text
-ui.onb2.guide.nest,Tuck the egg in!,,Menu text; also ui.onbLead.tuck
-ui.onb2.guide.pet,Pet {pet}!,,Menu text; e.g. Pet Bear!; also ui.onbLead.pet
+ui.onb2.guide.nest,Tuck the egg in!,,Menu text
+ui.onb2.guide.pet,Pet {pet}!,,Menu text; e.g. Pet Bear!
 ui.onb2.replay,Watch the first hatch again,,Menu text
 ui.onb2.stork.delivery,A delivery!,,Menu text
 ui.onb3.charm.name,Nest Charm,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
@@ -710,16 +712,58 @@ ui.onb3.tip.park,Pets play together in here.,,"First-session onboarding: pet bub
 ui.onb3.tip.style,Dress up your Pocket Deck here.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.week.line,{pet} loves the garden. A new egg naps in the nest after every hatch.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear loves the garden. A new egg naps in the nest after every hatch."
 ui.onb3.week.title,Welcome week done!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onbAllSet.gift,+{count} ★ Welcome gift!,,Menu text; e.g. +3 ★ Welcome gift!
+ui.onbAllSet.giftSub,A welcome gift from {pet}.,,Menu text; e.g. A welcome gift from Bear.
+ui.onbAllSet.hatch,Hatch one!,,Menu text
 ui.onbAllSet.nest,Nest,,Menu text
 ui.onbAllSet.next,What's next?,,Menu text
 ui.onbAllSet.pet,Pet,,Menu text
 ui.onbAllSet.stars,Stars,,"Menu text; also ui.r3.help.dash.d.title, ui.report.category.stars, ui.store.starsRow"
 ui.onbAllSet.sub,{pet} loves it here.,,Menu text; e.g. Bear loves it here.
-ui.onbLead.deckSub,Stars buy eggs and toys,,Menu text
-ui.onbLead.follow,Follow {pet}!,,Menu text; e.g. Follow Bear!
+ui.onbGift.bring,Bring {pet} out first.,,Menu text; e.g. Bring Bear out first.
+ui.onbGift.busy,Try again in a moment.,,Menu text
+ui.onbGift.card.deeper,Deeper {name}!,,Menu text; e.g. Deeper Pet Park!
+ui.onbGift.card.free,Free,,"Menu text; also ui.paint.free, ui.r4.hue.free"
+ui.onbGift.card.keep,Keep it,,Menu text
+ui.onbGift.card.paint,Paint {pet}!,,Menu text; e.g. Paint Bear!
+ui.onbGift.card.play,Play!,,Menu text
+ui.onbGift.card.pot,{name} paint pot,,Menu text; e.g. Pet Park paint pot
+ui.onbGift.card.potOdds,Each colour: 1 in 4,,Menu text
+ui.onbGift.card.snack,A snack for the racer!,,Menu text
+ui.onbGift.card.title,A gift for you!,,Menu text; also ui.onbGift.paint
+ui.onbGift.card.toyOdds,Each toy you don't have: 1 in {count},,Menu text; e.g. Each toy you don't have: 1 in 3
+ui.onbGift.dash,Race time!,,Menu text
+ui.onbGift.dashSub,Try the Garden Dash,,Menu text
+ui.onbGift.fetch,{pet} learned Fetch!,,Menu text; e.g. Bear learned Fetch!
+ui.onbGift.fetchSub,Throw the ball any time,,Menu text
+ui.onbGift.nestSub,Come and see,,Menu text
+ui.onbGift.nudge,For you!,,Menu text
+ui.onbGift.paintSub,A free Paint Egg,,Menu text
+ui.onbGift.park,Let's go play!,,Menu text
+ui.onbGift.parkSub,The Pet Park is open,,Menu text
+ui.onbGift.pull,You can hatch one!,,Menu text
+ui.onbGift.pullSub,Turn the crank,,Menu text
+ui.onbGift.room,Make room in the pouch first.,,Menu text
+ui.onbGift.row.line,A free egg at the egg machine,,Menu text
+ui.onbGift.row.lineSnack,A free Snack Egg at the machine,,Menu text
+ui.onbGift.row.name,Gift waiting,,Menu text
+ui.onbGift.snack,A snack for me?,,Menu text
+ui.onbGift.snackSub,A free Snack Egg,,Menu text
+ui.onbGift.throw,Throw it!,,Menu text
+ui.onbGift.toy,A toy for me?,,Menu text
+ui.onbGift.toySub,A free Toy Egg,,Menu text
+ui.onbGift.turn,Turn it!,,Menu text
+ui.onbGift.turnSub,Tap to turn the crank,,Menu text
+ui.onbGift.waiting,Gift waiting!,,Menu text
+ui.onbGift.waitingSub,At the egg machine,,Menu text
+ui.onbLead.deck,Let's win Stars!,,Menu text
+ui.onbLead.deckSub,Stars turn the crank!,,Menu text
+ui.onbLead.follow,This way!,,Menu text
 ui.onbLead.followSub,A new egg is waiting,,Menu text
-ui.onbLead.thisWay,This way!,,Menu text
+ui.onbLead.pet,Pet me!,,Menu text
+ui.onbLead.thisWay,Come on!,,Menu text
 ui.onbLead.toast,Sweet dreams! Come back tomorrow to hatch it.,,Menu text
+ui.onbLead.tuck,Tuck it in!,,Menu text
 ui.onbLead.tuckSub,It hatches tomorrow,,Menu text
 ui.onboarding.crack.pad,Press A!,,First-round coaching
 ui.onboarding.spend.give,Give to {pet},,First-round coaching; e.g. Give to Bear; also ui.r4.customize.toys.give
@@ -733,10 +777,6 @@ ui.onboarding.welcome.match,Merge,,First-round coaching
 ui.onboarding.welcome.more,One more!,,First-round coaching
 ui.onboarding.welcome.skip,Skip tutorial,,First-round coaching
 ui.onboarding.welcome.static,↓,,First-round coaching
-ui.paint.bought,{pot} bought,,Menu text; e.g. {pot} bought
-ui.paint.buy,Buy · {price}★,,Menu text; e.g. Buy · {price}★
-ui.paint.buyLine,"One {pot}, {price} Stars, then it paints. Yours to keep.",,"Menu text; e.g. One {pot}, {price} Stars, then it paints. Yours to keep."
-ui.paint.buyPot,Buy a {pot} · {price}★,,Menu text; e.g. Buy a {pot} · {price}★
 ui.paint.charmOwned,Yours to keep. It floats in your pet's tummy-and-ears colour.,,Menu text
 ui.paint.charmTip,"Charms take {pet}'s tummy-and-ears colour.
 Change it on the Colour tab.",,Menu text; e.g. Charms take Bear's tummy-and-ears colour.
@@ -761,23 +801,26 @@ ui.paint.egg.statDescription,Hatches one training snack. Feed it to your pet: th
 ui.paint.egg.statEggs,{count} Snack Eggs,,Menu text; e.g. 3 Snack Eggs
 ui.paint.egg.statNotReady,Snack Eggs are not ready yet.,,Menu text
 ui.paint.egg.where,Hatches from the Paint Egg.,,Menu text
-ui.paint.free,Free,,Menu text; also ui.r4.hue.free
 ui.paint.full,Full,,Menu text
 ui.paint.fullLine,{target} is as {colour} as it gets.,,Menu text; e.g. 3 is as {colour} as it gets.
+ui.paint.hatch,Hatch a Paint Egg,,Menu text
 ui.paint.help.line,"Paint, shine, outfits and charms, all behind Dress up.",,Menu text
 ui.paint.hub.line,"Colour, shine, outfits and charms",,Menu text
 ui.paint.hub.tile,"Pets, dress up and toys",,Menu text
 ui.paint.legacy,Your carried egg: choose its free pot once.,,Menu text
 ui.paint.line,{target} {count} of 5 → {next} of 5,,Menu text; e.g. 3 3 of 5 → {next} of 5
 ui.paint.lineMix,{colour} mixes {a} and {b}. Next: one {pot}.,,Menu text; e.g. {colour} mixes {a} and {b}. Next: one {pot}.
+ui.paint.lockedChip,Locked,,Menu text; also ui.pool3.charm.locked
+ui.paint.lockedLine,Win it from a Paint Egg.,,Menu text
+ui.paint.lockedMix,Needs a {pot}. Win it from a Paint Egg.,,Menu text; e.g. Needs a {pot}. Win it from a Paint Egg.
 ui.paint.mix.citrus_iris,Coral,,Menu text
 ui.paint.mix.citrus_rose,Orange,,"Menu text; also catalog.BallThemes.ById.marbles.names.2, catalog.BallThemes.ById.smileys.names.2"
 ui.paint.mix.citrus_tide,Green,,"Menu text; also catalog.BallThemes.ById.marbles.names.3, catalog.BallThemes.ById.smileys.names.3"
 ui.paint.mix.iris_rose,Magenta,,Menu text
 ui.paint.mix.iris_tide,Indigo,,Menu text
 ui.paint.mix.rose_tide,Violet,,"Menu text; also catalog.BallThemes.ById.bubbles.names.5, catalog.BallThemes.ById.marbles.names.5, catalog.BallThemes.ById.smileys.names.5"
-ui.paint.more.hues,"Buy pots here, or find them in the Paint Egg.",,Menu text
-ui.paint.none,"No pots yet. Buy one, or find them in the Paint Egg.",,Menu text
+ui.paint.more.hues,Win more pots from the Paint Egg.,,Menu text
+ui.paint.none,No pots yet. Win them from the Paint Egg.,,Menu text
 ui.paint.notice.next,Tap Dress up on your pet. New pieces hatch from eggs.,,Menu text
 ui.paint.notice.title,Dress up your pet,,Menu text
 ui.paint.notice.what,"Paint, charms, toys and outfits change how {pet} looks. Looks only.",,"Menu text; e.g. Paint, charms, toys and outfits change how Bear looks. Looks only."
@@ -793,6 +836,7 @@ ui.paint.promise.hue,"One pot, one step of colour. Back to white is free.",,Menu
 ui.paint.reason.InvalidPot,That was not saved. Try again.,,Menu text; also ui.paint.reason.OperationConflict
 ui.paint.reason.MeetPipFirst,Hatch a pet first.,,Menu text
 ui.paint.reason.NotReady,Paint pots are not ready yet.,,Menu text
+ui.paint.reason.NotSold,Pots come from the Paint Egg.,,Menu text
 ui.paint.reason.PriceChanged,The price changed. Check it and tap again.,,Menu text
 ui.paint.reason.Retrying,Still saving… your pot will show here.,,Menu text
 ui.paint.reason.RevealPending,Open your new item first.,,Menu text
@@ -818,9 +862,8 @@ ui.paint.shine.title,Shine,,"Menu text; also ui.paint.tab.shine, ui.r4.customize
 ui.paint.shine.use,Use {item},,Menu text; e.g. Use Squeaky Bone
 ui.paint.shop.looks,Looks,,Menu text
 ui.paint.shop.snacks,Snacks,,Menu text; also ui.stats.snacks.open
-ui.paint.shop.strip,Pick a colour,,Menu text
-ui.paint.shop.stripLine,"One pot, {price} Stars. The Paint Egg is the cheaper surprise.",,"Menu text; e.g. One pot, {price} Stars. The Paint Egg is the cheaper surprise."
 ui.paint.status,{count}/5 · ×{stock},,Menu text; e.g. 3/5 · ×{stock}
+ui.paint.statusLocked,{count}/5 · Locked,,Menu text; e.g. 3/5 · Locked
 ui.paint.statusMix,{count}/5,,Menu text; e.g. 3/5
 ui.paint.tab.colour,Colour,,Menu text
 ui.paint.target.main,Body,,Menu text
@@ -862,7 +905,6 @@ ui.pool3.charm.fallback.rule,Keep playing to earn this charm,,Menu text
 ui.pool3.charm.findInEggs,Find in eggs,,Menu text
 ui.pool3.charm.heart.rule,Finish the Wardrobe page in the book,,Menu text
 ui.pool3.charm.leaf.rule,Collect 14 daily stamps,,Menu text
-ui.pool3.charm.locked,Locked,,Menu text
 ui.pool3.charm.none,"No charm yet. Charms are rare in the Customization Egg, or earned.",,Menu text
 ui.pool3.charm.star.rule,Claim 4 weekly bonuses,,Menu text
 ui.qa.coach.sayHi,Say hi to {pet},,Menu text; e.g. Say hi to Bear
