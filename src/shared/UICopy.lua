@@ -307,7 +307,8 @@ local Table={
  onbLead={pet="Pet {pet}!",follow="Follow {pet}!",followSub="A new egg is waiting",tuck="Tuck the egg in!",tuckSub="It hatches tomorrow",
   deck="Play for Stars!",deckSub="Stars buy eggs and toys",thisWay="This way!",toast="Sweet dreams! Come back tomorrow to hatch it."},
  -- Section 3 (Onboard "allset2"): the celebration card.
- onbAllSet={title="You're all set!",pet="Pet",nest="Nest",stars="Stars",sub="{pet} loves it here.",next="What's next?"},
+ -- gift: the one-time welcome gift's pill under the stamps, its Stars rolling up to 5 (shown only once the server paid it).
+ onbAllSet={title="You're all set!",pet="Pet",nest="Nest",stars="Stars",sub="{pet} loves it here.",next="What's next?",gift="+{count} ★ Welcome gift!"},
  -- v1 track A onboarding: coach cards (CoachCards.lua), each shown once ever (coachMask).
  -- A title of three words or fewer and one short line; the game assumes merge-game players.
  coach={effortPay="Good effort",

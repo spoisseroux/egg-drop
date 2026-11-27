@@ -35,6 +35,8 @@ local Coach=require(ReplicatedStorage.Shared.CoachMarks)
 local StarterBonus=require(ReplicatedStorage.Shared.StarterBonus)
 -- G2 (2026-11-25): the first hello, +2 Stars on a new save's first paid pet (optional `firstHello`).
 local FirstHello=require(ReplicatedStorage.Shared.FirstHello)
+-- Onboarding v3 section 3 (2026-11-27): the one-time +5 welcome gift on "You're all set!" (optional `welcomeGift`).
+local WelcomeGift=require(ReplicatedStorage.Shared.WelcomeGift)
 local BoardConfig=require(ReplicatedStorage.Shared.BoardConfig)
 local HeatPayout=require(ReplicatedStorage.Shared.HeatPayout)
 local StampCard=require(ReplicatedStorage.Shared.StampCard)
@@ -242,7 +244,7 @@ local function validV10(state)return validVersion(state,10,false)and Wearables.v
 -- lookCharmMisses and lookFound on v11 (LookState.valid, run inside HueState.valid).
 -- Welcome bonus (growth cuts 2026-11-25): optional additive `starterRounds` on v11, valid when missing (no version bump).
 -- First hello (G2 2026-11-25): optional additive `firstHello` on v11, valid when missing (no version bump).
-local function valid(state)return validVersion(state,11,false)and PaintPots.valid(state)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and StarterBonus.valid(state)and FirstHello.valid(state)and Bond.valid(state)and Stats.valid(state)and Stats.validBoosts(state)and StatEggs.valid(state)and Names.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
+local function valid(state)return validVersion(state,11,false)and PaintPots.valid(state)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and StarterBonus.valid(state)and FirstHello.valid(state)and WelcomeGift.valid(state)and Bond.valid(state)and Stats.valid(state)and Stats.validBoosts(state)and StatEggs.valid(state)and Names.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
 Hatching.validV10,Hatching.valid=validV10,valid
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
@@ -374,6 +376,8 @@ function Hatching.load(userId, profile, adapter)
 		if type(state) == "table" and state.starterRounds ~= nil then state.starterRounds = StarterBonus.sanitize(state.starterRounds) end
 		-- G2: a malformed first-hello field is dropped (then read by its rule: a save with a paid pet is done), never a failed load.
 		if type(state) == "table" and state.firstHello ~= nil then state.firstHello = FirstHello.sanitize(state.firstHello) end
+		-- The welcome gift: a malformed field is dropped (then not owed: it never pays), never a failed load.
+		if type(state) == "table" and state.welcomeGift ~= nil then state.welcomeGift = WelcomeGift.sanitize(state.welcomeGift) end
 		-- Malformed bond XP is repaired (bad entries dropped), never a failed load.
 		if type(state) == "table" and state.bond ~= nil then state.bond = Bond.sanitize(state.bond) end
 		-- v2 stats (S1): malformed stat fields are repaired, never a failed load.
@@ -1080,7 +1084,9 @@ function Hatching.command(handle, action, value, expectedRevision)
 	end, candidate)
 end
 
-function Hatching.grantStarter(handle)
+-- `owed` (Onboard "allset2" on, read by the caller): this brand-new save is owed the welcome gift (`welcomeGift` = 0,
+-- in this same write). Saves whose Bear came earlier, or with the switch off, are never owed it.
+function Hatching.grantStarter(handle, owed)
 	if Catalog.isOwned(handle.state.inventoryMask, "pip") then return true, "AlreadyOwned" end
 	return transact(handle, "starter", handle.state.revision, function(state, candidate)
 		if Catalog.isOwned(state.inventoryMask, "pip") then return true end
@@ -1093,8 +1099,34 @@ function Hatching.grantStarter(handle)
 		state.inventoryMask = bit32.bor(state.inventoryMask, Catalog.bit("pip"))
 		state.lastHatch = { id = candidate.id, petId = "pip", duplicate = false,
 			family = "pip", mastery = state.mastery.pip, rare = false, starter = true, stars = stars }
+		if candidate.welcome then WelcomeGift.mark(state) end
 		return true
-	end, { id = handle.adapter.guid() })
+	end, { id = handle.adapter.guid(), welcome = owed == true })
+end
+
+-- The welcome gift (ONBOARDING-V3-BRIEF section 3; Spencer 2026-11-27): +WelcomeGift.Bonus Stars once per save, ever,
+-- when "You're all set!" is truly done in the save. ctx = {nest (false: the nest is off in this world), mask (coach
+-- bits the board holds but has not saved yet)}, frozen into the candidate so a retry pays the same way.
+-- Exactly once: the field is the receipt. It is read and set to the Stars paid inside the same UpdateAsync, so a
+-- replayed request, a retry after a store error (the pending operation resumes, and committed() proves an ambiguous
+-- write), a rejoin or a second server all meet `welcomeGift` > 0 and answer AlreadyGranted with nothing paid.
+function Hatching.welcomeGift(handle, ctx)
+	ctx = if type(ctx) == "table" then ctx else {}
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local signature = "welcomeGift"
+	local resuming = handle.pending and handle.pending.signature == signature
+	if not resuming and WelcomeGift.paid(handle.state) then return true, "AlreadyGranted" end
+	local candidate = if resuming then handle.pending.candidate
+		else table.freeze({ nest = ctx.nest ~= false, mask = Coach.mask(ctx.mask) })
+	local ok, reason = transact(handle, signature, handle.state.revision, function(state, captured)
+		local due, why = WelcomeGift.due(state, captured.nest, captured.mask)
+		if not due then return false, why end
+		if state.nectar + WelcomeGift.Bonus > 1000000000 then return false, "BalanceLimit" end
+		WelcomeGift.apply(state)
+		return true
+	end, candidate, nil, nil, "welcome:" .. WelcomeGift.Bonus)
+	if not ok and reason == "AlreadyGranted" then return true, reason end
+	return ok, reason
 end
 
 -- Earned pets (overnight 2026-11-14, slice E; SYSTEMS-SCOPE 1.3). Grants `petId` once its

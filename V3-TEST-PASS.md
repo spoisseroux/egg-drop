@@ -75,7 +75,8 @@ Beta (33), 2026-11-26: player scale (row 60). Beta (32), 2026-11-26: the first e
 
 ## Built, not on the beta yet
 
-Nothing: everything built for beta (38) is on the beta.
+- **Paint pots only from the Paint Egg** (`/alive paint`; Spencer, beta 38: "we want a gacha focused game"). Try: Dress up, Colour. Pots you own paint as before; a pot you don't own is a locked swatch (tap to preview, "Win it from a Paint Egg"), its button "Hatch a Paint Egg" opens Hatch eggs on the Paint Egg (it still cranks and emerges). No price or Buy anywhere, no pot strip under the Paint Egg. Pots bought on beta (38) stay.
+- **"+5 ★ Welcome gift!" on "You're all set!"** (`allset2`). Try with `/freshsave`: pet the Bear, tuck the egg in, play a round; the card shows a gold "+5 ★ Welcome gift!" under the stamps that counts up with a blip a Star, and the wallet goes up 5. Once per save: rejoin, or an old save, gets no gift; the card still works if the gift is late or refused.
 
 ## Scoped, not built
 

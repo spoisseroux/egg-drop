@@ -5995,7 +5995,20 @@ do
       require(script.AllSetCard).show(player:WaitForChild("PlayerGui"),{copy=Copy.get,pet=petName(),petId=shown and shown.id or "pip",
        play=function(name,speed,gain)return audio:play(name,speed,gain)end,haptic=function(name)require(script.Haptics).play(name)end,
        reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
-       cheer=function()request:FireServer("petLead",{kind="cheer"})end,next=function()clientUI.openThings()end})
+       cheer=function()request:FireServer("petLead",{kind="cheer"})end,next=function()clientUI.openThings()end,
+       -- the one-time welcome gift: asked once; shown only when this ask paid it (a refusal or no answer: no gift)
+       gift=function(arrived)
+        local remote=remotes:FindFirstChild("WelcomeGiftResult")
+        if not remote then return end
+        local link
+        link=remote.OnClientEvent:Connect(function(packet)
+         if link then link:Disconnect();link=nil end
+         -- AlreadyGranted (paid before, by an earlier ask or another server): nothing new, so no pill
+         if type(packet)=="table"and packet.status=="Saved"and packet.reason~="AlreadyGranted"and type(packet.stars)=="number"then arrived(packet.stars)end
+        end)
+        task.delay(30,function()if link then link:Disconnect();link=nil end end)
+        nurseryRequest:FireServer("welcomeGift")
+       end})
       return
      end
      require(script.GuideEndCard).show(player:WaitForChild("PlayerGui"),{copy=Copy.get,
