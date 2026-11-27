@@ -4,8 +4,10 @@
 -- (scripts/PetLead.spec.lua). The server (GardenState:lead) owns where the pet is, so every player sees it lead; the
 -- client (NestLead) owns the words, the nudges and the park. Nothing here touches the game.
 --
---   start   the Bear chirps, hops twice on the spot and turns to the nest          (server action "leadStart")
---   run     14 studs a second along the player's trail route (never a straight line through fences)   ("leadRun")
+--   start   the Bear chirps and hops once as it turns to the nest: it runs within 0.6 s     (server action "leadStart")
+--   run     18 studs a second along the player's trail route (never a straight line through fences)   ("leadRun")
+--           (onboarding fun pass, qa-2026-11-27-beta37/ONBOARDING-FUN-PASS.md section 1: a chase, faster than the
+--           player's 16, so they chase it instead of passing it; was 14, two hops and a 2 s rest after the pet)
 --   wait    12 studs ahead of the player it stops, faces them and beckons every 2.5 s ("leadWait")
 --           it runs on once the player is within 7 studs (or has passed it)
 --   back    a nudge: it runs back along its route to about 5 studs from the player  ("leadBack")
@@ -14,20 +16,22 @@
 local Lead={}
 
 -- ── Numbers ──────────────────────────────────────────────────────────────────────────────────────────────────────────
-Lead.Run=14            -- studs a second (the player walks 16)
+Lead.Run=18            -- studs a second (the player walks 16: a chase; was 14)
 Lead.Ahead=12          -- this far ahead of the player (and nearer the nest than them) it stops and looks back
 Lead.Resume=7          -- the player this close: it runs on
 Lead.Arrive=3          -- it stops this far short of the nest's prompt, along the route
 Lead.Reach=8           -- the player this close to the nest's prompt: prompt 2a is done (2b shows on the nest)
 Lead.Rest=2            -- s between two prompts (was 4)
+Lead.AfterPet=table.freeze({rest=0,free=.1}) -- the first pet's close: no rest, and the lead asks once the garden is free
+                       -- this long (BearNeeds' usual Return is 2.5 s): the Bear runs out of the petting screen
 Lead.Return=2.5        -- s free after a pause (the deck, a menu, leaving the garden) before it leads again
 Lead.Toast=3           -- s, the post-tuck toast
-Lead.Hops=table.freeze({count=2,height=.6,time=.35})          -- the start: two hops on the spot
+Lead.Hops=table.freeze({count=1,height=.6,time=.35})          -- the start: one hop, while it turns (was two, then the turn)
 Lead.Beckon=table.freeze({every=2.5,height=.6,time=.35,wave=.5}) -- the look back: a hop, a paw wave, a chirp
 Lead.Bounce=table.freeze({height=.35,time=.4,every=.9})       -- arrived: a bounce on the spot
 Lead.Cheer=table.freeze({time=.6,height=.9,hold=.8})          -- the jump-spin (tucked, all set)
 -- The nudges and the park (client, Lead.watch).
-Lead.Still=8           -- s the player stands still: a nudge
+Lead.Still=6           -- s the player stands still: a nudge (was 8)
 Lead.StillSpeed=1      -- studs a second under this is standing still
 Lead.Far=30            -- the player this far from the Bear (the other way): a nudge, counted
 Lead.Back=5            -- a nudge brings the Bear back to about this far from the player
@@ -274,7 +278,8 @@ function Lead.pose(action,age,reduced)
 	end
 	return 0,0
 end
--- Pure: the start's length (s): the two hops, then the turn to the nest (turnSeconds of it).
+-- Pure: the start's hop (s); the server turns the pet to the nest during it (GardenState:lead), so the run starts after
+-- the longer of the two.
 function Lead.startHops()return Lead.Hops.count*Lead.Hops.time end
 -- Pure: is a beckon due (the client's chirp, paw wave and bubble hop), `age` s into a wait, the last at `last`?
 function Lead.beckonDue(age,last)

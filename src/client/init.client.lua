@@ -3627,7 +3627,13 @@ do
    return gui
   end,
   -- Onboarding v3 section 5 (WelcomeDeck2): the board's well on screen, for the combo words over it.
-  wellRect=function()return viewport.AbsolutePosition,viewport.AbsoluteSize end}
+  wellRect=function()return viewport.AbsolutePosition,viewport.AbsoluteSize end,
+  -- The onboarding fun pass (WelcomeEgg3D's hold): the deck is tucking for the stork, or the stork will not come.
+  tucked=function()
+   local story=clientUI.firstHatchStory
+   if not story or story.disabled or not require(script.OnboardV2).on("stork")then return true end
+   return story.asked==true or(story.gate~=nil and story.gate.declined==true)
+  end}
  -- Set before RoomView can start the initial deck boot, not on its first frame.
  clientUI.deck.boot.maxMs=if(board:GetAttribute("OwnedPets")or 0)==0 then 1200 else nil
  local legacy=Welcome.new({meter=meter,gesture=legacyGesture,skip=legacySkip},dependencies)
@@ -5996,6 +6002,18 @@ do
        play=function(name,speed,gain)return audio:play(name,speed,gain)end,haptic=function(name)require(script.Haptics).play(name)end,
        reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
        cheer=function()request:FireServer("petLead",{kind="cheer"})end,next=function()clientUI.openThings()end,
+       -- the fun pass: "Hatch one!" when the Stars cover the cheapest egg; it lays the paw prints to the egg machine
+       canHatch=function()
+        local cost=require(script.EggHatchView).cheapestCost()
+        return type(cost)=="number"and(nurseryState and nurseryState.nectar or 0)>=cost
+       end,
+       hatch=function()
+        local machine=clientUI.eggCornerPlace and clientUI.eggCornerPlace()
+        local entry=not machine and clientUI.attract and clientUI.attract.stations.Eggs
+        local at=machine or(entry and entry.base)
+        if typeof(at)~="Vector3"then clientUI.openThings();return end
+        trail:start({position=at,name=Copy.get("r5.station.Eggs.name")})
+       end,
        -- the one-time welcome gift: asked once; shown only when this ask paid it (a refusal or no answer: no gift)
        gift=function(arrived)
         local remote=remotes:FindFirstChild("WelcomeGiftResult")
@@ -6085,6 +6103,8 @@ do
     return if needs:key()then Enum.ContextActionResult.Sink else Enum.ContextActionResult.Pass
    end,false,Enum.ContextActionPriority.Medium.Value,Enum.KeyCode.G,Enum.KeyCode.ButtonL2)
    clientUI.needs=needs
+   -- pet2's first visit (PetCuddle.First): the petting screen opened while the guide's "Pet me!" is the open prompt
+   roomView.cuddleFirst=function()return needs.guide==true and needs.open=="needHi"end
    clientUI.coach.options.follow=function()return Onboard.sessionFollow()end
    -- Live growth cuts on the beta: with the need bubbles on, the needHi bubble is the one hello prompt (no say-hi line)
    -- and the paw prints lead to the pet while it asks (the Bear's own prints to the machine start after it).

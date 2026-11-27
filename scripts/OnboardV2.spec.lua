@@ -69,6 +69,11 @@ return function(client)
 			seen[text]=true
 		end
 		assert(V2.deckLine(0,7)=="onb2.deck.hatching"and V2.deckLine(nil,nil)=="onb2.deck.drop","clamped")
+		-- the onboarding fun pass (deck2): the egg's own words after combos 1 and 2; the pictures keep their numerals
+		for _,step in ipairs({{0,0,"Drop a ball!"},{1,0,"Match two!"},{4,1,"It moved!"},{6,2,"It's cracking!"},{8,3,"It's hatching!"}})do
+			assert(instruction(V2.deckLine(step[1],step[2],true))==step[3],step[3])
+		end
+		assert(V2.picture(4,1)=="two"and V2.picture(6,2)=="one","the pictures (and the gold numeral) are the count's")
 		assert(instruction(V2.dropHint("Keyboard"))=="Click to drop"and V2.dropHint("Touch")==nil and V2.dropHint("Gamepad")==nil)
 	end)
 	test("step 1: three pips fill one a combo with a 1.0 -> 1.3 -> 1.0 pop over 0.2 s; the egg lit a little brighter each time",function()
@@ -100,9 +105,13 @@ return function(client)
 		assert(near(g0,V2.glow(3))and near(g1,V2.Deck.lightFinal)and l0==0 and near(l1,.2)and f0==0 and f1==1,"combo 3: the light rises, lift 20%, fade")
 		assert(select(2,V2.finale(.5,true))==0,"no lift under Reduced Motion")
 	end)
-	test("step 2: six seconds: glide 3, lower to 3.8, let go to 4.3, off by 6; wings 35 degrees, 3 Hz slowing to 1.5",function()
-		assert(V2.storkPhase(0)=="glide"and V2.storkPhase(2.99)=="glide"and V2.storkPhase(3.2)=="hover"and V2.storkPhase(4)=="release"
-			and V2.storkPhase(5)=="leave"and V2.storkPhase(6)=="gone")
+	test("step 2 (the onboarding fun pass): 4.6 s: glide 2, lower to 2.8, let go to 3.3, off by 4.6; wings 35 degrees, 3 Hz slowing to 1.5",function()
+		assert(V2.Stork.glide==2 and V2.Stork.hover==2.8 and V2.Stork.release==3.3 and V2.Stork.total==4.6)
+		assert(V2.storkPhase(0)=="glide"and V2.storkPhase(1.99)=="glide"and V2.storkPhase(2.2)=="hover"and V2.storkPhase(3)=="release"
+			and V2.storkPhase(4)=="leave"and V2.storkPhase(4.6)=="gone")
+		-- the leave's beats fit its 1.3 s, with time left to fly off
+		local L=V2.Leave
+		assert(L.clacks[2]<L.nod and L.nod+.35<=L.fly+.2 and V2.Stork.total-V2.Stork.release-L.fly>=.5)
 		local peak=0
 		for i=0,600 do peak=math.max(peak,math.abs(V2.flap(i/100)))end
 		assert(peak<=35+1e-6 and peak>34,"amplitude "..peak)
@@ -112,13 +121,13 @@ return function(client)
 			for i=1,200 do local v=V2.flap(a+(b-a)*i/200);if(v>0)~=(last>0)then n+=1 end;last=v end
 			return n
 		end
-		assert(crossings(0,.5)>=2 and crossings(4,5)>=2 and crossings(4,5)<=4,"slower after the glide")
-		assert(near(V2.flap(3)-V2.flap(3-1e-6),0,1e-3),"no jump at the end of the glide")
-		assert(V2.lower(2)==0 and V2.lower(3.8)==1 and V2.lower(3.4)>0 and V2.lower(3.4)<1)
+		assert(crossings(0,.5)>=2 and crossings(3,4)>=2 and crossings(3,4)<=4,"slower after the glide")
+		assert(near(V2.flap(2)-V2.flap(2-1e-6),0,1e-3),"no jump at the end of the glide")
+		assert(V2.lower(1.5)==0 and V2.lower(2.8)==1 and V2.lower(2.4)>0 and V2.lower(2.4)<1)
 		assert(V2.rock(-1)==0 and V2.rock(.6)==0 and math.abs(V2.rock(.1))<=6)
 		local a,b=Vector3.new(0,0,0),Vector3.new(10,0,0)
 		assert(V2.curve(a,b,Vector3.new(0,4,0),0)==a and V2.curve(a,b,Vector3.new(0,4,0),1)==b and V2.curve(a,b,Vector3.new(0,4,0),.5).Y==2)
-		assert(V2.Stork.out==40 and V2.Stork.up==18 and V2.Stork.land==6 and V2.Stork.skipAt==1 and V2.Stork.skipH==44 and V2.Stork.fov==55)
+		assert(V2.Stork.out==40 and V2.Stork.up==18 and V2.Stork.land==6 and V2.Stork.skipAt==.5 and V2.Stork.skipH==44 and V2.Stork.fov==55,"Skip at 0.5 s")
 		assert(instruction("onb2.stork.delivery")=="A delivery!")
 		instruction("onb2.stork.skip")
 	end)
@@ -279,7 +288,7 @@ return function(client)
 		assert(V2.nudgeDue(20,nil,0)and not V2.nudgeDue(19,nil,0)and not V2.nudgeDue(40,30,44)and V2.nudgeDue(40,30,45)and not V2.nudgeDue(nil,nil,9))
 	end)
 	test("beta (37) note 1: the Bear stands where the egg opened a beat, then follows; the swap waits for it to be there",function()
-		assert(V2.Stand.beat==1.5 and V2.Stand.wait==2 and V2.Stand.reach>0 and V2.Stand.near>0)
+		assert(V2.Stand.beat==.8 and V2.Stand.wait==2 and V2.Stand.reach>0 and V2.Stand.near>0,"the fun pass: a 0.8 s beat")
 		local land=Vector3.new(96,4.2,60)
 		assert(V2.standArrived(land+Vector3.new(.5,0,.5),land),"drawn on the blanket spot")
 		assert(not V2.standArrived(land+Vector3.new(3,-1,-2.6),land),"at its follow spot behind the player")

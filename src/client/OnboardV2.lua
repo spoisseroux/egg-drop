@@ -42,12 +42,13 @@ V2.Deck=table.freeze({
 	reducedYaw=-28,                                        -- Reduced Motion: a still three-quarter pose
 	tuckAfter=.4,                                          -- step 2: the deck tucks this long after combo 3
 })
--- The card's one line for this moment (UICopy keys).
-function V2.deckLine(drops,combos)
+-- The card's one line for this moment (UICopy keys). eggVoice (deck2, the onboarding fun pass): after combos 1 and 2
+-- the egg's own words ("It moved!", "It's cracking!") instead of a count ("2 more!", "1 more!"; the gold numeral stays).
+function V2.deckLine(drops,combos,eggVoice)
 	combos=math.clamp(math.floor(tonumber(combos)or 0),0,3)
 	if combos>=3 then return "onb2.deck.hatching"end
-	if combos==2 then return "onb2.deck.one"end
-	if combos==1 then return "onb2.deck.two"end
+	if combos==2 then return if eggVoice then "onb2.deck.cracking"else "onb2.deck.one"end
+	if combos==1 then return if eggVoice then "onb2.deck.moved"else "onb2.deck.two"end
 	if(tonumber(drops)or 0)>=1 then return "onb2.deck.match"end
 	return "onb2.deck.drop"
 end
@@ -129,6 +130,10 @@ V2.Deck2=table.freeze({
 	sweepStart=.55,sweepTime=.35,sweepAlpha=.45,
 	finaleAt=.55,                                          -- the old finale (glow, lift, fade) starts this long after pip 3
 	tuckAfter=1.2,                                         -- the deck tucks this long after combo 3 (Deck.tuckAfter off)
+	-- the onboarding fun pass (ONBOARDING-FUN-PASS section 1, "deck to stork"): from finaleAt until the deck tucks (the
+	-- story asks for the garden, or never takes the Bear), the egg stays, knocks every 0.4 s and the card's border
+	-- pulses gold; its rise starts as the deck tucks. holdMax: the rise starts by then whatever (past V2.Hold + tuckAfter)
+	holdKnock=.4,pulseHz=1.4,pulseLow=.15,pulseHigh=.8,pulseReduced=.35,holdMax=6,
 })
 V2.ComboWords=table.freeze({"onb2.deck.nice","onb2.deck.close","onb2.deck.hatching"})
 -- Both switches: the cuter deck dresses the egg3d deck.
@@ -198,11 +203,16 @@ function V2.cardBubble(i,t,reduced)
 	local fade=math.min(1,u/.12,(1-u)/.2)
 	return u,sway,1-D.bubbleAlpha*math.clamp(fade,0,1)
 end
--- The knock: seconds between knocks with `combos` combos landed (nil: no more knocking).
-function V2.knockEvery(combos)return V2.Deck2.knockEvery[math.clamp(math.floor(tonumber(combos)or 0),0,3)+1]end
--- Pure: is a knock due at `now` (the last at `last`)? Never under Reduced Motion or once combo 3 has landed.
-function V2.knockDue(now,last,combos,reduced)
-	local every=V2.knockEvery(combos)
+-- The knock: seconds between knocks with `combos` combos landed (nil: no more knocking). holding: combo 3 is in and the
+-- deck waits for the stork (the fun pass): every holdKnock s.
+function V2.knockEvery(combos,holding)
+	if holding then return V2.Deck2.holdKnock end
+	return V2.Deck2.knockEvery[math.clamp(math.floor(tonumber(combos)or 0),0,3)+1]
+end
+-- Pure: is a knock due at `now` (the last at `last`)? Never under Reduced Motion, nor once combo 3 has landed unless
+-- the deck is holding.
+function V2.knockDue(now,last,combos,reduced,holding)
+	local every=V2.knockEvery(combos,holding)
 	if reduced or not every or type(now)~="number"then return false end
 	return now-(last or now)>=every
 end
@@ -212,6 +222,21 @@ function V2.knockTwitch(age)
 	if type(age)~="number"or age<0 or age>=D.knockTime then return 0 end
 	local u=age/D.knockTime
 	return D.knockDeg*(1-u)*(1-u)*math.sin(u*math.pi*4)
+end
+-- Pure (the fun pass): the egg card's gold border `age` s into the hold: its see-through, pulsing pulseLow..pulseHigh
+-- at pulseHz (it starts bright). Reduced Motion: a steady pulseReduced.
+function V2.holdPulse(age,reduced)
+	local D=V2.Deck2
+	if type(age)~="number"or age<0 then return 1 end
+	if reduced then return D.pulseReduced end
+	local u=.5-.5*math.cos(age*D.pulseHz*math.pi*2)
+	return D.pulseLow+(D.pulseHigh-D.pulseLow)*u
+end
+-- Pure (the fun pass): does the egg's rise start now? holdFrom: when the hold began (nil: no hold); tucked: the deck is
+-- tucking (the story asked for the garden, or it will not take the Bear). By holdMax s whatever.
+function V2.riseDue(holdFrom,now,tucked)
+	if type(holdFrom)~="number"or type(now)~="number"or now<holdFrom then return false end
+	return tucked==true or now-holdFrom>=V2.Deck2.holdMax
 end
 -- Pure: the next pip's breath at t (1 at rest; 1.0 -> 1.12 at 1 Hz). Still under Reduced Motion.
 function V2.breathe(t,reduced)
@@ -328,7 +353,8 @@ V2.CardTimeout=90
 -- stand where the egg opened, facing the player, a beat (s) before it follows (the server's GardenState:stand owns
 -- the spot; reach s more for the ask to arrive). The story's own Bear stands there until the garden Bear is drawn
 -- within `near` studs of it (or `wait` s pass), then the two swap.
-V2.Stand=table.freeze({beat=1.5,reach=.6,wait=2,near=1.2})
+-- The fun pass: the beat is 0.8 s (was 1.5).
+V2.Stand=table.freeze({beat=.8,reach=.6,wait=2,near=1.2})
 -- Pure: is the garden Bear drawn at the egg's spot (flat distance)?
 function V2.standArrived(at,land)
 	if typeof(at)~="Vector3"or typeof(land)~="Vector3"then return false end
@@ -337,11 +363,13 @@ end
 
 -- ── Step 2: the stork ────────────────────────────────────────────────────────────────────────────────────────────────
 V2.Stork=table.freeze({
-	glide=3.0,hover=3.8,release=4.3,total=6.0,             -- seconds: glide in, lower the bundle, let go, fly off
+	-- the onboarding fun pass (ONBOARDING-FUN-PASS section 1): 4.6 s, was 6.0 (glide 3.0, hover 3.8, release 4.3);
+	-- the bundle's lowering and let-go keep their length, the glide loses 1 s and the leave 0.4 s (V2.Leave)
+	glide=2.0,hover=2.8,release=3.3,total=4.6,             -- seconds: glide in, lower the bundle, let go, fly off
 	out=40,up=18,land=6,hoverUp=4.2,                       -- studs: the start (out, up, to the player's right), the drop
 	flapDeg=35,flapFast=3,flapSlow=1.5,                    -- wings
 	open=1.2,rockDeg=6,clacks=2,                           -- the blanket's radius, the egg's settle rock
-	skipAt=1,skipH=44,fov=55,reducedFade=.3,
+	skipAt=.5,skipH=44,fov=55,reducedFade=.3,               -- Skip from 0.5 s (was 1)
 	body=hex("#F6F3EA"),tips=hex("#2E3440"),beak=hex("#F28C28"),cap=hex("#5B8DEF"),band=hex("#FFD86B"),
 	blanket=hex("#8FD3FF"),dots=hex("#FFFFFF"),
 })
@@ -390,7 +418,8 @@ function V2.rock(age)
 	return S.rockDeg*(1-u)*math.sin(u*math.pi*3)
 end
 -- The two beak clacks and the nod in the leave phase (seconds after the release): {clacks}, nodAt, flyAt.
-V2.Leave=table.freeze({clacks={.15,.42},nod=.7,fly=1.0})
+-- The fun pass: the leave is 1.3 s (was 1.7): the clacks, the nod and the fly-off come a little sooner.
+V2.Leave=table.freeze({clacks={.12,.34},nod=.55,fly=.75})
 
 -- Beta (36), Spencer: "the stork flies thru the arch mesh". The flight is chosen against the world before it starts:
 -- candidate approaches (a heading round the landing and a height) are sampled along the same curve the stork flies,

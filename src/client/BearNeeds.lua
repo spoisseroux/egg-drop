@@ -399,7 +399,11 @@ function Needs:step(now,dt)
 	if id~=self.open then
 		if self.open=="needNest"and nestLead and not nestLead.done and not nestLead.parked then nestLead:pause()end
 		if self.open~=nil then
-			self.restUntil=now+(if self.lead then Lead.Rest else Needs.Rest);d.react(self.open)
+			-- the lead (onboarding fun pass): the first pet's close has no rest, and the next prompt asks once the garden
+			-- has been free Lead.AfterPet.free s (not Needs.Return): the Bear runs out of the petting screen
+			local afterPet=self.lead and self.open=="needHi"
+			self.restUntil=now+(if afterPet then Lead.AfterPet.rest elseif self.lead then Lead.Rest else Needs.Rest);d.react(self.open)
+			self.quickReturn=if afterPet then Lead.AfterPet.free else nil
 			-- The guide's first pet: the hearts and purr are the petting's own; the settle buzz is the guide's.
 			if self.guide and self.open=="needHi"and Needs.closed("needHi",f)and d.firstPet then pcall(d.firstPet)end
 		end
@@ -411,10 +415,11 @@ function Needs:step(now,dt)
 	-- Never over a machine's prompt (the bubble is always on top).
 	local promptNear=d.prompt~=nil and d.prompt()==true
 	local leadNest=self.lead and id=="needNest"and nestLead~=nil
-	local show=id~=nil and now>=self.restUntil and blocked==nil and freeFor>=Needs.Return and not promptNear
+	local show=id~=nil and now>=self.restUntil and blocked==nil and freeFor>=(self.quickReturn or Needs.Return)and not promptNear
 		-- the guide's bubble hangs over the pet: with none drawn (stowed, loading) it waits, its clock stopped (the v3
 		-- brief's nest prompt sits on the nest instead)
 		and not(self.guide and not leadNest and d.petShown~=nil and d.petShown()~=true)
+	if show then self.quickReturn=nil end
 	-- The v3 brief: the lead runs (or pauses) while the nest prompt is open; a prompt in reach only hides the bubble.
 	local view=nil
 	if leadNest then

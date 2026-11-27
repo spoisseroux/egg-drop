@@ -10,7 +10,8 @@
 --   egg:update({active, combos, drops}) ; egg:destroy()
 -- Onboarding v3 section 5 (Onboard "deck2", deps.deck2 read once when the round's egg is made): WelcomeDeck2 dresses
 -- both cards; a counted combo's pip then pops when its spark lands (egg:comboSpark), and the hop, chime and line follow
--- the pop. deps also: sparkLayer(), wellRect() -> (position, size), scale(). Off: exactly as before.
+-- the pop. deps also: sparkLayer(), wellRect() -> (position, size), scale(), tucked() (the onboarding fun pass: true
+-- once the deck tucks for the stork, or the stork will not come; without it the rise starts at once). Off: as before.
 local RunService=game:GetService("RunService")
 local V2=require(script.Parent.OnboardV2)
 local Egg={};Egg.__index=Egg
@@ -142,12 +143,14 @@ function Egg:updateDeck2(s,combos)
 		for n=self.counted+1,combos do deck:counted(n,self.clock)end
 	elseif combos<self.counted and s.active then
 		-- a new Welcome round (rejoin, replayed save): start over
-		self.finaleAt,self.beatAt=nil,nil;table.clear(self.pops);self.combos=0;deck:reset()
+		self.finaleAt,self.beatAt,self.holdFrom=nil,nil,nil;table.clear(self.pops);self.combos=0;deck:reset()
 	end
 	self.counted=if s.active then combos else math.max(self.counted,combos)
 	self.drops=s.drops or 0
 	local finaleLeft=self.finaleAt~=nil and self.clock-self.finaleAt<D.finale
-	local show=(s.active==true and not(self.finaleAt and not finaleLeft))or(self.shown and(finaleLeft or deck:pending()))
+	-- the fun pass: the egg stays up through the hold (knocking, until the deck tucks)
+	local holding=self.holdFrom~=nil and self.finaleAt==nil
+	local show=(s.active==true and not(self.finaleAt and not finaleLeft))or(self.shown and(finaleLeft or holding or deck:pending()))
 	self:setShown(show)
 	self:paint()
 end
@@ -170,7 +173,15 @@ function Egg:step(dt)
 		for _,n in ipairs(self.deck2:step(self.clock))do
 			self.beatAt=self.clock;self.pops[n]=self.clock;self:play(n)
 			self.combos=math.max(self.combos,n)
-			if n>=3 and not self.finaleAt then self.finaleAt=self.clock+V2.Deck2.finaleAt end
+			if n>=3 and not self.finaleAt and not self.holdFrom then
+				-- the fun pass (deps.tucked given): the rise waits for the deck's tuck; the egg knocks meanwhile
+				if self.d.tucked then self.holdFrom=self.clock+V2.Deck2.finaleAt
+				else self.finaleAt=self.clock+V2.Deck2.finaleAt end
+			end
+		end
+		if self.holdFrom and not self.finaleAt then
+			local ok,tucked=pcall(self.d.tucked)
+			if V2.riseDue(self.holdFrom,self.clock,not ok or tucked==true)then self.finaleAt=self.clock end
 		end
 	end
 	if self.finaleAt and self.clock-self.finaleAt>=D.finale and self.shown then
@@ -185,12 +196,15 @@ function Egg:paint()
 	local reduced=self:reduced()
 	if self.cover then
 		local copy=self.d.copy or function(key)return key end
-		local key=V2.deckLine(self.drops,self.combos)
+		-- deck2 (the fun pass): the egg's own words after combos 1 and 2
+		local key=V2.deckLine(self.drops,self.combos,self.deck2~=nil)
 		local ok,text=pcall(copy,key)
 		self.line.Text=if ok and type(text)=="string"then text else ""
 		if self.coach and not self.deck2 then self.cover.BackgroundColor3=self.coach.BackgroundColor3 end
 	end
-	if self.deck2 then self.deck2:paint(self.clock,self.combos,self.drops or 0,self.line and self.line.Text or "")end
+	-- the fun pass's hold: from holdFrom until the rise, the egg knocks every 0.4 s and the border pulses
+	local holdAge=if self.holdFrom and not self.finaleAt and self.clock>=self.holdFrom then self.clock-self.holdFrom else nil
+	if self.deck2 then self.deck2:paint(self.clock,self.combos,self.drops or 0,self.line and self.line.Text or "",holdAge)end
 	for i,pip in ipairs(self.pips)do
 		local filled=V2.pip(i,self.combos)=="filled"
 		pip.frame.BackgroundColor3=if filled then D.pipFilled else D.pipEmpty
@@ -201,7 +215,7 @@ function Egg:paint()
 	if not preview or not preview.geo then return end
 	local beat=if self.beatAt then self.clock-self.beatAt else nil
 	local yaw,tilt,hop=V2.eggPose(self.clock,beat,reduced)
-	if self.deck2 then tilt+=self.deck2:knock(self.clock,self.combos)end
+	if self.deck2 then tilt+=self.deck2:knock(self.clock,self.combos,holdAge~=nil)end
 	-- the egg's own light: a little brighter each combo, a brief flare on the hop, the finale's rise
 	local light,lift,fade=V2.glow(self.combos),0,0
 	if beat and beat<D.wobbleTime and not reduced then light+=D.lightFlare*(1-beat/D.wobbleTime)end
