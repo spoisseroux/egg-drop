@@ -152,14 +152,16 @@ function Garden:sync(inputs,freshOwnerId)
         actor.ownerSample,actor.ownerSampleAt=input.position,sampledAt
         end
         if actor.charmVisible~=input.charmVisible then actor.charmVisible=input.charmVisible;self.dirty=true end
-        if distance(actor.lastOwner,input.position)>.65 then
+        -- The first hatch's stand (Garden:stand) holds until its beat is over. The owner's walk during the hold is not
+        -- taken in (lastOwner stays put), so the first sync after it still sees them moved and the pet follows, whether
+        -- or not they stand still by then (beta 38 review 3); the rest's own end follows too.
+        local standing=actor.standUntil~=nil and self.options.now()<actor.standUntil
+        if not standing and distance(actor.lastOwner,input.position)>.65 then
             actor.lastOwner,actor.idleSince=input.position,self.options.now()
             actor.wanderCount,actor.nextWanderAt=0,nil
-            -- Park pets stay in the playground while their owner walks around the kerb. The first hatch's stand
-            -- (Garden:stand) holds until its beat is over.
-            local standing=actor.standUntil~=nil and self.options.now()<actor.standUntil
+            -- Park pets stay in the playground while their owner walks around the kerb.
             -- The lead to the nest (Garden:lead) runs ahead on its own rules.
-            if actor.mode=="Room" and actor.behavior~="follow" and not actor.park and not actor.dash and not standing and not actor.lead then self:release(actor);self:transition(actor,"follow",input.anchor,.5) end
+            if actor.mode=="Room" and actor.behavior~="follow" and not actor.park and not actor.dash and not actor.lead then self:release(actor);self:transition(actor,"follow",input.anchor,.5) end
         end
         if actor.care and self.care then self.care:tick(actor,input)end
     end
@@ -490,6 +492,7 @@ Garden.StandMax=10
 function Garden:stand(id,spot,yaw,hold)
     local actor=self.actors[id]
     if not actor or typeof(spot)~="Vector3"or not self.inputs[id]or type(hold)~="number"or hold~=hold then return false end
+    -- a pet in Focus (the close-up: mode "Focus", Garden:focus) is refused by the mode check (the spec covers it)
     if actor.park or actor.care or actor.dash or actor.toyReservation or actor.mode~="Room"then return false end
     hold=math.clamp(hold,.05,Garden.StandMax)
     local now=self.options.now()
@@ -599,6 +602,11 @@ function Garden:leadStep(actor,input,position,now)
     -- far past any nudge (a teleport, a lost owner): the lead ends and it follows; the client asks again
     if Lead.flat(position,input.position)>Lead.MaxGap then
         actor.lead=nil;actor.idleSince=now;self:transition(actor,"follow",input.anchor,.6);return
+    end
+    -- arrived at the nest, or lost and waiting by the owner, while the owner walks off (the client stopped asking): the
+    -- lead ends past Lead.Far and it follows (beta 38 review C2)
+    if(lead.phase=="arrive"or lead.lost)and Lead.flat(position,input.position)>Lead.Far then
+        actor.lead=nil;actor.idleSince=now;self.dirty=true;self:transition(actor,"follow",input.anchor,.6);return
     end
     local nest=lead.nest or lead.goal
     -- poofed off its route: it waits by the owner for the client's new route (never a run off the route)

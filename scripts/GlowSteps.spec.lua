@@ -150,6 +150,34 @@ return function(client)
 		r.trail:destroy()
 	end)
 
+	test("LeadTrail on the real ThingsTrail: trail2 on, a guide trail the pet leads (hold, nil at stop); off, today's trail",function()
+		local LeadTrail=require(client.LeadTrail)
+		local model=Instance.new("Model")
+		model.GetPivot=function()return CFrame.new(V(4,0))end
+		model.Parent=workspace
+		local r=rig(true)
+		local lead=LeadTrail.new({things=r.trail})
+		assert(lead:lead(model,{position=far.position,name=far.name})and lead.mode=="lead")
+		assert(r.trail.guide and r.trail.leader==model and r.trail.steps.leading,"guide, the pet leads")
+		lead:hold(true);assert(r.trail.steps.leadState.held==true,"held")
+		lead:hold(false);assert(r.trail.steps.leadState.held==false)
+		for _=1,30 do r.trail:step(1)end
+		assert(lead:active(),"a guide outlives Seconds")
+		lead:stop()
+		assert(not r.trail:active()and r.trail.leader==nil and not r.trail.steps.leading)
+		r.trail:destroy()
+		r=rig(false)
+		lead=LeadTrail.new({things=r.trail})
+		assert(lead:lead(model,{position=far.position,name=far.name})and lead.mode=="show"and r.trail:active())
+		assert(not r.trail.glow and r.trail.leader==nil,"off: no lead mode")
+		lead:hold(true)
+		for _=1,21 do r.trail:step(1)end
+		assert(not lead:active()and r.trail.reason=="time","off: today's Seconds end")
+		lead:stop()
+		r.trail:destroy()
+		model.Parent=nil
+	end)
+
 	test("PetTrail: the switch is read per trail; a glow trail has no 30 s end and hides for a menu or the deck",function()
 		assert(Pet.glowOn({glow=true})and Pet.glowOn({glow=function()return true end}))
 		assert(not Pet.glowOn({})and not Pet.glowOn(nil)and not Pet.glowOn({glow=function()error("x")end}))

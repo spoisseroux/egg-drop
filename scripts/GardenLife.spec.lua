@@ -66,6 +66,8 @@ return function(client)
 			fruit=if options.fruit then function()return true end else nil,
 			play=function(cue,at,volume,pitch)table.insert(r.sounds,{cue=cue,at=at,volume=volume,pitch=pitch})end,
 			shook=function(i)table.insert(r.shakes,i)end,rock=function(p)table.insert(r.rocked,p)end,
+			promptBlocked=function()return r.promptBlocked==true end,sayHiNear=function()return r.sayHi==true end,
+			inputKind=function()return r.inputKind or "Keyboard"end,
 			buzz=function(name)table.insert(r.buzzed,name)end,
 			-- The garden hour: r.daylight (nil = the hour off), or r.hour(now) when a case drives the real clock.
 			daylight=if options.realHour then nil else function(now)if r.hour then return r.hour(now)end return r.daylight end})
@@ -1043,7 +1045,7 @@ return function(client)
 			walkIn()
 			assert(#r.shakes==2,"grown back, it shakes again")
 		end)
-		test("beta 38: the Shake prompt at each fruit tree's trunk (E, gamepad X, clickable), on only while a shake is allowed; a press within reach shakes like a bump and tells the server; out of reach nothing; resting: off and ignored",function()
+		test("beta 38: the Shake prompt at each fruit tree's trunk (R, gamepad X, clickable), on only while a shake is allowed; a press within reach shakes like a bump and tells the server; out of reach nothing; resting: off and ignored",function()
 			local r=fruitRig()
 			r.step(.5)
 			local prompts=r.life.shakePrompts
@@ -1085,6 +1087,34 @@ return function(client)
 			-- Parked (the deck): every prompt off.
 			r.life:park()
 			for _,entry in pairs(prompts)do assert(entry.prompt.Enabled==false,"parked: off")end
+		end)
+		test("beta 38 review 5: the Shake prompt is R on a keyboard (Say hi is E); off under a menu, the deck, focus or the dash; on a gamepad Say hi in reach wins; touch keeps it",function()
+			assert(Life.ShakeKey==Enum.KeyCode.R)
+			assert(Life.shakePromptWanted(true,false,false,"Keyboard")and not Life.shakePromptWanted(false,false,false,"Keyboard"))
+			assert(not Life.shakePromptWanted(true,true,false,"Touch"),"blocked")
+			assert(not Life.shakePromptWanted(true,false,true,"Gamepad"),"gamepad: Say hi wins")
+			assert(Life.shakePromptWanted(true,false,true,"Keyboard")and Life.shakePromptWanted(true,false,true,"Touch"),"keyboard R, touch taps")
+			local r=fruitRig()
+			r.step(.5)
+			local prompts=r.life.shakePrompts
+			for _,entry in pairs(prompts)do
+				assert(entry.prompt.KeyboardKeyCode==Enum.KeyCode.R and entry.prompt.GamepadKeyCode==Enum.KeyCode.ButtonX)
+				assert(entry.prompt.KeyboardKeyCode~=Enum.KeyCode.E,"never Say hi's key")
+				assert(entry.prompt.Enabled)
+			end
+			r.promptBlocked=true;r.step(.1)
+			for _,entry in pairs(prompts)do assert(entry.prompt.Enabled==false,"blocked: off")end
+			-- a press while blocked is dropped
+			local trunk=Vector3.new(TREE.x,5,TREE.z)
+			r.player=trunk+Vector3.new(Fruit.promptReach(TREE)-.3,0,0);r.step(.1)
+			r.life.shakeAsk=1;r.step(.1)
+			assert(#r.shakes==0,"no shake while blocked")
+			r.promptBlocked=false;r.sayHi=true;r.inputKind="Gamepad";r.step(.1)
+			assert(prompts[1].prompt.Enabled==false,"gamepad: Say hi in reach wins")
+			r.inputKind="Touch";r.step(.1)
+			assert(prompts[1].prompt.Enabled==true,"touch: both tappable")
+			r.inputKind="Keyboard";r.sayHi=false;r.step(.1)
+			assert(prompts[1].prompt.Enabled==true)
 		end)
 		test("beta 38: the canopy fruit: five a tree drawn in the tree's variety at 1.15, the seated ones with a leaf disc and sprig; an empty tree still shakes (leaves, lower rustles, nothing falls, no creak)",function()
 			local r=fruitRig()

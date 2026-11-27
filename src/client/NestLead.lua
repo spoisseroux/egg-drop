@@ -51,6 +51,8 @@ function NestLead:start(now,from,nest)
 	local function done(points)
 		if self.gen~=mine then return end
 		self.planning=false
+		-- the trail's raw route thinned and re-spaced to the server's caps (Lead.fit: bridge ends kept)
+		if type(points)=="table"then points=Lead.fit(points)end
 		if type(points)~="table"or #points<2 then self:failed(self.now or now);return end
 		self.askedAbove=self.seenSeq
 		self:send("start",{route=points})
@@ -75,8 +77,21 @@ function NestLead:stopLead()
 	self.planning=false
 	if self.leading then self:send("stop")end
 	self.leading,self.acked=false,false
+	self.holdAt,self.sawBack=nil,nil
 	if self.d.trail then self.d.trail:stop()end
 	self.trailAt=-math.huge
+end
+-- A nudge's run back (glow steps, trail:leadHold): no new prints from the send until the server's "back" is over
+-- (or never came, after Restart.wait).
+function NestLead:holdTrail(on,now)
+	local trail=self.d.trail
+	if on then self.holdAt,self.sawBack=now,false else self.holdAt,self.sawBack=nil,nil end
+	if trail and trail.hold then trail:hold(on)end
+end
+function NestLead:stepHold(now,phase)
+	if not self.holdAt then return end
+	if phase=="back"then self.sawBack=true;return end
+	if self.sawBack or now-self.holdAt>=Lead.Restart.wait then self:holdTrail(false,now)end
 end
 -- Hidden by something that pauses it (the deck, a menu, leaving the garden): the lead stops; it starts again when shown.
 function NestLead:pause()
@@ -108,6 +123,7 @@ function NestLead:finish(tucked)
 	self.gen+=1
 	local wasLeading=self.leading
 	self.leading,self.planning=false,false
+	self.holdAt,self.sawBack=nil,nil
 	if self.d.trail then self.d.trail:stop()end
 	if tucked then
 		self:send("cheer")
@@ -138,6 +154,17 @@ function NestLead:step(now,dt,ctx)
 	if not self.reached and typeof(root)=="Vector3"and typeof(nest)=="Vector3"and Lead.flat(root,nest)<=Lead.Reach then
 		self.reached=true
 		call(d.event,"NestReached")
+		-- arrived: the pet's prints end with the trail (trail:leadBy(nil) and stop); 2b shows on the nest
+		self.holdAt,self.sawBack=nil,nil
+		if d.trail then d.trail:stop()end
+		-- a lead the server has not taken (planning, or sent and unanswered) or one lost by the player (waiting there
+		-- for a route that never comes now) ends: the pet follows. One that runs or waits on its route arrives by itself.
+		local held=self:serverLead()
+		if self.planning or(self.leading and(not self.acked or(held and held.lost)))then
+			self.gen+=1;self.planning=false
+			if self.leading then self:send("stop")end
+			self.leading,self.acked=false,false
+		end
 	end
 	local speed=0
 	if typeof(root)=="Vector3"and typeof(self.lastRoot)=="Vector3"and(dt or 0)>0 then speed=Lead.flat(root,self.lastRoot)/dt end
@@ -169,6 +196,7 @@ function NestLead:step(now,dt,ctx)
 	end
 	if not self.leading and not self.planning and now>=self.retryAt and typeof(nest)=="Vector3"then self:start(now,petAt,nest)end
 	if self.leading and self.acked and lead then
+		self:stepHold(now,lead.phase)
 		local trail=d.trail
 		if trail and now>=self.trailAt and not trail:active()then
 			self.trailAt=now+NestLead.TrailEvery
@@ -187,6 +215,7 @@ function NestLead:step(now,dt,ctx)
 			gap=if typeof(root)=="Vector3"then Lead.flat(root,petAt)else 0,toNest=if typeof(root)=="Vector3"then Lead.flat(root,nest)else nil})
 		if event=="nudge"then
 			self:send("back")
+			self:holdTrail(true,now)
 			call(d.hop);call(d.chirp)
 		elseif event=="park"then
 			self:park(now)

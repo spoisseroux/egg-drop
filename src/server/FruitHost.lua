@@ -115,7 +115,7 @@ function Host:receive(player,packet)
 	rec.at=clock
 	if not self.on()then return nil,"Off"end
 	if not whole(packet.tree)or not self:treesNow()[packet.tree]then return nil,"Tree"end
-	if kind=="shake"then return self:shake(board,rec,packet.tree,clock)end
+	if kind=="shake"then return self:shake(board,rec,packet.tree,clock,packet.drops)end
 	if not finite(packet.x)or not finite(packet.z)then return nil,"Spot"end
 	local ok,reason,petId=self:check(board,rec,packet.tree,packet.x,packet.z,clock)
 	if not ok then
@@ -128,14 +128,15 @@ function Host:receive(player,packet)
 	return true
 end
 function Host:treesNow()return self.trees or Fruit.trees()end
--- A shake: the root at the server by the trunk; once per tree per Shake.gap. Its fruit is claimable for Window.
-function Host:shake(board,rec,i,clock)
+-- A shake: the root at the server by the trunk; once per tree per Shake.gap. Its fruit is claimable for Window, one
+-- claim per fruit it dropped (packet.drops, Fruit.shakeClaims: at most MaxDrops).
+function Host:shake(board,rec,i,clock,drops)
 	local tree=self:treesNow()[i]
 	local at=self.rootOf(board)
 	if not at or not Fruit.shakes(tree,at.X,at.Z,nil,Fruit.Shake.slack)then return nil,"Far"end
 	if clock-(rec.shakeAt[i]or -math.huge)<Fruit.Shake.gap then return nil,"Rate"end
 	rec.shakeAt[i]=clock
-	rec.shaken[i]=clock
+	rec.shaken[i]={at=clock,left=Fruit.shakeClaims(drops)}
 	return true
 end
 -- An eat claim: ok, nil, petId or false, reason. Nothing is changed but the shake it uses.
@@ -156,14 +157,18 @@ function Host:check(board,rec,i,x,z,clock)
 	local tree=self:treesNow()[i]
 	if not Fruit.nearTree(tree,x,z)then return false,"Far"end
 	local now=self.now()
-	local shook=rec.shaken[i]~=nil and clock-rec.shaken[i]<=Fruit.Window
+	local shake=rec.shaken[i]
+	local shook=shake~=nil and clock-shake.at<=Fruit.Window and shake.left>0
 	if not shook and not Fruit.dropped(i,tree.centre,now,Fruit.Window,self.breath())then return false,"NoFruit"end
 	local sample=Activity.sample(actor,now)
 	local pet=sample and sample.position
 	if typeof(pet)~="Vector3"or math.sqrt((pet.X-x)^2+(pet.Z-z)^2)>Fruit.PetReach then return false,"PetFar"end
 	local at=self.rootOf(board)
 	if not at or math.sqrt((at.X-x)^2+(at.Z-z)^2)>Fruit.OwnerReach then return false,"Far"end
-	if shook then rec.shaken[i]=nil end
+	if shook then
+		shake.left-=1
+		if shake.left<=0 then rec.shaken[i]=nil end
+	end
 	return true,nil,petId
 end
 

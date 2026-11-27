@@ -327,5 +327,26 @@ return function(server)
         local b=fixture(1);b.inputs[1].mode="Board";b:step(.5)
         assert(not b.garden:stand(1,spot,0,5),"Board")
     end)
+    -- Beta (38) review 3: an owner who walks during the hold and then stands still still gets their pet back.
+    test("first stand: walking during the hold and then standing still, the pet follows when the hold ends",function()
+        local c=fixture(1)
+        c:step(.5)
+        local spot=c.inputs[1].position+Vector3.new(0,-2.975,6)
+        assert(c.garden:stand(1,spot,math.pi,2))
+        for _=1,3 do
+            c.inputs[1].position+=Vector3.new(3,0,0);c.inputs[1].anchor+=Vector3.new(3,0,0);c:step(.5)
+            assert(c.garden.actors[1].action=="firstStand","held")
+        end
+        for _=1,16 do c:step(.5)end -- the owner stands still from here
+        local actor=c.garden.actors[1]
+        local at=c.garden:position(actor,c.now)
+        assert(actor.action~="firstStand"and actor.standUntil==nil,"the stand is over")
+        assert((at-spot).Magnitude>3,"not left on the dais: "..tostring((at-spot).Magnitude))
+        assert(Vector2.new(at.X-c.inputs[1].anchor.X,at.Z-c.inputs[1].anchor.Z).Magnitude<4,"by its owner")
+        -- refused in Focus
+        local f=fixture(1);f:step(.5)
+        assert(f.garden:focus(1,{kind="focus",seq=1,petId="pip",position=Activity.pack(f.inputs[1].anchor),yaw=0}))
+        assert(f.garden.actors[1].mode=="Focus"and not f.garden:stand(1,spot,0,5),"a pet in Focus is refused")
+    end)
     return {passed=#cases,cases=cases}
 end

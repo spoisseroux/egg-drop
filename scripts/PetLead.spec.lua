@@ -262,6 +262,29 @@ return function(server)
 		c:step(.5)
 		assert(c.snapshot.actors["1"].lead.lost==true)
 	end)
+	test("lead: arrived, or lost by the player, it ends once the owner is over Far away and the pet follows (review C2)",function()
+		local c=fixture()
+		c.garden:lead(1,ROUTE,GOAL,NEST)
+		for _=1,80 do
+			local pet=c:pet()
+			c:walk(Vector3.new(pet.X,4.025,pet.Z-4))
+			c:step(.5)
+			if c:actor().lead and c:actor().lead.phase=="arrive"then break end
+		end
+		assert(c:actor().lead and c:actor().lead.phase=="arrive")
+		c:walk(Vector3.new(c:pet().X,4.025,c:pet().Z-Lead.Far+2));c:step(.5)
+		assert(c:actor().lead~=nil,"inside Far: still there")
+		c:walk(Vector3.new(c:pet().X,4.025,c:pet().Z-Lead.Far-3));c:step(.5)
+		assert(c:actor().lead==nil and c:actor().behavior=="follow","past Far: the lead ends, it follows")
+		-- lost (poofed to the player) and the player walks off
+		local l=fixture()
+		l.garden:lead(1,ROUTE,GOAL,NEST)
+		for _=1,8 do l:step(.5)end
+		l:walk(v(35,0));l:step(.5)
+		assert(l.garden:leadBack(1)and l:actor().lead.lost)
+		l:walk(v(35+Lead.Far+3,0));l:step(.5)
+		assert(l:actor().lead==nil and l:actor().behavior=="follow","lost and left: it follows")
+	end)
 	test("lead: never the catch-up, the leash, a wander or a greeting while it leads; care, a race, the deck or a far owner end it",function()
 		local c=fixture({catchup=function()return true end})
 		c.inputs[2]={petId="puddle",owned=true,alive=true,characterId=1,mode="Room",position=Vector3.new(2,7,0),anchor=v(2,0),yaw=0,charmVisible=true}
@@ -329,6 +352,42 @@ return function(server)
 		for _=1,12 do c:step(.5);hops=c:actor().hop and c:actor().hop.seq or hops end
 		assert(hops>=1,"poofed on")
 		assert(c:actor().lead~=nil)
+	end)
+	test("fit: a long pathfinding route with a bridge crossing is thinned under Route.max, no leg over Route.step, the bridge's ends kept; the server's clean takes it",function()
+		local R=Lead.Route
+		-- 3-stud pathfinding points along a winding 300-stud way, a 30-stud bridge in the middle (its two ends 30 apart)
+		local raw={}
+		local x,z=0,0
+		for i=1,35 do x+=3;z+=math.sin(i*.4)*.8;table.insert(raw,Vector3.new(x,4,z))end
+		local near=Vector3.new(x+2,5,z);local far=Vector3.new(x+32,5,z)
+		table.insert(raw,near);table.insert(raw,far)
+		x=far.X
+		for i=1,35 do x+=3;z+=math.cos(i*.3)*.8;table.insert(raw,Vector3.new(x,4,z))end
+		for i=1,20 do z+=3;table.insert(raw,Vector3.new(x,4,z))end
+		assert(#raw>R.max,"raw: "..#raw.." points (over the cap)")
+		local out=Lead.fit(raw)
+		assert(out and #out<=R.max and #out>=2,"fits: "..tostring(out and #out))
+		local hasNear,hasFar=false,false
+		for i,p in ipairs(out)do
+			if p==near then hasNear=true end
+			if p==far then hasFar=true end
+			if i>1 then assert(Lead.flat(out[i-1],p)<=R.step,"leg "..i..": "..Lead.flat(out[i-1],p))end
+		end
+		assert(hasNear and hasFar,"the bridge's two ends")
+		assert(out[1]==raw[1]and out[#out]==raw[#raw])
+		local cleaned,why=Lead.clean(out,{pet=raw[1],nest=raw[#raw],ground=function(p)return p.Y end,clear=function()return true end})
+		assert(cleaned,"the server's caps: "..tostring(why))
+		-- the raw route alone is refused (the bug)
+		assert(Lead.clean(raw,{pet=raw[1],nest=raw[#raw],ground=function(p)return p.Y end,clear=function()return true end})==nil)
+		-- a short straight route stays short; nonsense is nil
+		local short=Lead.fit({Vector3.new(0,4,0),Vector3.new(4,4,0),Vector3.new(8,4,0)})
+		assert(#short==2,"straight: the two ends")
+		assert(Lead.fit({Vector3.new(0,4,0)})==nil and Lead.fit(nil)==nil and Lead.fit({Vector3.new(0,4,0),"x"})==nil)
+		-- a very twisty route still fits by the coarser passes
+		local zig={}
+		for i=1,200 do table.insert(zig,Vector3.new(i*1.5,4,if i%2==0 then 1.2 else 0))end
+		local z2=Lead.fit(zig)
+		assert(z2 and #z2<=R.max)
 	end)
 	return{passed=#cases,cases=cases}
 end

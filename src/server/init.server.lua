@@ -1618,6 +1618,8 @@ local function onBoardRequest(player, action, value, sticker)
 		-- value = {kind = "start", route = {Vector3...}} (the trail route from the pet to the nest's prompt), or "back"
 		-- (a nudge), "stop" (paused, parked, done) or "cheer" (the jump-spin; also with `allset2`).
 		if type(value)~="table"or type(value.kind)~="string"then return end
+		-- a stop always ends the lead, whatever the switches say now (ConfigService may turn `lead` off mid-lead)
+		if value.kind=="stop"then garden:leadEnd(player.UserId);return end
 		local Lead=require(ReplicatedStorage.Shared.PetLead)
 		local okOn,leadOn,allSetOn=pcall(function()
 			local Onboard=require(ReplicatedStorage.Shared.Onboard)
@@ -1632,7 +1634,6 @@ local function onBoardRequest(player, action, value, sticker)
 			return
 		end
 		if not leadOn then return end
-		if kind=="stop"then garden:leadEnd(player.UserId);return end
 		-- each kind at most once every Asks.gap s, and a bounded number of starts a session
 		if kind~="back"and kind~="start"then return end
 		board.leadAskAt=board.leadAskAt or {}
@@ -1652,7 +1653,9 @@ local function onBoardRequest(player, action, value, sticker)
 		local nest=Corner.nestSpot()
 		local skip={}
 		for _,other in ipairs(Players:GetPlayers())do if other.Character then table.insert(skip,other.Character)end end
+		-- water is hit (IgnoreWater false) so the ground below refuses it: no route point, and so no poof, on water
 		local groundParams=RaycastParams.new();groundParams.RespectCanCollide=true;groundParams.FilterType=Enum.RaycastFilterType.Exclude
+		groundParams.IgnoreWater=false
 		groundParams.FilterDescendantsInstances=skip
 		local skipSolid=table.clone(skip);table.insert(skipSolid,workspace.Terrain)
 		local solidParams=RaycastParams.new();solidParams.RespectCanCollide=true;solidParams.FilterType=Enum.RaycastFilterType.Exclude
@@ -1663,7 +1666,8 @@ local function onBoardRequest(player, action, value, sticker)
 		local points=Lead.clean(raw,{pet=pet,nest=nest,
 			ground=function(p)
 				local hit=workspace:Raycast(p+Vector3.new(0,Lead.Route.ground,0),Vector3.new(0,-Lead.Route.ground*2,0),groundParams)
-				return hit and hit.Position.Y
+				if not hit or hit.Material==Enum.Material.Water then return nil end
+				return hit.Position.Y
 			end,
 			-- a fence, a wall or a prop between two route points at the pet's body height (the ground is not one)
 			clear=function(a,b)
@@ -1681,6 +1685,9 @@ local function onBoardRequest(player, action, value, sticker)
 	elseif action=="firstStand"then
 		-- Beta (37) note 1: the first hatch's Bear stands where its egg opened (FirstHatchStory, Onboard "stork"), then
 		-- follows. Presentation only (GardenState:stand): a spot on solid ground near the owner, a few asks a session.
+		-- Only during the first hatch's hand-off: armed when the starter receipt's ack arrives (Meet; the nursery
+		-- request's "ack"), spent by the one stand it honours; any other time it is ignored.
+		if not board.firstStandArmed then return end
 		if type(value)~="table"or typeof(value.at)~="Vector3"or type(value.hold)~="number"or value.hold~=value.hold then return end
 		local okOn,storyOn=pcall(function()return require(ReplicatedStorage.Shared.Onboard).storyOn()end)
 		if not(okOn and storyOn)or not hasPet(board)or board.mode~="Room"or board.closing then return end
@@ -1700,7 +1707,9 @@ local function onBoardRequest(player, action, value, sticker)
 		if not hit or math.abs(hit.Position.Y-at.Y)>.6 then return end
 		local spot=Vector3.new(at.X,hit.Position.Y+.025,at.Z)
 		local toOwner=Vector3.new(root.Position.X-spot.X,0,root.Position.Z-spot.Z)
-		garden:stand(player.UserId,spot,if toOwner.Magnitude>.01 then math.atan2(toOwner.X,toOwner.Z)else nil,value.hold)
+		if garden:stand(player.UserId,spot,if toOwner.Magnitude>.01 then math.atan2(toOwner.X,toOwner.Z)else nil,value.hold)then
+			board.firstStandSpent,board.firstStandArmed=board.firstStandArmed,nil -- once per receipt (the ack's resends never re-arm it)
+		end
 		return
 	elseif action=="welcomeInput"then
 		if board.welcome and type(value)=="table"and value.sequence==board.runSequence and now-(board.welcomeInputAt or -math.huge)>=.1 then
@@ -2287,6 +2296,12 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	end
 	local isHue=HueState.isAction(action)
 	if action ~= "hatch" and action ~= "ack" and action ~= "daily" and not isHue then return end
+	-- The first hatch's Meet acks the starter receipt, then asks for the hand-off (firstStand): arm it (once) here, as the
+	-- ack arrives, whatever the save then says (the stand's ask does not wait for the ack's write).
+	do
+		local last = board.nursery and board.nursery.state and board.nursery.state.lastHatch
+		if action == "ack" and type(last) == "table" and last.starter == true and last.id == value and board.firstStandSpent ~= value then board.firstStandArmed = value end
+	end
 	local quote=if isHue and type(value)=="table"and type(value.id)=="string"and #value.id<=100 then{id=value.id,action=action,petId=value.petId}else nil
 	local pending=board.nursery.pending
 	local canonical=if isHue then HueState.quote(action,value,revision)else nil

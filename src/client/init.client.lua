@@ -1175,6 +1175,7 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
  pendingHatch=function()if openNursery then openNursery()end end,
  closed=function(reason)
   local back=clientUI.hueReturn;clientUI.hueReturn=nil
+  local focusPet=clientUI.hueFocusPet;clientUI.hueFocusPet=nil
   if back=="machine"then
    clientUI.hueView:setMachineSession(nil)
    if reason~="picked-up"and roomView.care then roomView.care:release()end
@@ -1182,6 +1183,15 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
   if reason=="back"and not roomView.busy and not(nurseryState and nurseryState.lastHatch)then
    if back=="eggs"and openNursery then openNursery()end
    if back=="hub"and clientUI.openHub then clientUI.openHub({slideFrom=-require(script.DeckKit).SlideOffset})end
+   -- Paint, Shine, Dress (plan answer 5): Back from Dress up is back to the pet's focus view, on the same pet
+   -- (opening Dress up ended focus: RoomView ends it under any overlay).
+   if back=="focus"and focusPet~=nil then
+    task.defer(function()
+     local shown=roomView.shownPet
+     if roomView.mode=="Room"and not roomView.busy and not roomView.focusing and not roomView.overlayOpen()and shown and shown.id==focusPet
+      and board:GetAttribute("CompanionId")==focusPet then roomView:focusPet()end
+    end)
+   end
   end
   -- QA Q5: Customize left the Companions hub some other way, so its Back no longer
   -- leads to the machine hub.
@@ -1199,6 +1209,7 @@ clientUI.openHue=function(page,petId,back)
  cancelHatchNavigation();clearPlayInputs();picker:close();journal:close();nurseryView:close("hue")
  if closeMenu then closeMenu()end
  clientUI.hueReturn=back or "eggs"
+ clientUI.hueFocusPet=if back=="focus"then(petId or board:GetAttribute("CompanionId"))else nil
  if back~="machine"then clientUI.hueView:setMachineSession(nil)end
  -- QA v760: Customize never replays a hatch receipt; only the Hatch eggs pages do.
  clientUI.hueView.quietOpen=not purchasePage
@@ -3522,7 +3533,7 @@ do
   local Onboard=require(ReplicatedStorage.Shared.Onboard)
   local trail=Trail.new({gui=overlayGui,ringColor=Kit.Tint.companions,chipColor=Kit.Tint.companions,
    glow=function()return Onboard.on("trail2")end,play=function(name,speed,gain)return audio:play(name,speed,gain)end})
-  -- The v3 brief's lead (LeadTrail) asks this trail for its lead mode (leadBy) once it has one (switch trail2).
+  -- (The v3 lead does not use this trail: the Things trail has the lead mode, ThingsTrail:leadBy.)
   clientUI.petTrail=trail
   local state={pet=nil}
   local function face(visual)
@@ -5578,7 +5589,22 @@ do
   end
   clientUI.life=require(script.GardenLife).mount({ambient=clientUI.ambient,
    -- GARDEN-PLAY-BRIEF-2: a tree I shook (the server's check of a fruit from it).
-   shook=function(i)fruitSend({kind="shake",tree=i})end,
+   shook=function(i,drops)fruitSend({kind="shake",tree=i,drops=drops})end,
+   -- Beta 38 review 5: the Shake prompt hides under a menu, the deck, focus and the dash; on a gamepad the pet's Say hi
+   -- (the same X) wins while it is in reach.
+   promptBlocked=function()
+    return board:GetAttribute("Mode")~="Room"or roomView.mode~="Room"or roomView.busy==true or roomView.focusing==true
+     or roomView.focusTransitioning==true or roomView.dashHeld==true or(clientUI.dash~=nil and clientUI.dash.seat~=nil)
+     or clientUI.anyModalOpen()==true or clientUI.roomOverlayOpen()==true
+   end,
+   sayHiNear=function()
+    local prompt,pet=roomView.petPrompt,roomView.pet
+    local character=player.Character
+    local root=character and character:FindFirstChild("HumanoidRootPart")
+    if not prompt or not prompt.Enabled or not pet or typeof(pet.origin)~="Vector3"or not root then return false end
+    return(pet.origin-root.Position).Magnitude<=prompt.MaxActivationDistance
+   end,
+   inputKind=function()return clientUI.inputKind()end,
    notice=function(loose,now)
     local pet=clientUI.lifePet
     return pet~=nil and pet:notice(loose,now)==true
@@ -5894,7 +5920,8 @@ do
     lead=function()return Onboard.leadOn()end,allSet2=function()return Onboard.on("allset2")end,nestOn=function()return Onboard.on("nest")end,
     copy=function(key)return Copy.get(key,{pet=petName()})end,
     leadDeps=(function()
-     local leadTrail=require(script.LeadTrail).new({things=trail,leaders=function()return{clientUI.petTrail}end})
+     -- the Things trail leads (trail2: start as a guide trail, then leadBy the pet); off, it is today's trail
+     local leadTrail=require(script.LeadTrail).new({things=trail})
      local function reducedNow()return reduceEffects()==true or GuiService.ReducedMotionEnabled end
      local toaster
      return{
