@@ -181,7 +181,7 @@ Corner.NotMachine=table.freeze({
 -- Every other `...Buy` send: not an egg, or (nameEggBuy) an egg sold on the naming screen with no shell in EggModels
 -- (Spencer to rule whether it comes out of the machine too).
 Corner.OtherBuys=table.freeze({ballThemeBuy="a ball theme (shop)",faceplateBuy="a faceplate (shop)",wearableBuy="a wearable (shop)",
-	potBuy="a paint pot (Dress up and the Hatch eggs strip, PAINT-SHINE-DRESS-PLAN): a hue jar bought outright, not an egg",
+	potBuy="a paint pot (PAINT-SHINE-DRESS-PLAN), not an egg: no longer sold (beta 38, gacha only; the server refuses it and only replays a buy already saved)",
 	nameEggBuy="the Names Egg: bought on the naming screen (Companions, Name), its own NameEggReveal; no shell in EggModels"})
 -- The buy actions (the press starts the buy crank) and the egg each drops: from Eggs.
 local buyActions={}

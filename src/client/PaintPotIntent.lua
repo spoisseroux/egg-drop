@@ -4,6 +4,8 @@
 -- once the pot is saved AND a snapshot at or past the receipt's revision has arrived (so the next hueUse carries the
 -- new counts and revision). A failure between leaves a bought jar, never a loss.
 -- NotReady (the switch flipped off) clears the purchase in flight and any chained paint.
+-- Beta (38), 2026-11-27 (gacha only): pots are not sold (PaintPotCatalog.Sold false), so buy() refuses as NotSold and
+-- sends nothing; nothing in the game calls it. receive() still settles a buy a beta (38) client already sent.
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Pots=require(Shared:WaitForChild("PaintPotCatalog"))
 local Copy=require(Shared:WaitForChild("UICopy"))
@@ -33,6 +35,7 @@ end
 function Intent.blocked(state,itemId,pending)
 	state=state or {}
 	if pending then return "Busy"end
+	if Pots.Sold~=true then return "NotSold"end
 	if not Pots.isItem(itemId)then return "InvalidPot"end
 	if state.lastHatch then return "RevealPending"end
 	if state.status and state.status~="Ready"then return "Busy"end

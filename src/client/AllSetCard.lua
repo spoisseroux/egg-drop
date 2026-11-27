@@ -8,16 +8,22 @@
 --        1.5, a tick buzz each
 --   0.9  the title punches (1.45 -> 1): `rarity_common`, a `pop` buzz, one light sweep across the card
 --   1.2  "{pet} loves it here." and the gold "What's next?" button (opens Things to do)
--- Reduced Motion: no confetti, spin or sweep; the sound and the buzz stay. No "+5 welcome gift": not confirmed.
+--   the welcome gift (Spencer OK'd it 2026-11-27): "+5 ★ Welcome gift!" under the stamps, only once the server says
+--        Saved (WelcomeGift: once per save, paid in the save). From T.gift (or when the answer lands, if later) the
+--        card grows Gift.grow px over 0.2 s, the gold pill pops and its count rolls 0 -> 5 over Gift.roll s with a
+--        `count_blip` a Star and `stars_total` at 5, and a `land` buzz. A late answer keeps the card up Gift.hold s more
+--        (at most T.lifeMax). Refused, slow or never: the card is exactly the one above, never held.
+-- Reduced Motion: no confetti, spin or sweep (and the gift's count lands at once); the sound and the buzz stay.
 -- The top half is pure (spec-checked offline); show() builds the card.
 --   AllSetCard.show(playerGui, {copy(key, vars), pet (name), petId, appearance, play(cue, speed, gain), haptic(name),
---     reduced(), cheer() (the server's jump-spin), next() (opens Things to do), done()}) -> card ({close()})
+--     reduced(), cheer() (the server's jump-spin), next() (opens Things to do), done(),
+--     gift(arrived) (optional: asks the server once; calls arrived(stars) only on Saved)}) -> card ({close(), gift(stars)})
 local Card={};Card.__index=Card
 
 -- ── Pure ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
-Card.T=table.freeze({card=.15,stamps={.3,.5,.7},title=.9,sub=1.2,life=5,closeAfter=.4,
+Card.T=table.freeze({card=.15,stamps={.3,.5,.7},title=.9,sub=1.2,life=5,lifeMax=7,gift=1,closeAfter=.4,
 	pop=.3,popFrom=.85,popPeak=1.05,stamp=.12,stampFrom=1.4,punch=1.45,punchTime=.12,sweep=.5,cheer=0})
-Card.Size=table.freeze({w=320,h=210,maxW=360,maxH=230,corner=22,headshot=72,glass=.15})
+Card.Size=table.freeze({w=320,h=210,maxW=360,maxH=260,corner=22,headshot=72,glass=.15})
 Card.Ink=Color3.fromHex("#0E0F12")
 Card.Gold=Color3.fromHex("#FFC14D")
 Card.Button=Color3.fromHex("#FFC14D")
@@ -60,9 +66,54 @@ function Card.sweep(t,reduced)
 	if reduced or t<T.title or t>T.title+T.sweep then return nil end
 	return(t-T.title)/T.sweep
 end
--- Pure: may a tap or B/Esc close it at t? And is it over by itself?
+-- Pure: may a tap or B/Esc close it at t? And is it over by itself (life: Card.life's, default T.life)?
 function Card.closable(t)return t>=Card.T.closeAfter end
-function Card.over(t)return t>=Card.T.life end
+function Card.over(t,life)return t>=(life or Card.T.life)end
+
+-- The welcome gift. `arrived`: the card's clock when the server's Saved landed (nil: no gift, the card as before).
+Card.Gift=table.freeze({grow=28,growTime=.2,roll=.6,hold=2.2,pop=.18,popFrom=.6})
+-- Pure: when the gift row starts (never before the stamps are done).
+function Card.giftAt(arrived)
+	if type(arrived)~="number"then return nil end
+	return math.max(arrived,Card.T.gift)
+end
+-- Pure: the card's life with a gift that landed at `arrived` (a late one stays Gift.hold s, at most T.lifeMax).
+function Card.life(arrived)
+	local at=Card.giftAt(arrived)
+	if not at or at>=Card.T.life then return Card.T.life end -- after the card's own end: too late, no gift shown
+	return math.min(Card.T.lifeMax,math.max(Card.T.life,at+Card.Gift.hold))
+end
+-- Pure: the Stars shown on the pill at t (nil before it starts): 0 -> total over Gift.roll s (Reduced Motion: total).
+function Card.giftCount(t,arrived,total,reduced)
+	local at=Card.giftAt(arrived)
+	if not at or t<at or at>=Card.T.life then return nil end
+	total=math.max(0,math.floor(tonumber(total)or 0))
+	if reduced then return total end
+	return math.min(total,math.floor(total*smooth((t-at)/Card.Gift.roll)+1e-9))
+end
+-- Pure: the pill's scale at t (nil before it starts).
+function Card.giftScale(t,arrived,reduced)
+	local at=Card.giftAt(arrived)
+	if not at or t<at or at>=Card.T.life then return nil end
+	if reduced then return 1 end
+	local G=Card.Gift
+	return G.popFrom+(1-G.popFrom)*smooth((t-at)/G.pop)
+end
+-- Pure: how far the card has grown for the gift row at t (0..Gift.grow px).
+function Card.giftGrow(t,arrived)
+	local at=Card.giftAt(arrived)
+	if not at or t<at or at>=Card.T.life then return 0 end
+	return Card.Gift.grow*smooth((t-at)/Card.Gift.growTime)
+end
+-- Pure: the cues for a count moving from `before` to `count` (a blip a Star, stars_total on reaching the total).
+function Card.giftCues(before,count,total)
+	local out={}
+	if type(count)~="number"then return out end
+	before=before or -1
+	for n=math.max(1,before+1),count do table.insert(out,{cue="count_blip",speed=1+.06*n})end
+	if count>=total and before<total then table.insert(out,{cue="stars_total",speed=1})end
+	return out
+end
 -- Pure: the cues and buzzes due in (from, to].
 function Card.due(list,from,to)
 	local out={}
@@ -175,6 +226,15 @@ build=function(self,gui,deps)
 	self.title=node("TextLabel",card,{Name="Title",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.new(.5,0,0,52),Size=UDim2.new(1,-24,0,34),BackgroundTransparency=1,
 		Font=Enum.Font.BuilderSansExtraBold,TextSize=28,TextColor3=Card.Ink,Text=copy("onbAllSet.title"),Visible=false,ZIndex=6})
 	self.titleScale=node("UIScale",self.title,{Scale=1})
+	-- the welcome gift's gold pill under the stamps (hidden until the server's Saved)
+	self.giftPill=node("Frame",card,{Name="WelcomeGift",AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,0,140),Size=UDim2.fromOffset(196,26),
+		BackgroundColor3=Card.Gold,BorderSizePixel=0,Visible=false,ZIndex=6})
+	node("UICorner",self.giftPill,{CornerRadius=UDim.new(.5,0)})
+	node("UIStroke",self.giftPill,{Color=Card.Ink,Thickness=2})
+	self.giftScale=node("UIScale",self.giftPill,{Scale=Card.Gift.popFrom})
+	self.giftText=node("TextLabel",self.giftPill,{Name="Text",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),Font=Enum.Font.BuilderSansExtraBold,
+		TextSize=16,TextColor3=Card.Ink,Text="",ZIndex=7})
+	self.copy=copy
 	self.sub=node("TextLabel",card,{Name="Sub",AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,0,140),Size=UDim2.new(1,-24,0,20),BackgroundTransparency=1,
 		Font=Enum.Font.BuilderSansBold,TextSize=16,TextColor3=Card.Ink,TextTransparency=.15,Text=copy("onbAllSet.sub",{pet=deps.pet or "Bear"}),Visible=false,ZIndex=6})
 	self.button=node("TextButton",card,{Name="WhatsNext",AnchorPoint=Vector2.new(.5,1),Position=UDim2.new(.5,0,1,-12),Size=UDim2.fromOffset(168,38),
@@ -200,12 +260,20 @@ build=function(self,gui,deps)
 		return Enum.ContextActionResult.Sink
 	end,false,Enum.ContextActionPriority.High.Value,Enum.KeyCode.ButtonB,Enum.KeyCode.Escape)
 	if deps.cheer then pcall(deps.cheer)end
+	-- the welcome gift: asked once; only a Saved answer while the card is up shows it
+	if deps.gift then pcall(deps.gift,function(stars)self:gift(stars)end)end
 	local last=-1
 	self.link=RunService.RenderStepped:Connect(function(dt)
 		local good,problem=pcall(self.step,self,dt,last,reduced)
 		last=self.t
 		if not good then warn("[AllSet] "..tostring(problem));self:close()end
 	end)
+end
+-- The server's Saved landed: show the gift from now (once; nothing after the card's own end or once it closed).
+function Card:gift(stars)
+	if not self.open or self.giftArrived or self.t>=Card.T.life then return false end
+	self.giftArrived=self.t;self.giftStars=math.max(0,math.floor(tonumber(stars)or 0))
+	return true
 end
 function Card:step(dt,last,reduced)
 	self.t+=dt
@@ -234,10 +302,26 @@ function Card:step(dt,last,reduced)
 	if sweep then self.sweep.Position=UDim2.fromScale(-.3+1.6*sweep,.5)end
 	local late=t>=Card.T.sub
 	self.sub.Visible=late;self.button.Visible=late
+	-- the welcome gift: the card grows, the pill pops and counts up with a blip a Star
+	local arrived=self.giftArrived
+	local grow=Card.giftGrow(t,arrived)
+	self.card.Size=UDim2.fromOffset(Card.Size.w,Card.Size.h+grow)
+	self.sub.Position=UDim2.new(.5,0,0,140+grow)
+	local count=Card.giftCount(t,arrived,self.giftStars,reduced)
+	self.giftPill.Visible=count~=nil
+	if count~=nil then
+		self.giftScale.Scale=Card.giftScale(t,arrived,reduced)or 1
+		self.giftText.Text=self.copy("onbAllSet.gift",{count=count})
+		-- Reduced Motion: the count lands at once, so one stars_total and no run of blips
+		local cues=if reduced then(if self.giftShown==nil then {{cue="stars_total",speed=1}}else {})else Card.giftCues(self.giftShown,count,self.giftStars)
+		for _,entry in ipairs(cues)do if d.play then pcall(d.play,entry.cue,entry.speed,.45)end end
+		if self.giftShown==nil and d.haptic then pcall(d.haptic,"land")end
+		self.giftShown=count
+	end
 	if self.shots and self.shotCard then
 		self.shots:pump({self.shotCard()},function()self.paw.Visible=false end)
 	end
-	if Card.over(t)then self:close()end
+	if Card.over(t,Card.life(arrived))then self:close()end
 end
 function Card:close()
 	if not self.open then return end

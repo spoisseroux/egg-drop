@@ -1084,9 +1084,10 @@ function View:renderBody()
  local keep={GetStars=true,NestRow=true}
  for _,id in ipairs(liveOrder)do keep["Recipe_"..id]=true end
  -- Paint, Shine, Dress (PAINT-SHINE-DRESS-PLAN): with the `paint` switch on, a "Looks" heading over the Paint Egg and
- -- its "Pick a colour" strip of four pots, and a "Snacks" heading over the Snack Egg. Off: none of these exist.
+ -- a "Snacks" heading over the Snack Egg. Off: neither exists. No pot strip: pots come only from the Paint Egg
+ -- (Spencer, beta 38: "we want a gacha focused game").
  local paint=require(script.Parent.DressUp).on()
- if paint then keep.PaintHeadLooks=true;keep.PaintHeadSnacks=true;keep.PotStrip=true end
+ if paint then keep.PaintHeadLooks=true;keep.PaintHeadSnacks=true end
  for _,child in ipairs(left:GetChildren())do if not keep[child.Name]then child:Destroy()end end
  local w=g.list.w-10 -- 3 px inset each side plus the 4 px scrollbar
  left.Position=UDim2.fromOffset(0,0);left.Size=UDim2.fromOffset(g.list.w,1)
@@ -1097,7 +1098,7 @@ function View:renderBody()
  local rowH,rowGap,noteH,tail=g.rowH,g.rowGap,28,8
  if phone then
   rowGap,noteH,tail=6,22,2
-  local fixed=3+#liveOrder*rowGap+noteH+(if self.store then 44+tail else 0)+4+(if paint then 2*20+44+rowGap else 0)
+  local fixed=3+#liveOrder*rowGap+noteH+(if self.store then 44+tail else 0)+4+(if paint then 2*20 else 0)
   rowH=math.clamp(math.floor((View.listWindow(self.body)-fixed-(if self:nestRowModel()then 44+rowGap else 0))/math.max(1,#liveOrder)),44,g.rowH)
  end
  y=self:layoutNestRow(left,y,w,phone,rowGap)
@@ -1138,7 +1139,6 @@ function View:renderBody()
   n.Interactable,n.Selectable=not self.pending,not self.pending;n:SetAttribute("Selected",selected)
   n:SetAttribute("AccessibleLabel",recipe.name..", "..line.Text..", "..recipe.cost.." Stars")
   y+=h+rowGap
-  if paint and id=="look"then y=self:layoutPotStrip(left,y,w,phone,rowGap)end
  end
  y+=if phone then 0 else 8
  local note=Kit.text(left,"Small",UICopy.get(if phone then "hatch.footer.phone"else "hatch.footer.desktop"),"soft",{Name="ListNote",Position=UDim2.fromOffset(8,y),Size=UDim2.fromOffset(w-8,20),TextSize=if phone then 12 else 14})
@@ -1168,41 +1168,6 @@ function View:paintHeading(left,name,text,y,w,phone)
  head.Text=text;head.TextSize=if phone then 12 else 14
  head.Position,head.Size=UDim2.fromOffset(8,y),UDim2.fromOffset(w-8,18)
  return y+20
-end
--- Paint, Shine, Dress: the "Pick a colour" strip under the Paint Egg. Four pots at the one price; a tap buys one
--- (self.paintPots = {buy(itemId) -> bool, intent} from init; nil: no strip). The save's NeedStars is the real check.
-function View:layoutPotStrip(left,y,w,phone,rowGap)
- local pots=self.paintPots
- local strip=left:FindFirstChild("PotStrip")
- if type(pots)~="table"or type(pots.buy)~="function"then if strip then strip:Destroy()end;return y end
- local Catalog=require(game:GetService("ReplicatedStorage").Shared.PaintPotCatalog)
- local HueCatalog=require(game:GetService("ReplicatedStorage").Shared.HueCatalog)
- local h=44
- if not strip then
-  strip=Kit.frame(left,"PotStrip",nil,UDim2.new(),UDim2.fromOffset(w,h))
-  Kit.text(strip,"Small","","soft",{Name="Label",TextTruncate=Enum.TextTruncate.AtEnd})
-  for i,id in ipairs(Catalog.Items)do local itemId=id
-   local b=Instance.new("TextButton");b.Name="Pot_"..id;b.Text="";b.AutoButtonColor=true;b.BorderSizePixel=0;b.ZIndex=strip.ZIndex+1
-   b.BackgroundColor3=HueCatalog.ById[id].color;Kit.corner(b,10);b.Parent=strip
-   b.Activated:Connect(function()if not self.pending and liveShopTarget(b,self.shade)then pots.buy(itemId)end end)
-   local _=i
-  end
- end
- local intent=pots.intent
- local label=strip.Label
- local message=if intent and intent.pending then UICopy.get("paint.saving")elseif intent and intent.message and intent.status~="Saved"then intent.message else nil
- label.Text=message or(UICopy.get("paint.shop.strip").." · "..Catalog.Price.."★")
- label.TextSize=if phone then 12 else 14
- strip.Position,strip.Size=UDim2.fromOffset(3,y),UDim2.fromOffset(w,h)
- local size=if phone then 32 else 36;local gap=8;local x=w-(#Catalog.Items*(size+gap))
- label.Position,label.Size=UDim2.fromOffset(13,0),UDim2.fromOffset(math.max(40,x-18),h)
- for i,id in ipairs(Catalog.Items)do
-  local b=strip:FindFirstChild("Pot_"..id)
-  b.Position,b.Size=UDim2.fromOffset(x+(i-1)*(size+gap),math.floor((h-size)/2)),UDim2.fromOffset(size,size)
-  b.Interactable=not self.pending and not(intent and intent.pending)
-  b:SetAttribute("AccessibleLabel",UICopy.get("paint.potName",{colour=UICopy.get("paint.pot."..id)}).." · "..Catalog.Price.." Stars")
- end
- return y+h+rowGap
 end
 -- Beta 14 D1 (WORLD-AND-NEST-LOOK, Nest merge rulings R2 3): the napping egg's quiet row at the top of the list, above
 -- the eggs that cost Stars. No lip, no price: the nest icon, "Napping egg" and its clock ("Hatch me!" in gold when

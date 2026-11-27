@@ -1099,7 +1099,8 @@ clientUI.hueIntent=clientUI.HueIntent.new({
  send=function(action,value,revision)clientUI.sendNursery(action,value,revision)end,
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})
 -- Paint, Shine, Dress (PAINT-SHINE-DRESS-PLAN): the switch's words go into UICopy.get (off: today's text), and the
--- paint pot intent (potBuy over HatchRequest, replies on Remotes.PotResult).
+-- paint pot intent (replies on Remotes.PotResult). Nothing calls its buy now: pots come only from the Paint Egg (beta 38),
+-- and the server refuses a potBuy unless it replays one that already committed.
 clientUI.DressUp=require(script.DressUp)
 clientUI.DressUp.install()
 clientUI.potIntent=require(script.PaintPotIntent).new({id=function()return HttpService:GenerateGUID(false)end,
@@ -1108,8 +1109,6 @@ clientUI.potIntent=require(script.PaintPotIntent).new({id=function()return HttpS
   if clientUI.hueView then clientUI.hueView:refresh()end
   if nurseryView and nurseryView.shade and nurseryView.shade.Visible then nurseryView:renderBody()end
  end})
--- Hatch eggs' "Pick a colour" strip (EggHatchView:layoutPotStrip, drawn only while the switch is on).
-nurseryView.paintPots={buy=function(itemId)return clientUI.potIntent:buy(itemId)end,intent=clientUI.potIntent}
 clientUI.materialIntent=require(script.MaterialIntent).new({id=function()return HttpService:GenerateGUID(false)end,
  available=function()return clientUI.itemAvailable("material")end,send=function(action,value,revision)clientUI.sendNursery(action,value,revision)end,
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})
@@ -5996,7 +5995,20 @@ do
       require(script.AllSetCard).show(player:WaitForChild("PlayerGui"),{copy=Copy.get,pet=petName(),petId=shown and shown.id or "pip",
        play=function(name,speed,gain)return audio:play(name,speed,gain)end,haptic=function(name)require(script.Haptics).play(name)end,
        reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
-       cheer=function()request:FireServer("petLead",{kind="cheer"})end,next=function()clientUI.openThings()end})
+       cheer=function()request:FireServer("petLead",{kind="cheer"})end,next=function()clientUI.openThings()end,
+       -- the one-time welcome gift: asked once; shown only when this ask paid it (a refusal or no answer: no gift)
+       gift=function(arrived)
+        local remote=remotes:FindFirstChild("WelcomeGiftResult")
+        if not remote then return end
+        local link
+        link=remote.OnClientEvent:Connect(function(packet)
+         if link then link:Disconnect();link=nil end
+         -- AlreadyGranted (paid before, by an earlier ask or another server): nothing new, so no pill
+         if type(packet)=="table"and packet.status=="Saved"and packet.reason~="AlreadyGranted"and type(packet.stars)=="number"then arrived(packet.stars)end
+        end)
+        task.delay(30,function()if link then link:Disconnect();link=nil end end)
+        nurseryRequest:FireServer("welcomeGift")
+       end})
       return
      end
      require(script.GuideEndCard).show(player:WaitForChild("PlayerGui"),{copy=Copy.get,

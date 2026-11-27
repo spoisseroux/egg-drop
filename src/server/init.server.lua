@@ -23,10 +23,9 @@ local RunDay = require(script.RunDay)
 local RewardRetry = require(script.RewardRetry)
 local HueState = require(script.HueState)
 local MaterialState=require(script.MaterialState)
--- Paint pots (PAINT-SHINE-DRESS-PLAN): the potBuy rules and the request order.
+-- Paint pots (PAINT-SHINE-DRESS-PLAN): the potBuy replay rules; every new buy is refused (pots come from the Paint Egg).
 local PaintPotState=require(script.PaintPotState)
 local PaintPotHost=require(script.PaintPotHost)
-local PaintPotCatalog=require(game:GetService("ReplicatedStorage").Shared.PaintPotCatalog)
 local ToyState=require(script.ToyState)
 local FeatureState=require(script.FeatureState)
 local MaterialCatalog=require(ReplicatedStorage.Shared.MaterialCatalog)
@@ -92,6 +91,8 @@ local toyResult=child("RemoteEvent","ToyResult",remotes)
 local featureResult=child("RemoteEvent","FeatureResult",remotes)
 -- Paint pots (PAINT-SHINE-DRESS-PLAN): the owner's potBuy replies.
 local potResult=child("RemoteEvent","PotResult",remotes)
+-- The welcome gift on "You're all set!" (ONBOARDING-V3-BRIEF section 3): the owner's one reply {status, reason, stars}.
+local welcomeGiftResult=child("RemoteEvent","WelcomeGiftResult",remotes)
 local appearanceResult = child("RemoteEvent", "AppearanceResult", remotes)
 local faceplateResult = child("RemoteEvent", "FaceplateResult", remotes)
 local wearableResult = child("RemoteEvent", "WearableResult", remotes)
@@ -1949,7 +1950,8 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		nurserySnapshot:FireClient(player,state);return
 	end
 	if not board.profileReady then return end
-	if action ~= "coachMark" then board.lastNurseryCommand = os.clock() end
+	-- (the welcome gift neither: its own loop waits for a free save, and it must not hold the coach bits' flush back)
+	if action ~= "coachMark" and action ~= "welcomeGift" then board.lastNurseryCommand = os.clock() end
 	-- Faceplate Star purchase (UI-SPEC 5.5): fixed price, server-validated,
 	-- idempotent by the client's operation id. Success equips the plate.
 	if action=="faceplateBuy"then
@@ -2144,6 +2146,42 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason,receipt);return
 	end
 
+	-- The welcome gift (ONBOARDING-V3-BRIEF section 3, Onboard "allset2"; Spencer OK'd it 2026-11-27): the client asks
+	-- once when "You're all set!" shows. WelcomeGiftHost owns the order (paid first, the switch, one loop a board, the
+	-- tries); HatchProgress.welcomeGift pays +5 once per save inside UpdateAsync, only on a save owed it whose three
+	-- guide facts are saved. A refusal or a slow save never holds the card: the client shows the gift only on Saved.
+	if action=="welcomeGift"then
+		local function reply(status,reason,stars)
+			if boards[player]==board then welcomeGiftResult:FireClient(player,{status=status,reason=reason,stars=stars})end
+		end
+		task.spawn(function()
+			local ok,problem=pcall(require(script.WelcomeGiftHost).request,{
+				paid=function()return require(ReplicatedStorage.Shared.WelcomeGift).paid(board.nursery.state)end,
+				on=function()return require(ReplicatedStorage.Shared.Onboard).on("allset2")end,
+				running=function()return board.welcomeGiftRunning==true end,
+				setRunning=function(on)board.welcomeGiftRunning=on==true end,
+				alive=function()return boards[player]==board and not board.closing end,
+				free=function()return canProgress(board)and not board.nurseryBusy and not board.nursery.busy and not board.payoutPending end,
+				grant=function()
+					local walletBefore=board.nursery.state.nectar
+					board.nurseryBusy=true
+					local okNest,nestOn=pcall(function()return require(ReplicatedStorage.Shared.Onboard).on("nest")end)
+					local called,granted,why=pcall(Nursery.welcomeGift,board.nursery,{nest=not okNest or nestOn==true,mask=board.coachPending})
+					board.nurseryBusy=false -- always freed, even when the call threw
+					if not called then warn("[WelcomeGift] "..tostring(granted));return false,"Unavailable"end
+					local after=board.nursery.state.nectar
+					if granted and why=="Saved"and after>walletBefore then Economy.source(player,after-walletBefore,after,"Gameplay","WelcomeGift")end
+					return granted,why
+				end,
+				wait=function(seconds)task.wait(seconds)end,
+				publish=function()if boards[player]==board then publishNursery(board);publishState(board)end end,
+				reply=reply,
+			})
+			if not ok then board.welcomeGiftRunning=false;warn("[WelcomeGift] "..tostring(problem));reply("Rejected","Unavailable")end
+		end)
+		return
+	end
+
 	-- One-time coach cards (onboarding v1): the client names a card it has shown; the bit
 	-- queues on the board and saves through Nursery.coachMark when the save is idle
 	-- (flushCoach). Unknown ids are dropped; a bit already saved or queued costs nothing.
@@ -2246,29 +2284,14 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
   publishNursery(board);publishState(board)
   sendItemResult(board,itemKind,quote,if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason,saved);return
  end
-	-- Paint pots (PAINT-SHINE-DRESS-PLAN): the order (receipt first, then the switch, rate limits and Busy) is
-	-- PaintPotHost's; this only hands it the board.
+	-- Paint pots (PAINT-SHINE-DRESS-PLAN): never sold now (Spencer, beta 38: "we want a gacha focused game"; pots come
+	-- only from the Paint Egg). PaintPotHost answers a buy that already committed (beta 38) and refuses every other one
+	-- as NotSold: no charge, no write. This only hands it the board.
 	if PaintPotState.isAction(action)then
 		PaintPotHost.request({
 			state=function()return board.nursery.state end,
-			on=function()return require(ReplicatedStorage.Shared.Alive).on("paint")end,
-			samePending=function(quote)local p=board.nursery.pending;return p~=nil and p.kind=="pot"and p.candidate.quote.id==quote.id end,
-			busy=function()return board.nurseryBusy or board.nursery.busy or board.payoutPending end,
-			recent=function()return os.clock()-(board.lastHatchRequest or -math.huge)<.3 end,
-			mark=function()board.lastHatchRequest=os.clock()end,
-			allow=function()board.potTimes=board.potTimes or {};return PaintPotCatalog.allow(board.potTimes,os.clock())end,
-			command=function()
-				board.nurseryBusy=true;publishNursery(board)
-				local walletBefore=board.nursery.state.nectar
-				local ok,reason,saved=Nursery.potCommand(board.nursery,action,value,revision)
-				if ok and reason~="AlreadySaved"then Economy.command(player,action,walletBefore,board.nursery.state.nectar,board.nursery.state)end
-				board.nurseryBusy=false
-				return ok,reason,saved
-			end,
 			publish=function()publishNursery(board);publishState(board)end,
 			reply=function(quote,status,reason,receipt)sendPotResult(board,quote,status,reason,receipt)end,
-			waiting=function(quote)board.potWaiting=quote end,
-			alive=function()return boards[player]==board end,
 		},action,value,revision)
 		return
 	end
@@ -2443,7 +2466,9 @@ grantWelcome=function(player,board)
 			if board.profileReady and not board.nurseryBusy and not board.nursery.busy then
 				local handle=board.nursery
 				local walletBefore=handle.state.nectar
-				local ok,reason=Nursery.grantStarter(handle)
+				-- Onboard "allset2" (beta and Studio only): this new save is owed the one-time welcome gift.
+				local okGift,owed=pcall(function()return require(ReplicatedStorage.Shared.Onboard).on("allset2")end)
+				local ok,reason=Nursery.grantStarter(handle,okGift and owed==true)
 				if boards[player]~=board or board.closing or board.nursery~=handle then break end
 				-- The save is authoritative even if a reset happened during the yielding write.
 				-- A stale Welcome owner cannot replay a cinematic or another reward.
