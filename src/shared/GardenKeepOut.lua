@@ -28,20 +28,26 @@ KeepOut.Lamp=.45              -- a lamp post's foot
 KeepOut.Fountain=table.freeze({x=52,z=3,r=4.6})   -- the kit's stone basin (8.9 x 5.64; the spring box is inside it)
 KeepOut.Wobble=table.freeze({x=17,z=-45,r=2.6})   -- the crag's egg (4.7 across) and its collar
 
-local cached
--- Every keep-out, solid and soft, built or not: {id, x, z, r, kind, feature?}. Frozen and cached.
-function KeepOut.all()
-	if cached then return cached end
+local cache={}
+-- Every keep-out, solid and soft, built or not: {id, x, z, r, kind, feature?}. Frozen and cached. Beta 38: the trunks
+-- of the graded trees (TreeGrades.kit while the grades are on; `graded` nil asks TreeGrades.on) at their grown radius.
+function KeepOut.all(graded)
+	local okGrades,Grades=pcall(function()return require(Shared.TreeGrades)end)
+	if graded==nil then graded=okGrades and Grades.on()or false end
+	local key=if graded then "graded"else "today"
+	if cache[key]then return cache[key]end
 	local out={}
 	local function add(id,x,z,r,kind,feature)
 		table.insert(out,table.freeze({id=id,x=x,z=z,r=r,kind=kind,feature=feature}))
 	end
 	-- Tree trunks: each kit crown's pivot is its trunk top (AeroKit: WorldPivot), straight over the trunk.
 	local okKit,Kit=pcall(function()return require(Shared.WorldAeroKit)end)
+	if okKit and graded and okGrades then Kit=Grades.kit(Kit,true)end
 	for _,crown in ipairs(okKit and type(Kit)=="table"and Kit.crowns or {})do
 		local pivot=crown.pivot
 		if type(pivot)=="table"and type(pivot[1])=="number"and type(pivot[3])=="number"then
-			local r=KeepOut.TrunkOf[crown.tree]or KeepOut.Trunk*(if type(crown.scale)=="number"then crown.scale else 1)
+			local s=if type(crown.trunk)=="number"then crown.trunk elseif type(crown.scale)=="number"then crown.scale else 1
+			local r=KeepOut.TrunkOf[crown.tree]or KeepOut.Trunk*s
 			add("trunk "..tostring(crown.tree),pivot[1],pivot[3],r,"solid",nil)
 		end
 	end
@@ -57,14 +63,14 @@ function KeepOut.all()
 			if foot.id~=Toys.Places.pods.id then add(foot.id,foot.x,foot.z,foot.r,if solid then "solid"else "soft",Toys.Feature)end
 		end
 	end
-	cached=table.freeze(out)
-	return cached
+	cache[key]=table.freeze(out)
+	return cache[key]
 end
 
 -- The solid keep-outs that are built: on(feature) -> boolean answers each prop's Alive switch (nil: every prop built).
-function KeepOut.solids(on)
+function KeepOut.solids(on,graded)
 	local out={}
-	for _,entry in ipairs(KeepOut.all())do
+	for _,entry in ipairs(KeepOut.all(graded))do
 		if entry.kind=="solid"and(entry.feature==nil or on==nil or on(entry.feature)==true)then table.insert(out,entry)end
 	end
 	return out
@@ -72,9 +78,9 @@ end
 
 -- The planner's circle records (GardenWalkability): {KeepOut = true, Parent = true, Name, X, Z, R} with R = r +
 -- Clearance. `Parent` is there so code that skips a removed wet part (part.Parent == nil) keeps the record.
-function KeepOut.regions(on)
+function KeepOut.regions(on,graded)
 	local out={}
-	for _,entry in ipairs(KeepOut.solids(on))do
+	for _,entry in ipairs(KeepOut.solids(on,graded))do
 		table.insert(out,table.freeze({KeepOut=true,Parent=true,Name=entry.id,X=entry.x,Z=entry.z,R=entry.r+KeepOut.Clearance}))
 	end
 	return out

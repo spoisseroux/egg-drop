@@ -55,6 +55,10 @@ function Config.mountKit(deps)
 	if not ceiling()then return nil end
 	local from=deps.from or game:GetService("ServerStorage")
 	local to=deps.to or game:GetService("ReplicatedStorage")
+	-- Beta 38: the tree grades' trunk pack (assets/world/AeroTrunks.rbxmx) goes with it, the same way (an empty
+	-- placeholder folder until its upload is confirmed: the clients then keep today's trunks).
+	local trunks=from:FindFirstChild("AeroTrunks")
+	if trunks and not to:FindFirstChild("AeroTrunks")then trunks:Clone().Parent=to end
 	local kit=from:FindFirstChild("AeroKit")
 	if not kit or to:FindFirstChild("AeroKit")then return to:FindFirstChild("AeroKit")end
 	local copy=kit:Clone()

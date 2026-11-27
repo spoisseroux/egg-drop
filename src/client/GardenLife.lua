@@ -476,7 +476,8 @@ function Life:readCrowns()
 	if d.spots then return d.spots.Crowns or {}end
 	local Shared=ReplicatedStorage:WaitForChild("Shared")
 	local ok,crowns=pcall(function()
-		local data=require(Shared:WaitForChild("WorldAeroKit"))
+		-- Beta 38: the trees as graded while the tree grades are on (TreeGrades.kit), as the kit's parts stand.
+		local data=require(Shared:WaitForChild("TreeGrades")).kit(require(Shared:WaitForChild("WorldAeroKit")),self.graded==true)
 		local Kit=require(script.Parent.AeroKit)
 		return Sim.kitCrowns(data,Kit.crownFrame,Life.KitKinds)
 	end)
@@ -486,6 +487,12 @@ function Life:readCrowns()
 		self.warn("[Life] Dewdrops on the old crown list: "..(if ok then "the kit has no lime crowns"else tostring(crowns)))
 	end
 	return self.spots.Crowns or {}
+end
+-- Beta 38: are the tree grades on (TreeGrades.on)? A fixture's crowns are never graded.
+function Life:gradedNow()
+	if self.d.groveCrowns or self.d.spots then return false end
+	local ok,on=pcall(function()return require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("TreeGrades")).on()end)
+	return ok and on==true
 end
 -- Hanging fruit follows its crown's sway (beta 14 B5): each grove crown with a pivot is matched (within .05) to a live
 -- kit part (WorldDressing "crown" with WorldPivot and WorldRestCFrame); no match is a static stem. Drawing only: what
@@ -513,6 +520,7 @@ function Life:places()
 	local d=self.d
 	local Shared=ReplicatedStorage:WaitForChild("Shared")
 	self.spots=d.spots or require(script.Parent.LifeSpots)
+	self.graded=self:gradedNow()
 	self.groveCrowns=self:readCrowns()
 	local stations=d.stations
 	if not stations then
@@ -762,7 +770,7 @@ function Life:enable()
 		self:fruitVoices(folder)
 		-- The fruit trees in the grove's order (both sort the lime crowns by tree name); a fallback crown list has none.
 		self.fruitTrees={}
-		local okTrees,trees=pcall(Fruit.trees)
+		local okTrees,trees=pcall(Fruit.trees,nil,self.graded==true)
 		for i,crown in ipairs(self.groveCrowns or {})do
 			local tree=okTrees and trees[i]
 			if tree and tree.tree==crown.tree then self.fruitTrees[i]=tree end
@@ -1011,6 +1019,14 @@ function Life:step(dt)
 		self:readDay(now)
 		self:readScene()
 		self:syncScene()
+		-- Beta 38: the tree grades flipped (`scene`, or the trunk pack): the garden again on the new trees, next frame.
+		if self:gradedNow()~=(self.graded==true)and not self.regrading then
+			self.regrading=true
+			;(self.d.defer or task.defer)(function()
+				self.regrading=false
+				if self.enabled and not self.destroyed then self:disable();self:sync()end
+			end)
+		end
 		-- The big breath's drops follow the `scene` switch (the same on every client): a new grove when it flips.
 		if(self.fruitWorld.breath==true)~=self.scene then
 			self.fruitWorld.breath=self.scene

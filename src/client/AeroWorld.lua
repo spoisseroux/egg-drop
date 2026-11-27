@@ -21,6 +21,7 @@ local Values=require(Shared:WaitForChild("WorldAero"))
 local Hour=require(Shared:WaitForChild("GardenHour"))
 local Additions=require(script.Parent.AeroAdditions)
 local Kit=require(script.Parent.AeroKit)
+local Grades=require(Shared:WaitForChild("TreeGrades"))
 
 local World={}
 World.__index=World
@@ -105,6 +106,16 @@ function World.new(options)
 		return module and require(module)
 	end
 	self.templates=options.templates or function()return ReplicatedStorage:FindFirstChild(Kit.Templates)end
+	-- Beta 38 (GARDEN-B38-BRIEF 4a): the tree grades' trunk pack, {data = WorldAeroTrunks, templates}, only while the
+	-- grades are on (TreeGrades.on: the pack confirmed and the Alive `scene` switch on); nil keeps today's trees. A
+	-- `scene` flip rebuilds the kit.
+	self.trunks=options.trunks or function()
+		if not Grades.on()then return nil end
+		local templates=ReplicatedStorage:FindFirstChild("AeroTrunks")
+		local data=Grades.trunks()
+		return if templates and data and Kit.trunksWhole(data,templates)then{data=data,templates=templates}else nil
+	end
+	self.sceneChanged=options.sceneChanged or function()return require(Shared:WaitForChild("Alive")).changed(Grades.Feature)end
 	self.spawn=options.spawn or task.spawn
 	-- The crowns' near fade (AeroKit.fader): on only in Room mode with the roam camera (a deck, a focus or a Dash race take
 	-- the camera: Scriptable). nil in specs unless given.
@@ -442,7 +453,8 @@ function World:hideMerged()
 	if not(built and room)then return end
 	-- The folders this layer watches: a new World that arrived before the old one left is the one that counts.
 	local meshes=self.folders.World
-	for _,name in ipairs(built.data.hides or {})do
+	-- The kit's hides, and with the trunk pack the merged trunks' visual (Transparency only: their collision stays).
+	for _,name in ipairs(built.hides or built.data.hides or {})do
 		local part=meshes and meshes:FindFirstChild(name)
 		if part and part:IsA("BasePart")then
 			-- A part the look also paints (the bubbles' Transparency): its own value back first, so the hide keeps the
@@ -475,17 +487,29 @@ function World:buildKit()
 	local turn,room=self.turn,self.room
 	local token={turn=turn,room=room}
 	self.kitLoading=token
+	local okTrunks,trunks=pcall(self.trunks)
+	trunks=if okTrunks then trunks else nil
 	self.spawn(function()
 		local fetched,loaded=pcall(self.preload,templates)
+		-- Beta 38: a trunk pack that does not load is today's trees (never a bare garden, never an error).
+		if trunks then
+			local good,trunkLoaded=pcall(self.preload,trunks.templates)
+			if not(good and trunkLoaded==true)then trunks=nil end
+		end
 		if self.kitLoading==token then self.kitLoading=nil end
 		if turn~=self.turn or room~=self.room or self.built or not self.enabled then return end
 		if not(fetched and loaded==true)then self:complain(if fetched then "kit meshes did not load" else loaded);return end
 		if self.level()>=World.DropLevel then return end
-		self:standKit(data,templates,turn)
+		self:standKit(data,templates,turn,trunks)
 	end)
 end
-function World:standKit(data,templates,turn)
-	local ok,built=pcall(self.kit.build,{data=data,templates=templates,parent=self.room,fade=self.fade})
+function World:standKit(data,templates,turn,trunks)
+	local pack=nil
+	if trunks then
+		data=Grades.kit(data,true,trunks.data)
+		pack={data=trunks.data,templates=trunks.templates,grade=function(tree)return Grades.of(tree).trunk end}
+	end
+	local ok,built=pcall(self.kit.build,{data=data,templates=templates,parent=self.room,fade=self.fade,trunks=pack})
 	if not ok then self:complain(built);return end
 	self.built=built
 	self:watch(built.folder)
@@ -525,6 +549,15 @@ function World:enable()
 	table.insert(self.connections,self.world.ChildAdded:Connect(function(item)if item.Name=="EggDropLounge"then self:bind(item)end end))
 	table.insert(self.connections,self.world.ChildRemoved:Connect(function(item)if item==self.room then self:bind(nil)end end))
 	table.insert(self.connections,self.switch.treesChanged():Connect(function()self:repaintCrowns()end))
+	-- Beta 38: the tree grades follow `scene` (TreeGrades.on): a flip stands the kit again, graded or not.
+	local okScene,sceneSignal=pcall(self.sceneChanged)
+	if okScene and sceneSignal then
+		table.insert(self.connections,sceneSignal:Connect(function()
+			if not self.enabled then return end
+			if self.built then self:dropKit()end
+			self:buildKit()
+		end))
+	end
 	table.insert(self.connections,self.reducedChanged():Connect(function()if self.added then pcall(self.added.still,self.reduced())end end))
 	self.clock.look=self.look
 	self.clock.apply(self.clock.now())

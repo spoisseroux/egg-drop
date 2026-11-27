@@ -74,6 +74,9 @@
       "AeroKit": {
         "$path": "assets/world/AeroKit.rbxmx"
       },
+      "AeroTrunks": {
+        "$path": "assets/world/AeroTrunks.rbxmx"
+      },
       "EggMachine": {
         "$path": "assets/world/EggMachine.rbxmx"
       },

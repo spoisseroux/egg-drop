@@ -39,6 +39,9 @@ return function(client,offline)
 				-- Fable B35: 20 studs off the hatch tree's crown, 9 off any other (its spot); B38: the low two only.
 				local crown=Lanterns.crownClash(p.x,p.z)
 				if crown then table.insert(bad,string.format("%s (%.1f, %.1f): near %s",p.id,p.x,p.z,crown))end
+				-- Beta 38: and with the tree grades on (bigger crowns).
+				crown=Lanterns.crownClash(p.x,p.z,true)
+				if crown then table.insert(bad,string.format("%s (%.1f, %.1f): graded, near %s",p.id,p.x,p.z,crown))end
 			end
 			-- Its centre within its layer's band through its bob and a burn's lift (none for the high pair), anywhere on
 			-- its drift, at its own height and (the low pair) at the mascots'; the basket's bottom never under 9.5.

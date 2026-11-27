@@ -21,6 +21,14 @@ Writes (never touches the island export, its manifest, walk map or the native co
 
 Then: upload the FBX as one Model, read MeshId / MeshSize back, and run scripts/build_world_aero_kit_assets.py.
 Coordinates: Blender (x, y, z) = Roblox (x, z + 4, -y). Roblox import turns each mesh by pi about Y.
+
+The trunk pack (GARDEN-B38-BRIEF 4a, the tree grades), its own upload so the kit above is untouched:
+  blender.exe -b assets/art-source/environment/world1-mockup-v7-import.blend --python scripts/build_world_aero_kit.py -- --trunks
+splits the island's trunks out of the merged W7_Trunks__bark (Vegetation_Trees__bark and Vegetation_HatchTree__bark):
+three shared trunks (Round, Tall, Blossom: one per tree kind, origin at the tree's root, placed per tree and proven on
+every tree's own bark like the crowns) and the two landmarks' trunks as one static mesh, so the merged part can hide
+its visual (its collision stays). Writes assets/world/aero-trunks/aero-trunks.fbx and aero-trunks-manifest.json; then
+upload the FBX as one Model, read MeshId / MeshSize back and run build_world_aero_kit_assets.py --trunks --confirm.
 """
 from __future__ import annotations
 
@@ -1082,5 +1090,98 @@ def main():
         print("KIT mesh", m["name"], m["tris"], m["size"])
 
 
+# ------------------------------------------------------------------------------------------------------------ trunks
+TRUNK_OUT = ROOT / "assets" / "world" / "aero-trunks"
+# Template names unique to this slice (a pack's names must never repeat another pack's: world-finish-template-names).
+TRUNK_PREFIX = "W7_Trees38_"
+TRUNK_KIND = {"Tree_Round": "Trunk_Round", "Tree_Tall": "Trunk_Tall", "Tree_Blossom": "Trunk_Blossom"}
+
+
+def check_trunks(sources):
+    """The trunks are cut from exactly the bark the island ships (W7_Trunks__bark's geometry hash)."""
+    manifest = {p["name"]: p for p in json.loads((ROOT / "assets/world/world-v7-manifest.json").read_text())["parts"]}
+    objs = [o for o in sources if C.classify(o.name)[0] == "Trunks__bark"]
+    joined = C.join([C.duplicate(o, "chk_" + o.name) for o in objs], "chk_Trunks__bark")
+    C.recentre(joined)
+    got, want = C.geom_hash(joined), manifest["W7_Trunks__bark"]["hash"]
+    assert got == want, ("merged trunk geometry drifted", got, want)
+    bpy.data.objects.remove(joined, do_unlink=True)
+    names = sorted(o.name for o in objs)
+    print("TRUNKS merged hash matches:", names)
+    return {o.name: o for o in objs}
+
+
+def trunks(sources):
+    chunks = check_trunks(sources)
+    trees_chunk = next(o for name, o in chunks.items() if name.startswith("Vegetation_Trees"))
+    landmark_chunk = next(o for name, o in chunks.items() if name.startswith("Vegetation_HatchTree"))
+    assert len(chunks) == 2, sorted(chunks)
+    group = [p for p in placements() if not p["object"].startswith("Landmark_")]
+    owner, pts = assign(trees_chunk, group)
+    assert len(owner) == len(group), ("a tree without bark", sorted(set(p["object"] for p in group) - set(owner)))
+    assert sum(len(v) for v in owner.values()) == len(trees_chunk.data.vertices)
+    canon, instances = {}, []
+    for p in sorted(group, key=lambda q: q["object"]):
+        name = TRUNK_KIND[p["mesh"]]
+        ids = owner[p["object"]]
+        if name not in canon:
+            obj = sub_object(trees_chunk, ids, name + "__bark")
+            obj.data.transform(placement_matrix(p).inverted())  # tree-local at scale 1: the origin is the root
+            canon[name] = {"obj": obj, "verts": [v.co.copy() for v in obj.data.vertices]}
+        entry = canon[name]
+        m = placement_matrix(p)
+        kd = KDTree(len(ids))
+        for k, i in enumerate(ids):
+            kd.insert(pts[i], k)
+        kd.balance()
+        err = max(kd.find(m @ v)[2] for v in entry["verts"])
+        assert len(entry["verts"]) == len(ids) and err < MAX_FIT, (p["object"], name, err, len(entry["verts"]), len(ids))
+        instances.append({"tree": p["object"], "mesh": name, "root": rb(m.translation), "yaw": round(p["yaw_rad"], 6),
+                          "scale": round(p["scale"], 6), "fit": round(err, 6)})
+    landmarks = sub_object(landmark_chunk, range(len(landmark_chunk.data.vertices)), "Trunks_Landmarks__bark")
+    return canon, instances, landmarks
+
+
+def main_trunks():
+    TRUNK_OUT.mkdir(parents=True, exist_ok=True)
+    sources = prepared_sources()
+    canon, instances, landmarks = trunks(sources)
+    meshes, export = [], []
+    for name, entry in canon.items():
+        obj = entry["obj"]
+        obj.name = obj.data.name = TRUNK_PREFIX + name + "__bark"
+        # The shared trunk's local origin is its root; where its bounds centre sits from it (Roblox axes, scale 1).
+        c, size = centred(obj)
+        meshes.append({"name": obj.name, "role": "trunk", "kind": "bark", "tris": C.tris(obj), "size": size,
+                       "rootToCentre": [round(c.x, 4), round(c.z, 4), round(-c.y, 4)], "hash": geom_digest(obj.data)})
+        export.append(obj)
+    landmarks.name = landmarks.data.name = TRUNK_PREFIX + "Trunks_Landmarks__bark"
+    c, size = centred(landmarks)
+    meshes.append({"name": landmarks.name, "role": "rest", "kind": "bark", "tris": C.tris(landmarks), "size": size,
+                   "center": rb(c), "hash": geom_digest(landmarks.data)})
+    export.append(landmarks)
+    for inst in instances:
+        inst["mesh"] = TRUNK_PREFIX + inst["mesh"] + "__bark"
+    bpy.ops.object.select_all(action="DESELECT")
+    for obj in export:
+        obj.select_set(True)
+    bpy.ops.export_scene.fbx(filepath=str(TRUNK_OUT / "aero-trunks.fbx"), use_selection=True, axis_forward="-Z", axis_up="Y",
+                             global_scale=1.0, apply_unit_scale=True, use_mesh_modifiers=False, object_types={"MESH"},
+                             add_leaf_bones=False, bake_anim=False, path_mode="STRIP", mesh_smooth_type="FACE",
+                             colors_type="SRGB")
+    manifest = {
+        "note": "Generated by scripts/build_world_aero_kit.py --trunks. Roblox studs. Trunk rootToCentre is the mesh bounds "
+                "centre from the tree's root in its own frame at scale 1 (Roblox axes, before the tree's yaw).",
+        "meshes": meshes, "trunks": instances, "hides": ["W7_Trunks__bark"],
+        "triangles": sum(m["tris"] for m in meshes)}
+    (TRUNK_OUT / "aero-trunks-manifest.json").write_text(json.dumps(manifest, indent=1), encoding="utf-8", newline="\n")
+    print("TRUNKS", len(meshes), "meshes", manifest["triangles"], "tris,", len(instances), "trees")
+    for m in meshes:
+        print("TRUNKS mesh", m["name"], m["tris"], m["size"])
+
+
 if __name__ == "__main__":
-    main()
+    if "--trunks" in sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else False:
+        main_trunks()
+    else:
+        main()
