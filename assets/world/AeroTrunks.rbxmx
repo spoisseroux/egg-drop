@@ -3,5 +3,121 @@
     <Properties>
       <string name="Name">AeroTrunks</string>
     </Properties>
+    <Item class="MeshPart" referent="AT0">
+      <Properties>
+        <string name="Name">W7_Trees38_Trunk_Round__bark</string>
+        <Content name="MeshId"><url>rbxassetid://123185331436698</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>4.6563</X><Y>8.7554</Y><Z>3.5908</Z></Vector3>
+        <Vector3 name="InitialSize"><X>130.2288360595703</X><Y>244.8743133544922</Y><Z>100.4291000366211</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CastShadow">true</bool>
+        <bool name="DoubleSided">false</bool>
+        <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
+        <token name="Material">272</token>
+        <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+        <float name="Reflectance">0.0</float>
+      </Properties>
+      <Item class="SurfaceAppearance" referent="ATS0">
+        <Properties>
+          <string name="Name">MatteFinish</string>
+          <token name="AlphaMode">0</token>
+          <Content name="ColorMap"><url>rbxassetid://95896755980970</url></Content>
+          <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
+          <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
+        </Properties>
+      </Item>
+    </Item>
+    <Item class="MeshPart" referent="AT1">
+      <Properties>
+        <string name="Name">W7_Trees38_Trunk_Blossom__bark</string>
+        <Content name="MeshId"><url>rbxassetid://126265269869961</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>4.5584</X><Y>7.7142</Y><Z>3.2662</Z></Vector3>
+        <Vector3 name="InitialSize"><X>127.4904556274414</X><Y>215.75494384765625</Y><Z>91.34917449951172</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CastShadow">true</bool>
+        <bool name="DoubleSided">false</bool>
+        <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
+        <token name="Material">272</token>
+        <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+        <float name="Reflectance">0.0</float>
+      </Properties>
+      <Item class="SurfaceAppearance" referent="ATS1">
+        <Properties>
+          <string name="Name">MatteFinish</string>
+          <token name="AlphaMode">0</token>
+          <Content name="ColorMap"><url>rbxassetid://95896755980970</url></Content>
+          <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
+          <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
+        </Properties>
+      </Item>
+    </Item>
+    <Item class="MeshPart" referent="AT2">
+      <Properties>
+        <string name="Name">W7_Trees38_Trunk_Tall__bark</string>
+        <Content name="MeshId"><url>rbxassetid://90716513781755</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>3.3702</X><Y>9.1224</Y><Z>2.575</Z></Vector3>
+        <Vector3 name="InitialSize"><X>94.25820922851562</X><Y>255.13864135742188</Y><Z>72.01956176757812</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CastShadow">true</bool>
+        <bool name="DoubleSided">false</bool>
+        <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
+        <token name="Material">272</token>
+        <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+        <float name="Reflectance">0.0</float>
+      </Properties>
+      <Item class="SurfaceAppearance" referent="ATS2">
+        <Properties>
+          <string name="Name">MatteFinish</string>
+          <token name="AlphaMode">0</token>
+          <Content name="ColorMap"><url>rbxassetid://95896755980970</url></Content>
+          <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
+          <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
+        </Properties>
+      </Item>
+    </Item>
+    <Item class="MeshPart" referent="AT3">
+      <Properties>
+        <string name="Name">W7_Trees38_Trunks_Landmarks__bark</string>
+        <Content name="MeshId"><url>rbxassetid://88549504120730</url></Content>
+        <Content name="TextureID"><url /></Content>
+        <Vector3 name="Size"><X>73.2255</X><Y>21.2147</Y><Z>11.6489</Z></Vector3>
+        <Vector3 name="InitialSize"><X>2048.0</X><Y>593.3409423828125</Y><Z>325.80218505859375</Z></Vector3>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">false</bool>
+        <bool name="CanQuery">false</bool>
+        <bool name="CanTouch">false</bool>
+        <bool name="CastShadow">true</bool>
+        <bool name="DoubleSided">false</bool>
+        <token name="CollisionFidelity">2</token>
+        <token name="RenderFidelity">1</token>
+        <token name="Material">272</token>
+        <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+        <float name="Reflectance">0.0</float>
+      </Properties>
+      <Item class="SurfaceAppearance" referent="ATS3">
+        <Properties>
+          <string name="Name">MatteFinish</string>
+          <token name="AlphaMode">0</token>
+          <Content name="ColorMap"><url>rbxassetid://95896755980970</url></Content>
+          <Content name="MetalnessMap"><url>rbxassetid://114363080604088</url></Content>
+          <Content name="RoughnessMap"><url>rbxassetid://132217078330162</url></Content>
+        </Properties>
+      </Item>
+    </Item>
   </Item>
 </roblox>

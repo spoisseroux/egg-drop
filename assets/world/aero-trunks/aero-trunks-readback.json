@@ -1,0 +1,13 @@
+{
+ "assetId": "113919803479198",
+ "operationId": "ed06bf11-cbc4-4fb5-9a4a-3e0ba4b3df19",
+ "moderation": "Approved",
+ "fbxSha256": "b6fda614887f9f4cd92b6cff3c9248e1a5a398d9255b62fa3757a107733650f6",
+ "manifestSha256": "14728622f277cbe295b7400a32552a8bb211d7a336ab56bdc0e0e1ed86f502f1",
+ "parts": [
+  {"meshId":"rbxassetid://126265269869961","name":"W7_Trees38_Trunk_Blossom__bark","meshSize":[127.49045562744141,215.75494384765625,91.349174499511719]},
+  {"meshId":"rbxassetid://123185331436698","name":"W7_Trees38_Trunk_Round__bark","meshSize":[130.22883605957031,244.87431335449219,100.42910003662109]},
+  {"meshId":"rbxassetid://90716513781755","name":"W7_Trees38_Trunk_Tall__bark","meshSize":[94.258209228515625,255.13864135742188,72.019561767578125]},
+  {"meshId":"rbxassetid://88549504120730","name":"W7_Trees38_Trunks_Landmarks__bark","meshSize":[2048,593.3409423828125,325.80218505859375]}
+ ]
+}
