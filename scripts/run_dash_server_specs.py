@@ -133,7 +133,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # Onboarding v3 brief section 2: the glow steps' view, ThingsTrail's guide and lead, PetTrail's switch.
           "GlowSteps",
           # Paint, Shine, Dress: the door's switch and tabs, the Colour cards, the pot intent and its buy-then-paint chain.
-          "DressUp"]
+          "DressUp",
+          # GARDEN-B38-BRIEF 4b (P1): the understory's spots against every keep list, its budget, switch, art and motion.
+          "Understory"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -208,7 +210,9 @@ def client_modules():
                     # Onboarding v3 brief section 2: the glow steps' view.
                     "GlowSteps.lua",
                     # Paint, Shine, Dress: the switch and tabs, the Colour cards, the pot intent.
-                    "DressUp.lua", "PaintPanel.lua", "PaintPotIntent.lua"):
+                    "DressUp.lua", "PaintPanel.lua", "PaintPotIntent.lua",
+                    # GARDEN-B38-BRIEF 4b: the understory's builder and motion.
+                    "UnderstoryClient.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

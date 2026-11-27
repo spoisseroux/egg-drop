@@ -5642,6 +5642,14 @@ do
  if ok and air then gui.Destroying:Connect(function()air:destroy()end)
  elseif not ok then warn("[DriftLanterns] not mounted: "..tostring(air))end
 end
+-- The garden understory (GARDEN-B38-BRIEF 4b, UnderstoryClient): bushes, flowering bushes and reeds, local only; nil
+-- where the Alive `scene` ceiling is closed (live). Nothing is drawn until UnderstoryArt's uploads are filled in.
+do
+ local ok,understory=pcall(function()return require(script.UnderstoryClient).mount({mode=function()return board:GetAttribute("Mode")end,
+  reduced=function()return reduceEffects()==true end})end)
+ if ok and understory then gui.Destroying:Connect(function()understory:destroy()end)
+ elseif not ok then warn("[Understory] not mounted: "..tostring(understory))end
+end
 -- Things to do (Shared.Things): nothing at all with the build ceiling off; with the switch off only the switches are
 -- watched. clientUI.things is what the Pocket menu's page (MachineHub), the coach's last line (ThingsTips) and the trail
 -- (ThingsTrail) ask.
