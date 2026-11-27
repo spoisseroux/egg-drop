@@ -720,6 +720,54 @@ Table.thisWeek={tab="This week",chip="This week",
 -- The fruit trees (GARDEN-B38-BRIEF 3b): the prompt at a fruit tree's trunk, and the Guide's one-time pointer to it.
 Table.fruit={tree="Fruit tree",shake="Shake",guide="Shake the tree!"}
 
+-- Paint, Shine, Dress (PAINT-SHINE-DRESS-PLAN, Fable's CUSTOMIZE-AUDIT): the Dress up door, its four tabs, paint pots and
+-- the renames. Shown only while the Alive `paint` switch is on (PaintCopy maps today's keys onto these); the keys these
+-- replace stay, because the switch-off path and live read them. No word from the audit's list (Hue, jar, dose, Main,
+-- Secondary, Rose, Tide, Citrus, Iris, Chalky, Satin, Glassy, Misty, Customization) appears here (PaintCopy.spec).
+Table.paint={door="Dress up",title="Dress up",eyebrow="Companions",
+ tab={colour="Colour",shine="Shine",outfit="Outfit",charm="Charm"},
+ target={main="Body",secondary="Tummy & ears"},
+ pot={rose="Pink",tide="Blue",citrus="Yellow",iris="Purple"},
+ potName="{colour} pot",
+ mix={rose_tide="Violet",citrus_rose="Orange",iris_rose="Magenta",citrus_tide="Green",iris_tide="Indigo",citrus_iris="Coral"},
+ status="{count}/5 · ×{stock}",statusMix="{count}/5",
+ paint="Paint",painting="Painting…",saving="Saving…",retry="Try again",
+ buy="Buy · {price}★",buyPot="Buy a {pot} · {price}★",
+ line="{target} {count} of 5 → {next} of 5",
+ lineMix="{colour} mixes {a} and {b}. Next: one {pot}.",
+ buyLine="One {pot}, {price} Stars, then it paints. Yours to keep.",
+ short="{count} more Stars needed",
+ full="Full",fullLine="{target} is as {colour} as it gets.",
+ white="Back to white",whiteLine="Free, any time. {pet} goes back to white here. Pots used stay used.",
+ whiteConfirm="Tap again: back to white",whiteConfirmLine="The paint here comes off. Pots used stay used.",
+ whiteCurrent="White now",free="Free",current="Current",
+ none="No pots yet. Buy one, or find them in the Paint Egg.",
+ bought="{pot} bought",
+ reason={NotReady="Paint pots are not ready yet.",NeedStars="You need more Stars.",Throttled="One moment…",Busy="Finishing your last save…",
+  RevealPending="Open your new item first.",PriceChanged="The price changed. Check it and tap again.",StackLimit="You have all the pots you can hold.",
+  MeetPipFirst="Hatch a pet first.",OperationConflict="That was not saved. Try again.",Retrying="Still saving… your pot will show here.",
+  RevisionChanged="Your pots changed. Check them and tap again.",InvalidPot="That was not saved. Try again."},
+ shop={looks="Looks",snacks="Snacks",strip="Pick a colour",stripLine="One pot, {price} Stars. The Paint Egg is the cheaper surprise."},
+ egg={look="Paint Egg",lookLine="Paint, shine and the odd charm",lookDescription="Hatches one paint pot or one shine. Now and then, a rare charm.",
+  lookPer="1 item per egg",stat="Snack Egg",statDescription="Hatches one training snack. Feed it to your pet: the next XP it earns in that stat counts extra.",
+  notReady="Paint Eggs are not ready yet.",statNotReady="Snack Eggs are not ready yet.",snacksEmpty="No snacks yet. Hatch a Snack Egg.",
+  statEggs="{count} Snack Eggs",medal="{name} medal! A free Snack Egg is yours.",where="Hatches from the Paint Egg.",charm="Rare in the Paint Egg",
+  charmNone="No charm yet. Charms are rare in the Paint Egg, or earned.",kindPot="PAINT POT",kindShine="SHINE",shineFor="Shine for your pet"},
+ shine={title="Shine",clear="See-through",soft="Soft",normal="Normal",shiny="Shiny",clear1="A bit see-through",clear2="See-through",clear3="Clear",
+  helper="Shiny and Soft move one step. See-through has three.",eggLink="Find more in the Paint Egg ›",empty="Find shine in the Paint Egg.",
+  none="None yet",use="Use {item}",reset="Back to normal",already="Already normal",clearLine="Back to normal from {look}. Free.",
+  max="As far as it goes.",more="More shine hatches from Paint Eggs.",openSaved="Open saved shine"},
+ hub={line="Colour, shine, outfits and charms",tile="Pets, dress up and toys"},
+ coach="Dress up {pet} and swap pets.",
+ charmTip="Charms take {pet}'s tummy-and-ears colour.\nChange it on the Colour tab.",
+ legacy="Your carried egg: choose its free pot once.",
+ describe={tide="A pot of sea, caught on a calm day.",iris="Dusk in a pot. Smells faintly of plums."},
+ charmOwned="Yours to keep. It floats in your pet's tummy-and-ears colour.",
+ promise={hue="One pot, one step of colour. Back to white is free.",finish="One step of shine. Normal is free."},
+ more={hues="Buy pots here, or find them in the Paint Egg."},
+ help={line="Paint, shine, outfits and charms, all behind Dress up.",title="Dress up"},
+ notice={title="Dress up your pet",next="Tap Dress up on your pet. New pieces hatch from eggs.",what="Paint, charms, toys and outfits change how {pet} looks. Looks only."}}
+
 local function freeze(node)
  for _,value in pairs(node)do if type(value)=="table"then freeze(value)end end
  return table.freeze(node)
@@ -784,7 +832,12 @@ function UICopy.pseudoEnabled()return pseudoOn end
 
 -- The string at `key` with `{name}` filled from `vars`. A missing key returns the
 -- key itself (and warns once) so a typo shows on screen instead of erroring.
+-- Paint, Shine, Dress: the client installs one override (PaintCopy.install) that swaps a key for its `paint.*` key while
+-- the switch is on. nil (the server, a spec, the switch off) is today's text, exactly.
+local override=nil
+function UICopy.setOverride(fn)override=if type(fn)=="function"then fn else nil end
 function UICopy.get(key,vars)
+ if override then local ok,alt=pcall(override,key);if ok and type(alt)=="string"and lookup(alt)~=nil then key=alt end end
  local text=lookup(key)
  if not text then
   if not warned[key]then warned[key]=true;warn("UICopy: missing key "..tostring(key))end

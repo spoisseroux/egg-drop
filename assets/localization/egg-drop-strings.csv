@@ -35,7 +35,7 @@ ui.book.hint.move,Move,,Collection book
 ui.book.hint.pages,Pages,,Collection book
 ui.book.missing,Not yet,,Collection book; also ui.notice.locked.title
 ui.book.owned,{owned}/{total},,Collection book; e.g. 3/12
-ui.book.pending,Saving…,,"Collection book; also ui.dash.result.saving, ui.names.saving, ui.onboarding.welcome.saving, ui.results.saved.pending"
+ui.book.pending,Saving…,,"Collection book; also ui.dash.result.saving, ui.names.saving, ui.onboarding.welcome.saving, ui.paint.saving"
 ui.book.promise,Every page pays once. Nothing to buy.,,Collection book
 ui.book.records.empty,Play a round and your records start here.,,Collection book
 ui.book.records.line,Your lifetime numbers,,Collection book
@@ -76,7 +76,7 @@ ui.care.notice.retry,Couldn't complete · try again,,Menu text
 ui.care.notice.saving,Wait for your pet save,,Menu text
 ui.coach.book.line,Fill the pages as you collect. Every page pays once.,,First-round coaching
 ui.coach.companions.line,"Dress up {pet}, swap pets and customize.",,"First-round coaching; e.g. Dress up Bear, swap pets and customize."
-ui.coach.companions.title,Companions,,"First-round coaching; also ui.hub.tile.companions.name, ui.names.eyebrow, ui.r3.help.companions.title, ui.r5.station.Journal.name"
+ui.coach.companions.title,Companions,,"First-round coaching; also ui.hub.tile.companions.name, ui.names.eyebrow, ui.paint.eyebrow, ui.r3.help.companions.title"
 ui.coach.effortPay,Good effort,,First-round coaching
 ui.coach.fillLine.line,Keep the pile under the line. Stay over it too long and the round ends.,,First-round coaching; also ui.notice.fillLine.what
 ui.coach.fillLine.short,Keep the pile under the line,,First-round coaching
@@ -273,7 +273,7 @@ ui.hatch.display.refund,Already owned · {count} Stars back,,Hatch eggs screen; 
 ui.hatch.display.wait,A little surprise,,Hatch eggs screen
 ui.hatch.egg.feature.description,Something pointy is growing in here. Hatches one feature item to grow on any pet.,,Hatch eggs screen
 ui.hatch.egg.feature.line,"Horns, claws or wings",,Hatch eggs screen
-ui.hatch.egg.feature.per,1 item per egg,,Hatch eggs screen; also ui.hatch.egg.look.per
+ui.hatch.egg.feature.per,1 item per egg,,"Hatch eggs screen; also ui.hatch.egg.look.per, ui.paint.egg.lookPer"
 ui.hatch.egg.hue.description,Hatches one pigment jar to change your pet's colour.,,Hatch eggs screen
 ui.hatch.egg.hue.line,A jar of colour,,Hatch eggs screen
 ui.hatch.egg.hue.per,1 jar per egg,,Hatch eggs screen
@@ -338,7 +338,7 @@ ui.hatch.result.allToys,Every toy found,,Hatch eggs screen
 ui.hatch.result.hatching,Hatching…,,Hatch eggs screen; also ui.names.egg.hatching
 ui.hatch.result.inThisEgg,IN THIS EGG,,Hatch eggs screen
 ui.hatch.result.more,+{count} more,,Hatch eggs screen; e.g. +3 more
-ui.hatch.result.need,{count} more Stars needed,,Hatch eggs screen; e.g. 3 more Stars needed; also ui.qa.shortfall
+ui.hatch.result.need,{count} more Stars needed,,"Hatch eggs screen; e.g. 3 more Stars needed; also ui.paint.short, ui.qa.shortfall"
 ui.hatch.result.pouchFull,Pouch is full. Feed a snack first.,,Hatch eggs screen
 ui.hatch.result.soldOut,Back tomorrow,,Hatch eggs screen; also ui.hatch.stat.soldOut
 ui.hatch.result.stamp.rare,RARE!,,Hatch eggs screen
@@ -409,16 +409,16 @@ ui.hatch.stat.pouchFull,Pouch full · feed a snack,,Hatch eggs screen
 ui.hatch.stat.promise.fixed,No surprises. Your next snack is shown above.,,Hatch eggs screen
 ui.hatch.stat.promise.random,The odds are on the label. A Feast within 8 eggs.,,Hatch eggs screen
 ui.hatch.stat.reason.AllMaxed,Every stat is at 99.,,Hatch eggs screen
-ui.hatch.stat.reason.Busy,Finishing your last save…,,Hatch eggs screen
+ui.hatch.stat.reason.Busy,Finishing your last save…,,Hatch eggs screen; also ui.paint.reason.Busy
 ui.hatch.stat.reason.ClockRollback,"One moment, then try again.",,Hatch eggs screen
 ui.hatch.stat.reason.ExpiredDay,A new day just started. Tap again.,,Hatch eggs screen
-ui.hatch.stat.reason.NeedStars,You need more Stars.,,Hatch eggs screen
+ui.hatch.stat.reason.NeedStars,You need more Stars.,,Hatch eggs screen; also ui.paint.reason.NeedStars
 ui.hatch.stat.reason.NoFreeEgg,No free egg to open.,,Hatch eggs screen
 ui.hatch.stat.reason.PetNotOut,Bring your pet out first.,,Hatch eggs screen
 ui.hatch.stat.reason.PouchFull,Your pouch is full. Feed a snack first.,,Hatch eggs screen
 ui.hatch.stat.reason.Retrying,Still saving… your egg will show here.,,Hatch eggs screen; also ui.hatch.stat.reason.Timeout
 ui.hatch.stat.reason.SoldOut,Today's nest is empty. Back tomorrow.,,Hatch eggs screen
-ui.hatch.stat.reason.Throttled,One moment…,,Hatch eggs screen; also ui.stats.snacks.reason.Busy
+ui.hatch.stat.reason.Throttled,One moment…,,"Hatch eggs screen; also ui.paint.reason.Throttled, ui.stats.snacks.reason.Busy"
 ui.hatch.stat.reveal.boost,{mult}x for your next {count} XP,,Hatch eggs screen; e.g. {mult}x for your next 3 XP; also ui.stats.snacks.card
 ui.hatch.stat.reveal.feed,Feed now,,Hatch eggs screen
 ui.hatch.stat.reveal.keep,Keep,,Hatch eggs screen
@@ -468,13 +468,13 @@ ui.inspect.prompt,Inspect,,Menu text
 ui.inspect.sent,Hello!,,Menu text
 ui.inspect.setting.off,Pet greetings: Off,,Menu text
 ui.inspect.setting.on,Pet greetings: On,,Menu text
-ui.inspect.slot.charm,Charm,,Menu text
+ui.inspect.slot.charm,Charm,,Menu text; also ui.paint.tab.charm
 ui.inspect.slot.finish,Material,,Menu text; also ui.r4.customize.finish.title
 ui.inspect.slot.toy,Toy,,Menu text
 ui.inspect.spin,Drag to turn,,Menu text
 ui.inspect.statsNone,No stats to show yet.,,Menu text
 ui.inspect.statsPrivate,"Levels only. XP, Stars and history stay private.",,Menu text
-ui.inspect.tab.outfit,Outfit,,Menu text
+ui.inspect.tab.outfit,Outfit,,Menu text; also ui.paint.tab.outfit
 ui.inspect.tab.stats,Stats,,"Menu text; also ui.names.tab.stat, ui.stats.open, ui.stats.results.label, ui.stats.snacks.back"
 ui.inspect.vibration.off,Vibration: Off,,Menu text
 ui.inspect.vibration.on,Vibration: On,,Menu text
@@ -492,7 +492,7 @@ ui.medal.starbloom,Starbloom medal,,Menu text
 ui.menu.subtitle.empty,Round not started,,Pause menu
 ui.menu.subtitle.locked,Win a round and this opens up,,Pause menu
 ui.menu.subtitle.paused,Round paused,,Pause menu
-ui.names.clear,Clear,,Menu text
+ui.names.clear,Clear,,Menu text; also ui.paint.shine.clear3
 ui.names.egg.again,Hatch another · {price},,Menu text; e.g. Hatch another · {price}
 ui.names.egg.all,All name pieces collected,,Menu text; also ui.names.reason.AllOwned
 ui.names.egg.allShort,All pieces collected,,Menu text
@@ -716,6 +716,103 @@ ui.onboarding.welcome.match,Merge,,First-round coaching
 ui.onboarding.welcome.more,One more!,,First-round coaching
 ui.onboarding.welcome.skip,Skip tutorial,,First-round coaching
 ui.onboarding.welcome.static,↓,,First-round coaching
+ui.paint.bought,{pot} bought,,Menu text; e.g. {pot} bought
+ui.paint.buy,Buy · {price}★,,Menu text; e.g. Buy · {price}★
+ui.paint.buyLine,"One {pot}, {price} Stars, then it paints. Yours to keep.",,"Menu text; e.g. One {pot}, {price} Stars, then it paints. Yours to keep."
+ui.paint.buyPot,Buy a {pot} · {price}★,,Menu text; e.g. Buy a {pot} · {price}★
+ui.paint.charmOwned,Yours to keep. It floats in your pet's tummy-and-ears colour.,,Menu text
+ui.paint.charmTip,"Charms take {pet}'s tummy-and-ears colour.
+Change it on the Colour tab.",,Menu text; e.g. Charms take Bear's tummy-and-ears colour.
+ui.paint.coach,Dress up {pet} and swap pets.,,Menu text; e.g. Dress up Bear and swap pets.
+ui.paint.current,Current,,Menu text
+ui.paint.describe.iris,Dusk in a pot. Smells faintly of plums.,,Menu text
+ui.paint.describe.tide,"A pot of sea, caught on a calm day.",,Menu text
+ui.paint.door,Dress up,,"Menu text; also ui.paint.help.title, ui.paint.title"
+ui.paint.egg.charm,Rare in the Paint Egg,,Menu text
+ui.paint.egg.charmNone,"No charm yet. Charms are rare in the Paint Egg, or earned.",,Menu text
+ui.paint.egg.kindPot,PAINT POT,,Menu text
+ui.paint.egg.kindShine,SHINE,,Menu text
+ui.paint.egg.look,Paint Egg,,Menu text
+ui.paint.egg.lookDescription,"Hatches one paint pot or one shine. Now and then, a rare charm.",,Menu text
+ui.paint.egg.lookLine,"Paint, shine and the odd charm",,Menu text
+ui.paint.egg.medal,{name} medal! A free Snack Egg is yours.,,Menu text; e.g. Pet Park medal! A free Snack Egg is yours.
+ui.paint.egg.notReady,Paint Eggs are not ready yet.,,Menu text
+ui.paint.egg.shineFor,Shine for your pet,,Menu text
+ui.paint.egg.snacksEmpty,No snacks yet. Hatch a Snack Egg.,,Menu text
+ui.paint.egg.stat,Snack Egg,,Menu text
+ui.paint.egg.statDescription,Hatches one training snack. Feed it to your pet: the next XP it earns in that stat counts extra.,,Menu text
+ui.paint.egg.statEggs,{count} Snack Eggs,,Menu text; e.g. 3 Snack Eggs
+ui.paint.egg.statNotReady,Snack Eggs are not ready yet.,,Menu text
+ui.paint.egg.where,Hatches from the Paint Egg.,,Menu text
+ui.paint.free,Free,,Menu text; also ui.r4.hue.free
+ui.paint.full,Full,,Menu text
+ui.paint.fullLine,{target} is as {colour} as it gets.,,Menu text; e.g. 3 is as {colour} as it gets.
+ui.paint.help.line,"Paint, shine, outfits and charms, all behind Dress up.",,Menu text
+ui.paint.hub.line,"Colour, shine, outfits and charms",,Menu text
+ui.paint.hub.tile,"Pets, dress up and toys",,Menu text
+ui.paint.legacy,Your carried egg: choose its free pot once.,,Menu text
+ui.paint.line,{target} {count} of 5 → {next} of 5,,Menu text; e.g. 3 3 of 5 → {next} of 5
+ui.paint.lineMix,{colour} mixes {a} and {b}. Next: one {pot}.,,Menu text; e.g. {colour} mixes {a} and {b}. Next: one {pot}.
+ui.paint.mix.citrus_iris,Coral,,Menu text
+ui.paint.mix.citrus_rose,Orange,,"Menu text; also catalog.BallThemes.ById.marbles.names.2, catalog.BallThemes.ById.smileys.names.2"
+ui.paint.mix.citrus_tide,Green,,"Menu text; also catalog.BallThemes.ById.marbles.names.3, catalog.BallThemes.ById.smileys.names.3"
+ui.paint.mix.iris_rose,Magenta,,Menu text
+ui.paint.mix.iris_tide,Indigo,,Menu text
+ui.paint.mix.rose_tide,Violet,,"Menu text; also catalog.BallThemes.ById.bubbles.names.5, catalog.BallThemes.ById.marbles.names.5, catalog.BallThemes.ById.smileys.names.5"
+ui.paint.more.hues,"Buy pots here, or find them in the Paint Egg.",,Menu text
+ui.paint.none,"No pots yet. Buy one, or find them in the Paint Egg.",,Menu text
+ui.paint.notice.next,Tap Dress up on your pet. New pieces hatch from eggs.,,Menu text
+ui.paint.notice.title,Dress up your pet,,Menu text
+ui.paint.notice.what,"Paint, charms, toys and outfits change how {pet} looks. Looks only.",,"Menu text; e.g. Paint, charms, toys and outfits change how Bear looks. Looks only."
+ui.paint.paint,Paint,,Menu text
+ui.paint.painting,Painting…,,Menu text
+ui.paint.pot.citrus,Yellow,,Menu text
+ui.paint.pot.iris,Purple,,Menu text
+ui.paint.pot.rose,Pink,,"Menu text; also catalog.BallThemes.ById.marbles.names.4, catalog.BallThemes.ById.smileys.names.4"
+ui.paint.pot.tide,Blue,,"Menu text; also catalog.BallThemes.ById.marbles.names.1, catalog.BallThemes.ById.smileys.names.1"
+ui.paint.potName,{colour} pot,,Menu text; e.g. {colour} pot
+ui.paint.promise.finish,One step of shine. Normal is free.,,Menu text
+ui.paint.promise.hue,"One pot, one step of colour. Back to white is free.",,Menu text
+ui.paint.reason.InvalidPot,That was not saved. Try again.,,Menu text; also ui.paint.reason.OperationConflict
+ui.paint.reason.MeetPipFirst,Hatch a pet first.,,Menu text
+ui.paint.reason.NotReady,Paint pots are not ready yet.,,Menu text
+ui.paint.reason.PriceChanged,The price changed. Check it and tap again.,,Menu text
+ui.paint.reason.Retrying,Still saving… your pot will show here.,,Menu text
+ui.paint.reason.RevealPending,Open your new item first.,,Menu text
+ui.paint.reason.RevisionChanged,Your pots changed. Check them and tap again.,,Menu text
+ui.paint.reason.StackLimit,You have all the pots you can hold.,,Menu text
+ui.paint.retry,Try again,,Menu text
+ui.paint.shine.already,Already normal,,Menu text
+ui.paint.shine.clear,See-through,,Menu text; also ui.paint.shine.clear2
+ui.paint.shine.clear1,A bit see-through,,Menu text
+ui.paint.shine.clearLine,Back to normal from {look}. Free.,,Menu text; e.g. Back to normal from {look}. Free.
+ui.paint.shine.eggLink,Find more in the Paint Egg ›,,Menu text
+ui.paint.shine.empty,Find shine in the Paint Egg.,,Menu text
+ui.paint.shine.helper,Shiny and Soft move one step. See-through has three.,,Menu text
+ui.paint.shine.max,As far as it goes.,,Menu text
+ui.paint.shine.more,More shine hatches from Paint Eggs.,,Menu text
+ui.paint.shine.none,None yet,,Menu text
+ui.paint.shine.normal,Normal,,Menu text
+ui.paint.shine.openSaved,Open saved shine,,Menu text
+ui.paint.shine.reset,Back to normal,,Menu text
+ui.paint.shine.shiny,Shiny,,Menu text
+ui.paint.shine.soft,Soft,,Menu text; also ui.r4.customize.finish.sheen.m1
+ui.paint.shine.title,Shine,,"Menu text; also ui.paint.tab.shine, ui.r4.customize.finish.sheenAxis, ui.r4.customize.finish.shine"
+ui.paint.shine.use,Use {item},,Menu text; e.g. Use Squeaky Bone
+ui.paint.shop.looks,Looks,,Menu text
+ui.paint.shop.snacks,Snacks,,Menu text; also ui.stats.snacks.open
+ui.paint.shop.strip,Pick a colour,,Menu text
+ui.paint.shop.stripLine,"One pot, {price} Stars. The Paint Egg is the cheaper surprise.",,"Menu text; e.g. One pot, {price} Stars. The Paint Egg is the cheaper surprise."
+ui.paint.status,{count}/5 · ×{stock},,Menu text; e.g. 3/5 · ×{stock}
+ui.paint.statusMix,{count}/5,,Menu text; e.g. 3/5
+ui.paint.tab.colour,Colour,,Menu text
+ui.paint.target.main,Body,,Menu text
+ui.paint.target.secondary,Tummy & ears,,Menu text
+ui.paint.white,Back to white,,Menu text
+ui.paint.whiteConfirm,Tap again: back to white,,Menu text
+ui.paint.whiteConfirmLine,The paint here comes off. Pots used stay used.,,Menu text
+ui.paint.whiteCurrent,White now,,Menu text
+ui.paint.whiteLine,"Free, any time. {pet} goes back to white here. Pots used stay used.",,"Menu text; e.g. Free, any time. Bear goes back to white here. Pots used stay used."
 ui.park.ballOut,Ball is out,,Pet Park chip
 ui.park.count,Pets playing {count}/{capacity},,Pet Park chip; e.g. Pets playing 3/{capacity}
 ui.park.date.done,Play date done · +{reward} ★,,Pet Park chip; e.g. Play date done · +5 ★
@@ -841,12 +938,10 @@ ui.r4.customize.finish.pill.max,Max,,Menu text
 ui.r4.customize.finish.pill.none,×0,,Menu text
 ui.r4.customize.finish.pill.use,Use,,Menu text
 ui.r4.customize.finish.reset,Back to original,,Menu text
-ui.r4.customize.finish.sheen.m1,Soft,,Menu text
 ui.r4.customize.finish.sheen.m3,Chalky,,Menu text
 ui.r4.customize.finish.sheen.p1,Satin,,Menu text
 ui.r4.customize.finish.sheen.p2,Glossy,,Menu text
 ui.r4.customize.finish.sheen.p3,Glassy,,Menu text
-ui.r4.customize.finish.sheenAxis,Shine,,Menu text; also ui.r4.customize.finish.shine
 ui.r4.customize.finish.stop,{item} {count}/{total},,Menu text; e.g. Squeaky Bone 3/12
 ui.r4.customize.finish.useJar,Use a {item} jar,,Menu text; e.g. Use a Squeaky Bone jar
 ui.r4.customize.moreFinishes,More material jars hatch from Customization Eggs.,,Menu text
@@ -863,7 +958,6 @@ ui.r4.hue.confirmLine,Press again to reset. It's free.,,Menu text
 ui.r4.hue.confirmReset,Confirm reset,,Menu text
 ui.r4.hue.current,Current colour,,Menu text
 ui.r4.hue.currentChip,CURRENT,,Menu text
-ui.r4.hue.free,Free,,Menu text
 ui.r4.hue.original,Original colour,,Menu text
 ui.r4.hue.originalMain,"{pet}'s first Main colour. Free, any time.",,"Menu text; e.g. Bear's first Main colour. Free, any time."
 ui.r4.hue.originalSecondary,"{pet}'s first Secondary colour. Free, any time.",,"Menu text; e.g. Bear's first Secondary colour. Free, any time."
@@ -1012,7 +1106,6 @@ ui.stats.snacks.empty,No snacks yet. Hatch a Stat Egg.,,Menu text
 ui.stats.snacks.favourite,{pet}'s favourite!,,Menu text; e.g. Bear's favourite!
 ui.stats.snacks.feed,Feed,,Menu text
 ui.stats.snacks.line,{name} boost: {mult}x for your next {count} XP,,Menu text; e.g. Pet Park boost: {mult}x for your next 3 XP
-ui.stats.snacks.open,Snacks,,Menu text
 ui.stats.snacks.reason.InRound,{pet} can't eat during a round,,Menu text; e.g. Bear can't eat during a round
 ui.stats.snacks.reason.NoSnack,That snack is gone,,Menu text
 ui.stats.snacks.reason.PetBusy,{pet} is busy playing,,Menu text; e.g. Bear is busy playing
@@ -1154,7 +1247,6 @@ catalog.BallThemes.ById.bubbles.names.1,Sky,,Catalogue BallThemes (names); also 
 catalog.BallThemes.ById.bubbles.names.2,Peach,,Catalogue BallThemes (names); also catalog.BallThemes.ById.tangerine_pop.names.4
 catalog.BallThemes.ById.bubbles.names.3,Melon,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.bubbles.names.4,Blossom,,Catalogue BallThemes (names)
-catalog.BallThemes.ById.bubbles.names.5,Violet,,"Catalogue BallThemes (names); also catalog.BallThemes.ById.marbles.names.5, catalog.BallThemes.ById.smileys.names.5"
 catalog.BallThemes.ById.bubbles.pitch,Soft and shiny. Two little eyes.,,Catalogue BallThemes (pitch)
 catalog.BallThemes.ById.deep_sea.name,Deep Sea,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.9.name
 catalog.BallThemes.ById.deep_sea.names.1,Trench,,Catalogue BallThemes (names)
@@ -1183,10 +1275,6 @@ catalog.BallThemes.ById.kittens.names.4,Sakura,,Catalogue BallThemes (names)
 catalog.BallThemes.ById.kittens.names.5,Plum,,Catalogue BallThemes (names); also catalog.BallThemes.ById.midnight.names.2
 catalog.BallThemes.ById.kittens.pitch,Pointed ears and a pink nose.,,Catalogue BallThemes (pitch)
 catalog.BallThemes.ById.marbles.name,Marbles,,Catalogue BallThemes (name)
-catalog.BallThemes.ById.marbles.names.1,Blue,,Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.1
-catalog.BallThemes.ById.marbles.names.2,Orange,,Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.2
-catalog.BallThemes.ById.marbles.names.3,Green,,Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.3
-catalog.BallThemes.ById.marbles.names.4,Pink,,Catalogue BallThemes (names); also catalog.BallThemes.ById.smileys.names.4
 catalog.BallThemes.ById.marbles.pitch,No faces. Glossy with a pattern each.,,Catalogue BallThemes (pitch)
 catalog.BallThemes.ById.midnight.name,Midnight,,Catalogue BallThemes (name); also catalog.BookCatalog.Pages.balls.items.11.name
 catalog.BallThemes.ById.midnight.names.1,Dusk,,Catalogue BallThemes (names)

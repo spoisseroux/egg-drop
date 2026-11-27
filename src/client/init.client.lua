@@ -1098,6 +1098,18 @@ clientUI.hueIntent=clientUI.HueIntent.new({
  available=function()return clientUI.itemAvailable("hue")end,
  send=function(action,value,revision)clientUI.sendNursery(action,value,revision)end,
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})
+-- Paint, Shine, Dress (PAINT-SHINE-DRESS-PLAN): the switch's words go into UICopy.get (off: today's text), and the
+-- paint pot intent (potBuy over HatchRequest, replies on Remotes.PotResult).
+clientUI.DressUp=require(script.DressUp)
+clientUI.DressUp.install()
+clientUI.potIntent=require(script.PaintPotIntent).new({id=function()return HttpService:GenerateGUID(false)end,
+ send=function(action,value,revision)clientUI.sendNursery(action,value,revision)end,
+ changed=function()
+  if clientUI.hueView then clientUI.hueView:refresh()end
+  if nurseryView and nurseryView.shade and nurseryView.shade.Visible then nurseryView:renderBody()end
+ end})
+-- Hatch eggs' "Pick a colour" strip (EggHatchView:layoutPotStrip, drawn only while the switch is on).
+nurseryView.paintPots={buy=function(itemId)return clientUI.potIntent:buy(itemId)end,intent=clientUI.potIntent}
 clientUI.materialIntent=require(script.MaterialIntent).new({id=function()return HttpService:GenerateGUID(false)end,
  available=function()return clientUI.itemAvailable("material")end,send=function(action,value,revision)clientUI.sendNursery(action,value,revision)end,
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})
@@ -1108,13 +1120,13 @@ clientUI.featureIntent=require(script.FeatureIntent).new({id=function()return Ht
  available=function()return clientUI.itemAvailable("feature")end,send=function(action,value,revision)clientUI.sendNursery(action,value,revision)end,
  changed=function()if clientUI.hueView then clientUI.hueView:refresh()end;if clientUI.syncDirectHatch then clientUI.syncDirectHatch()end end})
 clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
- materialIntent=clientUI.materialIntent,toyIntent=clientUI.toyIntent,featureIntent=clientUI.featureIntent,
+ materialIntent=clientUI.materialIntent,toyIntent=clientUI.toyIntent,featureIntent=clientUI.featureIntent,potIntent=clientUI.potIntent,
  wardrobe=function(petId)return clientUI.openWardrobe and clientUI.openWardrobe(petId)end,
  canCustomize=function(petId)
   local actor=roomView.care and roomView.care:actor()
   petId=petId or(clientUI.hueView and clientUI.hueView.petId)
   -- Opened from the cradle with free hands: edit the pet without docking it.
-  if(clientUI.hueReturn=="companions"or clientUI.hueReturn=="hub")and roomView.mode=="Room"and not roomView.busy and petId~=nil then return true end
+  if(clientUI.hueReturn=="companions"or clientUI.hueReturn=="hub"or clientUI.hueReturn=="focus")and roomView.mode=="Room"and not roomView.busy and petId~=nil then return true end
   return roomView.mode=="Room"and roomView.target=="Room"and not roomView.busy and actor~=nil and actor.care~=nil and actor.care.state=="Docked"and actor.petId==petId
  end,
  appearance=nurseryView.appearanceFor,
@@ -1178,7 +1190,7 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
 clientUI.openHue=function(page,petId,back)
  if clientUI.storyBusy()then return false end
  local purchasePage=page=="buy"or page=="materialBuy"or page=="toyBuy"or page=="featureBuy"
- if not purchasePage and back~="companions"and back~="hub"then
+ if not purchasePage and back~="companions"and back~="hub"and not(back=="focus"and clientUI.DressUp.on())then
   local actor=roomView.care and roomView.care:actor()
   if back~="machine"or not actor or not actor.care or actor.care.state~="Docked"or actor.petId~=petId then return false end
  end
@@ -1314,6 +1326,8 @@ do
  end
  clientUI.hub=CompanionsHub.new(host,{
   appearance=function(petId)return nurseryView.appearanceFor(petId)end,
+  -- Paint, Shine, Dress: Wardrobe and Customize become one Dress up tile while the switch is on.
+  dressUp=function()return clientUI.DressUp.on()end,
   open=function(rowId,petId)
    petId=petId or board:GetAttribute("CompanionId")
    if rowId=="wardrobe"then return clientUI.openWardrobe and clientUI.openWardrobe(petId)or false end
@@ -1490,6 +1504,11 @@ do
   closed=function(reason,from)if clientUI.machineReturn=="companions"and not(reason=="back"and from=="hub")then clientUI.machineReturn=nil end end})
  clientUI.openStats=function(options)return clientUI.stats.open(options)end
  roomView.openStats=clientUI.openStats
+ -- Paint, Shine, Dress: the focus view's Dress up button; off (the switch) opens nothing.
+ roomView.openDressUp=function()
+  if not clientUI.DressUp.on()then return false end
+  return clientUI.openHue("palette",board:GetAttribute("CompanionId"),"focus")==true
+ end
  gui.Destroying:Connect(function()clientUI.stats.destroy()end)
 end
 -- v2 pet names: the naming screen (Companions → pet → Name), the Names Egg card and its reveal on
@@ -1600,6 +1619,11 @@ do
  gui.Destroying:Connect(function()if replies then replies:Disconnect()end;clientUI.bugReport:destroy();reportGui:Destroy()end)
 end
 clientUI.hueResult=remotes:WaitForChild("HueResult").OnClientEvent:Connect(function(packet)clientUI.hueIntent:receive(packet)end)
+-- Paint pots: the owner's potBuy replies (a server without the remote yet: no pots, nothing waits).
+task.spawn(function()
+ local remote=remotes:WaitForChild("PotResult",30)
+ if remote then clientUI.potResult=remote.OnClientEvent:Connect(function(packet)clientUI.potIntent:receive(packet)end)end
+end)
 clientUI.charmResult=remotes:WaitForChild("PetAppearanceResult").OnClientEvent:Connect(function(packet)clientUI.hueView:charmResult(packet)end)
 clientUI.materialResult=remotes:WaitForChild("MaterialResult").OnClientEvent:Connect(function(packet)clientUI.materialIntent:receive(packet)end)
 clientUI.toyResult=remotes:WaitForChild("ToyResult").OnClientEvent:Connect(function(packet)clientUI.toyIntent:receive(packet)end)
@@ -1732,6 +1756,7 @@ local function refreshNursery(state)
     if clientUI.names then clientUI.names.sync(state)end
     if roomView.focusUI and roomView.focusUI.snacksOpen and roomView.focusUI:snacksOpen()then roomView.focusUI:refreshSnacks()end
     clientUI.hueIntent:update(state)
+    clientUI.potIntent:update(state)
     clientUI.materialIntent:update(state)
     clientUI.toyIntent:update(state)
     clientUI.featureIntent:update(state)

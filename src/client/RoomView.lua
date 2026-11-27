@@ -204,6 +204,8 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		charmToggle=function(visible)return self:setCharmVisible(visible)end,
 		-- v2 S3: the Stats button (and Y) leaves focus and opens the stats panel.
 		stats=function()return self.openStats~=nil and self.openStats({from="focus"})==true end,
+		-- Paint, Shine, Dress: the Dress up button (DressUpButton); init sets openDressUp, which checks the switch.
+		dressUp=function()return self.openDressUp~=nil and self.openDressUp()==true end,
 		-- v2 Stat Snacks (SnackHost sets snackModel / snackFeed / snackCarry on this view).
 		snackModel=function()return if self.snackModel then self.snackModel()else {pouch={}}end,
 		snackFeed=function(snackId,onBusy)return self.snackFeed~=nil and self.snackFeed(snackId,onBusy)==true end,

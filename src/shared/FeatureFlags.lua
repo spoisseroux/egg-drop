@@ -131,5 +131,7 @@ return table.freeze({PetTrail=true,FirstHelloBonus=true,RoundTwoNudge=true,ToyPi
  AliveDeckJuice=true,
  -- AlivePet2 (ONBOARDING-V3-BRIEF section 4): the cuter petting screen (PetCuddle, PetCuddleUI); beta and Studio only.
  AlivePet2=true,
+ -- AlivePaint (PAINT-SHINE-DRESS-PLAN): Dress up, the renames and the paint pots; beta and Studio only.
+ AlivePaint=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
  PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,PlayerScale=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true,TierPets=true,ParkTopLawn=true,ThisWeek=true})

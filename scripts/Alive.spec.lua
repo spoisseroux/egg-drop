@@ -9,7 +9,7 @@ return function(client,parent)
  for _,f in ipairs(Alive.Features)do saved[f]=workspace:GetAttribute(Alive.attribute(f))end
  local ok,problem=pcall(function()
   test("five features, their attributes and config keys; every flag is in the build",function()
-   assert(table.concat(Alive.Features," ")=="springs menus close wind life scene snack windbed asmr wobble balls crunch air fruit keepout aerohatch deckjuice pet2")
+   assert(table.concat(Alive.Features," ")=="springs menus close wind life scene snack windbed asmr wobble balls crunch air fruit keepout aerohatch deckjuice pet2 paint")
    assert(Alive.attribute("wind")=="Alive_wind"and Alive.key("wind")=="alive_wind")
    assert(Flags.AliveSprings and Flags.AliveMenus and Flags.AliveClose and Flags.AliveWind and Flags.AliveLife and Flags.AliveScene and Flags.AliveSnack)
    assert(Flags.AliveWindbed and Flags.AliveAsmr and Flags.AliveWobble and Flags.AliveBalls and Flags.AliveCrunch and Flags.AliveAir and Flags.AliveFruit and Flags.AliveKeepOut and Flags.AliveAeroHatch and Flags.AliveDeckJuice and Flags.AlivePet2)

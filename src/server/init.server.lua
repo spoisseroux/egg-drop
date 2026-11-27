@@ -23,6 +23,10 @@ local RunDay = require(script.RunDay)
 local RewardRetry = require(script.RewardRetry)
 local HueState = require(script.HueState)
 local MaterialState=require(script.MaterialState)
+-- Paint pots (PAINT-SHINE-DRESS-PLAN): the potBuy rules and the request order.
+local PaintPotState=require(script.PaintPotState)
+local PaintPotHost=require(script.PaintPotHost)
+local PaintPotCatalog=require(game:GetService("ReplicatedStorage").Shared.PaintPotCatalog)
 local ToyState=require(script.ToyState)
 local FeatureState=require(script.FeatureState)
 local MaterialCatalog=require(ReplicatedStorage.Shared.MaterialCatalog)
@@ -86,6 +90,8 @@ local hueResult = child("RemoteEvent", "HueResult", remotes)
 local materialResult=child("RemoteEvent","MaterialResult",remotes)
 local toyResult=child("RemoteEvent","ToyResult",remotes)
 local featureResult=child("RemoteEvent","FeatureResult",remotes)
+-- Paint pots (PAINT-SHINE-DRESS-PLAN): the owner's potBuy replies.
+local potResult=child("RemoteEvent","PotResult",remotes)
 local appearanceResult = child("RemoteEvent", "AppearanceResult", remotes)
 local faceplateResult = child("RemoteEvent", "FaceplateResult", remotes)
 local wearableResult = child("RemoteEvent", "WearableResult", remotes)
@@ -662,6 +668,14 @@ local function sendItemResult(board,kind,quote,status,reason,receipt)
  if status~="Retrying"and not awaiting and board[waiting]and board[waiting].id==quote.id then board[waiting]=nil end
 end
 
+-- Paint pots: one reply per request; a Retrying buy waits (board.potWaiting) for its proof in publishNursery.
+local function sendPotResult(board,quote,status,reason,receipt)
+ if not quote then return end
+ potResult:FireClient(board.player,{id=quote.id,action=quote.action,status=status,reason=reason,revision=board.nursery.state.revision,receipt=receipt})
+ local pending=board.nursery.pending;local awaiting=pending and pending.kind=="pot"and pending.candidate.quote.id==quote.id
+ if status~="Retrying"and not awaiting and board.potWaiting and board.potWaiting.id==quote.id then board.potWaiting=nil end
+end
+
 -- Guided first session (plan section 1): until the first saved win, the first
 -- three rounds of a session run Easy with no picker.
 local function guidedHeat(board)
@@ -707,6 +721,8 @@ local function publishNursery(board)
 		sendHueResult(board,board.hueWaiting,"Saved",nil,state.lastHueResult)
 	end
 	if board.materialWaiting and state.lastMaterialResult and state.lastMaterialResult.id==board.materialWaiting.id then sendMaterialResult(board,board.materialWaiting,"Saved",nil,state.lastMaterialResult)end
+	-- Paint pots (architect review item 3): a Retrying buy that settled later reaches PaintPotIntent.
+	if board.potWaiting and state.lastPotResult and state.lastPotResult.id==board.potWaiting.id then sendPotResult(board,board.potWaiting,"Saved",nil,state.lastPotResult)end
 	for _,kind in ipairs({"toy","feature"})do
   local title=kind:sub(1,1):upper()..kind:sub(2);local waiting=board[kind.."Waiting"];local receipt=state["last"..title.."Result"]
   if waiting and receipt and receipt.id==waiting.id then sendItemResult(board,kind,waiting,"Saved",nil,receipt)end
@@ -2155,6 +2171,32 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
   publishNursery(board);publishState(board)
   sendItemResult(board,itemKind,quote,if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason,saved);return
  end
+	-- Paint pots (PAINT-SHINE-DRESS-PLAN): the order (receipt first, then the switch, rate limits and Busy) is
+	-- PaintPotHost's; this only hands it the board.
+	if PaintPotState.isAction(action)then
+		PaintPotHost.request({
+			state=function()return board.nursery.state end,
+			on=function()return require(ReplicatedStorage.Shared.Alive).on("paint")end,
+			samePending=function(quote)local p=board.nursery.pending;return p~=nil and p.kind=="pot"and p.candidate.quote.id==quote.id end,
+			busy=function()return board.nurseryBusy or board.nursery.busy or board.payoutPending end,
+			recent=function()return os.clock()-(board.lastHatchRequest or -math.huge)<.3 end,
+			mark=function()board.lastHatchRequest=os.clock()end,
+			allow=function()board.potTimes=board.potTimes or {};return PaintPotCatalog.allow(board.potTimes,os.clock())end,
+			command=function()
+				board.nurseryBusy=true;publishNursery(board)
+				local walletBefore=board.nursery.state.nectar
+				local ok,reason,saved=Nursery.potCommand(board.nursery,action,value,revision)
+				if ok and reason~="AlreadySaved"then Economy.command(player,action,walletBefore,board.nursery.state.nectar,board.nursery.state)end
+				board.nurseryBusy=false
+				return ok,reason,saved
+			end,
+			publish=function()publishNursery(board);publishState(board)end,
+			reply=function(quote,status,reason,receipt)sendPotResult(board,quote,status,reason,receipt)end,
+			waiting=function(quote)board.potWaiting=quote end,
+			alive=function()return boards[player]==board end,
+		},action,value,revision)
+		return
+	end
 	if MaterialState.isAction(action)then
 		local quote=if type(value)=="table"and type(value.id)=="string"and #value.id<=100 then {id=value.id,action=action,petId=value.petId}else nil
 		local canonical=MaterialState.quote(action,value,revision)
@@ -2780,6 +2822,8 @@ task.spawn(function()
 					if boards[player] == board then publishNursery(board); publishState(board);if board.petContact then board.petContact:reconcile()end end
 					if boards[player]==board and pending and pending.kind=="hue"and not ok and reason~="Retrying"then sendHueResult(board,pending.candidate.quote,"Rejected",reason)end
 					if boards[player]==board and pending and pending.kind=="material"and not ok and reason~="Retrying"then sendMaterialResult(board,pending.candidate.quote,"Rejected",reason)end
+					-- Paint pots (review item 3): a settled buy replies through publishNursery (potWaiting); a refusal here.
+					if boards[player]==board and pending and pending.kind=="pot"and not ok and reason~="Retrying"then sendPotResult(board,{id=pending.candidate.quote.id,action="potBuy"},"Rejected",reason)end
 					if boards[player]==board and pending and(pending.kind=="toy"or pending.kind=="feature")and not ok and reason~="Retrying"then sendItemResult(board,pending.kind,pending.candidate.quote,"Rejected",reason)end
 					if pending then settleSnack(player,board,pending,ok,reason)end
 				end)

@@ -73,7 +73,10 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # Onboarding v3 brief (qa-2026-11-27-beta37) section 2: the glow steps' pure rules (TrailGlow).
          "TrailGlow",
          # The petting screen (ONBOARDING-V3-BRIEF section 4, switch pet2): the heart, the lean, the mitten, the spots.
-         "PetCuddle"]
+         "PetCuddle",
+         # Paint, Shine, Dress (PAINT-SHINE-DRESS-PLAN): the pot rules and request order, the save path, the live and base
+         # builds loading a save with pots, and the words.
+         "PaintPotState", "PaintPotProgress", "PaintPotCrossVersion", "PaintCopy"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
@@ -128,7 +131,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # AERO-JUICE-BRIEF 1 and 2: the Aero Glass palette and shading, the Pocket Deck juice pass, the UI counters.
           "AeroJuice",
           # Onboarding v3 brief section 2: the glow steps' view, ThingsTrail's guide and lead, PetTrail's switch.
-          "GlowSteps"]
+          "GlowSteps",
+          # Paint, Shine, Dress: the door's switch and tabs, the Colour cards, the pot intent and its buy-then-paint chain.
+          "DressUp"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -201,7 +206,9 @@ def client_modules():
                     # AERO-JUICE-BRIEF 1 and 2: the bubble shading, the deck juice layer, its UI half and the faces.
                     "AeroShade.lua", "AeroJuice.lua", "AeroUI.lua", "BallFaces.lua",
                     # Onboarding v3 brief section 2: the glow steps' view.
-                    "GlowSteps.lua"):
+                    "GlowSteps.lua",
+                    # Paint, Shine, Dress: the switch and tabs, the Colour cards, the pot intent.
+                    "DressUp.lua", "PaintPanel.lua", "PaintPotIntent.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

@@ -37,6 +37,10 @@ local EatingProof=require(script.Parent.HueEatingProof);local FruitEating=requir
 local CardPreviews=require(script.Parent.CardPreviewCache);local TabInk=require(script.Parent.TabInk)
 local HintLegend=require(script.Parent.HintLegend);require(script.Parent.ToyTabIcon)
 local UICopy=require(Shared.UICopy)
+-- Paint, Shine, Dress (PAINT-SHINE-DRESS-PLAN): with the Alive `paint` switch on, Customize is "Dress up" (Colour,
+-- Shine, Outfit, Charm), the Colour tab paints with pots (PaintPanel) and Outfit opens the Wardrobe. Off is today.
+local DressUp=require(script.Parent.DressUp)
+local PaintPanel=require(script.Parent.PaintPanel)
 local View={};View.__index=View
 View.ClearConfirmSeconds=3
 View.ToyFadeTime=.15 -- UI-SPEC-v816 3: switching toys on the Toys screen
@@ -46,6 +50,18 @@ local names={};for _,id in ipairs(Hues.ItemOrder)do names[id]=Hues.Items[id].nam
 local LookEgg=require(Shared.LookEggCatalog)
 for _,id in ipairs(LookEgg.FinishItems)do names[id]=UICopy.get("hatch.look.jar."..id)end
 for _,shape in ipairs(LookEgg.EggShapes)do names["charm_"..shape]=CharmCatalog.ById[shape].name.." charm"end
+-- Paint, Shine, Dress: item names are read when shown, so receipts and reveals say "Pink pot" and "Shiny" while the
+-- switch is on and today's names while it is off.
+do
+ local base=names
+ names=setmetatable({},{__index=function(_,id)
+  if DressUp.on()then
+   if Hues.ById[id]then return PaintPanel.potName(id)end
+   if LookEgg.kind(id)=="finish"then return UICopy.get("hatch.look.jar."..id)end
+  end
+  return base[id]
+ end})
+end
 local function place(n,x,y,w,h)n.Position,n.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)end
 local function text(parent,name,copy,role)
  local n=Art.text(parent,name,copy,UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),"text",16)
@@ -513,6 +529,11 @@ function View:chooseChannel(channel)
  self:refresh();if not self.confirmation then self.body.CanvasPosition=self.scrollPositions[self.tab..":"..self.channel]or Vector2.zero end;return true
 end
 function View:setTab(tab)
+ if tab=="outfit"then
+  -- Dress up's Outfit: the Wardrobe, unchanged, over this screen (its back returns here); the tab stays.
+  if not self:openWardrobe()then self.useMessage=UICopy.get("wardrobe.emptySolo");self:layout()end
+  return false
+ end
  if self.options.routeChanged then self.options.routeChanged("tab")end
  if not self:canCustomize()and not(self:hasHueAssignment()and(tab=="pet"or tab=="hue"))and not((self:hasMaterialAssignment()or self:hasToyAssignment()or self:hasFeatureAssignment())and tab=="pet")then return false end
  if tab=="features"and not FeatureFlags.Features then return false end
@@ -760,7 +781,8 @@ function View.previewAppearance(base,tab,id,channel)
   local key=if channel=="secondary"then "secondaryDoses"else "mainDoses"
   local counts=if Hues.validCounts(a[key])then table.clone(a[key])else Hues.emptyCounts()
   if id=="original"or id=="reset"or id=="white"then counts=Hues.emptyCounts()
-  elseif Hues.ById[id]then counts[id]=math.min(5,counts[id]+1)end
+  elseif Hues.ById[id]then counts[id]=math.min(5,counts[id]+1)
+  elseif Hues.Mixes[id]then local nextPot=PaintPanel.next(id,counts);if nextPot then counts[nextPot]=math.min(5,counts[nextPot]+1)end end
   a[key]=counts
   if channel=="secondary"and id=="original"then a.secondaryWhite=false
   elseif channel=="secondary"and id=="white"then a.secondaryWhite=true end
@@ -1338,7 +1360,9 @@ end
 
 -- ── Customize chrome (redesign menus 2) ─────────────────────────────────────
 -- Pure: the tab row. Features joins only when Shared.FeatureFlags.Features is on.
-function View.tabList(flags)
+function View.tabList(flags,paint)
+ if paint==nil then paint=flags==nil and DressUp.on()end
+ if paint then return DressUp.tabs()end
  flags=flags or FeatureFlags
  -- QA v2 R4.5: Toys draw a chew bone (ToyTabIcon), no longer the Ring charm's ball.
  -- Customization Egg slice 3: the jar doses (id "finish") replace Materials; a saved legacy
@@ -1484,7 +1508,7 @@ function View:buildChrome(view)
  local phone=view~=nil
  local toys=self.tab=="toys"
  local g=View.chromeGeometry(if phone then view.W else 848,if phone then view.H else 608,phone,toys)
- self.chromeGeom=g;self.chromeKey=(if phone then string.format("%dx%d",view.W,view.H)else "regular")..(if toys then ":toys"else "")
+ self.chromeGeom=g;self.chromeKey=(if phone then string.format("%dx%d",view.W,view.H)else "regular")..(if toys then ":toys"else "")..(if DressUp.on()then ":paint"else "")
  local root=Kit.frame(self.shade,"Customize",nil,UDim2.new(),UDim2.fromScale(1,1));root.ZIndex=self.shade.ZIndex+1;root.Visible=false
  self.chromeRoot=root
  local dim=Kit.frame(root,"Shade",nil,UDim2.new(),UDim2.fromScale(1,1));dim.BackgroundTransparency=if phone then 1 else .35;dim.BackgroundColor3=Color3.new(0,0,0);dim.Active=true
@@ -1503,7 +1527,7 @@ function View:buildChrome(view)
   Kit.shellPattern(panel) -- Toy Shell 3.3: the shell's moving checker (phones get it from Kit.sheet)
  end
  self.chromeBody=body
- self.header=Kit.header(body,{title=if toys then UICopy.get("r4.customize.toys.title")else "Customize",eyebrow="Companions",tint="companions",compact=phone,width=g.W,left=if phone then 24 else 24,onBack=function()self:close("back")end})
+ self.header=Kit.header(body,{title=if toys then UICopy.get("r4.customize.toys.title")elseif DressUp.on()then UICopy.get("paint.title")else "Customize",eyebrow="Companions",tint="companions",compact=phone,width=g.W,left=if phone then 24 else 24,onBack=function()self:close("back")end})
  local tabs=View.tabList();local labels,icons={},{}
  for _,t in ipairs(tabs)do table.insert(labels,t.label);table.insert(icons,t.icon)end
  self.chromeTabs=Kit.tabs(body,labels,g.tabs.w,g.tabs.h,if phone then 14 else 16,icons);self.chromeTabs.root.Position=UDim2.fromOffset(g.tabs.x,g.tabs.y)
@@ -1541,7 +1565,7 @@ function View:buildChrome(view)
   Size=UDim2.fromOffset(g.grid.w,g.grid.h),ScrollBarThickness=4,ZIndex=body.ZIndex+1,Selectable=false,ScrollingDirection=Enum.ScrollingDirection.Y,
   ScrollBarImageColor3=Color3.new(1,1,1),ScrollBarImageTransparency=.6,Active=true})
  self.chromeGrid=grid;self.gridContent=grid
- self.channelTabs=Kit.tabs(grid,{"Main","Secondary"},g.grid.w-6,if phone then 36 else 40,if phone then 14 else 15,nil,{level=2})
+ self.channelTabs=Kit.tabs(grid,if DressUp.on()then {UICopy.get("paint.target.main"),UICopy.get("paint.target.secondary")}else {"Main","Secondary"},g.grid.w-6,if phone then 36 else 40,if phone then 14 else 15,nil,{level=2})
  self.channelTabs.root.Name="ChannelTabs";TabInk.guard(self.channelTabs)
  self.channelTabs.changed=function(index)if not self:chooseChannel(if index==1 then "main"else "secondary")then self:layout()end end
  self.hueCards={}
@@ -1578,7 +1602,7 @@ function View:fitChrome(size)
  local view=nil
  -- QA v2 R3.2 (follow-up 2026-11-14): the phone sheet starts at Kit.sheetTop, so an inset host is not pushed down twice.
  if phone then local top=Kit.sheetTop(self.shade);view={W=math.floor(size.X),H=math.max(1,math.floor(size.Y)-top),top=top}end
- local key=(if view then string.format("%dx%d",view.W,view.H)else "regular")..(if self.tab=="toys"then ":toys"else "")
+ local key=(if view then string.format("%dx%d",view.W,view.H)else "regular")..(if self.tab=="toys"then ":toys"else "")..(if DressUp.on()then ":paint"else "")
  if self.chromeKey~=key or not self.chromeRoot then self:buildChrome(view);self.chromeRoot.Visible=true;self.card.Visible=false;self:showChrome(true)end
  local panel=self.chromePanel
  if view then panel.AnchorPoint=Vector2.zero;panel.Position=UDim2.fromOffset(0,view.top);panel.Size=UDim2.fromOffset(view.W,view.H);self.chromeScale.Scale=1
@@ -1597,13 +1621,14 @@ function View:layoutChrome()
  self.header.root.Visible=true
  if self.header.wallet then self.header.wallet.set(self.state.nectar or 0)end
  local toysScreen=g.toys==true
- self.header.setTitle(if toysScreen then UICopy.get("r4.customize.toys.title")else "Customize",if self.machine then "Care Cradle"else "Companions")
+ self.header.setTitle(if toysScreen then UICopy.get("r4.customize.toys.title")elseif DressUp.on()then UICopy.get("paint.title")else "Customize",if self.machine then "Care Cradle"else "Companions")
  local allowed=self:canCustomize()
  self.chromeTabs.root.Visible=not toysScreen and not self.boundedEating and(allowed or self:hasHueAssignment())
  self.paneAside.Visible=toysScreen
  for _,b in pairs(self.chromeTabs.buttons)do b.Interactable=not self.intent.pending end
  local grid=self.chromeGrid;local gw=g.grid.w-4 -- the 4 px scrollbar never covers the right column
  for _,b in pairs(self.hueCards)do b.Visible=false end
+ for _,b in pairs(self.paintCards or {})do b.Visible=false end
  for _,b in pairs(self.charmCards)do b.Visible=false end
  self.charmTip.Visible=false;self.channelTabs.root.Visible=false
  local focus={}
@@ -1613,6 +1638,10 @@ function View:layoutChrome()
  local a=self:appearance()
  if self.boundedEating then
   pane.line="Eating…"
+ elseif self.tab=="hue"and DressUp.on()and not self.assignment then
+  self.channelTabs.root.Visible=true;self.channelTabs.root.Position=UDim2.fromOffset(3,y)
+  self.channelTabs.select(if self.channel=="main"then 1 else 2);y+=self.channelTabs.root.Size.Y.Offset+12
+  y,focus,index=self:layoutPaint(grid,gw,g,compact,y,index,pane,allowed,a,petName)
  elseif self.tab=="hue"then
   self.channelTabs.root.Visible=true;self.channelTabs.root.Position=UDim2.fromOffset(3,y)
   self.channelTabs.select(if self.channel=="main"then 1 else 2);y+=self.channelTabs.root.Size.Y.Offset+12
@@ -1700,7 +1729,7 @@ function View:layoutChrome()
   y+=h+12
   if not compact then
    self.charmTip.Visible=true;place(self.charmTip,3,y,gw-6,72)
-   self.charmTipText.Text="Charms take "..petName.."'s Secondary colour.\nChange it on the Hue tab."
+   self.charmTipText.Text=if DressUp.on()then UICopy.get("paint.charmTip",{pet=petName})else "Charms take "..petName.."'s Secondary colour.\nChange it on the Hue tab."
    Kit.tintIcon(self.charmTipIcon,function()return tint end)
    y+=80
   end
@@ -1762,7 +1791,7 @@ function View:layoutChrome()
  if pane.button then Kit.setText(self.chromeAction,pane.button);Kit.setEnabled(self.chromeAction,pane.enabled==true)end
  Kit.setGlyphVisible(self.chromeAction,not compact or not Kit.lastInputTouch())
  if self.legend then self.legend.setLabel("confirm",if self.tab=="hue"or self.tab=="finish"then "Use"elseif toysScreen then "Give"else "Wear")end
- if self.hintPromise then self.hintPromise.Text=Promise[self.tab]or ""end
+ if self.hintPromise then self.hintPromise.Text=if DressUp.on()and UICopy.has("paint.promise."..self.tab)then UICopy.get("paint.promise."..self.tab)else Promise[self.tab]or ""end
  self.chromePanel:SetAttribute("Tab",self.tab);self.chromePanel:SetAttribute("FocusedCard",focus[index]and focus[index].id or nil)
  -- Focus ring on the focused card.
  local target=focus[index]
@@ -1774,6 +1803,81 @@ function View:layoutChrome()
   grid.CanvasPosition=Vector2.new(0,math.clamp(cy,0,math.max(0,y+6-view)))
  elseif self.chromeRing then self.chromeRing.hide()end
  self.layingOut=false;self:fitPortrait()
+end
+-- Paint, Shine, Dress: the Colour tab while the switch is on. Ten swatches (PaintPanel), then Back to white (today's
+-- free clear with its confirm). One tap selects and previews; the pane's button (or a second tap) paints or buys.
+function View:paintReady()
+ local pot=self.options.potIntent
+ return self:canCustomize()and not self.intent.pending and not(pot and pot.pending)
+end
+function View:layoutPaint(grid,gw,g,compact,y,index,pane,allowed,a,petName)
+ if self.paintGrid~=grid then
+  self.paintGrid=grid;self.paintCards={}
+  for _,s in ipairs(PaintPanel.Swatches)do local id=s.id
+   local b=Cards.new(grid,"PaintCard_"..string.gsub(id,":","_"));b.Visible=false;self.paintCards[id]=b
+   b.Activated:Connect(function()self:chromeTap("hue",id)end)
+  end
+ end
+ local ready=self:paintReady()
+ local cards=PaintPanel.cards(self.state,self.petId,self.channel,ready)
+ local list={};for _,c in ipairs(cards)do table.insert(list,c)end
+ table.insert(list,{id=PaintPanel.White})
+ local rects,h=Cards.rects(#list,gw,g.cols,g.cardH,g.gap,y)
+ index=math.clamp(index,1,#list)
+ local counts=self:counts();local original=not nonzero(counts)
+ local armed=self.clearConfirm~=nil and self.clearConfirm.petId==self.petId and self.clearConfirm.channel==self.channel and os.clock()<self.clearConfirm.untilTime
+ local focus={}
+ for i,c in ipairs(list)do
+  if c.id==PaintPanel.White then
+   local b=self.hueCards.original;b.Visible=true;Cards.place(b,rects[i])
+   local resolved=Palette.resolve(self.petId,View.previewAppearance(a,"hue","original",self.channel))
+   Cards.dress(b,{name=UICopy.get("paint.white"),status=if original then UICopy.get("paint.current")else UICopy.get("paint.free"),
+    tone=if original then "accent"else "soft",swatch=require(script.Parent.PetHeadshot).behind(resolved[if self.channel=="main"then "body"else "secondary"]),focused=i==index,compact=compact})
+   table.insert(focus,{button=b,id=c.id,act=function()return self:clearColour()end})
+  else
+   local b=self.paintCards[c.id];b.Visible=true;Cards.place(b,rects[i])
+   Cards.dress(b,{name=c.name,status=c.status,tone=if c.action=="full"then "accent"elseif c.stock>0 then "soft"else "dim",swatch=c.color,focused=i==index,compact=compact})
+   b:SetAttribute("PaintAction",c.action);b:SetAttribute("Pips",c.pips);b:SetAttribute("Pot",c.pot)
+   local id=c.id
+   table.insert(focus,{button=b,id=id,act=function()return self:paintAct(id)end})
+  end
+ end
+ y+=h+12
+ -- Legacy: a carried egg from before v6 still picks its free pot once (rare; the old page's buttons, new words).
+ if self.legacyTitle.Visible then
+  self.legacyTitle.Text=UICopy.get("paint.legacy");Art.type(self.legacyTitle,"Body",compact)
+  local th=Art.textHeight(self.legacyTitle,gw-6,24);place(self.legacyTitle,3,y,gw-6,th);y+=th+8
+ end
+ for _,id in ipairs(ids)do local n=self.legacyButtons[id];if n and n.Visible then n.Text=PaintPanel.potName(id);Art.type(n,"Action",compact);local bh=math.max(44,Art.actionHeight(n,gw-6));place(n,3,y,gw-6,bh);y+=bh+8 end end
+ local item=list[index]
+ local pot=self.options.potIntent
+ if item and item.id==PaintPanel.White then
+  pane.name=UICopy.get("paint.white");pane.chip={UICopy.get("paint.free"),"accent"}
+  pane.line=UICopy.get("paint.whiteLine",{pet=petName})
+  pane.button=if original then UICopy.get("paint.whiteCurrent")elseif armed then UICopy.get("paint.whiteConfirm")else UICopy.get("paint.white")
+  pane.enabled=allowed and not self.intent.pending and not original
+  pane.status=if armed then UICopy.get("paint.whiteConfirmLine")else ""
+ elseif item then
+  pane.name=item.name;pane.line=item.line;pane.button=item.button;pane.enabled=item.enabled and allowed
+  pane.chip=if item.action=="buy"then {tostring(require(Shared.PaintPotCatalog).Price).."★","accent"}else {"×"..item.stock,"plain"}
+  pane.status=""
+ end
+ if pot and pot.pending then pane.status=UICopy.get(if pot.pending.thenDo then "paint.painting"else "paint.saving");pane.enabled=false
+ elseif self.intent.pending and self.intent.pending.action=="hueUse"then pane.status=UICopy.get("paint.painting")
+ elseif pot and pot.message and pot.status~="Saved"then pane.status=pot.message
+ elseif self.intent.message then pane.status=self.intent.message end
+ if pot and pot.status=="Retrying"then pane.button=UICopy.get("paint.retry");pane.enabled=true
+ elseif self.intent.status=="Retrying"then pane.button=UICopy.get("paint.retry");pane.enabled=true end
+ return y,focus,index
+end
+function View:paintAct(id)
+ if not self:canCustomize()then return false end
+ local card=PaintPanel.card(id,self.state,self.petId,self.channel,self:paintReady())
+ local petId,channel=self.petId,self.channel
+ local ok=PaintPanel.act(card,{hue=self.intent,pot=self.options.potIntent},petId,channel,self.state,function()
+  return not self.destroyed and self.shade.Visible and self.petId==petId and self.channel==channel and self.tab=="hue"
+ end)
+ self:layout();return ok
 end
 -- Tap / click on a chrome card: the first tap selects (and previews), the second acts.
 function View:chromeTap(tab,id)
@@ -1821,6 +1925,7 @@ end
 -- A / Enter / the pane button.
 function View:chromeAct()
  if not self:chromeActive()then return false end
+ if self.tab=="hue"and self.options.potIntent and self.options.potIntent.status=="Retrying"then return self.options.potIntent:retry()end
  if self.tab=="hue"and self.intent.status=="Retrying"then return self.intent:retry()end
  if self.tab=="materials"and self.materialIntent and self.materialIntent.status=="Retrying"then return self.materialIntent:retry()end
  local item=(self.focusables or {})[self:focusIndex()]

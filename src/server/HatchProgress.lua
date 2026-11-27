@@ -67,6 +67,9 @@ local NestState=require(script.Parent.NestState)
 local Onboard=require(ReplicatedStorage.Shared.Onboard)
 -- v2 pet names: optional names / petNames fields (NameState); earned pieces granted by catchUp.
 local Names=require(script.Parent.NameState)
+-- Paint pots (PAINT-SHINE-DRESS-PLAN): the optional paintPots field and the potBuy rules.
+local PaintPots=require(script.Parent.PaintPotState)
+local PaintPotCatalog=require(ReplicatedStorage.Shared.PaintPotCatalog)
 local NameCatalog=require(ReplicatedStorage.Shared.NameCatalog)
 -- v2 S2: the pet that earns XP for actions with no pet of their own (quests, the daily stamp,
 -- book milestones). The host sets handle.statPetOf; read once per call, so retries are stable.
@@ -239,7 +242,7 @@ local function validV10(state)return validVersion(state,10,false)and Wearables.v
 -- lookCharmMisses and lookFound on v11 (LookState.valid, run inside HueState.valid).
 -- Welcome bonus (growth cuts 2026-11-25): optional additive `starterRounds` on v11, valid when missing (no version bump).
 -- First hello (G2 2026-11-25): optional additive `firstHello` on v11, valid when missing (no version bump).
-local function valid(state)return validVersion(state,11,false)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and StarterBonus.valid(state)and FirstHello.valid(state)and Bond.valid(state)and Stats.valid(state)and Stats.validBoosts(state)and StatEggs.valid(state)and Names.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
+local function valid(state)return validVersion(state,11,false)and PaintPots.valid(state)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and StarterBonus.valid(state)and FirstHello.valid(state)and Bond.valid(state)and Stats.valid(state)and Stats.validBoosts(state)and StatEggs.valid(state)and Names.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
 Hatching.validV10,Hatching.valid=validV10,valid
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
@@ -386,6 +389,12 @@ function Hatching.load(userId, profile, adapter)
 		if type(state) == "table" then
 			local repaired, problem = pcall(function() Names.sanitize(state); Names.dropInvalid(state) end)
 			if not repaired then warn("Egg Drop: dropped names at load:", problem); state.names = nil; state.petNames = nil end
+		end
+		-- Paint pots (architect review item 4): newer or malformed receipts are repaired before validation, never a
+		-- failed load; still invalid drops the receipts alone (the jars and Stars live in validated fields).
+		if type(state) == "table" then
+			local repaired = pcall(PaintPots.sanitize, state)
+			if not repaired or not PaintPots.valid(state) then warn("Egg Drop: dropped paintPots at load"); state.paintPots = nil end
 		end
 		-- "No default charm" (plan §2.2): a save written before this build has no charmUnlocks and
 		-- keeps Snowflake, Ring and Pebble (everyone owned them under the old rules); a save this
@@ -556,6 +565,8 @@ function Hatching.public(handle)
 	public.lookAvailable=Hatching.lookAvailable(handle)
 	public.lookSelectionMode=LookEgg.selectionMode(handle.restricted)
 	public.catalogVersion=require(ReplicatedStorage.Shared.HueCatalog).CatalogVersion
+	-- Paint pots: the last receipt, only once a pot was bought (an untouched snapshot is unchanged).
+	for key,value in pairs(PaintPots.public(state))do public[key]=value end
 	return public
 end
 
@@ -578,6 +589,7 @@ local function committed(pending,state)
 	if pending.kind=="material"then return MaterialState.proof(state,pending.candidate)end
 	if pending.kind=="toy"then return ToyState.proof(state,pending.candidate)end
 	if pending.kind=="feature"then return FeatureState.proof(state,pending.candidate)end
+	if pending.kind=="pot"then return PaintPots.proof(state,pending.candidate)end
 	-- The digest binds an operation id to its arguments: a reused id with other
 	-- arguments is not proof that this request committed.
 	return state.lastOperation and state.lastOperation.id==pending.id and state.lastOperation.digest==pending.digest
@@ -635,11 +647,11 @@ local function transact(handle, signature, expectedRevision, apply, candidate, o
 		if committed(pending,state)then return root end -- Proof precedes calendar expiry.
 		if reusedId(pending,state)then reason = "OperationConflict"; return nil end
 		if state.revision ~= pending.revision or state.operationSeq + 1 ~= pending.sequence then
-			 reason = "RevisionChanged"; return if pending.kind=="pet"or pending.kind=="hue"or pending.kind=="material"or pending.kind=="toy"or pending.kind=="feature"then root else nil
+			 reason = "RevisionChanged"; return if pending.kind=="pet"or pending.kind=="hue"or pending.kind=="material"or pending.kind=="toy"or pending.kind=="feature"or pending.kind=="pot"then root else nil
 		end
 		local before = { nectar = state.nectar, inventoryMask = state.inventoryMask }
 		local allowed, failure = pending.apply(state, pending.candidate)
-		if not allowed then reason = failure; return if pending.kind=="pet"or pending.kind=="hue"or pending.kind=="material"or pending.kind=="toy"or pending.kind=="feature"then root else nil end
+		if not allowed then reason = failure; return if pending.kind=="pet"or pending.kind=="hue"or pending.kind=="material"or pending.kind=="toy"or pending.kind=="feature"or pending.kind=="pot"then root else nil end
 		-- `now` is read here, inside the callback, so the state-derived Discoveries
 		-- (BookCatalog.stateBits) see the clock of this attempt.
 		Lifetime.record(before, state, pending.signature, handle.adapter.now())
@@ -660,7 +672,7 @@ local function transact(handle, signature, expectedRevision, apply, candidate, o
 		noteRoundStars(handle, pending)
 		return true, "Saved"
 	end
-	if ok and(pending.kind=="pet"or pending.kind=="hue"or pending.kind=="material"or pending.kind=="toy"or pending.kind=="feature")and record and fenced(handle,record.hatching,handle.adapter.now())then
+	if ok and(pending.kind=="pet"or pending.kind=="hue"or pending.kind=="material"or pending.kind=="toy"or pending.kind=="feature"or pending.kind=="pot")and record and fenced(handle,record.hatching,handle.adapter.now())then
 		-- A fenced unchanged return proves that this operation did not commit.
 		-- Expired-day/revision refusals must not strand Retrying with no pending.
 		accept(handle,record);handle.pending=nil;handle.status="Ready"
@@ -844,6 +856,36 @@ function Hatching.materialCommand(handle,action,value,revision)
  return ok,reason,if saved then MaterialState.publicReceipt(saved)else nil
 end
 
+-- Paint pots (PAINT-SHINE-DRESS-PLAN): one fixed-price pot, one transact. No roll, so no reservation: the quote id,
+-- the digest and the sequence prove it (PaintPotState.proof). A saved receipt replays first; a new operation checks
+-- the revision and the live price; the Stars and every refusal are checked again inside UpdateAsync (apply). The
+-- switch, the rate limits and Busy are the host's (PaintPotHost), after the receipt lookup.
+function Hatching.potCommand(handle,action,value,revision)
+	local quote=PaintPots.quote(action,value,revision)
+	if not quote then return false,"InvalidPot"end
+	if handle.status~="Ready"and handle.status~="Retrying"then return false,handle.status end
+	local receipt,same=PaintPots.find(handle.state,quote)
+	if receipt then
+		if same then return true,"AlreadySaved",PaintPots.publicReceipt(receipt)end
+		return false,"OperationConflict"
+	end
+	if handle.busy then return false,"Busy"end
+	local signature="pot:"..quote.id
+	local pending=handle.pending
+	local candidate
+	if pending and pending.signature==signature then
+		if pending.digest~=PaintPots.digest(quote)then return false,"OperationConflict"end
+		candidate=pending.candidate
+	elseif pending then return false,"Pending"
+	else
+		if revision~=handle.state.revision then return false,"RevisionChanged"end
+		if quote.price~=PaintPotCatalog.Price then return false,"PriceChanged"end
+		candidate={quote=clone(quote),operationId=handle.adapter.guid(),sequence=handle.state.operationSeq+1,digest=PaintPots.digest(quote)}
+	end
+	local ok,reason=transact(handle,signature,revision,PaintPots.apply,candidate,if pending then nil else candidate.operationId,"pot",candidate.digest)
+	local saved=if ok then PaintPots.find(handle.state,quote)else nil
+	return ok,reason,if saved then PaintPots.publicReceipt(saved)else nil
+end
 
 -- These two bounded item families share the existing root writer and fence.
 local itemStates={toy=ToyState,feature=FeatureState}
