@@ -2164,10 +2164,15 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 			if boards[player]==board then giftResult:FireClient(player,{id=opId,kind=kind,action=action,status=status,reason=reason,gift=record,revision=board.nursery.state.revision})end
 		end
 		if not kind then reply("Rejected","InvalidGift");return end
-		if os.clock()-(board.lastGiftAsk or -math.huge)<.5 then reply("Rejected","Throttled");return end
-		board.lastGiftAsk=os.clock()
 		local Gifts=require(ReplicatedStorage.Shared.GiftEggs)
+		if action=="giftEgg"then
+			if os.clock()-(board.lastGiftAsk or -math.huge)<.5 then reply("Rejected","Throttled");return end
+			board.lastGiftAsk=os.clock()
+		end
 		if action=="giftSeen"then
+			-- once per gift (seen never goes back), so a replay costs no write; still spaced from other saves
+			if os.clock()-(board.lastGiftSeen or -math.huge)<.5 then reply("Rejected","Throttled");return end
+			board.lastGiftSeen=os.clock()
 			if board.nurseryBusy or board.payoutPending or not canProgress(board)then reply("Rejected","Busy");return end
 			board.nurseryBusy=true
 			local called,ok,reason=pcall(Nursery.giftSeen,board.nursery,kind)

@@ -6141,6 +6141,7 @@ do
      return ribbonPart
     end
     local chain
+    local seenWaiting={} -- giftSeen asks the server has not saved yet, by id
     local giftBubble=require(script.GiftBubble).new({parent=playerGui,adornee=petPart,machine=machinePart,reduced=reducedNow,
      text=function(key)return Copy.get(key,{pet=petName()})end,
      onTap=function()if chain then chain:tap()end end,onClose=function()if chain then chain:close()end end,
@@ -6161,7 +6162,11 @@ do
         else clientUI.toyIntent:equip(petId(),r.item,nil)end
         pcall(function()require(script.Haptics).play("settle")end)
        end,
-       seen=function(r)nurseryRequest:FireServer("giftSeen",{kind=r.kind,id=HttpService:GenerateGUID(false)})end,
+       seen=function(r)
+        local id=HttpService:GenerateGUID(false)
+        seenWaiting[id]={kind=r.kind,tries=0}
+        nurseryRequest:FireServer("giftSeen",{kind=r.kind,id=id})
+       end,
        closed=function()if chain then chain:revealed()end end})
      end
      local machine=clientUI.eggMachine
@@ -6171,6 +6176,16 @@ do
     local waiting={}
     local result=remotes:WaitForChild("GiftResult")
     result.OnClientEvent:Connect(function(packet)
+     if type(packet)=="table"and packet.action=="giftSeen"and type(packet.id)=="string"then
+      -- seen is told until the server has it (a busy save or a throttle asks again, a few times)
+      local s=seenWaiting[packet.id]
+      if not s then return end
+      if packet.status~="Saved"and(packet.reason=="Busy"or packet.reason=="Throttled"or packet.status=="Retrying")and s.tries<5 then
+       s.tries+=1
+       task.delay(1.5,function()if seenWaiting[packet.id]==s then nurseryRequest:FireServer("giftSeen",{kind=s.kind,id=packet.id})end end)
+      else seenWaiting[packet.id]=nil end
+      return
+     end
      if type(packet)~="table"or packet.action~="giftEgg"or type(packet.id)~="string"then return end
      local w=waiting[packet.id]
      if not w then return end
