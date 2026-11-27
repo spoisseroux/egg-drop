@@ -151,7 +151,7 @@ function Reveal.show(parent,record,options)
 	local function button(name,label,x,primary)
 		local size=if primary then C.primary else C.later
 		local b=node("TextButton",plate,{Name=name,Text="",AnchorPoint=Vector2.new(.5,1),Position=UDim2.new(x,0,1,-12),Size=UDim2.fromOffset(size.w,size.h),
-			BackgroundTransparency=1,AutoButtonColor=false,BorderSizePixel=0,Selectable=true,ZIndex=6,Visible=reduced})
+			BackgroundTransparency=1,AutoButtonColor=false,BorderSizePixel=0,Selectable=true,ZIndex=6,Visible=false})
 		local fill=node("Frame",b,{Name="Fill",Size=UDim2.fromScale(1,1),BackgroundColor3=if primary then Color3.fromHex(fillHex)else Color3.new(1,1,1),
 			BackgroundTransparency=if primary then 0 else GiftArt.GlassTransparency,BorderSizePixel=0,ZIndex=6,Active=false})
 		round(fill,UDim.new(0,size.h/2));node("UIStroke",fill,{Color=Reveal.Ink,Thickness=2})
