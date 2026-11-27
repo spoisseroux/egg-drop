@@ -727,12 +727,14 @@ function Machine:step(dt)
 	end
 	self.unboundSince=nil
 	self:ribbonLapse()
+	local eye=self.d.camera and self.d.camera()
 	if self.ribbonView then
-		local good,problem=pcall(self.ribbonView.step,self.ribbonView,dt or 0,parts,self.d.root and self.d.root())
+		-- its clock runs at any range; out of range it writes nothing (code review)
+		local far=typeof(eye)=="Vector3"and(eye-parts.body.Position).Magnitude>Machine.Range
+		local good,problem=pcall(self.ribbonView.step,self.ribbonView,dt or 0,parts,self.d.root and self.d.root(),far)
 		if not good then self:warnOnce("ribbon: "..tostring(problem))end
 		if self.ribbonView and self.ribbonView:gone()then self.ribbonView=nil end
 	end
-	local eye=self.d.camera and self.d.camera()
 	local centre=parts.body.Position
 	if typeof(eye)=="Vector3"and(eye-centre).Magnitude>Machine.Range then self:rest();return end
 	self.atRest=false

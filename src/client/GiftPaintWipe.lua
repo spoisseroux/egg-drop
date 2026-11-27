@@ -165,7 +165,17 @@ function Wipe:step(dt)
 		pose.squash=s.squash*W.squash/.14 -- GardenPetVisual's boop squashes the body 14% at 1
 	end
 	visual.poseDirty=true
-	if run.camera and run.fov then run.camera.FieldOfView=run.fov*(1-W.closer*s.closer)end
+	-- Code review: only while the camera is still the player's own (Custom) and still at the field of view this set;
+	-- the petting zoom or any other owner taking it ends the wipe's hold, and nothing is restored over theirs.
+	if run.camera and run.fov then
+		local camera=run.camera
+		if GiftArt.ownsFov(camera.CameraType==Enum.CameraType.Custom and(self.d.camera==nil or self.d.camera()==camera),camera.FieldOfView,run.fovSet)then
+			run.fovSet=run.fov*(1-W.closer*s.closer)
+			camera.FieldOfView=run.fovSet
+		else
+			run.camera,run.fov,run.fovSet=nil,nil,nil
+		end
+	end
 	local top,centre,radius=run.top or ground+1.5,run.centre or Vector3.new(0,ground+.8,0),run.radius or .7
 	-- the pot and its pour
 	if run.potBody then
@@ -256,7 +266,14 @@ function Wipe:stop()
 	self.run=nil
 	if not run then return end
 	if run.visual and run.visual.giftPose then run.visual.giftPose=nil;run.visual.poseDirty=true end
-	if run.camera and run.fov then pcall(function()run.camera.FieldOfView=run.fov end)end
+	-- Code review: the sweep's colour leaves the paint path, and PetMaterials writes the real colour again.
+	for entry in pairs(run.from)do entry.wipeColor=nil;entry.materialPartColor=nil;entry.materialTint=nil end
+	if run.camera and run.fov then
+		local camera=run.camera
+		pcall(function()
+			if GiftArt.ownsFov(camera.CameraType==Enum.CameraType.Custom,camera.FieldOfView,run.fovSet)then camera.FieldOfView=run.fov end
+		end)
+	end
 	if run.folder then run.folder:Destroy()end
 end
 return Wipe

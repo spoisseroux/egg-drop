@@ -161,6 +161,15 @@ function Art.ribbon(t,untie,reduced)
 	end
 	return s
 end
+-- Pure (code review): what of the ribbon needs writing this frame, from the last frame written (`last`, nil: none)
+-- and this one's sample and opacity. -> body (the sash, loops and knot: they moved, opened or faded), sizes (the bow
+-- opened further: the loops and knot resize), tails (they swayed, or the body moved under them). Out of range: none.
+function Art.ribbonWrites(last,s,alpha,far)
+	if far then return false,false,false end
+	if not last then return true,true,true end
+	local body=last.fall~=s.fall or last.open~=s.open or last.alpha~=alpha
+	return body,last.open~=s.open,body or last.sway~=s.sway
+end
 -- The untie's sound and buzz (on the first crank tick).
 Art.RibbonCue=table.freeze({sound="blanket_rustle",speed=1.3,volume=.35,buzz="machine_light"})
 
@@ -329,6 +338,15 @@ function Art.wipe(t,duplicate,reduced)
 	end
 	s.done=u>=W.seconds-1e-9
 	return s
+end
+-- Pure (code review): does the wipe still own the camera's field of view? Only while the camera is the player's own
+-- (Custom) and still at the value the wipe last set (nil: nothing set yet, the value it read a moment ago). Anyone
+-- else's zoom (the petting camera, a greeting shot) wins, and the wipe never restores over it.
+Art.FovSlack=.05
+function Art.ownsFov(custom,fov,lastSet)
+	if custom~=true or type(fov)~="number"then return false end
+	if lastSet==nil then return true end
+	return math.abs(fov-lastSet)<=Art.FovSlack
 end
 -- Pure: which colour a body piece shows mid-sweep. top and bottom are the piece's height as shares of the pet (0 the
 -- crown, 1 the feet), sweep 0..1. The leading edge is a band (Wipe.sweep.band of the pet's height) of the pot's colour
