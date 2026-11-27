@@ -27,7 +27,7 @@ return function(client)
 		local r={state=with(FRESH,over.state or {}),owned=1,mask=over.mask or 0,marked={},trails={},acts={},chirps=0,reacts={},trailUp=false,
 			gate={on=true,mode="Room",canRoam=true,idleFor=5,awayFor=0,roomFor=5,windowActive=true,railEmpty=true,parkPending=0,action="idle"},
 			root=v(0,0),petAt=v(2,0),model={},nestAt=v(0,60),sent={},events={},toasts={},celebrations=0,beckons=0,hops=0,shows={},leads={},
-			server={seq=0,actor=nil},returning=over.returning==true,leadOn=over.leadOn~=false,allSet2=over.allSet2~=false}
+			server={seq=0,actor=nil},holds={},returning=over.returning==true,leadOn=over.leadOn~=false,allSet2=over.allSet2~=false}
 		r.bubble={sets={},hops=0}
 		function r.bubble:set(icon,visible,words,sub)
 			table.insert(self.sets,{icon=icon,visible=visible,words=words,sub=sub})
@@ -41,7 +41,8 @@ return function(client)
 		function trail:lead(model,target)table.insert(r.leads,target);r.trailUp=true;return true end
 		function trail:show(target)table.insert(r.shows,target);r.trailUp=true;return true end
 		function trail:active()return r.trailUp end
-		function trail:stop()r.trailUp=false end
+		function trail:stop()r.trailUp=false;r.trailStops=(r.trailStops or 0)+1 end
+		function trail:hold(on)table.insert(r.holds,on)end
 		local leadDeps={
 			send=function(kind,body)
 				table.insert(r.sent,kind)
@@ -132,6 +133,25 @@ return function(client)
 		r.state.nest={n=0,at=1,tucked=true};r.run(.5)
 		assert(has(r.sent,"cheer")and r.celebrations==1 and r.toasts[1]==Lead.ToastCopy,"the jump-spin, the hearts and buzz, the toast")
 		r.run(10);assert(r.celebrations==1 and count(r.sent,"cheer")==1,"once")
+	end)
+	test("a nudge holds the pet's prints (leadHold) through the server's run back, or Restart.wait if it never came; reaching the nest ends the trail",function()
+		local r=rig()
+		r.toNest()
+		r.phase("wait","leadWait")
+		r.run(Lead.Still+.25)
+		assert(count(r.sent,"back")==1 and r.holds[1]==true and #r.holds==1,"held at the nudge")
+		r.phase("back","leadBack");r.run(3)
+		assert(#r.holds==1,"held while it runs back")
+		r.phase("wait","leadWait");r.run(.25)
+		assert(r.holds[2]==false,"let go once back is over")
+		r.run(Lead.Still+.25)
+		assert(count(r.sent,"back")==2 and r.holds[3]==true)
+		r.run(Lead.Restart.wait+.25)
+		assert(r.holds[4]==false,"never went back: let go after Restart.wait")
+		local stops=r.trailStops or 0
+		r.root=r.nestAt+Vector3.new(0,0,-Lead.Reach+1);r.run(.25)
+		assert(has(r.events,"NestReached")and(r.trailStops or 0)==stops+1 and not r.trailUp,"arrived: the trail (and the pet's prints) end")
+		r.run(5);assert(not r.trailUp,"not laid again")
 	end)
 	test("nudges: still 8 s, the pet comes back with This way! for 2 s; three ignored, the fourth parks it: the chip, the next prompt, the trail lit",function()
 		local r=rig()
@@ -249,21 +269,48 @@ return function(client)
 	end)
 
 	-- NestLead alone: the trail adapter, a refused start's backoff, the finish without a tuck.
-	test("the trail adapter: a trail with a lead mode leads by the pet; otherwise today's trail to the target",function()
+	test("the trail adapter: the trail starts as a guide, then leadBy the pet (trail2); refused (off): today's trail; hold; stop ends the lead",function()
 		local calls={}
-		local things={start=function(self,target)table.insert(calls,"start");self.on=true;return true end,active=function(self)return self.on==true end,
-			stop=function(self)table.insert(calls,"stop");self.on=false end}
-		local pet={leadBy=function(self,model,target)table.insert(calls,"leadBy");self.on=true;return true end,leading=function(self)return self.on==true end,
-			stopLead=function(self)table.insert(calls,"stopLead");self.on=false end}
-		local a=LeadTrail.new({things=things,leaders=function()return{pet}end})
-		assert(a:lead({},{position=v(0,0)})and calls[1]=="leadBy"and a:active(),"leadBy first")
-		a:stop();assert(calls[2]=="stopLead"and not a:active())
-		local b=LeadTrail.new({things=things,leaders=function()return{nil}end})
-		assert(b:lead({},{position=v(0,0)})and calls[3]=="start"and b:active(),"no lead mode yet: today's trail")
-		b:stop();assert(calls[4]=="stop")
-		assert(LeadTrail.leader({{},{leadBy=1},pet})==pet,"only a method counts")
-		local c=LeadTrail.new({things=things,leaders=function()return{pet}end})
-		assert(c:show({position=v(0,0)})and calls[5]=="start","show is always today's trail from the player")
+		local function fake(glow)
+			local t={}
+			function t:start(target)table.insert(calls,"start");self.target=target;return true end
+			function t:active()return self.target~=nil end
+			function t:stop()table.insert(calls,"stop");self.target=nil;self.leader=nil end
+			function t:leadBy(model)
+				table.insert(calls,"leadBy:"..(if model==nil then "nil"else "pet"))
+				if not glow or not self.target then return false end
+				self.leader=model;return true
+			end
+			function t:leadHold(on)table.insert(calls,"hold:"..tostring(on))end
+			return t
+		end
+		-- trail2 on
+		local on=fake(true)
+		local a=LeadTrail.new({things=on})
+		local target={position=v(0,0),name="Nest"}
+		assert(a:lead({},target)and a.mode=="lead"and a:active())
+		assert(table.find(calls,"start")<table.find(calls,"leadBy:pet"),"started before leadBy")
+		assert(on.target.guide==true and on.target.position==target.position and target.guide==nil,"a guide trail; the caller's target untouched")
+		a:hold(true);a:hold(false)
+		assert(table.find(calls,"hold:true")and table.find(calls,"hold:false"))
+		table.clear(calls);a:stop()
+		assert(calls[1]=="leadBy:nil"and calls[2]=="stop"and not a:active(),"leadBy(nil), then stop")
+		-- trail2 off: leadBy refuses, the started trail is today's; hold does nothing
+		table.clear(calls)
+		local off=fake(false)
+		local b=LeadTrail.new({things=off})
+		assert(b:lead({},target)and b.mode=="show"and b:active())
+		b:hold(true);assert(not table.find(calls,"hold:true"),"no hold off")
+		table.clear(calls);b:stop();assert(calls[1]=="stop"and #calls==1)
+		-- no pet: today's trail from the player; another caller's trail is never stopped
+		local c=LeadTrail.new({things=on})
+		table.clear(calls)
+		assert(c:show(target)and calls[#calls]=="start"and on.target==target)
+		on:start({position=v(9,9)})
+		assert(not c:active(),"Show me elsewhere took it over");table.clear(calls);c:stop();assert(#calls==0)
+		on:stop()
+		assert(LeadTrail.leader({{},{leadBy=1},on})==on,"only a method counts")
+		assert(LeadTrail.new({things=on}):lead(nil,target)and on.target==target,"no model: today's")
 	end)
 	test("the all-set card's clock: the pop, three stamps one by one, the punched title, the sub-line and button, 5 s; closes after 0.4 s",function()
 		assert(Card.cardScale(.1)==nil and near(Card.cardScale(Card.T.card),.85)and Card.cardScale(1)==1)

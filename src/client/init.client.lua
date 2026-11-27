@@ -3522,7 +3522,7 @@ do
   local Onboard=require(ReplicatedStorage.Shared.Onboard)
   local trail=Trail.new({gui=overlayGui,ringColor=Kit.Tint.companions,chipColor=Kit.Tint.companions,
    glow=function()return Onboard.on("trail2")end,play=function(name,speed,gain)return audio:play(name,speed,gain)end})
-  -- The v3 brief's lead (LeadTrail) asks this trail for its lead mode (leadBy) once it has one (switch trail2).
+  -- (The v3 lead does not use this trail: the Things trail has the lead mode, ThingsTrail:leadBy.)
   clientUI.petTrail=trail
   local state={pet=nil}
   local function face(visual)
@@ -5894,7 +5894,8 @@ do
     lead=function()return Onboard.leadOn()end,allSet2=function()return Onboard.on("allset2")end,nestOn=function()return Onboard.on("nest")end,
     copy=function(key)return Copy.get(key,{pet=petName()})end,
     leadDeps=(function()
-     local leadTrail=require(script.LeadTrail).new({things=trail,leaders=function()return{clientUI.petTrail}end})
+     -- the Things trail leads (trail2: start as a guide trail, then leadBy the pet); off, it is today's trail
+     local leadTrail=require(script.LeadTrail).new({things=trail})
      local function reducedNow()return reduceEffects()==true or GuiService.ReducedMotionEnabled end
      local toaster
      return{
