@@ -4,7 +4,7 @@
 --   1. the kind's record already saved: Saved AlreadyGranted with that record at once (a replay, a rejoin, another
 --      server granted it; an unseen reveal still shows), before the switch
 --   2. the switch (Onboard "gifts", beta and Studio only): NotReady
---   3. one loop per board (a second ask while one runs is dropped: the first answers)
+--   3. one loop per board (a second ask while one runs is answered Busy at once: the first loop answers the first)
 --   4. up to GiftEggs.Tries attempts, GiftEggs.Gap s apart, while the board is free: grant() gives it or refuses.
 --      RevealPending, Busy, Pending, Retrying and RevisionChanged wait for the next try; any other refusal (NotDue,
 --      AllOwned, NotOwed, ...) answers at once. The last reason answers once the tries run out.
@@ -17,7 +17,9 @@ function Host.request(d)
 	local saved=d.saved()
 	if saved then d.reply("Saved","AlreadyGranted",saved);return "AlreadyGranted"end
 	if not d.on()then d.reply("Rejected","NotReady");return "NotReady"end
-	if d.running()then return "Running"end
+	-- Code review: a second ask while one runs is answered Busy (its own op id), so the client asks again soon instead of
+	-- waiting out its timeout; the first ask's loop still answers the first.
+	if d.running()then d.reply("Rejected","Busy");return "Running"end
 	d.setRunning(true)
 	local reason="Busy"
 	for try=1,Gifts.Tries do

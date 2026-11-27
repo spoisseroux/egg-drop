@@ -140,5 +140,32 @@ return function(client)
 		r.run(1);assert(r.fetches==1);r.run(5);assert(r.fetches==1)
 	end)
 
+	test("code review: a tapped gift's lead never holds the Bear's prompts for long (no step closer, walking away, idle at the machine)",function()
+		local function leading()
+			local r=rig(snapshot({gifts={owed=true,granted={},ready="paint"}}))
+			r.dist=80
+			r.chain.d.distance=function()return r.dist end
+			r.run(3);r.chain:tap();assert(r.chain:holds()and r.chain.active.phase=="leading")
+			return r
+		end
+		local r=leading()
+		r.run(Chain.LeadPark-1);assert(r.chain:holds())
+		r.run(1.5);assert(not r.chain:holds()and r.chip and r.row=="paint","no step closer for LeadPark s: parked, the guide resumes")
+		local w=leading()
+		for _=1,30 do w.dist-=1;w.run(1)end
+		assert(w.chain:holds(),"heading there: still leading after 30 s")
+		w.dist+=Chain.Away+1;w.run(.25);assert(not w.chain:holds()and w.chip,"walking away: parked")
+		local m=leading()
+		m.near=true;m.run(.25);assert(m.shown and m.head=="onbGift.turn")
+		m.run(Chain.NudgeAfter+Chain.ParkAfter+.5);assert(not m.chain:holds()and not m.shown and m.chip,"idle at the machine: parked")
+	end)
+
+	test("code review: the client asks again on a busy save; giftSeen also on Pending and RevealPending, a few times",function()
+		assert(Chain.retryAsk("Rejected","Busy",0)and Chain.retryAsk("Rejected","Throttled",0)and Chain.retryAsk("Retrying",nil,0))
+		assert(not Chain.retryAsk("Rejected","NotDue",0)and not Chain.retryAsk("Saved",nil,0)and not Chain.retryAsk("Rejected","Busy",Chain.AskTries))
+		for _,why in ipairs({"Busy","Throttled","Pending","RevealPending","Retrying"})do assert(Chain.retrySeen("Rejected",why,0),why)end
+		assert(not Chain.retrySeen("Rejected","NoGift",0)and not Chain.retrySeen("Saved","Saved",0)and not Chain.retrySeen("Rejected","Pending",Chain.SeenTries))
+	end)
+
 	return {passed=#cases,cases=cases}
 end

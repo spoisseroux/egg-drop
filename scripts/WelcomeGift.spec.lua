@@ -175,6 +175,42 @@ return function(server)
 		local okVet,whyVet=H.welcomeGift(vet,{nest=true});assert(not okVet and whyVet=="Veteran"and vet.state.welcomeGift==0)
 	end)
 
+	test("code review: never under an open reveal (RevealPending, waited on, nothing written, seq still); paid once it closes",function()
+		local Toys=require(Shared.ToyCatalog)
+		assert(Gift.Wait.RevealPending and Gift.Wait.InvalidData and Gift.Wait.NotDone,"an owed save's waits are never final")
+		local h,db,c=fresh(true)
+		h=done(h,db,c)
+		h=rejoin(h,db,c,{nectar=100})
+		h.restricted=false
+		local rev=h.state.revision
+		assert(H.toyCommand(h,"toyBuy",{id=rev..":toy-wg",catalogVersion=Toys.CatalogVersion,poolVersion=Toys.PoolVersion,eligible=Toys.remaining(h.state.toyUnlocks)},rev))
+		local pending=h.state.pendingToyResult;assert(pending,"the toy's reveal is open")
+		local seq,wallet,writes=h.state.operationSeq,h.state.nectar,c.writes
+		local ok,why=H.welcomeGift(h,{nest=true})
+		assert(not ok and why=="RevealPending"and h.state.operationSeq==seq and h.state.nectar==wallet and c.writes==writes,tostring(why))
+		assert(db.player_1.hatching.welcomeGift==0,"still owed")
+		assert(H.toyCommand(h,"toyAck",{id=h.state.revision..":toy-wgack",catalogVersion=Toys.CatalogVersion,resultId=pending.id},h.state.revision))
+		local ok2,why2=H.welcomeGift(h,{nest=true});assert(ok2 and why2=="Saved"and h.state.welcomeGift==5,tostring(why2))
+	end)
+
+	test("code review: the client asks again from the snapshot while owed and done (after the card's own ask), never once paid",function()
+		local function snap(over)
+			local s={welcomeGift=0,totalWins=0,coachMask=Coach.with(0,"needHi"),nest={tucked=true,n=0},stats={rounds=2}}
+			for k,v in pairs(over or {})do s[k]=v end
+			return s
+		end
+		local clock={}
+		assert(not Gift.shouldAsk(snap(),true,nil,clock,100),"the card's own ask first")
+		assert(not Gift.shouldAsk(snap(),true,nil,clock,100+Gift.AskAfter-1))
+		assert(Gift.shouldAsk(snap(),true,nil,clock,100+Gift.AskAfter),"still owed: ask")
+		clock.lastAsk=100+Gift.AskAfter
+		assert(not Gift.shouldAsk(snap(),true,nil,clock,100+Gift.AskAfter+Gift.AskEvery-1))
+		assert(Gift.shouldAsk(snap(),true,nil,clock,100+Gift.AskAfter+Gift.AskEvery),"and again")
+		assert(not Gift.shouldAsk(snap({welcomeGift=5}),true,nil,clock,1e6)and clock.doneSince==nil,"paid: never")
+		assert(not Gift.shouldAsk(snap({stats={rounds=1}}),true,nil,{},1e6),"not done: never")
+		assert(not Gift.shouldAsk(snap({welcomeGift=false}),true,nil,{},1e6),"not owed: never")
+	end)
+
 	-- The request order (WelcomeGiftHost).
 	local function deps(over)
 		local d={log={},grants=0,waits=0,running_=false,replies={}}

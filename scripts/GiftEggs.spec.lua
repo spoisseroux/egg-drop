@@ -375,7 +375,10 @@ return function(server)
 		assert(Host.request(d)=="AlreadyGranted"and d.grants==0 and d.replies[1].status=="Saved"and d.replies[1].record.item=="tide")
 		d=deps({on=false});assert(Host.request(d)=="NotReady"and d.grants==0 and d.replies[1].status=="Rejected")
 		d=deps({});assert(Host.request(d)=="Saved"and d.grants==1 and d.replies[1].record.item=="rose"and d.log[1]=="publish"and not d.running_)
-		d=deps({});d.running_=true;assert(Host.request(d)=="Running"and d.grants==0 and #d.replies==0)
+		d=deps({});d.running_=true
+		assert(Host.request(d)=="Running"and d.grants==0 and #d.replies==1 and d.replies[1].status=="Rejected"and d.replies[1].reason=="Busy",
+			"code review: a second ask while one runs is answered Busy, so the client asks again")
+		assert(d.running_==true,"the first loop still runs")
 		d=deps({answers={{false,"RevealPending"},{false,"Busy"},{true,"Saved",{kind="toy",item="ball"}}}})
 		assert(Host.request(d)=="Saved"and d.grants==3 and d.waits==2 and d.replies[1].record.item=="ball")
 		d=deps({answers={}})

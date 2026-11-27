@@ -28,7 +28,23 @@ Chain.Gap=180        -- s clear of the last reveal before the next invite (after
 Chain.PerSession=2   -- invites a session after step 1
 Chain.Near=12        -- studs from the machine: the bubble says "Turn it!"
 Chain.Free=1         -- s free of every other prompt before a bubble shows
-Chain.Stuck=table.freeze({cranking=45,reveal=180,leading=240}) -- s: a phase that never ended lets the garden go
+Chain.Stuck=table.freeze({cranking=45,reveal=180}) -- s: a phase that never ended lets the garden go
+Chain.LeadPark=20    -- s of a gift's lead with no step closer to the machine: parked (code review: the guide resumes)
+Chain.Progress=2     -- studs closer that count as heading there
+Chain.Away=15        -- studs further than the closest point so far: walking away, parked
+-- Pure (code review): ask again after this reply? A giftEgg ask: a busy save, a throttle or a second ask while one
+-- runs, a few times. A giftSeen: also Pending and RevealPending (another write or reveal first), so the card never
+-- replays on the next join for want of a retry.
+Chain.AskTries=4
+Chain.SeenTries=6
+function Chain.retryAsk(status,reason,tries)
+	if status=="Saved"or(tries or 0)>=Chain.AskTries then return false end
+	return status=="Retrying"or reason=="Busy"or reason=="Throttled"
+end
+function Chain.retrySeen(status,reason,tries)
+	if status=="Saved"or(tries or 0)>=Chain.SeenTries then return false end
+	return status=="Retrying"or reason=="Busy"or reason=="Throttled"or reason=="Pending"or reason=="RevealPending"or reason=="Retrying"
+end
 Chain.Gifts=table.freeze({paint=true,toy=true,snack=true})
 Chain.Steps=table.freeze({
 	paint=table.freeze({head="onbGift.paint",sub="onbGift.paintSub",target="Eggs",gift="paint"}),
@@ -238,8 +254,23 @@ function Chain:step(now)
 		if a.phase=="invited"and now-a.at>=Chain.NudgeAfter then a.phase="nudged";a.at=now;self.d.bubble.hop()
 		elseif a.phase=="nudged"and now-a.at>=Chain.ParkAfter then self:park("ignored");a=nil end
 	elseif a and a.phase=="leading"and a.gift then
-		-- at the machine: the bubble says Turn it! (a tap cranks)
-		if self.d.near()and self.d.gate()==nil then self.d.bubble.set(true,"onbGift.turn","onbGift.turnSub")else self.d.bubble.set(false)end
+		-- at the machine: the bubble says Turn it! (a tap cranks). Code review: a lead never holds the Bear's prompts for
+		-- long. Standing at the machine untapped parks like an ignored bubble; away from it, LeadPark s with no step
+		-- closer (Progress studs), or walking Away studs off from the closest point, parks it (the guide resumes).
+		if self.d.near()then
+			a.nearAt=a.nearAt or now
+			if self.d.gate()==nil then self.d.bubble.set(true,"onbGift.turn","onbGift.turnSub")else self.d.bubble.set(false)end
+			if now-a.nearAt>=Chain.NudgeAfter+Chain.ParkAfter then self:park("ignored");a=nil end
+		else
+			a.nearAt=nil
+			self.d.bubble.set(false)
+			local distance=self.d.distance and self.d.distance()or nil
+			if type(distance)=="number"then
+				if a.best==nil or distance<=a.best-Chain.Progress then a.best,a.bestAt=distance,now end
+				if distance>=a.best+Chain.Away then self:park("away");a=nil end
+			end
+			if a and now-(a.bestAt or a.at)>=Chain.LeadPark then self:park("away");a=nil end
+		end
 	end
 	-- The park's one tip there.
 	if f.on and not f.fetched and self.d.inPark and self.d.inPark()and not self.throwShown and self.session.parkLed then

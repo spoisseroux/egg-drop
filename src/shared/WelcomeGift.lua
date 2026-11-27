@@ -78,7 +78,20 @@ function Gift.apply(state)
 	state.nectar+=Gift.Bonus
 	return Gift.Bonus
 end
--- Reasons the request loop waits on (the facts or the save may still be on their way); any other refusal is final.
-Gift.Wait=table.freeze({NotDone=true,Busy=true,Pending=true,Retrying=true,RevisionChanged=true})
+-- Reasons the request loop waits on (the facts or the save may still be on their way, another reveal or reservation is
+-- open: RevealPending; a write that would not validate yet: InvalidData); any other refusal is final for that ask.
+Gift.Wait=table.freeze({NotDone=true,Busy=true,Pending=true,Retrying=true,RevisionChanged=true,RevealPending=true,InvalidData=true})
+-- The client asks again from the snapshot (code review 2026-11-27: an owed save must never stay owed for good): while the
+-- save is owed and the three facts are done, the card's own ask gets AskAfter s, then one ask every AskEvery s.
+Gift.AskAfter=30
+Gift.AskEvery=20
+-- Pure: should the client ask now? `clock` = {doneSince, lastAsk} (kept by the caller; this updates doneSince).
+-- `state` is the owner snapshot (welcomeGift, coachMask, nest, stats, totalWins, lastPetAward).
+function Gift.shouldAsk(state,nestRequired,mask,clock,now)
+	if not Gift.due(state,nestRequired,mask)then clock.doneSince=nil;return false end
+	clock.doneSince=clock.doneSince or now
+	if now-clock.doneSince<Gift.AskAfter then return false end
+	return clock.lastAsk==nil or now-clock.lastAsk>=Gift.AskEvery
+end
 
 return table.freeze(Gift)

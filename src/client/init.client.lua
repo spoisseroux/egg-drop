@@ -6177,10 +6177,10 @@ do
     local result=remotes:WaitForChild("GiftResult")
     result.OnClientEvent:Connect(function(packet)
      if type(packet)=="table"and packet.action=="giftSeen"and type(packet.id)=="string"then
-      -- seen is told until the server has it (a busy save or a throttle asks again, a few times)
+      -- seen is told until the server has it (a busy save, a throttle, another write or reveal first: asked again)
       local s=seenWaiting[packet.id]
       if not s then return end
-      if packet.status~="Saved"and(packet.reason=="Busy"or packet.reason=="Throttled"or packet.status=="Retrying")and s.tries<5 then
+      if Chain.retrySeen(packet.status,packet.reason,s.tries)then
        s.tries+=1
        task.delay(1.5,function()if seenWaiting[packet.id]==s then nurseryRequest:FireServer("giftSeen",{kind=s.kind,id=packet.id})end end)
       else seenWaiting[packet.id]=nil end
@@ -6189,8 +6189,8 @@ do
      if type(packet)~="table"or packet.action~="giftEgg"or type(packet.id)~="string"then return end
      local w=waiting[packet.id]
      if not w then return end
-     if packet.status~="Saved"and(packet.reason=="Throttled"or packet.reason=="Busy")and not w.again then
-      w.again=true
+     if Chain.retryAsk(packet.status,packet.reason,w.tries)then
+      w.tries=(w.tries or 0)+1
       task.delay(.8,function()if waiting[packet.id]==w then nurseryRequest:FireServer("giftEgg",{kind=w.kind,id=packet.id})end end)
       return
      end
@@ -6219,6 +6219,11 @@ do
       local at=clientUI.eggCornerPlace and clientUI.eggCornerPlace()
       local from=rootPosition()
       return typeof(at)=="Vector3"and from~=nil and(at-from).Magnitude<=Chain.Near
+     end,
+     distance=function()
+      local at=clientUI.eggCornerPlace and clientUI.eggCornerPlace()
+      local from=rootPosition()
+      return if typeof(at)=="Vector3"and from~=nil then(at-from).Magnitude else nil
      end,
      lead=function(target)
       if target=="Eggs"then
@@ -6269,6 +6274,39 @@ do
     gui.Destroying:Connect(function()beatGifts:Disconnect();giftBubble:destroy()end)
    end)
    if not okGifts then warn("[Gift] not mounted: "..tostring(giftsProblem))end
+   -- Code review: the welcome gift never stays owed for good. While the snapshot says owed (welcomeGift = 0) and the
+   -- three facts are done, the card's own ask gets WelcomeGift.AskAfter s, then the client asks again every AskEvery s
+   -- (the server's loop re-checks everything); a gift this paid shows as a toast once the card is gone.
+   local okWelcome,welcomeProblem=pcall(function()
+    local Welcome=require(ReplicatedStorage.Shared.WelcomeGift)
+    local remote=remotes:WaitForChild("WelcomeGiftResult")
+    local clock,asking,toaster={},false,nil
+    remote.OnClientEvent:Connect(function(packet)
+     if not asking then return end
+     asking=false
+     if type(packet)=="table"and packet.status=="Saved"and packet.reason~="AlreadyGranted"and type(packet.stars)=="number"then
+      toaster=toaster or require(script.DeckKit).toaster(overlayGui)
+      toaster.show(Copy.get("onbAllSet.gift",{count=packet.stars}))
+     end
+    end)
+    local nextLook=0
+    local beat=RunService.Heartbeat:Connect(function()
+     if os.clock()<nextLook then return end
+     nextLook=os.clock()+1
+     if asking or not Onboard.on("allset2")then return end
+     local state=nurseryState
+     if type(state)~="table"or state.welcomeGift~=0 then clock.doneSince=nil;return end
+     local playerGui=player:FindFirstChild("PlayerGui")
+     if playerGui and playerGui:FindFirstChild("EggDropAllSet2")then return end -- the card asks itself
+     if Welcome.shouldAsk(state,Onboard.on("nest"),clientUI.coach.mask,clock,os.clock())then
+      clock.lastAsk=os.clock();asking=true
+      nurseryRequest:FireServer("welcomeGift")
+      task.delay(40,function()asking=false end)
+     end
+    end)
+    gui.Destroying:Connect(function()beat:Disconnect()end)
+   end)
+   if not okWelcome then warn("[WelcomeGift] retry not mounted: "..tostring(welcomeProblem))end
    clientUI.coach.options.follow=function()return Onboard.sessionFollow()end
    -- Live growth cuts on the beta: with the need bubbles on, the needHi bubble is the one hello prompt (no say-hi line)
    -- and the paw prints lead to the pet while it asks (the Bear's own prints to the machine start after it).

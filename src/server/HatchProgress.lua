@@ -575,6 +575,8 @@ function Hatching.public(handle)
 	for key,value in pairs(PaintPots.public(state))do public[key]=value end
 	-- The gift chain (Onboard "gifts"): only while the switch is on (off: no key, the snapshot as before).
 	if Onboard.on("gifts") then public.gifts = Hatching.giftsPublic(handle, { nest = Onboard.on("nest") }) end
+	-- The welcome gift's state (Onboard "allset2"), so the client can ask again while the save is still owed.
+	if Onboard.on("allset2") then public.welcomeGift = WelcomeGift.sanitize(state.welcomeGift) end
 	return public
 end
 
@@ -1126,6 +1128,9 @@ function Hatching.welcomeGift(handle, ctx)
 	local candidate = if resuming then handle.pending.candidate
 		else table.freeze({ nest = ctx.nest ~= false, mask = Coach.mask(ctx.mask) })
 	local ok, reason = transact(handle, signature, handle.state.revision, function(state, captured)
+		-- Code review: never under another open reservation or reveal (the write would not validate, InvalidData, and
+		-- operationSeq must not move under a saved toy or look reservation): RevealPending, which the host waits on.
+		if Guard.other(state, nil) then return false, "RevealPending" end
 		local due, why = WelcomeGift.due(state, captured.nest, captured.mask)
 		if not due then return false, why end
 		if state.nectar + WelcomeGift.Bonus > 1000000000 then return false, "BalanceLimit" end
