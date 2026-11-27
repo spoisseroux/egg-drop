@@ -29,6 +29,7 @@ local Draw=require(script.Parent:WaitForChild("GiftEggArt"))
 local Reveal={}
 Reveal.Ink=GiftArt.color("ink")
 local open=nil
+local openClose=nil -- the open card's own close (code review: a replaced card's Heartbeat never outlives it)
 local node=Draw.node
 local function on(signal,fn)if typeof(signal)=="RBXScriptSignal"then return signal:Connect(fn)end;return nil end
 local function round(parent,r)return node("UICorner",parent,{CornerRadius=r or UDim.new(.5,0)})end
@@ -61,6 +62,8 @@ local function itemArt(holder,record)
 end
 
 function Reveal.show(parent,record,options)
+	-- a card still open: closed through its own close (its Heartbeat goes with it), never just destroyed
+	if openClose then openClose()end
 	if open then open:Destroy();open=nil end
 	local C=GiftArt.Card
 	local words=Reveal.words(record,options)
@@ -180,13 +183,15 @@ function Reveal.show(parent,record,options)
 	local exit=nil -- {kind = "fold" | "later", at, from, to}
 	local done=false
 	local link
-	local function close(acted)
+	-- `silent`: replaced by a newer card or destroyed from outside (no callbacks, as before); either way its clock stops.
+	local function close(acted,silent)
 		if done then return end
 		done=true
-		if link then link:Disconnect()end
+		if link then link:Disconnect();link=nil end
 		if shots then pcall(function()shots:clear()end)end
-		if open==gui then open=nil end
+		if open==gui then open,openClose=nil,nil end
 		gui:Destroy()
+		if silent then return end
 		if acted and options.landed then pcall(options.landed,record)end
 		if options.seen then pcall(options.seen,record)end
 		if options.closed then pcall(options.closed)end
@@ -207,8 +212,10 @@ function Reveal.show(parent,record,options)
 	end
 	on(primary.Activated,function()leave(true)end)
 	on(later.Activated,function()leave(false)end)
+	openClose=function()close(false,true)end
 	link=RunService.Heartbeat:Connect(function(dt)
 		if done then return end
+		if gui.Parent==nil then close(false,true);return end
 		local ok,problem=pcall(function()
 			t+=dt
 			if shots and shotCard then shots:pump({shotCard()},function()end)end

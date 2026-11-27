@@ -26,6 +26,8 @@ local C=require(Shared.PetCuddle)
 local UICopy=require(Shared.UICopy)
 
 local Cuddle={};Cuddle.__index=Cuddle
+Cuddle.CloseRetry=.25 -- s between tries of a refused first-visit close
+Cuddle.CloseGiveUp=3   -- s of refusals before it leaves the screen open
 -- STAND-INS (marked): the brief's new `fur_brush` loop and the belly squeak are not made yet. EMPTY SLOT: BrushId = 0
 -- plays the stand-in below, an existing placeholder loop (shimmer_loop, assets/audio/placeholder) slowed right down.
 Cuddle.BrushId=0
@@ -206,6 +208,7 @@ function Cuddle:begin()
  local okFirst,first=pcall(function()return self.deps.first and self.deps.first()end)
  self.active=true;self.state=C.new(okFirst and first==true)
  self.firstBurstAt,self.closing=nil,false
+ self.closeRetryAt,self.closeFirstTry,self.closeGaveUp=nil,nil,nil
  self.hinted=false;self.hintUntil=nil;self.lovedUntil=nil;self.spot=nil;self.spotAge=0;self.burstAge=nil;self.heartClock=0
  self.leanW,self.lookW,self.spotW,self.blush,self.shownFill=0,0,0,0,0
  self.padAt=nil;self.stickAt=Vector2.zero;self.lastHand=nil;self.velocity=Vector2.zero
@@ -525,14 +528,21 @@ function Cuddle:step(dt,camera,pet,boxAt,boxSize)
   self.firstBurstAt=self.firstBurstAt or os.clock()
  end
  -- the first visit: C.First.close s after the burst the screen closes by itself (as Back: the wave, the ease out). A
- -- refused close (back() false: the camera mid-transition) tries again next frame while the screen is up.
- if not self.closing and C.closeDue(s,self.firstBurstAt,os.clock())then
+ -- refused close (back() false: the camera mid-transition, a respawn) tries again every CloseRetry s, and after
+ -- CloseGiveUp s of refusals it stops and leaves the screen open (code review: never a restore every frame).
+ local now=os.clock()
+ if not self.closing and not self.closeGaveUp and now>=(self.closeRetryAt or 0)and C.closeDue(s,self.firstBurstAt,now)then
   self.closing=true
+  self.closeFirstTry=self.closeFirstTry or now
   local back=focus.callbacks and focus.callbacks.back
   if back then task.defer(function()
    if not self.active then return end
    local ok,went=pcall(back)
-   if not ok or went==false then self.closing=false end
+   if not ok or went==false then
+    self.closing=false
+    self.closeRetryAt=os.clock()+Cuddle.CloseRetry
+    if os.clock()-self.closeFirstTry>=Cuddle.CloseGiveUp then self.closeGaveUp=true end
+   end
   end)end
  end
  if onFavourite and not s.lovedShown then

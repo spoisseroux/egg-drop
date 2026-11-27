@@ -5234,7 +5234,7 @@ do
     local nest=clientUI.nest
     local at=nest and nest.root
     if typeof(at)~="CFrame"or typeof(pet.origin)~="Vector3"or(pet.origin-at.Position).Magnitude>10 then
-     if current and current.nest then pet.giftPose=nil end
+     if current and current.nest then pet.giftPose=nil;pet.poseDirty=true end
      return
     end
     pose.nest=true

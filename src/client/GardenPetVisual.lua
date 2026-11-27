@@ -468,13 +468,17 @@ function Visual:update(dt)
    local localFrame=root:ToObjectSpace(cf)
    cf=root*CFrame.new(localFrame.Position*factor)*localFrame.Rotation;size*=factor
   end
-  Face.paintSurface(entry,self,daylight)
   -- The paint wipe (GiftPaintWipe): a body piece shows the old colour, the bright edge or the new one as the sweep
-  -- passes it. Face, eyes and the secondary palette never tint.
-  if gift and gift.tint and entry.colorRole=="body"and not isFace and not entry.faceRole then
-   local tinted=gift.tint(entry,cf,size)
-   if tinted and part.Color~=tinted then part.Color=tinted end
+  -- passes it. Face, eyes and the secondary palette never tint. Code review: it goes through the same paint path as
+  -- every colour (entry.wipeColor, read by PetMaterials and PetNightSurfaces), so a SurfaceAppearance finish sweeps
+  -- too and the cached part colour is rewritten when it ends.
+  local wipeColor=nil
+  if gift and gift.tint and entry.colorRole=="body"and not isFace and not entry.faceRole then wipeColor=gift.tint(entry,cf,size)end
+  if entry.wipeColor~=wipeColor then
+   entry.wipeColor=wipeColor
+   entry.materialPartColor,entry.materialTint=nil,nil
   end
+  Face.paintSurface(entry,self,daylight)
   if entry.faceRole then
    local tint=if entry.faceRole=="cheek"then entry.color:Lerp(self.colors.blush,math.clamp(pose.blush+(self.affectionBlush or 0)+(if cuddle then cuddle.blush or 0 else 0),0,1))else nil
    Face.paint(entry,self.worldContext,tint,daylight)

@@ -113,7 +113,8 @@ end
 -- The gift is no longer waiting (and was not untied): it fades and goes.
 function Ribbon:off()if not self.offAt then self.offAt=self.t end end
 function Ribbon:gone()return self.dead==true end
-function Ribbon:step(dt,parts,root)
+-- `far`: the camera is out of the machine's range (EggMachineClient.Range): the clock runs, nothing is written.
+function Ribbon:step(dt,parts,root,far)
 	if self.dead then return end
 	self.t+=dt or 0
 	if parts and(not self.parts or self.parts.model~=parts.model or not self.parts.folder.Parent)then
@@ -131,6 +132,15 @@ function Ribbon:step(dt,parts,root)
 		attracted=true
 		self:play("machine_attract",1,.3)
 	end
+	-- Code review: nothing is written out of the machine's range, and only what changed is written in it.
+	local body,sizes,tails=GiftArt.ribbonWrites(p.last,s,alpha,far==true)
+	if far then
+		if p.glint.Transparency~=1 then p.glint.Transparency=1 end
+		if p.board then p.board.Enabled=false end
+		p.last=nil -- back in range: everything is written once
+		return
+	end
+	p.last={fall=s.fall,open=s.open,alpha=alpha,sway=s.sway}
 	local R,L=GiftArt.Ribbon,p.layout
 	local drop=Vector3.new(0,-s.fall,0)+p.frame:VectorToWorldSpace(Vector3.new(0,0,.35*s.fall/R.untie.fall))
 	local frame=CFrame.new(drop)*p.frame
@@ -140,22 +150,28 @@ function Ribbon:step(dt,parts,root)
 		local want=math.clamp(transparency+(extra or 0),0,1)
 		if part.Transparency~=want then part.Transparency=want end
 	end
-	set(p.sash,frame*CFrame.new(L.sash.at)*CFrame.Angles(0,0,math.rad(L.sash.angle)))
-	-- the bow: open shrinks the loops and swings them out, the knot loosens
 	local open=s.open
-	for i,loop in ipairs(p.loops)do
-		local row=L.loops[i]
-		local sign=if i==1 then -1 else 1
-		local k=1-open
-		loop.Size=Vector3.new(R.bow.loop*math.max(.05,k),R.bow.loopTall*math.max(.05,k),R.bow.loopThick)
-		set(loop,frame*CFrame.new(row.at+Vector3.new(sign*.15*open,-.1*open,0))*CFrame.Angles(0,0,math.rad(row.angle+sign*60*open)))
+	if body then
+		set(p.sash,frame*CFrame.new(L.sash.at)*CFrame.Angles(0,0,math.rad(L.sash.angle)))
+		-- the bow: open shrinks the loops and swings them out, the knot loosens
+		for i,loop in ipairs(p.loops)do
+			local row=L.loops[i]
+			local sign=if i==1 then -1 else 1
+			if sizes then
+				local k=math.max(.05,1-open)
+				loop.Size=Vector3.new(R.bow.loop*k,R.bow.loopTall*k,R.bow.loopThick)
+			end
+			set(loop,frame*CFrame.new(row.at+Vector3.new(sign*.15*open,-.1*open,0))*CFrame.Angles(0,0,math.rad(row.angle+sign*60*open)))
+		end
+		if sizes then p.knot.Size=Vector3.one*R.bow.knot*(1-.4*open)end
+		set(p.knot,frame*CFrame.new(L.bow))
 	end
-	p.knot.Size=Vector3.one*R.bow.knot*(1-.4*open)
-	set(p.knot,frame*CFrame.new(L.bow))
-	for i,tail in ipairs(p.tails)do
-		local row=L.tails[i]
-		local sign=if i==1 then -1 else 1
-		set(tail,frame*CFrame.new(L.bow)*CFrame.Angles(0,0,math.rad(row.angle+s.sway+sign*40*open))*CFrame.new(0,-R.bow.tail/2,-R.bow.loopThick/4))
+	if tails then
+		for i,tail in ipairs(p.tails)do
+			local row=L.tails[i]
+			local sign=if i==1 then -1 else 1
+			set(tail,frame*CFrame.new(L.bow)*CFrame.Angles(0,0,math.rad(row.angle+s.sway+sign*40*open))*CFrame.new(0,-R.bow.tail/2,-R.bow.loopThick/4))
+		end
 	end
 	-- the glint, down the sash from its upper right
 	if s.glint then

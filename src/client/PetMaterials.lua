@@ -193,7 +193,8 @@ function Owner:paint(entry,visual,daylight)
   entry.materialSurface=surface;entry.materialProfile=templateKey
   entry.materialTint=nil;entry.materialStrength=nil;entry.materialPartColor=nil
  end
- local base=entry.color or entry.faceBaseColor or entry.part.Color
+ -- The gift paint wipe's sweep (GardenPetVisual sets entry.wipeColor while it passes; nil the rest of the time).
+ local base=entry.wipeColor or entry.color or entry.faceBaseColor or entry.part.Color
  local values=Config.Profiles[if twoTone then "BodyTwoTone" else key]
  local ramp=if twoTone then Materials.nightGlow(daylight,Materials.hourOn())else Materials.dusk(daylight)
  local strength=values.day+(values.night-values.day)*ramp

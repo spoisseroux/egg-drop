@@ -13,7 +13,7 @@ end
 function Night.paint(entry,visual,daylight)
  if Materials.paint(entry,visual,daylight)then return true end
  if entry.colorRole~="body"and entry.colorRole~="secondary"then return false end
- local base=entry.color or entry.originalColor or entry.part.Color
+ local base=entry.wipeColor or entry.color or entry.originalColor or entry.part.Color -- wipeColor: the gift paint wipe
  local dusk=Materials.dusk(daylight)
  local selected=entry.renderHidden~=true and(entry.role~="charm"or(visual.charmVisible~=false and(entry.charmShape or "dot")==visual.renderCharmShape))
  local neon=visual.worldContext and entry.role=="charm"and selected and dusk>.001
