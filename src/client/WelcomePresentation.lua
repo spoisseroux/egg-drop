@@ -177,7 +177,7 @@ function View:update(snapshot)
 			return require(script.Parent.WelcomeEgg3D).new(self.hosts.meter,self.hosts.skip.Parent,{copy=self.d.copy,play=self.d.play,
 				reduced=function()return self.snapshot~=nil and self.snapshot.reduced==true end,
 				-- onboarding v3 section 5 (Onboard "deck2"): the cuter deck, read once for this round's egg
-				deck2=V2.deck2On(),sparkLayer=self.d.sparkLayer,wellRect=self.d.wellRect,scale=self.d.scale})
+				deck2=V2.deck2On(),sparkLayer=self.d.sparkLayer,wellRect=self.d.wellRect,scale=self.d.scale,tucked=self.d.tucked})
 		end)
 		if ok then self.egg3d=egg else warn("[Onboard] egg3d: "..tostring(egg))end
 	end

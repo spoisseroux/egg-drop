@@ -9,7 +9,8 @@
 --              knocks from inside (WelcomeEgg3D asks knock()); three egg pips, the next one breathing
 --   a combo    the spark arcs from the merge to its pip (0.35 s, 4 beads), the pip pops with a ring, the egg hops
 --              (WelcomeEgg3D), the card's border flashes the merged tier's light, a word punches over the well
---   combo 3    the pips fly into the egg, one light sweep, then the egg's rise (WelcomeEgg3D) and the tuck
+--   combo 3    the pips fly into the egg, one light sweep, then the egg's rise (WelcomeEgg3D) and the tuck; the onboarding
+--              fun pass: until the deck tucks for the stork the egg knocks every 0.4 s and the border pulses gold
 -- Reduced Motion: no loops, arc, knock, pops, flight or sweep; colour, words, sound and buzz stay.
 -- WelcomeEgg3D owns it: Deck2.new(egg) after the egg is built; counted(n, clock) when the server's count reaches n;
 -- step(clock) -> the combos whose pips popped now; paint(clock, combos, drops, line); comboSpark(from, tier).
@@ -324,11 +325,12 @@ function Deck2:step(clock)
 end
 -- The knock (WelcomeEgg3D adds the twitch to the egg's tilt): due every 4, 2.5, then 1.2 s as combos land; a quiet
 -- tap. Returns the twitch (degrees) now.
-function Deck2:knock(clock,combos)
+-- holding (the onboarding fun pass): combo 3 is in and the deck waits for the stork: every 0.4 s.
+function Deck2:knock(clock,combos,holding)
 	if not self.shown then return 0 end
 	local reduced=self:reduced()
 	self.knockLast=self.knockLast or clock
-	if V2.knockDue(clock,self.knockLast,combos,reduced)then
+	if V2.knockDue(clock,self.knockLast,combos,reduced,holding)then
 		self.knockLast=clock;self.knockAt=clock
 		local K=D.knock
 		if self.d.play then pcall(self.d.play,K.cue,K.pitch,K.gain)end
@@ -487,15 +489,22 @@ function Deck2:paintWord(clock,reduced)
 	set(word,"TextStrokeTransparency",.15+.85*fade)
 	set(word,"Visible",true)
 end
--- combos: the pips shown filled (popped); line: the left card's text now.
-function Deck2:paint(clock,combos,drops,line)
+-- combos: the pips shown filled (popped); line: the left card's text now; holdAge: s into the fun pass's hold (nil:
+-- none): the border pulses gold (V2.holdPulse) until the rise.
+function Deck2:paint(clock,combos,drops,line,holdAge)
 	if not self.alive or not self.shown then return end
 	local reduced=self:reduced()
 	self:layoutEgg()
 	self:paintCard(clock,combos,drops,line,reduced)
 	self:paintPips(clock,combos,reduced)
-	set(self.flash,"Transparency",V2.flashAlpha(if self.flashAt then clock-self.flashAt else nil))
-	if self.flashColor then set(self.flash,"Color",self.flashColor)end
+	local flash=V2.flashAlpha(if self.flashAt then clock-self.flashAt else nil)
+	if holdAge then
+		set(self.flash,"Transparency",math.min(flash,V2.holdPulse(holdAge,reduced)))
+		set(self.flash,"Color",if flash<1 and self.flashColor then self.flashColor else D.gold)
+	else
+		set(self.flash,"Transparency",flash)
+		if self.flashColor then set(self.flash,"Color",self.flashColor)end
+	end
 	local offset=V2.sweep(if self.finaleAt then clock-self.finaleAt else nil,reduced)
 	set(self.sweepFrame,"Visible",offset~=nil)
 	if offset then self.sweepBand.Offset=Vector2.new(offset,0)end

@@ -714,6 +714,15 @@ function View.liveOrder(flags)
  if flags.StatEgg==true then table.insert(order,"stat")end
  return order
 end
+-- Pure: the cheapest egg on the live list (its Stars), for "You're all set!"'s "Hatch one!" (the onboarding fun pass).
+function View.cheapestCost()
+ local best=nil
+ for _,id in ipairs(liveOrder)do
+  local cost=shopRecipe(id).cost
+  if type(cost)=="number"and(best==nil or cost<best)then best=cost end
+ end
+ return best
+end
 -- Pure: the odds block for one egg. Values always come from OddsText.list, so the
 -- shares of one egg add up to 100% and equal shares read the same (1/6 each: "1 in 6").
 -- Returns {rows = {{id, name, value}}, per = "1 toy per egg", empty = text or nil}.

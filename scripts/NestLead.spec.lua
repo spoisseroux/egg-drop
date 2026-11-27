@@ -83,27 +83,29 @@ return function(client)
 			if r.server.actor then r.server.actor.lead.phase=phase;r.server.actor.action=action;r.server.actor.startTime=r.t;r.server.actor.actionId=(r.server.actor.actionId or 0)+1 end
 		end
 		function r.toNest()
-			r.run(Needs.Return+.5);r.needs:saidHi();r.run(Lead.Rest+.5)
+			-- the fun pass: the follow prompt (and the lead's start) comes at once after the pet (Lead.AfterPet)
+			r.run(Needs.Return+.5);r.needs:saidHi();r.run(.5)
 		end
 		return r
 	end
 	local function has(list,x)return table.find(list,x)~=nil end
 	local function count(list,x)local n=0;for _,y in ipairs(list)do if y==x then n+=1 end end;return n end
 
-	test("lead: the three prompts in two lines, 2 s between; Pet, then Follow (paws, the pet leads), then Play for Stars",function()
+	test("lead: the three prompts in two lines; Pet, then at once Follow (paws, the pet leads), then 2 s on Play for Stars",function()
 		local r=rig()
 		r.run(Needs.Return+.5)
-		assert(r.needs.lead==true and r.bubble.icon=="hand"and r.bubble.words=="C:onbLead.pet"and r.bubble.sub==nil,"Pet {pet}!, one line")
-		r.needs:saidHi();r.run(Lead.Rest-.5)
-		assert(r.bubble.icon==nil,"2 s of nothing")
-		r.run(1)
+		assert(r.needs.lead==true and r.bubble.icon=="hand"and r.bubble.words=="C:onbLead.pet"and r.bubble.sub==nil,"Pet me!, one line")
+		-- the onboarding fun pass: no rest after the pet (Lead.AfterPet)
+		r.needs:saidHi();r.run(.25)
 		assert(r.bubble.icon=="paws"and r.bubble.words=="C:onbLead.follow"and r.bubble.sub=="C:onbLead.followSub","Follow {pet}! / A new egg is waiting")
 		assert(r.needs.bubbleOn=="pet")
 		assert(has(r.sent,"start")and #r.lastRoute>=3,"the lead starts with the trail's route (fitted: Lead.fit)")
 		for i=2,#r.lastRoute do assert(Lead.flat(r.lastRoute[i-1],r.lastRoute[i])<=Lead.Route.step,"no leg over the server's step")end
 		assert(r.lastRoute[1]==r.petAt and r.lastRoute[#r.lastRoute]==r.nestAt,"from the pet to the nest")
-		r.state.nest={n=0,at=1,tucked=true};r.run(Lead.Rest+.5)
-		assert(r.bubble.icon=="deck"and r.bubble.words=="C:onbLead.deck"and r.bubble.sub=="C:onbLead.deckSub","Play for Stars! / Stars buy eggs and toys")
+		r.state.nest={n=0,at=1,tucked=true};r.run(Lead.Rest-.5)
+		assert(r.bubble.icon==nil,"2 s of nothing after the tuck")
+		r.run(1)
+		assert(r.bubble.icon=="deck"and r.bubble.words=="C:onbLead.deck"and r.bubble.sub=="C:onbLead.deckSub","Let's win Stars! / Stars turn the crank!")
 		r.gate.mode="Board";r.run(5)
 		r.gate.mode="Room";r.run(Needs.Return+.5)
 		assert(r.bubble.icon=="deck"and r.allSets==nil,"opening the deck is not enough")
@@ -111,12 +113,26 @@ return function(client)
 		assert(r.allSets==1,"a round played: all set, once")
 		r.run(20);assert(r.allSets==1)
 	end)
+	test("the fun pass: the petting screen closes and the lead asks at once (not Needs.Return); a later hide waits Return again",function()
+		local r=rig()
+		r.run(Needs.Return+.5)
+		assert(r.bubble.icon=="hand")
+		-- the petting screen opens (the greeting closes Pet me!) and stays a while
+		r.gate.petting=true;r.needs:saidHi();r.run(4)
+		assert(r.bubble.icon==nil and not has(r.sent,"start"),"nothing while the screen is up")
+		r.gate.petting=nil;r.run(.5) -- two 0.25 s frames: the first free frame starts the 0.1 s count
+		assert(r.bubble.icon=="paws"and has(r.sent,"start"),"the Bear runs out of the screen: "..tostring(r.bubble.icon))
+		-- a menu later: the usual Return before the prompt comes back
+		r.gate.modal=true;r.run(1);assert(r.bubble.icon==nil)
+		r.gate.modal=nil;r.run(Needs.Return-.5);assert(r.bubble.icon==nil,"Return as before")
+		r.run(1);assert(r.bubble.icon=="paws")
+	end)
 	test("2a: taken by the server with a chirp; the prints follow the pet; the look back beckons every 2.5 s with the bubble's hop",function()
 		local r=rig()
 		r.run(Needs.Return+.5);r.needs:saidHi()
 		local chirps=r.chirps
 		r.run(Lead.Rest+.5)
-		assert(r.chirps==chirps+1,"the chirp as it hops twice: "..(r.chirps-chirps))
+		assert(r.chirps==chirps+1,"the chirp as it hops once: "..(r.chirps-chirps))
 		assert(#r.leads>=1 and r.leads[1].position==r.nestAt,"the prints lead by the pet")
 		r.phase("wait","leadWait");r.run(.25)
 		assert(r.beckons==1 and r.hops>=1,"the first beckon")
@@ -357,26 +373,32 @@ return function(client)
 		assert(LeadTrail.leader({{},{leadBy=1},on})==on,"only a method counts")
 		assert(LeadTrail.new({things=on}):lead(nil,target)and on.target==target,"no model: today's")
 	end)
-	test("the all-set card's clock: the pop, three stamps one by one, the punched title, the sub-line and button, 5 s; closes after 0.4 s",function()
+	test("the all-set card's clock: the pop, three small stamps 0.08 s apart, the punched title, the sub-line and button, 5 s; closes after 0.4 s",function()
 		assert(Card.cardScale(.1)==nil and near(Card.cardScale(Card.T.card),.85)and Card.cardScale(1)==1)
 		local peak=0
 		for i=0,30 do peak=math.max(peak,Card.cardScale(Card.T.card+i*.01)or 0)end
 		assert(near(peak,1.05,.01),"0.85 -> 1.05 -> 1.0")
-		for i,at in ipairs({.3,.5,.7})do
+		-- the onboarding fun pass: 44 px stamps, 0.08 s apart (were 64 px, 0.2 s), the title right after them
+		assert(Card.Size.stamp==44)
+		for i,at in ipairs({.3,.38,.46})do
 			assert(Card.stampScale(i,at-.01)==nil and near(Card.stampScale(i,at),1.4)and Card.stampScale(i,at+.12)==1,"stamp "..i)
 		end
-		assert(Card.titleScale(.89)==nil and near(Card.titleScale(.9),1.45)and Card.titleScale(1.2)==1)
-		assert(Card.sweep(1,false)and Card.sweep(1,true)==nil and Card.sweep(2,false)==nil,"one sweep; none under Reduced Motion")
+		assert(Card.titleScale(.59)==nil and near(Card.titleScale(.6),1.45)and Card.titleScale(1.2)==1)
+		assert(Card.T.title>=Card.T.stamps[3]+Card.T.stamp and Card.T.gift>Card.T.title and Card.T.sub>Card.T.gift,"stamps, title, gift, words")
+		assert(Card.sweep(.8,false)and Card.sweep(.8,true)==nil and Card.sweep(2,false)==nil,"one sweep; none under Reduced Motion")
 		assert(not Card.closable(.3)and Card.closable(.4)and not Card.over(4.9)and Card.over(5))
 		local due=Card.due(Card.Cues,-1,.31)
 		assert(#due==2 and due[1].cue=="charge"and due[2].speed==1.12,"charge at 1.0, then 1.12")
-		local later=Card.due(Card.Cues,.75,.95)
+		local later=Card.due(Card.Cues,.5,.65)
 		assert(#later==1 and later[1].cue=="rarity_common")
 		assert(#Card.due(Card.Buzz,-1,1)==5 and Card.Buzz[5].haptic=="pop")
 		assert(Card.Bubbles==24 and Card.Dots==16 and #Card.Confetti==4)
 		for _,stamp in ipairs(Card.Stamps)do assert(UICopy.get(stamp.key)~=stamp.key,stamp.key)end
 		assert(UICopy.get("onbAllSet.title")=="You're all set!"and UICopy.get("onbAllSet.sub",{pet="Bear"})=="Bear loves it here."
 			and UICopy.get("onbAllSet.next")=="What's next?")
+		-- the button: "Hatch one!" (to the egg machine) when the Stars cover the cheapest egg, else "What's next?"
+		assert(Card.buttonKey(true)=="onbAllSet.hatch"and Card.buttonKey(false)=="onbAllSet.next"and Card.buttonKey(nil)=="onbAllSet.next")
+		assert(UICopy.get("onbAllSet.hatch")=="Hatch one!")
 		for i=1,Card.Bubbles do local x,delay,speed=Card.particle(i,Card.Bubbles,"bubble");assert(x>=0 and x<1 and delay>=0 and speed>0)end
 	end)
 	test("the bubble's second line: a width for the longer line, and the sub-line shown only with two lines",function()

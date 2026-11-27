@@ -11,6 +11,10 @@ C.Feature="pet2"
 -- The Happy heart. It fills in `seconds` of rubbing (twice as fast on the favourite spot), drains `drain` a second
 -- while nobody rubs, and at full plays the happy burst and drops to `burstTo`. No fail state, no timer.
 C.Fill=table.freeze({seconds=6,favourite=2,drain=.05,burstTo=.2})
+-- The first visit (the guide's "Pet me!" open when the screen opened; ONBOARDING-FUN-PASS section 1): the heart fills
+-- twice as fast (3 s), and the happy burst closes the screen by itself `close` s later (the pet's wave and the camera's
+-- ease out follow, then the Bear runs out of it on the lead). Every later visit is as above.
+C.First=table.freeze({seconds=3,close=.8})
 -- Stage thresholds: 1 small hearts, 2 bigger hearts + blush + purr up, 3 the burst.
 C.Stages=table.freeze({.33,.66,1})
 -- Hearts rise from the hand while rubbing: from stage 1 one small heart every .5 s, from stage 2 a bigger one every .4 s.
@@ -38,9 +42,14 @@ C.FavouriteHint=4
 C.Exit=table.freeze({ease=.3})
 C.CameraCloser=.15
 
--- Pure: a fresh visit (the heart starts empty every time the screen opens).
-function C.new()
- return{fill=0,stage=0,bursts=0,rubbed=0,elsewhere=0,lovedShown=false}
+-- Pure: a fresh visit (the heart starts empty every time the screen opens). first: the guide's first pet (C.First).
+function C.new(first)
+ return{fill=0,stage=0,bursts=0,rubbed=0,elsewhere=0,lovedShown=false,first=first==true,
+  seconds=if first==true then C.First.seconds else C.Fill.seconds}
+end
+-- Pure: does a first visit close itself now? burstAt: when its first burst played (nil: none yet).
+function C.closeDue(state,burstAt,now)
+ return type(state)=="table"and state.first==true and type(burstAt)=="number"and type(now)=="number"and now-burstAt>=C.First.close
 end
 -- Pure: the stage for a fill: 0 under 33%, 1 from 33%, 2 from 66%, 3 at full.
 function C.stageOf(fill)
@@ -59,7 +68,7 @@ function C.step(state,dt,rubbing,favourite)
  if rubbing then
   state.rubbed+=dt
   if favourite then state.elsewhere=0 else state.elsewhere+=dt end
-  state.fill=math.min(1,state.fill+dt/C.Fill.seconds*(if favourite then C.Fill.favourite else 1))
+  state.fill=math.min(1,state.fill+dt/(state.seconds or C.Fill.seconds)*(if favourite then C.Fill.favourite else 1))
  else
   state.fill=math.max(0,state.fill-C.Fill.drain*dt)
  end

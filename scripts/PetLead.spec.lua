@@ -32,9 +32,11 @@ return function(server)
 		Onboard.inject(nil)
 	end)
 	test("the brief's numbers",function()
-		assert(Lead.Run==14 and Lead.Ahead==12 and Lead.Resume==7 and Lead.Arrive==3 and Lead.Reach==8 and Lead.Rest==2)
-		assert(Lead.Hops.count==2 and Lead.Hops.height==.6 and Lead.Hops.time==.35 and Lead.Beckon.every==2.5 and Lead.Beckon.wave==.5)
-		assert(Lead.Still==8 and Lead.Far==30 and Lead.Back==5 and Lead.ThisWay==2 and Lead.Nudges==3 and Lead.Chip==36)
+		-- the onboarding fun pass: a chase (18, faster than the player's 16), one hop, no rest after the pet, nudge at 6 s
+		assert(Lead.Run==18 and Lead.Ahead==12 and Lead.Resume==7 and Lead.Arrive==3 and Lead.Reach==8 and Lead.Rest==2)
+		assert(Lead.AfterPet.rest==0 and Lead.AfterPet.free<=.25)
+		assert(Lead.Hops.count==1 and Lead.Hops.height==.6 and Lead.Hops.time==.35 and Lead.Beckon.every==2.5 and Lead.Beckon.wave==.5)
+		assert(Lead.Still==6 and Lead.Far==30 and Lead.Back==5 and Lead.ThisWay==2 and Lead.Nudges==3 and Lead.Chip==36)
 		assert(Lead.StuckMove==2 and Lead.StuckTime==2 and Lead.Return==2.5 and Lead.Toast==3)
 	end)
 	test("the words: headlines 16 characters or fewer, sub-lines 28 or fewer, {pet} filled, no key names",function()
@@ -46,8 +48,12 @@ return function(server)
 				assert(sub~=entry.sub and #sub<=28,name..": "..sub)
 			end
 		end
-		assert(UICopy.get(Lead.Prompts.follow.head,{pet="Bear"})=="Follow Bear!")
-		assert(UICopy.get(Lead.Prompts.needDeck.head)=="Play for Stars!"and UICopy.get(Lead.Prompts.needDeck.sub)=="Stars buy eggs and toys")
+		-- the onboarding fun pass: the pet's own voice (it asks, we do not order)
+		assert(UICopy.get(Lead.Prompts.needHi.head,{pet="Bear"})=="Pet me!"and UICopy.get(Lead.Prompts.follow.head,{pet="Bear"})=="This way!")
+		assert(UICopy.get(Lead.Prompts.tuck.head)=="Tuck it in!")
+		assert(UICopy.get(Lead.Prompts.needDeck.head)=="Let's win Stars!"and UICopy.get(Lead.Prompts.needDeck.sub)=="Stars turn the crank!")
+		-- the nudge's word still changes the headline
+		assert(UICopy.get(Lead.ThisWayCopy)~=UICopy.get(Lead.Prompts.follow.head),"the nudge reads differently")
 		assert(#UICopy.get(Lead.ThisWayCopy)<=16 and UICopy.get(Lead.ToastCopy)=="Sweet dreams! Come back tomorrow to hatch it.")
 	end)
 	test("routes: the trim stops 3 studs short along the route; corners kept, the straight bits dropped",function()
@@ -123,10 +129,10 @@ return function(server)
 		assert(Lead.decide(stuck,{now=12.1,pet=v(0,6),owner=v(0,0),goal=goal,moving=true})=="poof","under 2 studs in 2 s")
 		assert(Lead.decide(stuck,{now=14.2,pet=v(0,9),owner=v(0,0),goal=goal,moving=true})==nil,"moving again")
 	end)
-	test("the poses every screen draws: two hops, the beckon each 2.5 s, the arrival bounce, the jump-spin; none under Reduced Motion",function()
+	test("the poses every screen draws: one hop, the beckon each 2.5 s, the arrival bounce, the jump-spin; none under Reduced Motion",function()
 		local H=Lead.Hops
-		assert(near(Lead.pose("leadStart",H.time*.5,false),H.height)and near(Lead.pose("leadStart",H.time*1.5,false),H.height),"two hops")
-		assert(Lead.pose("leadStart",H.time*2+.01,false)==0,"then still")
+		assert(near(Lead.pose("leadStart",H.time*.5,false),H.height),"one hop")
+		assert(Lead.pose("leadStart",H.time*1.5,false)==0 and Lead.pose("leadStart",H.time+.01,false)==0,"then still")
 		assert(near(Lead.pose("leadWait",Lead.Beckon.time*.5,false),Lead.Beckon.height)and Lead.pose("leadWait",1,false)==0)
 		assert(near(Lead.pose("leadWait",Lead.Beckon.every+Lead.Beckon.time*.5,false),Lead.Beckon.height),"again 2.5 s later")
 		assert(Lead.pose("leadArrive",Lead.Bounce.time*.5,false)>0)
@@ -139,15 +145,15 @@ return function(server)
 		assert(Lead.pose("follow",.1,false)==0 and Lead.pose("leadRun",.1,false)==0)
 		assert(Lead.beckonDue(.1,nil)and not Lead.beckonDue(.2,0)and Lead.beckonDue(2.6,0)and not Lead.beckonDue(-1,nil))
 	end)
-	test("the nudges and the park: still 8 s, or over 30 studs away, is a nudge; answered it starts over; the 4th parks",function()
+	test("the nudges and the park: still 6 s, or over 30 studs away, is a nudge; answered it starts over; the 4th parks",function()
 		local w=Lead.watcher()
 		local t=0
 		local function look(speed,gap,toNest,active)
 			t+=.5
 			return Lead.watch(w,{now=t,dt=.5,active=active~=false,speed=speed,gap=gap,toNest=toNest})
 		end
-		for _=1,15 do assert(look(0,12,40)==nil)end
-		assert(look(0,12,40)=="nudge"and w.count==1 and Lead.thisWay(w,t),"8 s still")
+		for _=1,Lead.Still*2-1 do assert(look(0,12,40)==nil)end
+		assert(look(0,12,40)=="nudge"and w.count==1 and Lead.thisWay(w,t),"6 s still")
 		assert(not Lead.thisWay(w,t+Lead.ThisWay+.01),"This way! for 2 s")
 		-- walking the other way: counted at once (after the cool-down)
 		for _=1,5 do look(10,20,45)end
@@ -157,7 +163,7 @@ return function(server)
 		assert(w.count==0,"not ignored: the count starts over")
 		-- three ignored, then the park
 		local events={}
-		for _=1,4*17 do local e=look(0,12,44);if e then table.insert(events,e)end end
+		for _=1,4*(Lead.Still*2+1)do local e=look(0,12,44);if e then table.insert(events,e)end end
 		assert(table.concat(events,",")=="nudge,nudge,nudge,park","three nudges, then the park: "..table.concat(events,","))
 		-- paused (the deck, a menu): the clock stands still
 		local p=Lead.watcher()
@@ -183,15 +189,18 @@ return function(server)
 	end
 	local ROUTE={v(0,2),v(0,10),v(0,20),v(0,30),v(0,40)}
 	local GOAL,NEST=v(0,37),v(0,42)
-	test("lead: the start hops in place and turns, then it runs at about 14 studs a second along the route",function()
+	test("lead: the start hops once in place as it turns, then it runs within 0.6 s at about 18 studs a second along the route",function()
 		local c=fixture()
 		assert(c.garden:lead(1,ROUTE,GOAL,NEST))
 		local a=c:actor()
 		assert(a.lead and a.lead.phase=="start"and a.action=="leadStart"and a.behavior=="investigate","never a sit or a doze")
+		assert(a.endTime-c.now<=.6+1e-6 and a.endTime-c.now>=Lead.startHops(),"the hop and the turn together: "..(a.endTime-c.now))
 		local from=c:pet()
-		c:step(.5);assert((c:pet()-from).Magnitude<1e-3,"hopping where it stands")
-		assert(c.snapshot.actors["1"].lead.phase=="start"and c.snapshot.actors["1"].lead.seq==1,"the snapshot carries it")
-		c:step(.5);c:step(.5)
+		c:step(.25);assert((c:pet()-from).Magnitude<1e-3,"hopping where it stands")
+		c:step(.25)
+		local held=c.snapshot.actors["1"].lead
+		assert(held and(held.phase=="start"or held.phase=="run")and held.seq==1,"the snapshot carries it")
+		c:step(.25)
 		assert(c:actor().action=="leadRun","then it runs: "..tostring(c:actor().action))
 		local t0,p0=c.now,c:pet()
 		c:step(.5)
@@ -326,8 +335,9 @@ return function(server)
 		-- no route at all: the server's own planner straight to the goal
 		local e=fixture()
 		assert(e.garden:lead(1,{},GOAL,NEST))
-		for _=1,3 do e:step(.5)end
-		assert(e:actor().action=="leadRun")
+		-- the start is over within 0.6 s now (one hop while it turns), so it is running by 1 s
+		for _=1,2 do e:step(.5)end
+		assert(e:actor().action=="leadRun",tostring(e:actor().action))
 	end)
 	test("cheer: the jump-spin where it stands, held through the owner moving, then it follows; it ends a lead",function()
 		local c=fixture()

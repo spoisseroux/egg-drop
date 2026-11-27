@@ -560,10 +560,13 @@ function Garden:lead(id,points,goal,nest)
     self:release(actor)
     actor.leadSeq=(actor.leadSeq or 0)+1
     actor.lead={seq=actor.leadSeq,points=points,goal=goal,nest=if typeof(nest)=="Vector3"then nest else nil,phase="start"}
-    -- the start: two hops where it stands (PetLead.pose), then a turn to the way
+    -- the start: one hop (PetLead.pose) while it turns to the way, then it runs (the onboarding fun pass: the run starts
+    -- within 0.6 s; it was two hops, then the turn)
     local face=goal
     for _,p in ipairs(points)do if Lead.flat(p,at)>1.5 then face=p;break end end
-    local path,seconds=Garden.leadSettle(at,ZERO,sample and sample.yaw or actor.yaw or 0,face,.05,Lead.startHops())
+    local path,seconds=Garden.leadSettle(at,ZERO,sample and sample.yaw or actor.yaw or 0,face,.05)
+    local short=Lead.startHops()+.05-seconds
+    if short>0 then path[#path].duration+=short;seconds+=short end
     -- "investigate", not "rest": a lead's long holds never sit or doze (PetSitPose, PetExpression), its face curious
     self:transition(actor,"investigate",at,seconds,"leadStart",nil,nil,{path=path,duration=seconds})
     actor.from,actor.to=Activity.pack(at),Activity.pack(at)

@@ -295,7 +295,9 @@ local Table={
   deck={drop="Drop a ball!",match="Match two!",two="2 more!",one="1 more!",hatching="It's hatching!",click="Click to drop",
    -- Onboarding v3 section 5 (Onboard "deck2"): the punch word over the well on combos 1 and 2 (combo 3 says
    -- `hatching`), and the big sun-gold numeral over "2 more!" / "1 more!".
-   nice="Nice!",close="So close!",numTwo="2",numOne="1"},
+   nice="Nice!",close="So close!",numTwo="2",numOne="1",
+   -- The onboarding fun pass (deck2): the egg's own words after combos 1 and 2, in place of `two` / `one`.
+   moved="It moved!",cracking="It's cracking!"},
   stork={delivery="A delivery!",skip="Skip"},
   crack={tap="Tap the egg!",click="Click the egg!",pad="Crack it!"},
   card={meet="Meet {pet}"},
@@ -303,12 +305,15 @@ local Table={
   replay="Watch the first hatch again",
  },
  -- Onboarding v3 brief section 1 (Onboard "lead", qa-2026-11-27-beta37/ONBOARDING-V3-BRIEF.md): two lines, a headline
- -- of 16 characters or fewer and a sub-line of 28 or fewer; the post-tuck toast.
- onbLead={pet="Pet {pet}!",follow="Follow {pet}!",followSub="A new egg is waiting",tuck="Tuck the egg in!",tuckSub="It hatches tomorrow",
-  deck="Play for Stars!",deckSub="Stars buy eggs and toys",thisWay="This way!",toast="Sweet dreams! Come back tomorrow to hatch it."},
+ -- of 16 characters or fewer and a sub-line of 28 or fewer; the post-tuck toast. The onboarding fun pass: the headlines
+ -- are the pet's own voice (it asks, we do not order); thisWay is the nudge's word over "This way!".
+ onbLead={pet="Pet me!",follow="This way!",followSub="A new egg is waiting",tuck="Tuck it in!",tuckSub="It hatches tomorrow",
+  deck="Let's win Stars!",deckSub="Stars turn the crank!",thisWay="Come on!",toast="Sweet dreams! Come back tomorrow to hatch it."},
  -- Section 3 (Onboard "allset2"): the celebration card.
- -- gift: the one-time welcome gift's pill under the stamps, its Stars rolling up to 5 (shown only once the server paid it).
- onbAllSet={title="You're all set!",pet="Pet",nest="Nest",stars="Stars",sub="{pet} loves it here.",next="What's next?",gift="+{count} ★ Welcome gift!"},
+ -- gift: the one-time welcome gift's pill under the stamps, its Stars landing one by one up to 5 (shown only once the
+ -- server paid it); giftSub replaces `sub` with it. hatch: the button when the Stars cover the cheapest egg (the fun pass).
+ onbAllSet={title="You're all set!",pet="Pet",nest="Nest",stars="Stars",sub="{pet} loves it here.",next="What's next?",gift="+{count} ★ Welcome gift!",
+  giftSub="A welcome gift from {pet}.",hatch="Hatch one!"},
  -- v1 track A onboarding: coach cards (CoachCards.lua), each shown once ever (coachMask).
  -- A title of three words or fewer and one short line; the game assumes merge-game players.
  coach={effortPay="Good effort",

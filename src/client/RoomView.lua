@@ -197,7 +197,8 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 		-- pet2 (ONBOARDING-V3-BRIEF 4): the pet waves and the camera eases out over 0.3 s first (Room:cuddleExit).
 		back = function() if self.focusing then if self.focusUI and self.focusUI.cuddleOn then self:cuddleExit()else self:useRoomCamera(false)end end end,
 		-- pet2's sounds, Reduced Motion and the Affection hearts it quiets (PetCuddleUI; unused while the switch is off).
-		cuddle={audio=audio,reduced=function()return reduceEffects()==true end,affection=function()return self.affection end},
+		cuddle={audio=audio,reduced=function()return reduceEffects()==true end,affection=function()return self.affection end,
+			first=function()return self.cuddleFirstVisit==true end},
 		greet = function()return self:reactPet(false)end,
 		pet = function()return self:reactPet(true)end,
 		petContact=function(active)return self:setPetContact(active)end,
@@ -1207,6 +1208,9 @@ function Room:focusPet()
 	self:cancelCameraTween()
 	self.greetingCamera=PetGreetingShot.capture(camera,root)
 	self.greetingCamera.pet,self.greetingCamera.petOrigin,self.greetingCamera.petYaw=self.pet,self.pet.origin,self.pet.yaw
+	-- pet2's first visit (the guide's "Pet me!" open now, before this focus closes it): read once, here
+	local okFirst,first=pcall(function()return self.cuddleFirst~=nil and self.cuddleFirst()end)
+	self.cuddleFirstVisit=okFirst and first==true
 	self.focusing,self.menuOpen=true,false
 	self.focusMotion,self.followState=nil,nil
 	self.greetButton.Text="Roam"

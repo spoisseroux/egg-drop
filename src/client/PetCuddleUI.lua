@@ -117,7 +117,8 @@ local function happyHeart(parent,z)
  return{root=root,pop=pop,rim=rim,base=base,clip=clip,fill=fill,glint=glint}
 end
 
--- deps: {audio = BoardAudio (or nil), reduced() -> bool, affection() -> PetAffection (or nil)}.
+-- deps: {audio = BoardAudio (or nil), reduced() -> bool, affection() -> PetAffection (or nil), first() -> bool (the
+-- guide's first pet: PetCuddle.First, read when the screen opens)}.
 function Cuddle.new(focus,deps)
  deps=deps or {}
  local panel=focus.panel
@@ -201,7 +202,10 @@ function Cuddle:audio()return self.deps.audio end
 -- The screen opened with the switch on: a fresh visit.
 function Cuddle:begin()
  if self.active or self.destroyed then return end
- self.active=true;self.state=C.new()
+ -- the guide's first pet (deps.first, read once as the screen opens): the 3 s heart, and the burst closes the screen
+ local okFirst,first=pcall(function()return self.deps.first and self.deps.first()end)
+ self.active=true;self.state=C.new(okFirst and first==true)
+ self.firstBurstAt,self.closing=nil,false
  self.hinted=false;self.hintUntil=nil;self.lovedUntil=nil;self.spot=nil;self.spotAge=0;self.burstAge=nil;self.heartClock=0
  self.leanW,self.lookW,self.spotW,self.blush,self.shownFill=0,0,0,0,0
  self.padAt=nil;self.stickAt=Vector2.zero;self.lastHand=nil;self.velocity=Vector2.zero
@@ -514,7 +518,13 @@ function Cuddle:step(dt,camera,pet,boxAt,boxSize)
  local audio=self:audio()
  if events.stage then pop(self.heart.pop,1.18);pcall(function()require(script.Parent.Haptics).play("settle")end)end
  local centre=if boxAt then boxAt+boxSize*Vector2.new(.5,.45)else size*.5
- if events.burst then self:burst(centre,reduced)end
+ if events.burst then self:burst(centre,reduced);self.firstBurstAt=self.firstBurstAt or os.clock()end
+ -- the first visit: C.First.close s after the burst the screen closes by itself (as Back: the wave, the ease out)
+ if not self.closing and C.closeDue(s,self.firstBurstAt,os.clock())then
+  self.closing=true
+  local back=focus.callbacks and focus.callbacks.back
+  if back then task.defer(function()if self.active then pcall(back)end end)end
+ end
  if onFavourite and not s.lovedShown then
   s.lovedShown=true;self:showLoved((focus.bondInfo and focus.bondInfo.name)or UICopy.get("pet.cuddle.friend"))
  end

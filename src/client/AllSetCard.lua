@@ -4,26 +4,33 @@
 --   0.0  the Bear jumps and spins (the server's leadCheer, every screen); 24 Aero bubbles and 16 confetti dots rise
 --        from the bottom edge; `charge` at 1.0; a tick buzz
 --   0.15 the card pops (0.85 -> 1.05 -> 1.0 over 0.3 s), the pet's headshot poking over its top edge
---   0.3, 0.5, 0.7  three stamps (Pet, Nest, Stars) land with a gold tick: 1.4 -> 1.0 in 0.12 s, `charge` 1.12 / 1.26 /
---        1.5, a tick buzz each
---   0.9  the title punches (1.45 -> 1): `rarity_common`, a `pop` buzz, one light sweep across the card
---   1.2  "{pet} loves it here." and the gold "What's next?" button (opens Things to do)
---   the welcome gift (Spencer OK'd it 2026-11-27): "+5 ★ Welcome gift!" under the stamps, only once the server says
---        Saved (WelcomeGift: once per save, paid in the save). From T.gift (or when the answer lands, if later) the
---        card grows Gift.grow px over 0.2 s, the gold pill pops and its count rolls 0 -> 5 over Gift.roll s with a
---        `count_blip` a Star and `stars_total` at 5, and a `land` buzz. A late answer keeps the card up Gift.hold s more
---        (at most T.lifeMax). Refused, slow or never: the card is exactly the one above, never held.
+--   0.3, 0.38, 0.46  three small stamps (44 px: Pet, Nest, Stars) land with a gold tick: 1.4 -> 1.0 in 0.12 s,
+--        `charge` 1.12 / 1.26 / 1.5, a tick buzz each (the onboarding fun pass: was 64 px, 0.2 s apart, so the ticks
+--        read as done, not as homework)
+--   0.6  the title punches (1.45 -> 1): `rarity_common`, a `pop` buzz, one light sweep across the card
+--   1.2  "{pet} loves it here." and the gold button: "Hatch one!" (the paw prints to the egg machine) when the Stars
+--        cover the cheapest egg, else "What's next?" (opens Things to do). It turns into "Hatch one!" when the gift
+--        lands the Stars, never back.
+--   the welcome gift, the card's hero (Spencer OK'd it 2026-11-27; ONBOARDING-FUN-PASS section 4): "+5 ★ Welcome
+--        gift!", only once the server says Saved (WelcomeGift: once per save, paid in the save). From T.gift (0.9, or
+--        when the answer lands, if later) the card grows Gift.grow px over 0.2 s and the gold pill pops; five gold Stars
+--        burst from the pet's headshot and fly to it one by one (Gift.gap s apart, Gift.fly s each), each landing counts
+--        one with `charge` rising; the last lands with `stars_total`, a `land` buzz and the pill punches 1.3. The sub-line
+--        becomes "A welcome gift from {pet}.". A late answer keeps the card up Gift.hold s more (at most T.lifeMax).
+--        Refused, slow or never: the card is exactly the one above, never held.
 -- Reduced Motion: no confetti, spin or sweep (and the gift's count lands at once); the sound and the buzz stay.
 -- The top half is pure (spec-checked offline); show() builds the card.
 --   AllSetCard.show(playerGui, {copy(key, vars), pet (name), petId, appearance, play(cue, speed, gain), haptic(name),
 --     reduced(), cheer() (the server's jump-spin), next() (opens Things to do), done(),
---     gift(arrived) (optional: asks the server once; calls arrived(stars) only on Saved)}) -> card ({close(), gift(stars)})
+--     gift(arrived) (optional: asks the server once; calls arrived(stars) only on Saved),
+--     canHatch() (optional: the Stars cover the cheapest egg now), hatch() (optional: the way to the egg machine)})
+--     -> card ({close(), gift(stars)})
 local Card={};Card.__index=Card
 
 -- ── Pure ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
-Card.T=table.freeze({card=.15,stamps={.3,.5,.7},title=.9,sub=1.2,life=5,lifeMax=7,gift=1,closeAfter=.4,
+Card.T=table.freeze({card=.15,stamps={.3,.38,.46},title=.6,sub=1.2,life=5,lifeMax=7,gift=.9,closeAfter=.4,
 	pop=.3,popFrom=.85,popPeak=1.05,stamp=.12,stampFrom=1.4,punch=1.45,punchTime=.12,sweep=.5,cheer=0})
-Card.Size=table.freeze({w=320,h=210,maxW=360,maxH=260,corner=22,headshot=72,glass=.15})
+Card.Size=table.freeze({w=320,h=210,maxW=360,maxH=260,corner=22,headshot=72,glass=.15,stamp=44,stampGap=76,pill=34,pillW=220,pillY=134})
 Card.Ink=Color3.fromHex("#0E0F12")
 Card.Gold=Color3.fromHex("#FFC14D")
 Card.Button=Color3.fromHex("#FFC14D")
@@ -31,9 +38,11 @@ Card.Confetti=table.freeze({Color3.fromHex("#22B8F2"),Color3.fromHex("#FFB52A"),
 Card.Bubbles=24;Card.Dots=16;Card.Rise=1.8
 Card.Stamps=table.freeze({{key="onbAllSet.pet",icon="hand"},{key="onbAllSet.nest",icon="moon"},{key="onbAllSet.stars",icon="deck"}})
 -- The sounds and buzzes, in time (existing cues only): {at, cue, speed} and {at, haptic}.
-Card.Cues=table.freeze({{at=0,cue="charge",speed=1},{at=.3,cue="charge",speed=1.12},{at=.5,cue="charge",speed=1.26},
-	{at=.7,cue="charge",speed=1.5},{at=.9,cue="rarity_common",speed=1}})
-Card.Buzz=table.freeze({{at=0,haptic="settle"},{at=.3,haptic="land"},{at=.5,haptic="land"},{at=.7,haptic="land"},{at=.9,haptic="pop"}})
+Card.Cues=table.freeze({{at=0,cue="charge",speed=1},{at=.3,cue="charge",speed=1.12},{at=.38,cue="charge",speed=1.26},
+	{at=.46,cue="charge",speed=1.5},{at=.6,cue="rarity_common",speed=1}})
+Card.Buzz=table.freeze({{at=0,haptic="settle"},{at=.3,haptic="land"},{at=.38,haptic="land"},{at=.46,haptic="land"},{at=.6,haptic="pop"}})
+-- Pure: the button's words: "Hatch one!" when the Stars cover the cheapest egg, else "What's next?".
+function Card.buttonKey(canHatch)return if canHatch==true then "onbAllSet.hatch"else "onbAllSet.next"end
 local function smooth(u)u=math.clamp(u,0,1);return u*u*(3-2*u)end
 -- Pure: the card's scale at t (nil before it shows).
 function Card.cardScale(t)
@@ -71,7 +80,10 @@ function Card.closable(t)return t>=Card.T.closeAfter end
 function Card.over(t,life)return t>=(life or Card.T.life)end
 
 -- The welcome gift. `arrived`: the card's clock when the server's Saved landed (nil: no gift, the card as before).
-Card.Gift=table.freeze({grow=28,growTime=.2,roll=.6,hold=2.2,pop=.18,popFrom=.6})
+-- The fun pass: each Star flies `fly` s from the headshot to the pill, `gap` s after the one before (at most `stars`
+-- fly; the last landing shows the whole total); the pill punches to `punch` over `punchTime` s as the last lands.
+Card.Gift=table.freeze({grow=34,growTime=.2,hold=2.2,pop=.18,popFrom=.6,fly=.35,gap=.08,stars=10,punch=1.3,punchTime=.25,
+	star=26,spread=44,lift=26})
 -- Pure: when the gift row starts (never before the stamps are done).
 function Card.giftAt(arrived)
 	if type(arrived)~="number"then return nil end
@@ -83,20 +95,53 @@ function Card.life(arrived)
 	if not at or at>=Card.T.life then return Card.T.life end -- after the card's own end: too late, no gift shown
 	return math.min(Card.T.lifeMax,math.max(Card.T.life,at+Card.Gift.hold))
 end
--- Pure: the Stars shown on the pill at t (nil before it starts): 0 -> total over Gift.roll s (Reduced Motion: total).
+-- Pure: how many Stars fly for a gift of `total` (Gift.stars at most).
+function Card.giftFlying(total)return math.clamp(math.floor(tonumber(total)or 0),0,Card.Gift.stars)end
+-- Pure: when Star i (1..) lands, the gift starting at `at`.
+function Card.giftLand(i,at)return at+(i-1)*Card.Gift.gap+Card.Gift.fly end
+-- Pure: the Stars shown on the pill at t (nil before it starts): one more as each flying Star lands, the whole total
+-- with the last (Reduced Motion: the total at once).
 function Card.giftCount(t,arrived,total,reduced)
 	local at=Card.giftAt(arrived)
 	if not at or t<at or at>=Card.T.life then return nil end
 	total=math.max(0,math.floor(tonumber(total)or 0))
 	if reduced then return total end
-	return math.min(total,math.floor(total*smooth((t-at)/Card.Gift.roll)+1e-9))
+	local n=Card.giftFlying(total)
+	local landed=0
+	for i=1,n do if t>=Card.giftLand(i,at)then landed=i end end
+	return if landed>=n then total else landed
 end
--- Pure: the pill's scale at t (nil before it starts).
-function Card.giftScale(t,arrived,reduced)
+-- Pure: Star i's flight at t: its progress (0 at the headshot .. 1 at the pill), or nil when it is not in the air
+-- (not yet launched, landed, Reduced Motion, or past what flies).
+function Card.giftStar(i,t,arrived,total,reduced)
+	local at=Card.giftAt(arrived)
+	if reduced or not at or at>=Card.T.life or i>Card.giftFlying(total)then return nil end
+	if t>=Card.giftLand(i,at)then return nil end -- landed (the count's own test, so the two always agree)
+	local u=(t-(at+(i-1)*Card.Gift.gap))/Card.Gift.fly
+	if u<0 then return nil end
+	return u
+end
+-- Pure: Star i of n's place at u from `from` to `to` (card pixels, y down): a curve bowed up and fanned out.
+function Card.giftPath(i,n,u,from,to)
+	local G=Card.Gift
+	u=math.clamp(u,0,1)
+	local side=if n>1 then((i-1)/(n-1)-.5)*2 else 0
+	local mid=(from+to)/2+Vector2.new(side*G.spread,-G.lift)
+	local e=u*u*(3-2*u)
+	local v=1-e
+	return from*(v*v)+mid*(2*v*e)+to*(e*e)
+end
+-- Pure: the pill's scale at t (nil before it starts): it pops in, then punches to Gift.punch as the last Star lands.
+function Card.giftScale(t,arrived,reduced,total)
 	local at=Card.giftAt(arrived)
 	if not at or t<at or at>=Card.T.life then return nil end
 	if reduced then return 1 end
 	local G=Card.Gift
+	local n=Card.giftFlying(total)
+	if n>0 then
+		local age=t-Card.giftLand(n,at)
+		if age>=0 and age<G.punchTime then return 1+(G.punch-1)*math.sin(age/G.punchTime*math.pi)end
+	end
 	return G.popFrom+(1-G.popFrom)*smooth((t-at)/G.pop)
 end
 -- Pure: how far the card has grown for the gift row at t (0..Gift.grow px).
@@ -105,12 +150,13 @@ function Card.giftGrow(t,arrived)
 	if not at or t<at or at>=Card.T.life then return 0 end
 	return Card.Gift.grow*smooth((t-at)/Card.Gift.growTime)
 end
--- Pure: the cues for a count moving from `before` to `count` (a blip a Star, stars_total on reaching the total).
+-- Pure: the cues for a count moving from `before` to `count`: `charge` rising a step for each Star landed,
+-- stars_total on reaching the total.
 function Card.giftCues(before,count,total)
 	local out={}
 	if type(count)~="number"then return out end
 	before=before or -1
-	for n=math.max(1,before+1),count do table.insert(out,{cue="count_blip",speed=1+.06*n})end
+	for n=math.max(1,before+1),math.min(count,Card.Gift.stars)do table.insert(out,{cue="charge",speed=1+.08*n})end
 	if count>=total and before<total then table.insert(out,{cue="stars_total",speed=1})end
 	return out
 end
@@ -204,22 +250,24 @@ build=function(self,gui,deps)
 	-- the stamps
 	self.stamps={}
 	local ok,Bubble=pcall(require,script.Parent.NeedBubble)
+	-- the fun pass: 44 px stamps (were 64), so the gift below them is the card's hero
+	local stampPx=S.stamp
 	for i,entry in ipairs(Card.Stamps)do
-		local x=(i-2)*92
-		local holder=node("Frame",card,{Name="Stamp"..i,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.new(.5,x,0,84),Size=UDim2.fromOffset(64,64),
+		local x=(i-2)*S.stampGap
+		local holder=node("Frame",card,{Name="Stamp"..i,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.new(.5,x,0,86),Size=UDim2.fromOffset(stampPx,stampPx),
 			BackgroundTransparency=1,Visible=false,ZIndex=6})
-		local disc=node("Frame",holder,{Name="Disc",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromOffset(54,54),
+		local disc=node("Frame",holder,{Name="Disc",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromOffset(stampPx-6,stampPx-6),
 			BackgroundColor3=Color3.fromHex("#F3F6FB"),BorderSizePixel=0,ZIndex=6})
 		node("UICorner",disc,{CornerRadius=UDim.new(.5,0)})
 		node("UIStroke",disc,{Color=Card.Ink,Thickness=2})
 		local id=ok and Bubble.IconIds[entry.icon]
 		if id then node("ImageLabel",disc,{BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromScale(.66,.66),
 			Image="rbxassetid://"..id,ZIndex=7})end
-		local tick=node("TextLabel",holder,{Name="Tick",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.new(1,-6,0,8),Size=UDim2.fromOffset(24,24),
-			BackgroundColor3=Card.Gold,Text="✓",TextColor3=Color3.new(1,1,1),Font=Enum.Font.BuilderSansExtraBold,TextSize=16,BorderSizePixel=0,ZIndex=8})
+		local tick=node("TextLabel",holder,{Name="Tick",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.new(1,-4,0,6),Size=UDim2.fromOffset(18,18),
+			BackgroundColor3=Card.Gold,Text="✓",TextColor3=Color3.new(1,1,1),Font=Enum.Font.BuilderSansExtraBold,TextSize=12,BorderSizePixel=0,ZIndex=8})
 		node("UICorner",tick,{CornerRadius=UDim.new(.5,0)})
-		node("TextLabel",holder,{Name="Label",AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,1,2),Size=UDim2.fromOffset(84,20),BackgroundTransparency=1,
-			Font=Enum.Font.BuilderSansBold,TextSize=15,TextColor3=Card.Ink,Text=copy(entry.key),ZIndex=6})
+		node("TextLabel",holder,{Name="Label",AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,1,1),Size=UDim2.fromOffset(72,16),BackgroundTransparency=1,
+			Font=Enum.Font.BuilderSansBold,TextSize=13,TextColor3=Card.Ink,Text=copy(entry.key),ZIndex=6})
 		table.insert(self.stamps,{holder=holder,scale=node("UIScale",holder,{Scale=Card.T.stampFrom})})
 	end
 	-- the title, the sub-line and the button
@@ -227,24 +275,35 @@ build=function(self,gui,deps)
 		Font=Enum.Font.BuilderSansExtraBold,TextSize=28,TextColor3=Card.Ink,Text=copy("onbAllSet.title"),Visible=false,ZIndex=6})
 	self.titleScale=node("UIScale",self.title,{Scale=1})
 	-- the welcome gift's gold pill under the stamps (hidden until the server's Saved)
-	self.giftPill=node("Frame",card,{Name="WelcomeGift",AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,0,140),Size=UDim2.fromOffset(196,26),
+	-- the fun pass: the gift is the hero, a bigger pill the Stars fly into from the headshot
+	self.giftPill=node("Frame",card,{Name="WelcomeGift",AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,0,S.pillY),Size=UDim2.fromOffset(S.pillW,S.pill),
 		BackgroundColor3=Card.Gold,BorderSizePixel=0,Visible=false,ZIndex=6})
 	node("UICorner",self.giftPill,{CornerRadius=UDim.new(.5,0)})
 	node("UIStroke",self.giftPill,{Color=Card.Ink,Thickness=2})
 	self.giftScale=node("UIScale",self.giftPill,{Scale=Card.Gift.popFrom})
 	self.giftText=node("TextLabel",self.giftPill,{Name="Text",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),Font=Enum.Font.BuilderSansExtraBold,
-		TextSize=16,TextColor3=Card.Ink,Text="",ZIndex=7})
+		TextSize=20,TextColor3=Card.Ink,Text="",ZIndex=7})
+	self.flyers={}
+	for i=1,Card.Gift.stars do
+		local star=node("TextLabel",card,{Name="GiftStar"..i,AnchorPoint=Vector2.new(.5,.5),Size=UDim2.fromOffset(Card.Gift.star,Card.Gift.star),BackgroundTransparency=1,
+			Text="★",TextScaled=true,Font=Enum.Font.BuilderSansExtraBold,TextColor3=Card.Gold,TextStrokeColor3=Card.Ink,TextStrokeTransparency=.2,
+			Visible=false,ZIndex=9})
+		self.flyers[i]=star
+	end
 	self.copy=copy
-	self.sub=node("TextLabel",card,{Name="Sub",AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,0,140),Size=UDim2.new(1,-24,0,20),BackgroundTransparency=1,
-		Font=Enum.Font.BuilderSansBold,TextSize=16,TextColor3=Card.Ink,TextTransparency=.15,Text=copy("onbAllSet.sub",{pet=deps.pet or "Bear"}),Visible=false,ZIndex=6})
+	self.petName=deps.pet or "Bear"
+	self.sub=node("TextLabel",card,{Name="Sub",AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,0,138),Size=UDim2.new(1,-24,0,20),BackgroundTransparency=1,
+		Font=Enum.Font.BuilderSansBold,TextSize=16,TextColor3=Card.Ink,TextTransparency=.15,Text=copy("onbAllSet.sub",{pet=self.petName}),Visible=false,ZIndex=6})
 	self.button=node("TextButton",card,{Name="WhatsNext",AnchorPoint=Vector2.new(.5,1),Position=UDim2.new(.5,0,1,-12),Size=UDim2.fromOffset(168,38),
 		BackgroundColor3=Card.Button,Text=copy("onbAllSet.next"),TextColor3=Card.Ink,Font=Enum.Font.BuilderSansExtraBold,TextSize=18,AutoButtonColor=true,
 		BorderSizePixel=0,Visible=false,Selectable=true,ZIndex=7})
 	node("UICorner",self.button,{CornerRadius=UDim.new(0,19)})
 	self.button.Activated:Connect(function()
 		if not self.open then return end
+		local hatch=self.hatchReady==true
 		self:close()
-		if deps.next then pcall(deps.next)end
+		-- "Hatch one!": the way to the egg machine (its crank and emerge play before any reveal); else Things to do
+		if hatch and deps.hatch then pcall(deps.hatch)elseif deps.next then pcall(deps.next)end
 	end)
 	local function tryClose()if Card.closable(self.t)then self:close()end end
 	-- the full-screen tap catcher last (under everything: ZIndex 1), once the rest is built
@@ -302,21 +361,42 @@ function Card:step(dt,last,reduced)
 	if sweep then self.sweep.Position=UDim2.fromScale(-.3+1.6*sweep,.5)end
 	local late=t>=Card.T.sub
 	self.sub.Visible=late;self.button.Visible=late
-	-- the welcome gift: the card grows, the pill pops and counts up with a blip a Star
+	-- "Hatch one!" once the Stars cover the cheapest egg (never back to "What's next?")
+	if late and not self.hatchReady and d.canHatch and d.hatch then
+		local okHatch,can=pcall(d.canHatch)
+		if okHatch and can==true then self.hatchReady=true end
+	end
+	local key=Card.buttonKey(self.hatchReady)
+	if self.buttonKey~=key then self.buttonKey=key;self.button.Text=self.copy(key)end
+	-- the welcome gift: the card grows, the pill pops, the Stars fly into it from the headshot and count up one by one
 	local arrived=self.giftArrived
 	local grow=Card.giftGrow(t,arrived)
 	self.card.Size=UDim2.fromOffset(Card.Size.w,Card.Size.h+grow)
-	self.sub.Position=UDim2.new(.5,0,0,140+grow)
+	self.sub.Position=UDim2.new(.5,0,0,138+grow)
 	local count=Card.giftCount(t,arrived,self.giftStars,reduced)
 	self.giftPill.Visible=count~=nil
 	if count~=nil then
-		self.giftScale.Scale=Card.giftScale(t,arrived,reduced)or 1
+		if not self.giftWords then self.giftWords=true;self.sub.Text=self.copy("onbAllSet.giftSub",{pet=self.petName})end
+		self.giftScale.Scale=Card.giftScale(t,arrived,reduced,self.giftStars)or 1
 		self.giftText.Text=self.copy("onbAllSet.gift",{count=count})
-		-- Reduced Motion: the count lands at once, so one stars_total and no run of blips
+		-- Reduced Motion: the count lands at once, so one stars_total and no run of charges
 		local cues=if reduced then(if self.giftShown==nil then {{cue="stars_total",speed=1}}else {})else Card.giftCues(self.giftShown,count,self.giftStars)
 		for _,entry in ipairs(cues)do if d.play then pcall(d.play,entry.cue,entry.speed,.45)end end
-		if self.giftShown==nil and d.haptic then pcall(d.haptic,"land")end
+		if d.haptic and(if reduced then self.giftShown==nil else(count>=self.giftStars and(self.giftShown or -1)<self.giftStars))then pcall(d.haptic,"land")end
 		self.giftShown=count
+	end
+	-- the flying Stars: from the headshot (the card's top centre) to the pill's centre
+	local n=Card.giftFlying(self.giftStars)
+	local from=Vector2.new(Card.Size.w/2,0)
+	local to=Vector2.new(Card.Size.w/2,Card.Size.pillY+Card.Size.pill/2)
+	for i,star in ipairs(self.flyers)do
+		local u=if count~=nil then Card.giftStar(i,t,arrived,self.giftStars,reduced)else nil
+		star.Visible=u~=nil
+		if u then
+			local p=Card.giftPath(i,n,u,from,to)
+			star.Position=UDim2.fromOffset(math.floor(p.X+.5),math.floor(p.Y+.5))
+			star.Rotation=u*200
+		end
 	end
 	if self.shots and self.shotCard then
 		self.shots:pump({self.shotCard()},function()self.paw.Visible=false end)
