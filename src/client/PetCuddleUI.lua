@@ -118,7 +118,7 @@ local function happyHeart(parent,z)
 end
 
 -- deps: {audio = BoardAudio (or nil), reduced() -> bool, affection() -> PetAffection (or nil), first() -> bool (the
--- guide's first pet: PetCuddle.First, read when the screen opens)}.
+-- guide's first pet: PetCuddle.First, read when the screen opens), firstDone() (that first visit's burst played)}.
 function Cuddle.new(focus,deps)
  deps=deps or {}
  local panel=focus.panel
@@ -518,12 +518,22 @@ function Cuddle:step(dt,camera,pet,boxAt,boxSize)
  local audio=self:audio()
  if events.stage then pop(self.heart.pop,1.18);pcall(function()require(script.Parent.Haptics).play("settle")end)end
  local centre=if boxAt then boxAt+boxSize*Vector2.new(.5,.45)else size*.5
- if events.burst then self:burst(centre,reduced);self.firstBurstAt=self.firstBurstAt or os.clock()end
- -- the first visit: C.First.close s after the burst the screen closes by itself (as Back: the wave, the ease out)
+ if events.burst then
+  self:burst(centre,reduced)
+  -- the first visit's burst spends it: every later visit is a normal one (deps.firstDone)
+  if s.first and not self.firstBurstAt and self.deps.firstDone then pcall(self.deps.firstDone)end
+  self.firstBurstAt=self.firstBurstAt or os.clock()
+ end
+ -- the first visit: C.First.close s after the burst the screen closes by itself (as Back: the wave, the ease out). A
+ -- refused close (back() false: the camera mid-transition) tries again next frame while the screen is up.
  if not self.closing and C.closeDue(s,self.firstBurstAt,os.clock())then
   self.closing=true
   local back=focus.callbacks and focus.callbacks.back
-  if back then task.defer(function()if self.active then pcall(back)end end)end
+  if back then task.defer(function()
+   if not self.active then return end
+   local ok,went=pcall(back)
+   if not ok or went==false then self.closing=false end
+  end)end
  end
  if onFavourite and not s.lovedShown then
   s.lovedShown=true;self:showLoved((focus.bondInfo and focus.bondInfo.name)or UICopy.get("pet.cuddle.friend"))
