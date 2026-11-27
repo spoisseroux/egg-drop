@@ -118,7 +118,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # Onboarding v2 (qa-2026-11-26-beta35/ONBOARDING-V2.md): the five steps' rules, the safe reveal card.
           "OnboardV2", "RevealLayout", "EggCrackPaths",
           # AERO-JUICE-BRIEF 1 and 2: the Aero Glass palette and shading, the Pocket Deck juice pass, the UI counters.
-          "AeroJuice"]
+          "AeroJuice",
+          # GARDEN-B38-BRIEF 4b (P1): the understory's spots against every keep list, its budget, switch, art and motion.
+          "Understory"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -189,7 +191,9 @@ def client_modules():
                     # Onboarding v2: the steps' pure rules (BearNeeds reads the guide's) and the reveal card's layout.
                     "OnboardV2.lua", "RevealLayout.lua", "EggCrackPaths.lua", "EggCrack3D.lua",
                     # AERO-JUICE-BRIEF 1 and 2: the bubble shading, the deck juice layer, its UI half and the faces.
-                    "AeroShade.lua", "AeroJuice.lua", "AeroUI.lua", "BallFaces.lua"):
+                    "AeroShade.lua", "AeroJuice.lua", "AeroUI.lua", "BallFaces.lua",
+                    # GARDEN-B38-BRIEF 4b: the understory's builder and motion.
+                    "UnderstoryClient.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

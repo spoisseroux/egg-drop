@@ -76,6 +76,7 @@ Beta (33), 2026-11-26: player scale (row 60). Beta (32), 2026-11-26: the first e
 
 | # | Piece | Status | What to try |
 |---|---|---|---|
+| B38-4b | **Garden understory P1: bushes, flowering bushes, reeds** (GARDEN-B38-BRIEF 4b; renders `artifacts/qa-2026-11-27-beta37/understory/`) | Built and spec'd offline; draws nothing until the FBX and two PNGs are uploaded and their ids are in `UnderstoryArt.lua` | Walk the garden: clusters of three bushes at the bridge ends, behind the rotunda and colonnade, the knoll stairs' foot and two path forks; flowering pairs by the hub and the fountain; reeds on both stream banks, the falls pool and the fountain's lawn side. Bushes never block a path or hide a ball; reeds lean in gusts, bushes shiver only in strong ones. Switch: `/alive scene off`. |
 
 ## Scoped, not built
 
