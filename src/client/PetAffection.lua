@@ -275,7 +275,7 @@ function Affection:step(dt,active,reduced)
  for i,p in ipairs(self.petals)do
   local stagger=if held then(held+(i-1)*.4)%Affection.HeartCycle else nil
   local strength=math.max(welcome,if self.index==3 then wave else 0,if stagger then math.sin(stagger/Affection.HeartCycle*math.pi)else 0)
-  local show=active and not reduced and strength>0
+  local show=active and not reduced and strength>0 and not self.quiet
   p.Transparency=if show then 1-strength*.8 else 1
   local heart=self.hearts[i];if heart.gui.Enabled~=show then heart.gui.Enabled=show end
   if show then heart.glyph.TextTransparency=1-strength;heart.glyph.TextStrokeTransparency=1-strength*.65 end

@@ -387,6 +387,15 @@ function Audio:setPurr(active)
 	return false
 end
 
+-- pet2 (PetCuddleUI): the purr loop's pitch follows the Happy heart (.9 to 1.15); 1 puts it back.
+function Audio:setPurrPitch(speed)
+	local loop=self.purr
+	if self.destroyed or not loop then return false end
+	speed=math.clamp(tonumber(speed)or 1,.5,2)
+	if math.abs(loop.voice.PlaybackSpeed-speed)>.004 then loop.voice.PlaybackSpeed=speed end
+	return true
+end
+
 function Audio:silencePurr()
 	if self.destroyed then return end
 	local loop = self.purr

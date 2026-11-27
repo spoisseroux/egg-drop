@@ -76,6 +76,7 @@ Beta (33), 2026-11-26: player scale (row 60). Beta (32), 2026-11-26: the first e
 
 | # | Piece | Status | What to try |
 |---|---|---|---|
+| B1 | **The cuter petting screen** (ONBOARDING-V3-BRIEF section 4, P1 slice + P2 spots; switch `/alive pet2`) | Built, needs a Studio look | Pet the Bear (E, tap, or click). The camera sits closer; round glass Back top left, the name pill top centre, the Happy heart on the right, "Rub Bear!" at the bottom (fades on the first rub). The mitten is your cursor (PC), floats above your finger (phone), or rides the left stick with X to rub (gamepad); it tilts with the rub and squashes on contact. The Bear's eyes follow it and he leans into a rub. Rub about 6 s: hearts at a third, bigger hearts, blush and a higher purr at two thirds, then the burst (wiggle-jump, hearts, sparkles, chime, buzz) and the heart drops to 20%; it drains slowly if you stop. Spots answer (head, cheeks, chin, belly squeak, back stretch, ears/tail twitch); one favourite spot fills twice as fast ("Bear loves this!"), with faint sparkles there after 4 s elsewhere. Leave with Back, B, Esc or a walk key: he waves and the camera eases out. Reduced Motion: no hand tilt, lean, wiggle or floating hearts. Sounds are stand-ins (brush loop, squeak). `/alive pet2 off`: the old screen exactly. |
 
 ## Scoped, not built
 

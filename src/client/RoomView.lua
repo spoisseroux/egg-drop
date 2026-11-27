@@ -10,6 +10,8 @@ local MovementLock = require(script.Parent.MovementLock)
 local FocusTransition=require(script.Parent.FocusTransition)
 local FocusCharacterVisibility=require(script.Parent.FocusCharacterVisibility)
 local PetAffection=require(script.Parent.PetAffection)
+local PetCuddleUI=require(script.Parent.PetCuddleUI)
+local PetCuddle=require(ReplicatedStorage.Shared.PetCuddle)
 local HollowAmbience=require(script.Parent.HollowAmbience)
 -- The coo clock's daylight; garden hour E: through PetFace.moodDaylight, so pets keep the day coo wait at the hour's night.
 local function CooDaylight()return require(script.Parent.PetFace).moodDaylight(require(script.Parent.HollowClock).daylight())end
@@ -192,7 +194,10 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
   if self.petContactActive and self:contactEligible(self.contactContext)then self.audio:play(self.shownPet.cue,if index%2==0 then .96 else 1.06,.26)end
  end)
 	self.focusUI = PetFocusUI.new(gui, {
-		back = function() if self.focusing then self:useRoomCamera(false) end end,
+		-- pet2 (ONBOARDING-V3-BRIEF 4): the pet waves and the camera eases out over 0.3 s first (Room:cuddleExit).
+		back = function() if self.focusing then if self.focusUI and self.focusUI.cuddleOn then self:cuddleExit()else self:useRoomCamera(false)end end end,
+		-- pet2's sounds, Reduced Motion and the Affection hearts it quiets (PetCuddleUI; unused while the switch is off).
+		cuddle={audio=audio,reduced=function()return reduceEffects()==true end,affection=function()return self.affection end},
 		greet = function()return self:reactPet(false)end,
 		pet = function()return self:reactPet(true)end,
 		petContact=function(active)return self:setPetContact(active)end,
@@ -1108,10 +1113,43 @@ function Room:applyFocusPlan(plan, camera)
 	self.pet.lastFrame = -1
 	self.pet:update(0)
 	camera.CameraType = Enum.CameraType.Scriptable
-	camera.CFrame, camera.Focus, camera.FieldOfView = plan.camera, CFrame.new(plan.target), plan.fov
+	camera.CFrame, camera.Focus, camera.FieldOfView = Room.cuddleShot(plan), CFrame.new(plan.target), plan.fov
 	self.focusAspect = camera.ViewportSize.X / math.max(1, camera.ViewportSize.Y)
 	self.focusGeometry=Room.focusGeometryKey(camera,self.pet.rigRevision)
 	if self.focusUI then self.focusUI:cancelPointer() end
+end
+
+-- pet2 (ONBOARDING-V3-BRIEF 4): the close-up sits 15% closer to its target along the same line (so the planned
+-- clearances still hold); off, the plan's shot exactly.
+function Room.cuddleShot(plan,on)
+	if on==nil then on=PetCuddleUI.on()end
+	if not on then return plan.camera end
+	local target=plan.target
+	return CFrame.new(target+(plan.camera.Position-target)*(1-PetCuddle.CameraCloser))*plan.camera.Rotation
+end
+-- pet2's exit: the pet waves and the camera eases 0.3 s toward the roaming shot, then the usual covered return.
+-- Reduced Motion (or no saved shot): the usual return at once.
+function Room:cuddleExit()
+	if not self.focusing or self.focusExiting or self.focusTransitioning or self.cuddleLeaving then return false end
+	local camera,shot=workspace.CurrentCamera,self.greetingCamera
+	if self.reduceEffects()or GuiService.ReducedMotionEnabled or not camera or not shot or shot.camera~=camera or typeof(shot.transform)~="CFrame"then
+		return self:useRoomCamera(false)
+	end
+	self.cuddleLeaving=true
+	local epoch=self.focusEpoch
+	if self.focusUI then self.focusUI:cancelPointer()end
+	self:setPetContact(false)
+	if self.pet and self.pet.greet then self.pet:greet()end
+	local tween=TweenService:Create(camera,TweenInfo.new(PetCuddle.Exit.ease,Enum.EasingStyle.Quad,Enum.EasingDirection.InOut),
+		{CFrame=shot.transform,FieldOfView=shot.fov or camera.FieldOfView})
+	tween:Play()
+	task.delay(PetCuddle.Exit.ease,function()
+		self.cuddleLeaving=false
+		tween:Cancel()
+		if self.destroyed or self.focusEpoch~=epoch or not self.focusing then return end
+		self:useRoomCamera(false)
+	end)
+	return true
 end
 
 function Room.focusGeometryKey(camera,rigRevision)

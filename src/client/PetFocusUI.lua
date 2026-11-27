@@ -8,6 +8,9 @@ local RigBounds=require(script.Parent.PetRigBounds)
 -- Slice F (overnight 2026-11-14): the focus card's bond pips (Kit card, BondPips row).
 local Kit=require(script.Parent.DeckKit)
 local BondPips=require(script.Parent.BondPips)
+-- ONBOARDING-V3-BRIEF section 4 (Alive "pet2", beta and Studio): the cuter petting screen, built on the first open with
+-- the switch on and read at each open; off, nothing of it exists and this screen is exactly as before.
+local Cuddle=require(script.Parent.PetCuddleUI)
 local Focus = {}
 Focus.__index = Focus
 local serial = 0
@@ -417,6 +420,7 @@ end
 function Focus:inside(point)
 	local at,size=self.hit.Position,self.hit.Size
 	if point.X<at.X.Offset or point.Y<at.Y.Offset or point.X>at.X.Offset+size.X.Offset or point.Y>at.Y.Offset+size.Y.Offset then return false end
+	if self.cuddleOn and self.cuddle and self.cuddle:blocks(point)then return false end
 	for _,node in ipairs({self.back,self.helper,self.bondCard,self.pickupButton,self.statsButton,self.snacksButton,self.trayCard})do
 		if node and node.Visible then
 			local p,s=node.AbsolutePosition-self.root.AbsolutePosition,node.AbsoluteSize
@@ -446,7 +450,7 @@ function Focus:movePointer(input,began)
 	local point=Vector2.new(input.Position.X,input.Position.Y)-self.root.AbsolutePosition
 	if not self:inside(point)then self:cancelPointer();return end
 	local traveled=if self.previousPoint then(point-self.previousPoint).Magnitude else 0
-	self.glove.Position,self.glove.Visible=UDim2.fromOffset(point.X,point.Y),true
+	self.glove.Position,self.glove.Visible=UDim2.fromOffset(point.X,point.Y),not self.cuddleOn
 	self.glove.Rotation=if self.previousPoint then math.clamp((point.X-self.previousPoint.X)*.7,-16,16)else 0
 	self.previousPoint=point
 	if not began then self.strokeDistance+=traveled end
@@ -487,6 +491,11 @@ function Focus:setActive(active)
 	self:cancelPointer()
 	local prefix = self.actionPrefix
 	if active then
+		self.cuddleOn=Cuddle.on()
+		if self.cuddleOn then
+			self.cuddle=self.cuddle or Cuddle.new(self,self.callbacks.cuddle)
+			self.cuddle:begin();self.lastStepAt=nil
+		end
   self.openingGreetE=UserInputService:IsKeyDown(Enum.KeyCode.E)
   local greetKind=UserInputService:GetLastInputType()
   self.openingGreetDevice=if string.match(greetKind.Name,"^Gamepad")and UserInputService:IsGamepadButtonDown(greetKind,Enum.KeyCode.ButtonX)then greetKind else nil
@@ -498,6 +507,10 @@ function Focus:setActive(active)
 		ContextActionService:BindActionAtPriority(prefix .. "Back", function(_, state)
 			return self:handleBack(state)
 		end, false, priority + 1, Enum.KeyCode.ButtonB)
+		-- pet2: Esc leaves too (the brief's exit: Back, B, Esc or any walk input).
+		if self.cuddleOn then
+			ContextActionService:BindActionAtPriority(prefix .. "Escape", function(_, state)return self:handleBack(state)end, false, priority + 1, Enum.KeyCode.Escape)
+		end
 		ContextActionService:BindActionAtPriority(prefix .. "Greet", function(_, state,input)
 			return self:handleGreet(state,input)
 		end, false, priority, Enum.KeyCode.E, Enum.KeyCode.ButtonX)
@@ -521,8 +534,14 @@ function Focus:setActive(active)
 	else
 		if self.focusLessonStarted then self:retireFocusHint()end
 		self.openingADevice=nil;self.openingTouches=nil;self.openingMouse=false;self.openingGreetE=false;self.openingGreetDevice=nil
-		for _, suffix in ipairs({ "Back", "Greet", "Move", "Stats", "Snacks" }) do ContextActionService:UnbindAction(prefix .. suffix) end
+		for _, suffix in ipairs({ "Back", "Greet", "Move", "Stats", "Snacks", "Escape" }) do ContextActionService:UnbindAction(prefix .. suffix) end
 		self:closeSnacks()
+		if self.cuddleOn then
+			self.cuddleOn=false
+			if self.cuddle then self.cuddle:finish()end
+			-- The bond card comes back exactly as the pill found it.
+			if self.bondInfo then self:setBond(self.bondInfo)end
+		end
 		if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.panel) then GuiService.SelectedObject = nil end
 	end
 end
@@ -632,7 +651,8 @@ function Focus:update(camera, pet, roamHint)
 	self.petRectPosition=if position then position+self.root.AbsolutePosition else nil
 	self.petRectSize=size
 	if position and canReact and not self.saveNotice then self.focusLessonStarted=true end
-	self.helper.Visible=self.saveNotice~=nil or(self.focusLessonStarted and not self.focusLessonRetired)
+	-- pet2: the "Rub {pet}!" pill teaches it; this line only carries a save notice.
+	self.helper.Visible=self.saveNotice~=nil or(not self.cuddleOn and self.focusLessonStarted and not self.focusLessonRetired)
 	self:checkContactDeadline()
 	self.hit.Visible, self.hit.Interactable = position ~= nil and canReact, canReact
 	if position then
@@ -643,6 +663,12 @@ function Focus:update(camera, pet, roamHint)
     end
 	if not canReact or not position then self:cancelPointer() end
 	if not ownsInput and GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.panel) then GuiService.SelectedObject = nil end
+	if self.cuddleOn and self.cuddle then
+		local now=os.clock()
+		local dt=if self.lastStepAt then now-self.lastStepAt else 0
+		self.lastStepAt=now
+		self.cuddle:step(dt,camera,pet,position,size)
+	end
 end
 
 function Focus:canOwnInput()
@@ -682,6 +708,17 @@ end
 
 function Focus:handleMove(state,input)
 	if not self.active or not self:canOwnInput()then return Enum.ContextActionResult.Pass end
+	-- pet2: the left stick moves the mitten; any other walk input (not A) leaves, as Back does.
+	if self.cuddleOn and input then
+		if input.KeyCode==Enum.KeyCode.Thumbstick1 then
+			if self.cuddle then self.cuddle:stick(if state==Enum.UserInputState.End or state==Enum.UserInputState.Cancel then nil else input.Position)end
+			return Enum.ContextActionResult.Sink
+		end
+		if input.KeyCode~=Enum.KeyCode.ButtonA then
+			if state==Enum.UserInputState.Begin then self.callbacks.back()end
+			return Enum.ContextActionResult.Sink
+		end
+	end
 	if input and input.KeyCode==Enum.KeyCode.ButtonA then
 		if self.openingADevice==input.UserInputType then
 			if state==Enum.UserInputState.End or state==Enum.UserInputState.Cancel then self.openingADevice=nil end
@@ -705,6 +742,7 @@ function Focus:destroy()
 	self:cancelPointer()
 	self.destroyed = true
 	if self.tray then self.tray:destroy();self.tray=nil end
+	if self.cuddle then self.cuddle:destroy();self.cuddle=nil end
 	for _, connection in ipairs(self.connections) do connection:Disconnect() end
 	table.clear(self.connections)
 	self.gui:Destroy()
