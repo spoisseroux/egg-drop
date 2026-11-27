@@ -110,6 +110,8 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           "BumbleBallView",
           # GARDEN-B38-BRIEF 1: the three plain balls' patterns (Felt patchwork, Dot, Hoop), from the band and disc system.
           "BumbleBallLook",
+          # GARDEN-B38-BRIEF 4a: the tree grades, the trunk pack, the graded kit and every reader on it (placeholder: today).
+          "TreeGrades",
           # The garden's crunchy toys (GARDEN-PLAY-BRIEF 2026-11-26 section 2): spots, budget, switch, timings, the client.
           "CrunchToys",
           # The garden's drift lanterns and seed fluff (GARDEN-PLAY-BRIEF section 4): spots, heights, night, the client.

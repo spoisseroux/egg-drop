@@ -116,8 +116,17 @@ function Flowers.groundPlates(options)
 		decal.Parent=part
 		table.insert(plates,{part=part,position=part.Position,ground=true})
 	end
+	-- Beta 38: under a graded tree (TreeGrades: the grades on) the litter grows with its trunk, 5 to 6.5 across.
+	-- options.graded (specs) else TreeGrades.on().
+	local graded=options.graded
+	if graded==nil then
+		local ok,on=pcall(function()return require(Shared:WaitForChild("TreeGrades")).on()end)
+		graded=ok and on==true
+	end
+	local Grades=require(Shared:WaitForChild("TreeGrades"))
 	for _,row in ipairs(Ground.Litter)do
-		plate("GroundLitter",row,Vector3.new(row[4],Dressing.Thickness,row[4]),art(Look.litter.texture),nil,Look.litter)
+		local across=Grades.litter(row[6],row[4],graded)
+		plate("GroundLitter",row,Vector3.new(across,Dressing.Thickness,across),art(Look.litter.texture),nil,Look.litter)
 	end
 	for _,row in ipairs(Ground.Lawn)do
 		local b=row[6]=="b"

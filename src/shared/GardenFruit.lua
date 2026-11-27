@@ -129,25 +129,30 @@ function Fruit.on()
 end
 
 local function vector(list)return Vector3.new(list[1],list[2],list[3])end
-local treesCache
--- The fruit trees (see the header). data: WorldAeroKit (specs pass their own; nil reads it).
-function Fruit.trees(data)
-	if data==nil and treesCache then return treesCache end
-	local kit=data or require(Shared.WorldAeroKit)
+local treesCache={}
+-- The fruit trees (see the header). data: WorldAeroKit (specs pass their own; nil reads it). Beta 38: graded
+-- (TreeGrades.kit) while the tree grades are on (`graded`; nil asks TreeGrades.on), so the centre, the trunk's spot and
+-- its radius (Trunk x the trunk's own scale) are the trees every client draws; the rules on them are unchanged.
+function Fruit.trees(data,graded)
+	local Grades=require(Shared.TreeGrades)
+	if graded==nil then graded=Grades.on()end
+	local key=if graded then "graded"else "today"
+	if data==nil and treesCache[key]then return treesCache[key]end
+	local kit=Grades.kit(data or require(Shared.WorldAeroKit),graded)
 	local out={}
 	for _,crown in ipairs(kit.crowns or {})do
 		local mesh=kit.meshes and kit.meshes[crown.mesh]
 		if mesh and Fruit.Kinds[mesh.kind]then
 			local pivot=vector(crown.pivot)
-			local centre=pivot+CFrame.Angles(0,crown.yaw,0):VectorToWorldSpace(vector(mesh.pivotToCentre)*crown.scale)
+			local centre=pivot+CFrame.Angles(0,crown.yaw,0):VectorToWorldSpace(vector(mesh.pivotToCentre)*Grades.scaleOf(crown))
 			table.insert(out,{tree=crown.tree,centre=centre,x=pivot.X,z=pivot.Z,
-				trunk=Fruit.TrunkOf[crown.tree]or Fruit.Trunk*crown.scale})
+				trunk=Fruit.TrunkOf[crown.tree]or Fruit.Trunk*(crown.trunk or crown.scale)})
 		end
 	end
 	table.sort(out,function(a,b)return a.tree<b.tree end)
 	for i,tree in ipairs(out)do tree.i=i;out[i]=table.freeze(tree)end
 	out=table.freeze(out)
-	if data==nil then treesCache=out end
+	if data==nil then treesCache[key]=out end
 	return out
 end
 

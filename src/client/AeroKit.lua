@@ -24,12 +24,34 @@ local function vector(list)return Vector3.new(list[1],list[2],list[3])end
 
 -- A shared crown on its tree: the part's CFrame and Size, and the pivot it turns about. `mesh` is WorldAeroKit.meshes[name].
 -- pivotToCentre is the mesh's bounds centre from its pivot in the tree's frame at scale 1, before the tree's yaw.
+-- Beta 38 (TreeGrades.kit): a graded crown's `wide` widens it across (X and Z, in its own frame) on top of its scale.
 function Kit.crownFrame(crown,mesh)
-	local scale=crown.scale
+	local s=crown.scale
+	local w=crown.wide or 1
+	local scale=Vector3.new(s*w,s,s*w)
 	local yaw=CFrame.Angles(0,crown.yaw,0)
 	local pivot=vector(crown.pivot)
 	local centre=pivot+yaw:VectorToWorldSpace(vector(mesh.pivotToCentre)*scale)
 	return CFrame.new(centre)*yaw*Kit.Turn,vector(mesh.size)*scale,pivot
+end
+-- Beta 38: a shared trunk on its tree (WorldAeroTrunks): the part's CFrame and Size. rootToCentre is the mesh's bounds
+-- centre from the tree's root in its frame at scale 1, before the yaw; `grade` the trunk's TreeGrades multiplier.
+function Kit.trunkFrame(row,mesh,grade)
+	local scale=row.scale*(grade or 1)
+	local yaw=CFrame.Angles(0,row.yaw,0)
+	local centre=vector(row.root)+yaw:VectorToWorldSpace(vector(mesh.rootToCentre)*scale)
+	return CFrame.new(centre)*yaw*Kit.Turn,vector(mesh.size)*scale
+end
+-- Beta 38: is the trunk pack whole (every mesh of `data` a MeshPart template in `templates`)?
+function Kit.trunksWhole(data,templates)
+	if type(data)~="table"or type(data.meshes)~="table"or templates==nil then return false end
+	local any=false
+	for name in pairs(data.meshes)do
+		local t=templates:FindFirstChild(name)
+		if not(t and t:IsA("MeshPart"))then return false end
+		any=true
+	end
+	return any
 end
 -- A part authored in place (rest, falls): at its bounds centre.
 function Kit.placedFrame(mesh)
@@ -100,6 +122,41 @@ function Kit.build(options)
 		if string.sub(name,-#"__kitfoam")=="__kitfoam"then Kit.glow(p)end
 		p.Parent=folder
 	end
+	-- Beta 38 (the tree grades): the trunk pack, when given whole (options.trunks = {data = WorldAeroTrunks, templates,
+	-- grade(tree) -> number}): each tree's shared trunk at its grade and the landmarks' trunks as they are, static and
+	-- shadowed like the island's bark. The merged W7_Trunks__bark then hides its visual (AeroWorld; its collision stays).
+	local trunks=options.trunks
+	local hides=table.clone(data.hides or {})
+	if trunks and Kit.trunksWhole(trunks.data,trunks.templates)then
+		local function cloneTrunk(name)
+			local p=trunks.templates:FindFirstChild(name):Clone()
+			inert(p)
+			p:SetAttribute("WorldMesh",true)
+			p:SetAttribute("TreeTrunk",true)
+			table.insert(parts,p)
+			return p
+		end
+		for _,row in ipairs(trunks.data.trunks)do
+			local mesh=trunks.data.meshes[row.mesh]
+			assert(mesh and mesh.rootToCentre,"kit trunk without a mesh: "..tostring(row.mesh))
+			local cframe,size=Kit.trunkFrame(row,mesh,trunks.grade and trunks.grade(row.tree)or 1)
+			local p=cloneTrunk(row.mesh)
+			p.Size,p.CFrame=size,cframe
+			p.Parent=folder
+		end
+		for name,mesh in pairs(trunks.data.meshes)do
+			if mesh.role=="rest"then
+				local cframe,size=Kit.placedFrame(mesh)
+				local p=cloneTrunk(name)
+				p.Size,p.CFrame=size,cframe
+				p.Parent=folder
+			end
+		end
+		for _,name in ipairs(trunks.data.hides or {})do table.insert(hides,name)end
+		trunks=true
+	else
+		trunks=false
+	end
 	for index,rock in ipairs(data.rocks or {})do
 		local ball=Instance.new("Part")
 		ball.Name="RockCollision"
@@ -131,7 +188,7 @@ function Kit.build(options)
 	-- The fader before the folder goes in: a throw here leaves nothing in the room (code review r2).
 	local fader=options.fade and Kit.fader(parts,options.fade)
 	folder.Parent=options.parent
-	local handle={folder=folder,data=data,parts=parts}
+	local handle={folder=folder,data=data,parts=parts,hides=hides,trunks=trunks}
 	function handle.destroy()
 		if fader then fader.destroy()end
 		pcall(function()folder:Destroy()end)

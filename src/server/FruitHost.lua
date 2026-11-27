@@ -69,7 +69,9 @@ function Host.new(d)
 		return ok and on==true
 	end
 	self.rootOf=d.root or root
-	self.trees=d.trees or Fruit.trees()
+	-- Beta 38: read each time (GardenFruit.trees caches): the trees follow the tree grades' `scene` switch, as the
+	-- clients' do. The rules on them are unchanged.
+	self.trees=d.trees
 	self.remote=d.remote
 	return self
 end
@@ -112,7 +114,7 @@ function Host:receive(player,packet)
 	if clock-rec.at<Host.RequestGap then return nil,"Throttled"end
 	rec.at=clock
 	if not self.on()then return nil,"Off"end
-	if not whole(packet.tree)or not self.trees[packet.tree]then return nil,"Tree"end
+	if not whole(packet.tree)or not self:treesNow()[packet.tree]then return nil,"Tree"end
 	if kind=="shake"then return self:shake(board,rec,packet.tree,clock)end
 	if not finite(packet.x)or not finite(packet.z)then return nil,"Spot"end
 	local ok,reason,petId=self:check(board,rec,packet.tree,packet.x,packet.z,clock)
@@ -125,9 +127,10 @@ function Host:receive(player,packet)
 	self:flush(player,board)
 	return true
 end
+function Host:treesNow()return self.trees or Fruit.trees()end
 -- A shake: the root at the server by the trunk; once per tree per Shake.gap. Its fruit is claimable for Window.
 function Host:shake(board,rec,i,clock)
-	local tree=self.trees[i]
+	local tree=self:treesNow()[i]
 	local at=self.rootOf(board)
 	if not at or not Fruit.shakes(tree,at.X,at.Z,nil,Fruit.Shake.slack)then return nil,"Far"end
 	if clock-(rec.shakeAt[i]or -math.huge)<Fruit.Shake.gap then return nil,"Rate"end
@@ -150,7 +153,7 @@ function Host:check(board,rec,i,x,z,clock)
 	if clock-rec.paidAt<Fruit.Gap then return false,"Rate"end
 	local left=d.nursery.fruitLeft(handle)-(if rec.flight then 1 else 0)-#rec.queue
 	if left<=0 then return false,"DailyLimit"end
-	local tree=self.trees[i]
+	local tree=self:treesNow()[i]
 	if not Fruit.nearTree(tree,x,z)then return false,"Far"end
 	local now=self.now()
 	local shook=rec.shaken[i]~=nil and clock-rec.shaken[i]<=Fruit.Window

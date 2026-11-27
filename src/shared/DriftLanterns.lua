@@ -135,6 +135,9 @@ Lanterns.KindOrder=table.freeze({"imp","cherub"})
 -- standing trees' crown middles (scripts/build_life_spots.py crown() over vegetation-placements.json less the declutter).
 Lanterns.HatchCrown=table.freeze({x=-36.1,z=-18,keep=20})
 Lanterns.CrownKeep=9
+-- Beta 38 (TreeGrades): the shade crowns grow x1.45 across (the rim three x1.7), about 2.5 studs more each side, so
+-- with the grades on a low balloon keeps CrownKeepGraded. The spots keep both (the grades may be off).
+Lanterns.CrownKeepGraded=12
 Lanterns.Crowns=table.freeze({
 	{-99.44,-15.38},{-61.73,-24.38},{-70.41,-43.85},{-8.32,-47.79},{-76.22,15.68},{-66.38,27.92},{-33.63,37.73},
 	{-27.89,56.38},{18.36,44.13},{52.38,56.02},{66.41,25.84},{73.99,12.38},{37.67,7.78},{72.43,-22.2},{37.61,-61.94},
@@ -142,11 +145,12 @@ Lanterns.Crowns=table.freeze({
 })
 -- Pure: nil when (x, z) keeps clear of every crown, else what it is too near (the low layer's rule; mid and high are
 -- over every crown and keep only the hatch tree's 20 and the paving).
-function Lanterns.crownClash(x,z)
+function Lanterns.crownClash(x,z,graded)
 	local H=Lanterns.HatchCrown
 	if Vector2.new(x-H.x,z-H.z).Magnitude<H.keep then return "the hatch tree's crown"end
+	local keep=if graded then Lanterns.CrownKeepGraded else Lanterns.CrownKeep
 	for _,c in ipairs(Lanterns.Crowns)do
-		if Vector2.new(x-c[1],z-c[2]).Magnitude<Lanterns.CrownKeep then return string.format("the crown at (%g, %g)",c[1],c[2])end
+		if Vector2.new(x-c[1],z-c[2]).Magnitude<keep then return string.format("the crown at (%g, %g)",c[1],c[2])end
 	end
 	return nil
 end
@@ -156,7 +160,7 @@ end
 -- are coral, teal, mustard with never the same one on neighbours.
 Lanterns.Places=table.freeze({
 	table.freeze({id="low_knoll",layer="low",x=-27,z=20.3,over=14,scale=1,accent=1,mascot=true}),
-	table.freeze({id="low_fountain",layer="low",x=47,z=13,over=14,scale=1,accent=3,mascot=true}),
+	table.freeze({id="low_fountain",layer="low",x=50,z=16,over=14,scale=1,accent=3,mascot=true}), -- from (47, 13): 12 off Tree_15's graded crown
 	table.freeze({id="mid_stream",layer="mid",x=14,z=31,over=30,scale=1.25,accent=2}),
 	table.freeze({id="mid_west",layer="mid",x=-58,z=40,over=36,scale=1.25,accent=3}),
 	table.freeze({id="mid_east",layer="mid",x=86,z=-6,over=42,scale=1.25,accent=1}),
