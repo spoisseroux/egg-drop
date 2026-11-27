@@ -5,53 +5,53 @@
  "meshes": {
   "bush": {
    "name": "Understory_B38_Bush",
-   "tris": 120,
+   "tris": 176,
    "centre": [
     0.0,
-    0.92,
+    0.85,
     0.0
    ],
    "size": [
-    2.993,
+    2.9364,
     2.0,
     3.0
    ],
-   "hash": "6d5b065c849bc9b0"
+   "hash": "033df6252134b3de"
   },
   "flower": {
    "name": "Understory_B38_BushFlower",
-   "tris": 120,
+   "tris": 176,
    "centre": [
     0.0,
-    0.92,
+    0.85,
     0.0
    ],
    "size": [
-    2.993,
+    2.9364,
     2.0,
     3.0
    ],
-   "hash": "d5689df205847802"
+   "hash": "ddf1d0a0568623d7"
   },
   "reeds": {
    "name": "Understory_B38_Reeds",
-   "tris": 36,
+   "tris": 38,
    "centre": [
-    -0.0761,
+    -0.0175,
     1.5172,
-    -0.0985
+    -0.0868
    ],
    "size": [
-    1.9854,
+    1.8683,
     3.1344,
-    2.0111
+    2.0191
    ],
-   "hash": "e62e44ba398327e8"
+   "hash": "1a8332b311b45d33"
   }
  },
  "triangles": {
-  "bush": 120,
-  "flower": 120,
-  "reeds": 36
+  "bush": 176,
+  "flower": 176,
+  "reeds": 38
  }
 }

@@ -11,9 +11,11 @@ forward -Z, up Y (as the nest landmark), so Roblox imports each mesh turned by p
 its origin at its bounds centre; the manifest records each mesh's bounds centre from the foot and its size, so the
 client seats it: CFrame.new(foot) * yaw * CFrame.new(centre * scale) * Turn, Size = size * scale.
 
-Budget (brief): bush 120 triangles, reeds 36. Reed blades and cattail stems are cards: each is two triangles back to
-back with their own vertices (Roblox culls back faces; a merged pair would smooth its normal to nothing). The bush keeps
-a soft smooth normal and a vertex-colour shade (darker low down and inside), which a MeshPart's TextureID multiplies.
+Budget (Fable review round 1): a bush at most 190 triangles, reeds at most 38. Reed blades and stems and the bush's
+leaf sprays are cards: each face is doubled back to back with its own vertices (Roblox culls back faces; a merged pair
+would smooth its normal to nothing). The bush's normals are custom split normals out from one point (one soft mass),
+and its shade is a vertex colour (.45 at the foot to 1.0 at the top, darker where lobes tuck together), which a MeshPart's
+TextureID multiplies (memory: roblox-surfaceappearance-runtime; the Aero falls kit ships vertex colour the same way).
 
 Writes assets/world/understory/understory.fbx and understory-manifest.json (names unique to this slice: memory note
 world-finish-template-names); with --render, renders the three meshes beside a player-height post (4.2) and a pet-size
@@ -36,14 +38,17 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "assets" / "world" / "understory"
 RENDERS = ROOT / "artifacts" / "qa-2026-11-27-beta37" / "understory"
 ATLAS = OUT / "understory-atlas.png"
-ATLAS_PX = 256.0
+ATLAS_PX = 512.0
 # Atlas regions, x0 y0 x1 y1 in pixels, image y down (scripts/draw_understory_atlas.py).
-REGION = {"bush": (0, 0, 128, 128), "flower": (128, 0, 256, 128), "blades": (0, 128, 96, 256),
-          "stem": (96, 128, 104, 256), "head": (104, 128, 128, 256)}
-INSET = 2.0                                   # pixels kept off each region's edge (mip bleed)
+REGION = {"bush": (0, 0, 256, 256), "flower": (256, 0, 512, 256), "blades": (0, 256, 192, 512),
+          "stem": (192, 256, 208, 512), "head": (208, 256, 256, 512)}
+INSET = 4.0                                   # pixels kept off each region's edge (mip bleed)
 NAMES = {"bush": "Understory_B38_Bush", "flower": "Understory_B38_BushFlower", "reeds": "Understory_B38_Reeds"}
-TRIS = {"bush": 120, "flower": 120, "reeds": 36}
+TRIS_CAP = {"bush": 190, "flower": 190, "reeds": 38}
 BUSH_ACROSS, BUSH_TALL = 3.0, 2.0             # design size; the client scales each bush to 2.5 / 4 across
+GROUND = -.15                                 # Roblox-local y the bush's skirt sinks to (it sits, never perches)
+NORMAL_FROM = (0, .4, 0)                      # Roblox-local: every bush normal points out from here (one soft mass)
+FRINGE = 28                                   # leaf-spray cards on the upper outline and the lobe joins
 SEED = 20261127
 
 
@@ -65,73 +70,134 @@ def region_uv(name, u, v):
 
 
 # ----------------------------------------------------------------------------------------------------------- bush
-def lump(bm, centre, radius, squash, subdiv, seed, sink):
-    """An icosphere pushed by seeded noise (leaf clusters, not a ball), its underside flattened at the ground."""
+# Fable review round 1 (FIX FIRST: "mossy boulders that perch on a point"): a subdiv-2 dome and four subdiv-1 shoulder
+# lobes pushed by stronger noise (.3); under each lobe's centre the shape stops tapering, keeps its radius (flare x 1.1)
+# and drops to the ground, and the faces left wholly under the lawn are deleted; 28 leaf-spray cards break the upper
+# outline and the joins; normals point out from one point so it shades as one soft mass; one continuous dome unwrap
+# round the bush's axis (its top at the region's centre); a vertex shade .45 at the foot to 1.0 at the top, darker
+# where one lobe tucks into another.
+LOBES = (  # Roblox-local centre, radius, vertical squash, icosphere subdivisions (bmesh: 2 = 80 faces, 1 = 20)
+    ((0, 1.0, 0), 1.18, .82, 2),
+    ((.92, .6, .32), .74, .86, 1), ((-.3, .58, .9), .72, .84, 1),
+    ((-.94, .62, -.2), .76, .86, 1), ((.2, .56, -.92), .72, .84, 1),
+)
+
+
+def lump(bm, centre, radius, squash, subdiv, seed):
     made = bmesh.ops.create_icosphere(bm, subdivisions=subdiv, radius=1.0)
-    out = []
     off = Vector((seed * 3.7, seed * 1.3, seed * 2.1))
+    c = bl(centre)
     for vert in made["verts"]:
         d = vert.co.normalized()
-        bump = noise.noise(d * 1.6 + off) * .16 + noise.noise(d * 3.4 + off * 2) * .06
+        bump = noise.noise(d * 1.4 + off) * .3 + noise.noise(d * 3.2 + off * 2) * .08
         r = radius * (1 + bump)
-        p = Vector((d.x * r, d.y * r, d.z * r * squash)) + bl(centre)
-        if p.z < -sink:                              # Blender z is up: tuck the underside just under the lawn
-            p.z = -sink
-        vert.co = p
-        out.append(vert)
-    return made
+        if d.z >= 0:
+            vert.co = Vector((d.x * r, d.y * r, d.z * r * squash)) + c
+        else:
+            # below the centre: no taper, the full radius flared x 1.1, straight down into the lawn
+            h = math.hypot(d.x, d.y)
+            if h < 1e-6:
+                vert.co = Vector((c.x, c.y, GROUND))
+            else:
+                vert.co = Vector((c.x + d.x / h * r * 1.1, c.y + d.y / h * r * 1.1, GROUND))
+    return made["verts"]
+
+
+def dome_uv(region, p, centre, theta_max):
+    """The dome unwrap: angle from the bush's axis above `centre` maps to the radius, azimuth to the angle round."""
+    d = p - centre
+    theta = math.atan2(math.hypot(d.x, d.y), d.z)
+    phi = math.atan2(d.y, d.x)
+    r = .5 * min(1.0, theta / theta_max)
+    return region_uv(region, .5 + r * math.cos(phi), .5 - r * math.sin(phi))
 
 
 def build_bush(name, region):
+    rnd = random.Random(SEED + 7)
     bm = bmesh.new()
     uv = bm.loops.layers.uv.new("UVMap")
     col = bm.loops.layers.color.new("Col")
-    # Six leaf clusters of 20 triangles (bmesh icosphere subdivisions 1): a crowning one, four round the shoulder and one
-    # leaning off the top, so the outline is clumps like the tree crowns, never one smooth boulder. 120 in all.
-    for k, (centre, radius, squash) in enumerate((
-            ((0, 1.05, 0), .95, .85), ((.82, .62, .3), .72, .85), ((-.2, .6, .86), .7, .82),
-            ((-.86, .64, -.12), .74, .85), ((.1, .58, -.84), .7, .82), ((.36, 1.42, -.28), .6, .9))):
-        lump(bm, centre, radius, squash, 1, k + 1, .08)
+    owner = {}
+    for k, (centre, radius, squash, subdiv) in enumerate(LOBES):
+        for v in lump(bm, centre, radius, squash, subdiv, k + 1):
+            owner[v] = k
     bmesh.ops.triangulate(bm, faces=bm.faces)
-    bm.normal_update()
-    # scale to the design size exactly (3 across, 2 tall from the ground)
+    under = [f for f in bm.faces if all(v.co.z <= GROUND + 1e-4 for v in f.verts)]
+    bmesh.ops.delete(bm, geom=under, context="FACES")
+    # where one lobe tucks into another: darker (a factor per vertex, applied with the height shade below)
+    tuck = {}
+    for v in bm.verts:
+        k = owner.get(v)
+        f = 1.0
+        for j, (centre, radius, _, _) in enumerate(LOBES):
+            if j == k:
+                continue
+            dist = (v.co - bl(centre)).length / radius
+            if dist < 1.15:
+                f = min(f, .72 + .28 * max(0.0, (dist - .6) / .55))
+        tuck[v] = f
+    # fringe anchors: core vertices on the upper outline (far out for their height) and at the lobe joins
+    axis = bl(NORMAL_FROM)
+    bm.verts.index_update()
+    cands = []
+    for v in bm.verts:
+        if v.co.z < .45 or not v.link_faces:
+            continue
+        score = math.hypot(v.co.x, v.co.y) * .6 + v.co.z * .5 + (1 - tuck[v]) * 3 + rnd.random() * .4
+        cands.append((-score, v.index, v.co.copy(), (v.co - axis).normalized()))
+    cands.sort(key=lambda c: (c[0], c[1]))
+    anchors = []
+    for _, _, co, n in cands:
+        if all((co - a).length > .42 for a, _ in anchors):
+            anchors.append((co, n))
+        if len(anchors) == FRINGE:
+            break
+    assert len(anchors) == FRINGE, len(anchors)
+    up = Vector((0, 0, 1))
+    for co, n in anchors:
+        # a spray lies along the surface toward the outline and tips out about 30 degrees, its foot buried, so only the
+        # leaf tip breaks the silhouette (straight out, the cards read as thorns)
+        along = up - n * up.dot(n)
+        along = (along if along.length > 1e-4 else n.orthogonal()).normalized()
+        direction = (along * .82 + n * .5).normalized()
+        base = co - n * .14
+        tip = base + direction * (.5 + rnd.random() * .2)
+        t = n.cross(up)
+        t = (t if t.length > 1e-4 else Vector((1, 0, 0))).normalized()
+        t = (Matrix.Rotation(rnd.uniform(-.6, .6), 3, direction) @ t).normalized()
+        w = .2 + rnd.random() * .06
+        card(bm, uv, col, [rb(base - t * w), rb(base + t * w), rb(tip)], [(0, 0)] * 3, [1, 1, 1])
+    bmesh.ops.triangulate(bm, faces=bm.faces)
+    # scale to the design size: 3 across; 2 tall from the sunk skirt (GROUND stays GROUND)
     xs = [v.co.x for v in bm.verts]
     ys = [v.co.y for v in bm.verts]
     zs = [v.co.z for v in bm.verts]
     cx, cy = (max(xs) + min(xs)) / 2, (max(ys) + min(ys)) / 2
     sx = BUSH_ACROSS / max(max(xs) - min(xs), max(ys) - min(ys))
-    sz = BUSH_TALL / (max(zs) - min(zs))
-    z0 = min(zs)
+    sz = BUSH_TALL / (max(zs) - GROUND)
     for v in bm.verts:
-        v.co = Vector(((v.co.x - cx) * sx, (v.co.y - cy) * sx, (v.co.z - z0) * sz - .08))
-    bm.normal_update()
-    span = BUSH_ACROSS * 1.02
+        v.co = Vector(((v.co.x - cx) * sx, (v.co.y - cy) * sx, (v.co.z - GROUND) * sz + GROUND))
+    top = max(v.co.z for v in bm.verts)
+    theta_max = max(math.atan2(math.hypot(v.co.x, v.co.y), v.co.z - axis.z) for v in bm.verts)
     for f in bm.faces:
         f.smooth = True
-        n = f.normal
-        ax = max(range(3), key=lambda i: abs(n[i]))
-        a, b = [(1, 2), (0, 2), (0, 1)][ax]
         for loop in f.loops:
             p = loop.vert.co
-            # each face is its own planar island (the leaf print hides the seams): a top face takes x and y, a side
-            # face its horizontal axis across and the height down the region
-            u = p[a] / span + .5
-            v = (.5 - p[b] / span) if ax == 2 else (1 - (p.z + .1) / (BUSH_TALL + .2))
-            loop[uv].uv = region_uv(region, u, v)
-            # shade: darker low down (the clusters shade each other), never black
-            h = max(0.0, min(1.0, (p.z + .08) / BUSH_TALL))
-            k = .66 + .34 * h
+            loop[uv].uv = dome_uv(region, p, axis, theta_max)
+            h = max(0.0, min(1.0, (p.z - GROUND) / (top - GROUND)))
+            k = (.45 + .55 * h) * tuck.get(loop.vert, 1.0)
             loop[col] = (k, k, k, 1.0)
-    return finish(bm, name)
+    return finish(bm, name, normals_from=axis)
 
 
 # ---------------------------------------------------------------------------------------------------------- reeds
-def card(bm, uv, col, pts, uvs, shades):
-    """One triangle as two back to back faces, each with its own vertices (flat, so each side lights as itself)."""
-    for order in ((0, 1, 2), (0, 2, 1)):
+def card(bm, uv, col, pts, uvs, shades, smooth=False):
+    """A triangle or quad as two back to back faces, each with its own vertices (flat, so each side lights as itself)."""
+    n = len(pts)
+    for order in (tuple(range(n)), (0,) + tuple(range(n - 1, 0, -1))):
         vs = [bm.verts.new(bl(pts[i])) for i in order]
         f = bm.faces.new(vs)
-        f.smooth = False
+        f.smooth = smooth
         for loop, i in zip(f.loops, order):
             loop[uv].uv = uvs[i]
             k = shades[i]
@@ -139,11 +205,12 @@ def card(bm, uv, col, pts, uvs, shades):
 
 
 def build_reeds(name):
+    """Nine blades (2 triangles each), two stems as constant-width quads (4 each), two spindle heads (6 each): 38."""
     rnd = random.Random(SEED)
     bm = bmesh.new()
     uv = bm.loops.layers.uv.new("UVMap")
     col = bm.loops.layers.color.new("Col")
-    blades = 10
+    blades = 9
     for k in range(blades):
         a = k / blades * math.tau + rnd.uniform(-.25, .25)
         r = .08 + rnd.random() * .3
@@ -155,58 +222,59 @@ def build_reeds(name):
         w = .07 + rnd.random() * .04
         left = (foot[0] - math.cos(side) * w, foot[1], foot[2] - math.sin(side) * w)
         right = (foot[0] + math.cos(side) * w, foot[1], foot[2] + math.sin(side) * w)
-        strip = k % 8                                           # eight 12 px strips across the blade region
+        strip = k % 8                                           # eight 24 px strips across the blade region
         u0, u1 = strip / 8 + .01, (strip + 1) / 8 - .01
         card(bm, uv, col, [left, right, tip],
              [region_uv("blades", u0, 1), region_uv("blades", u1, 1), region_uv("blades", (u0 + u1) / 2, 0)],
              [.7, .7, 1.0])
     for k in range(2):
         a = k * math.pi + .6
-        foot = (math.cos(a) * .12, -.05, math.sin(a) * .12)
+        foot = Vector((math.cos(a) * .12, -.05, math.sin(a) * .12))
         tall = 2.75 + k * .35
         lean = math.radians(5 + k * 4)
-        top = Vector((foot[0] + math.cos(a) * math.sin(lean) * tall, tall * math.cos(lean), foot[2] + math.sin(a) * math.sin(lean) * tall))
-        side = a + math.pi / 2
-        w = .035
+        axis = Vector((math.cos(a) * math.sin(lean), math.cos(lean), math.sin(a) * math.sin(lean)))
+        top = foot + axis * tall
+        head_low = top - axis * .62                             # the spindle: .55 long, .07 of bare stem tip above it
+        head_top = top - axis * .07
+        stem_top = head_low + axis * .1                         # the stem runs into the head
+        side = Vector((math.cos(a + math.pi / 2), 0, math.sin(a + math.pi / 2)))
+        w = .03
         card(bm, uv, col,
-             [(foot[0] - math.cos(side) * w, foot[1], foot[2] - math.sin(side) * w),
-              (foot[0] + math.cos(side) * w, foot[1], foot[2] + math.sin(side) * w), tuple(top)],
-             [region_uv("stem", 0, 1), region_uv("stem", 1, 1), region_uv("stem", .5, 0)], [.7, .7, .95])
-        # the head: a three-sided velvet sleeve (6 triangles, open ends) .5 long, its top .35 under the stem's tip
-        axis = (top - Vector(foot)).normalized()
-        head_top = top - axis * .35
-        head_low = head_top - axis * .5
+             [tuple(foot - side * w), tuple(foot + side * w), tuple(stem_top + side * w), tuple(stem_top - side * w)],
+             [region_uv("stem", 0, 1), region_uv("stem", 1, 1), region_uv("stem", 1, 0), region_uv("stem", 0, 0)],
+             [.7, .7, .95, .95])
+        # the head: a three-sided spindle pointed at both ends, radius .055 at its middle (6 triangles)
         ref = Vector((0, 1, 0)) if abs(axis.y) < .9 else Vector((1, 0, 0))
         e1 = axis.cross(ref).normalized()
         e2 = axis.cross(e1).normalized()
-        ring = []
-        for s in range(3):
-            t = s / 3 * math.tau
-            ring.append((math.cos(t) * e1 + math.sin(t) * e2) * .09)
+        mid = (head_low + head_top) / 2
+        ring = [mid + (math.cos(s / 3 * math.tau) * e1 + math.sin(s / 3 * math.tau) * e2) * .055 for s in range(3)]
         for s in range(3):
             q0, q1 = ring[s], ring[(s + 1) % 3]
-            # (point, around 0..1, along 0..1) round the quad
-            quad = [(head_low + q0, s / 3, 0), (head_low + q1, (s + 1) / 3, 0), (head_top + q1, (s + 1) / 3, 1),
-                    (head_top + q0, s / 3, 1)]
-            # wound so the face looks out along (q0 + q1), in Blender space
-            p0, p1, p2 = (bl(tuple(q[0])) for q in quad[:3])
-            if (p1 - p0).cross(p2 - p0).dot(bl(tuple(q0 + q1))) < 0:
-                quad.reverse()
-            f = bm.faces.new([bm.verts.new(bl(tuple(q[0]))) for q in quad])
-            f.smooth = True
-            for loop, (_, around, along) in zip(f.loops, quad):
-                loop[uv].uv = region_uv("head", around, 1 - along)
-                k = .75 + .25 * along
-                loop[col] = (k, k, k, 1.0)
+            for tip_pt, along in ((head_top, 1.0), (head_low, 0.0)):
+                tri = [(q0, s / 3, .5), (q1, (s + 1) / 3, .5), (tip_pt, (s + .5) / 3, along)]
+                p0, p1, p2 = (bl(tuple(q[0])) for q in tri)
+                outward = bl(tuple((q0 + q1) / 2 - mid))
+                if (p1 - p0).cross(p2 - p0).dot(outward) < 0:
+                    tri.reverse()
+                f = bm.faces.new([bm.verts.new(bl(tuple(q[0]))) for q in tri])
+                f.smooth = True
+                for loop, (_, around, al) in zip(f.loops, tri):
+                    loop[uv].uv = region_uv("head", around, 1 - al)
+                    kk = .75 + .25 * al
+                    loop[col] = (kk, kk, kk, 1.0)
     bmesh.ops.triangulate(bm, faces=bm.faces)
     return finish(bm, name)
 
 
 # --------------------------------------------------------------------------------------------------------- common
-def finish(bm, name):
+def finish(bm, name, normals_from=None):
     me = bpy.data.meshes.new(name)
     bm.to_mesh(me)
     bm.free()
+    if normals_from is not None:
+        # custom split normals, every one out from a single point: the bush shades as one soft mass
+        me.normals_split_custom_set_from_vertices([tuple((v.co - normals_from).normalized()) for v in me.vertices])
     obj = bpy.data.objects.new(name, me)
     bpy.context.scene.collection.objects.link(obj)
     return obj
@@ -241,7 +309,7 @@ def main():
     meshes = {}
     for key, obj in objs.items():
         n = tris(obj)
-        assert n == TRIS[key], (key, n, TRIS[key])
+        assert n <= TRIS_CAP[key], (key, n, TRIS_CAP[key])
         centre, size = bounds(obj)
         meshes[key] = {"name": obj.name, "tris": n, "centre": centre, "size": size, "hash": digest(obj)}
     assert meshes["bush"]["hash"] != meshes["flower"]["hash"], "the flowering bush must sit on its own atlas region"
@@ -301,6 +369,8 @@ def material(name, image=None, colour=None, rough=.95, vcol=False):
     elif colour:
         bsdf.inputs["Base Color"].default_value = (*colour, 1)
     bsdf.inputs["Roughness"].default_value = rough
+    # as Roblox draws a mesh: back faces culled (the doubled cards' far halves would z-fight their near halves)
+    mat.use_backface_culling = True
     for key in ("Specular IOR Level", "Specular"):
         if key in bsdf.inputs:
             bsdf.inputs[key].default_value = .15
@@ -343,7 +413,7 @@ def render(objs, meshes):
     ]
     for src, name, foot, scale, yaw in lineup:
         place(src, name, foot, scale, yaw)
-    bpy.ops.mesh.primitive_plane_add(size=80, location=(0, 0, 0))
+    bpy.ops.mesh.primitive_plane_add(size=240, location=(0, 0, 0))
     ground = bpy.context.object
     ground.data.materials.append(material("Lawn", colour=lin("#56A54B"), rough=1))
     bpy.ops.mesh.primitive_cylinder_add(radius=.6, depth=4.2, location=bl((8, 2.1, 0)))
@@ -381,7 +451,9 @@ def render(objs, meshes):
     scene.collection.objects.link(cam)
     scene.camera = cam
     views = (("lineup", (-1, 4.2, -13), (-1, 1.3, 3)), ("player-eye", (-2, 5.2, -6), (-1, 1.0, 9)),
-             ("close", (-3.5, 2.6, -5.2), (-3.5, 1.0, 1)), ("reeds", (4.5, 2.2, -4.5), (3.6, 1.6, 0)))
+             ("close", (-3.5, 2.6, -5.2), (-3.5, 1.0, 1)), ("reeds", (4.5, 2.2, -4.5), (3.6, 1.6, 0)),
+             # Fable: a player's eye (.8 scale, eyes about 3.6 up) 6 studs from the cluster, the lawn behind it
+             ("lawn-behind", (-4, 3.6, 3.6), (-4, .9, 9.6)))
     for label, eye, target in views:
         e, t = bl(eye), bl(target)
         cam.location = e

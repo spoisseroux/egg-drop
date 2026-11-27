@@ -16,9 +16,10 @@ local U={}
 U.Feature="scene"
 U.Data=Data
 U.Art=Art
--- The brief's counts and budget: 46 instances, 32 x 120 + 14 x 36 = 4,344 triangles, 32 blob decals.
+-- The brief's counts; the budget after Fable's review round 1 (a bush up to 190 triangles, reeds up to 38): 46 instances,
+-- 32 x 176 + 14 x 38 = 6,164 triangles, 32 blob decals.
 U.Counts=table.freeze({bushes=24,flowering=8,reeds=14})
-U.Budget=table.freeze({instances=46,blobs=32,triangles=4344})
+U.Budget=table.freeze({instances=46,blobs=32,triangles=6164,bushCap=190,reedsCap=38})
 -- Sizes (studs): round bushes 2.5 and 4 across, 1.5 to 2.5 tall (see-over for a .8 player, 4.2 tall); flowering 2.5 to 3.
 U.Sizes=table.freeze({bush=table.freeze({across={2.5,4},tall={1.5,2.5}}),flower=table.freeze({across={2.5,3},tall={1.5,2.5}}),
 	reeds=table.freeze({scale={.8,1.15}})})

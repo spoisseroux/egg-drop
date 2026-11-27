@@ -29,12 +29,12 @@ return function(client,offline)
 		return{Connect=function(_,fn)return b.Event:Connect(fn)end,Fire=function(_,...)b:Fire(...)end}
 	end
 
-	test("the brief's counts and budget: 24 bushes in eight threes, 8 flowering in pairs, 14 reeds; 46 parts, 4,344 tris",function()
+	test("the brief's counts and budget: 24 bushes in eight threes, 8 flowering in pairs, 14 reeds; 46 parts, 6,164 tris",function()
 		assert(#Data.Bushes==U.Counts.bushes and #Data.Flowering==U.Counts.flowering and #Data.Reeds==U.Counts.reeds)
 		assert(U.Budget.instances==#Data.Bushes+#Data.Flowering+#Data.Reeds)
 		assert(U.Budget.blobs==#Data.Bushes+#Data.Flowering)
 		local tris=(#Data.Bushes)*Art.Meshes.bush.tris+(#Data.Flowering)*Art.Meshes.flower.tris+(#Data.Reeds)*Art.Meshes.reeds.tris
-		assert(tris==U.Budget.triangles and Art.Meshes.bush.tris==120 and Art.Meshes.reeds.tris==36,"triangles "..tris)
+		assert(tris==U.Budget.triangles and Art.Meshes.bush.tris<=U.Budget.bushCap and Art.Meshes.flower.tris==Art.Meshes.bush.tris and Art.Meshes.reeds.tris<=U.Budget.reedsCap,"triangles "..tris)
 		local sites={}
 		for _,row in ipairs(Data.Bushes)do sites[row[7]]=(sites[row[7]]or 0)+1 end
 		local n=0
@@ -114,8 +114,8 @@ return function(client,offline)
 	test("the art: placeholder ids draw nothing (never an error); a filled kind needs its mesh and the atlas",function()
 		for _,kind in ipairs(U.Kinds)do assert(Art.ready(kind)==Art.filled(Art.Meshes[kind].id)and Art.filled(Art.Atlas)==Art.ready(kind))end
 		local fake={Atlas="rbxassetid://5",Blob=nil,filled=Art.filled,ready=Art.ready,
-			Meshes={bush={id="rbxassetid://7",size=Art.Meshes.bush.size,centre=Art.Meshes.bush.centre,tris=120},
-				flower={id=nil,size=Art.Meshes.flower.size,centre=Art.Meshes.flower.centre,tris=120},
+			Meshes={bush={id="rbxassetid://7",size=Art.Meshes.bush.size,centre=Art.Meshes.bush.centre,tris=176},
+				flower={id=nil,size=Art.Meshes.flower.size,centre=Art.Meshes.flower.centre,tris=176},
 				reeds=Art.Meshes.reeds}}
 		assert(Art.ready("bush",fake)==true and Art.ready("flower",fake)==false)
 		assert(Art.ready("bush",{Atlas=nil,Meshes=fake.Meshes})==false,"no atlas, nothing")
@@ -151,9 +151,9 @@ return function(client,offline)
 		return c,state,changed,parent
 	end
 	local FILLED={Atlas="rbxassetid://11",Blob="rbxassetid://12",filled=Art.filled,ready=Art.ready,Meshes={
-		bush={id="rbxassetid://21",size=Art.Meshes.bush.size,centre=Art.Meshes.bush.centre,tris=120},
-		flower={id="rbxassetid://22",size=Art.Meshes.flower.size,centre=Art.Meshes.flower.centre,tris=120},
-		reeds={id="rbxassetid://23",size=Art.Meshes.reeds.size,centre=Art.Meshes.reeds.centre,tris=36}}}
+		bush={id="rbxassetid://21",size=Art.Meshes.bush.size,centre=Art.Meshes.bush.centre,tris=176},
+		flower={id="rbxassetid://22",size=Art.Meshes.flower.size,centre=Art.Meshes.flower.centre,tris=176},
+		reeds={id="rbxassetid://23",size=Art.Meshes.reeds.size,centre=Art.Meshes.reeds.centre,tris=38}}}
 
 	test("the client: nothing on live or with scene off; the shipped placeholders build an empty folder, no error",function()
 		assert(Alive.ceiling("scene",nil,LIVE,false)==false,"never on live")
