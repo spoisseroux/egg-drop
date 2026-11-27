@@ -71,7 +71,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # "This week" (GARDEN-PLAY-BRIEF-2 section 8): the weekly wardrobe pick's rotation, prices, listing and purchase.
          "ThisWeek",
          # Onboarding v3 brief (qa-2026-11-27-beta37) section 2: the glow steps' pure rules (TrailGlow).
-         "TrailGlow"]
+         "TrailGlow",
+         # The petting screen (ONBOARDING-V3-BRIEF section 4, switch pet2): the heart, the lean, the mitten, the spots.
+         "PetCuddle"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.

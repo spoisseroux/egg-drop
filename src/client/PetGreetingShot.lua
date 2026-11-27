@@ -81,8 +81,10 @@ function Shot.captureFocusedSubject(pet)
 		local body=CFrame.new(pet.origin)*CFrame.Angles(0,pet.yaw or 0,0)*CFrame.new(cached.center)
 		return body,cached.size,cached.body,cached.envelope,true
 	end
- local keys={"reducedEffects","idleMotionFrozen","origin","yaw","time","greeting","focusPose","gaitWeight","movementBob","affectionTilt","lastFrame","expression","petting","affection","gardenAction","actionPhase"}
+ local keys={"reducedEffects","idleMotionFrozen","origin","yaw","time","greeting","focusPose","gaitWeight","movementBob","affectionTilt","lastFrame","expression","petting","affection","gardenAction","actionPhase","cuddle"}
 	local saved={};for _,key in ipairs(keys)do saved[key]=pet[key]end
+	-- pet2's lean and look (PetCuddleUI) never shape the cached focus envelope.
+	pet.cuddle=nil
 	pet.reducedEffects=false
  pet.idleMotionFrozen=true
 	pet.origin,pet.yaw,pet.time=Vector3.zero,0,0

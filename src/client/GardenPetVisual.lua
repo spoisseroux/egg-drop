@@ -310,6 +310,9 @@ function Visual:update(dt)
  local blink,breath,bodyStretch,headPitch,headYaw,dotX,dotY,dotStretch=Motion.sample(self,expression)
  if beat then headPitch+=beatPitch;headYaw+=beatYaw;bodyStretch+=beatStretch;eye*=beatEye;if beatMouth then mouth="open"end end
  headYaw+=lookYaw+helloYaw;headPitch-=Sit.HeadUp*sit
+ -- pet2 (PetCuddleUI): the head follows the mitten and the rubbed spot answers; nil whenever that screen is closed.
+ local cuddle=self.cuddle
+ if cuddle then headYaw+=cuddle.headYaw or 0;headPitch+=cuddle.headPitch or 0;eye*=cuddle.eye or 1;bodyStretch+=cuddle.stretch or 0 end
  -- Beta (34): the look round or sniff in the pause after a stroll (PetWalkBeats, set by PetFollow.activity).
  if not reduced and self.gardenAction=="wanderPause"then headYaw+=self.walkLookYaw or 0;headPitch+=self.walkLookPitch or 0 end
  -- Ears roll about their base anchors and the tail yaws about its anchor (C1).
@@ -324,6 +327,7 @@ function Visual:update(dt)
  -- Sitting perks the ears; a scamper (over 7 studs a second) lays them back 10 degrees.
  local scamper=if self.reducedEffects then 0 else math.clamp(((self.travelSpeed or 0)-7)/1.5,0,1)*(self.gaitWeight or 0)
  earL+=Sit.EarPerk*sit-math.rad(10)*scamper;earR+=Sit.EarPerk*sit-math.rad(10)*scamper
+ if cuddle and not reveal then earL+=cuddle.ear or 0;earR+=cuddle.ear or 0 end
  local hinges=self.appendageHinges
  if not hinges or hinges.scale~=self.scale then
   local anchors=self.definition.anchors
@@ -358,7 +362,7 @@ function Visual:update(dt)
  -- Walk body (B2): lean 4 degrees into travel; sitting lowers 0.22 and leans back 6.
  -- Beta (34): and a touch more forward as a walk gets going, back as it settles (PetFollow.lean).
  local lean=math.rad(4)*gait-Sit.Pitch*sit+(if reduced then 0 else(self.accelLean or 0))
- local upper=root*CFrame.new(weightX,-(self.careBodyLower or 0)-Sit.Lower*self.scale*sit,0)*CFrame.new(hipAnchor)*CFrame.Angles(lean,0,weightRoll+(beatHip or 0))*CFrame.new(-hipAnchor)
+ local upper=root*CFrame.new(weightX,-(self.careBodyLower or 0)-Sit.Lower*self.scale*sit,0)*CFrame.new(hipAnchor)*CFrame.Angles(lean+(if cuddle then cuddle.pitch or 0 else 0),if cuddle then cuddle.sway or 0 else 0,weightRoll+(beatHip or 0)+(if cuddle then cuddle.roll or 0 else 0))*CFrame.new(-hipAnchor)
  -- A 0.12 s settle squash at half the boop when a walk stops.
  if(self.lastGait or 0)>.3 and gait<.05 and not reduced then self.settleAt=os.clock()end
  self.lastGait=gait
@@ -370,15 +374,19 @@ function Visual:update(dt)
  self.boopSquash=boop
  -- Head nods 2 degrees a quarter cycle behind the two-bounce walk.
  headPitch+=math.rad(2)*math.sin(2*(self.gaitPhase or 0)-math.pi*.5)*gait
- local hop=(greet*.11+reactHop*.11-boop*.05+(self.movementBob or 0)+(beatRise or 0))*self.scale
+ local hop=(greet*.11+reactHop*.11-boop*.05+(self.movementBob or 0)+(beatRise or 0)+(if cuddle then cuddle.hop or 0 else 0))*self.scale
  local headAnchor=v(self.definition.anchors.Head)*self.scale
- local head=upper*CFrame.new(0,hop+(pose.head+breath)*self.scale,0)*CFrame.new(headAnchor)*CFrame.Angles(-greet*.08+shove*.15+headPitch+cooNod+(self.careHeadPitch or 0),headYaw,pose.tilt-weightRoll*.5+(self.affectionTilt or 0)*.08+cooRoll+(self.careHeadRoll or 0)+Sit.side(self)*Sit.HeadTilt*sit)*CFrame.new(-headAnchor)
+ local head=upper*CFrame.new(0,hop+(pose.head+breath)*self.scale,0)*CFrame.new(headAnchor)*CFrame.Angles(-greet*.08+shove*.15+headPitch+cooNod+(self.careHeadPitch or 0),headYaw,pose.tilt-weightRoll*.5+(self.affectionTilt or 0)*.08+cooRoll+(self.careHeadRoll or 0)+Sit.side(self)*Sit.HeadTilt*sit+(if cuddle then cuddle.headRoll or 0 else 0))*CFrame.new(-headAnchor)
  Bounds.begin(self);Bounds.begin(self.bodyHull)
  for _,entry in ipairs(self.pieces)do
   local name,channel=entry.name,entry.channel;local part=entry.part
   local cf=upper*CFrame.new(0,hop,0)*entry.frame
   local isFace=channel=="Face"or string.find(name,"Eye")or string.find(name,"Glint")or string.find(name,"Mouth")or string.find(name,"Teeth")or string.find(name,"Cheek")
   if channel=="Head"or isFace or channel=="Charm"then cf=head*entry.frame end
+  -- pet2: the eyes look toward the mitten (a small shift across the face, in the head's own frame).
+  if cuddle and isFace and(cuddle.eyeX~=0 or cuddle.eyeY~=0)and(string.find(name,"Eye")or string.find(name,"Glint"))then
+   cf=head*CFrame.new((cuddle.eyeX or 0)*self.scale,(cuddle.eyeY or 0)*self.scale,0)*entry.frame
+  end
   if channel=="Head"and(entry.earSide or string.sub(name,1,3)=="Ear")then
    -- Ear pieces and anything pierced through an ear roll about the ear's base anchor.
    local left=(entry.earSide or string.sub(name,-1))=="L";local hinge=if left then hinges.EarL else hinges.EarR
@@ -452,7 +460,7 @@ function Visual:update(dt)
   end
   Face.paintSurface(entry,self,daylight)
   if entry.faceRole then
-   local tint=if entry.faceRole=="cheek"then entry.color:Lerp(self.colors.blush,math.clamp(pose.blush+(self.affectionBlush or 0),0,1))else nil
+   local tint=if entry.faceRole=="cheek"then entry.color:Lerp(self.colors.blush,math.clamp(pose.blush+(self.affectionBlush or 0)+(if cuddle then cuddle.blush or 0 else 0),0,1))else nil
    Face.paint(entry,self.worldContext,tint,daylight)
   end
   if entry.role=="charm"then Charms.paintVisibility(entry,hidden,self.secondaryColor)end
