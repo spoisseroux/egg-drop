@@ -51,6 +51,7 @@ local Models=require(Shared:WaitForChild("EggModels")).Egg
 local Stations=require(script.Parent:WaitForChild("LoungeStations"))
 local Corner=require(Shared:WaitForChild("EggCorner"))
 local Land=require(Shared:WaitForChild("NestLandmark"))
+local GiftArt=require(Shared:WaitForChild("GiftArt"))
 local Client={};Client.__index=Client
 Client.Folder="EggDropSleepyNest"
 Client.Event="NestEvent"
@@ -177,6 +178,10 @@ function Client.secondLine(view)
 end
 -- "Inside: {item} and {stars} Stars." or "Inside: {stars} Stars."
 function Client.inside(view)
+	-- The gift chain (Onboard "gifts", GIFT-ART-BRIEF 4): the gift's name waits for the hatch; only its kind shows.
+	if Client.giftPeekOn()and view.gift.kind~="stars"then
+		return UICopy.get("onb3.nest.insideKind",{kind=UICopy.get("onb3.nest.kind."..view.gift.kind),stars=view.gift.stars})
+	end
 	local name=Client.itemName(view.gift.kind,view.gift.item,view.pet)
 	if name then return UICopy.get("onb3.nest.inside",{item=name,stars=view.gift.stars})end
 	return UICopy.get("onb3.nest.insideStars",{stars=view.gift.stars})
@@ -452,6 +457,7 @@ function Client:clear()
 	self.view,self.drawn,self.egg,self.hatching,self.waiting,self.queued,self.tuck=nil,nil,nil,nil,nil,nil,nil
 	self.beat,self.beatUntil=nil,nil
 	self.looking=nil -- code review of 071d8a6: a Peek never outlives its nest
+	self:endGiftPeek()
 	table.clear(self.beats)
 end
 function Client:close()
@@ -1109,7 +1115,7 @@ function Client:act()
 		self.tuck={t=0,first=self.view.n==0}
 		self:play("pet_coo_1",.85,.35)
 		if self.egg then pcall(function()self.egg.zzz:Emit(3)end)end
-		self:peek()
+		if Client.giftPeekOn()then self:giftPeek()else self:peek()end
 		return true
 	elseif self.action=="hatch"then
 		if not self:send("claim")then return false end
@@ -1130,6 +1136,8 @@ Client.Look=table.freeze({seconds=1.6,lift=.15,tilt=8,tileIn=.1,tileHold=1.3,pro
 local function easeOutQuad(x)return 1-(1-x)*(1-x)end
 function Client:peekLook()
 	if not self.isOpen or not self.view or not self.egg or self.looking then return false end
+	-- The gift chain (Onboard "gifts"): the Peek verb plays the same look as the tuck's.
+	if Client.giftPeekOn()then return self:giftPeek()end
 	self.looking={t=0}
 	self.promptAfter=self.clock+Client.Look.seconds+Client.Look.promptRest
 	self:play("pet_coo_1",.85,.2)
@@ -1175,6 +1183,162 @@ function Client:peek(timing)
 	end
 	table.insert(self.beats,{kind="peek",board=board,t=0,parts={tile,chip},labels={item,count,stars},timing=timing,
 		keepPill=timing~=nil}) -- the look keeps the pill's clock showing
+end
+-- ── The gift Peek (GIFT-ART-BRIEF section 4, Onboard "gifts"; the schedule and shapes are GiftArt.peek) ──────────
+-- Replaces the cream tile on the tuck, and the Peek verb plays the same look (2.4 s, no camera move, no card). Honest:
+-- the nest egg holds the gift, never a pet. The egg rocks three times, each smaller, as the Bear leans in; a zigzag
+-- crack of light opens across its front (cream inside, the shell's lavender at its edges, a lavender point light, four
+-- shafts fanning 40 degrees); in the light a 72 px disc shows the gift's real kind as an ink silhouette under a white
+-- "?" (its name waits for the hatch), the true Stars chip and "Egg n of 7" below; the Bear gasps (hops back, paws up);
+-- at 1.9 the crack closes, the disc shrinks into it, one Zzz puff and "Sweet dreams!". Light only: the shell is never
+-- broken or marked. The prompt is off for 3 s. Reduced Motion: the light and the disc fade in and out (.2 s), held
+-- 1.6 s; no rock, shafts or bob. Off: the tile above, exactly.
+-- deps (optional): bear(pose or nil) (the garden pet's overlay while it is by the nest), haptic(name), event(name).
+function Client.giftPeekOn()return Onboard.on("gifts")end
+-- Pure: the "Sweet dreams!" pill's words and the disc's lines for a view (the name is never among them).
+function Client.giftPeekWords(view)
+	return{stars="+"..tostring(view.gift.stars).." ★",count=if view.egg<=Nest.WeekLength then UICopy.get("onb3.nest.count",{count=view.egg})else "",
+		sweet=UICopy.get("onb3.nest.sweet")}
+end
+function Client:giftPeek()
+	local egg,view=self.egg,self.view
+	if not egg or not view or self.peeking then return false end
+	local P=GiftArt.Peek
+	local reduced=self:reduced()
+	local folder=make("Folder",self.folder,{Name="GiftPeekLight"})
+	local cream,shell=GiftArt.color("crack"),GiftArt.color("shell")
+	local function glow(name,color,transparency)
+		return inert(make("Part",folder,{Name=name,Size=Vector3.new(.1,.05,.02),Color=color,Material=Enum.Material.Neon,Transparency=transparency or 1}))
+	end
+	local peek={t=0,last=-1,reduced=reduced,folder=folder,segments={},edges={},shafts={}}
+	local points=GiftArt.crackPoints()
+	for i=1,#points-1 do
+		peek.edges[i]=glow("CrackEdge"..i,shell)
+		peek.segments[i]=glow("Crack"..i,cream)
+	end
+	for i=1,P.shafts.count do peek.shafts[i]=glow("Shaft"..i,cream)end
+	peek.lamp=inert(make("Part",folder,{Name="CrackLamp",Size=Vector3.new(.1,.1,.1),Transparency=1}))
+	peek.light=make("PointLight",peek.lamp,{Name="CrackLight",Color=shell,Range=P.light.range,Brightness=0,Shadows=false})
+	-- the disc, in the light
+	local words=Client.giftPeekWords(view)
+	local D=P.disc
+	local board=make("BillboardGui",egg.anchor,{Name="GiftPeekDisc",LightInfluence=0,AlwaysOnTop=not self.landmark,MaxDistance=60,Size=UDim2.fromOffset(120,132)})
+	local holder=make("Frame",board,{Name="Holder",AnchorPoint=Vector2.new(.5,0),Position=UDim2.fromScale(.5,0),Size=UDim2.fromOffset(D.size,D.size),BackgroundTransparency=1})
+	local scale=make("UIScale",holder,{Scale=0})
+	local disc=make("Frame",holder,{Name="Disc",Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.new(1,1,1),BackgroundTransparency=GiftArt.GlassTransparency,BorderSizePixel=0,ZIndex=2})
+	corner(disc)
+	make("UIStroke",disc,{Color=GiftArt.color("ink"),Thickness=2})
+	local ok,Draw=pcall(require,script.Parent:WaitForChild("GiftEggArt"))
+	local drawn,why=ok,Draw
+	if ok then drawn,why=pcall(Draw.silhouette,disc,view.gift.kind,Color3.new(1,1,1),3)end
+	if not drawn then warn("[Nest] the Peek's silhouette: "..tostring(why))end
+	local q=make("TextLabel",holder,{Name="Question",BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromScale(1,1),
+		Text="?",Font=Enum.Font.FredokaOne,TextSize=D.q,TextColor3=Color3.new(1,1,1),TextStrokeColor3=GiftArt.color("ink"),TextStrokeTransparency=.2,ZIndex=6})
+	q.AutoLocalize=false
+	local chip=make("Frame",board,{Name="Stars",AnchorPoint=Vector2.new(.5,0),Position=UDim2.new(.5,0,0,D.size+6),Size=UDim2.fromOffset(64,24),
+		BackgroundColor3=GiftArt.color("gold"),BorderSizePixel=0})
+	corner(chip)
+	local stars=label(chip,"Count",15,Client.Color.ink);stars.Text=words.stars;stars.AutoLocalize=false
+	local count=label(board,"Count",13,Client.Color.text)
+	count.Position=UDim2.new(0,0,0,D.size+32);count.Size=UDim2.new(1,0,0,18);count.Text=words.count
+	count.TextStrokeColor3=GiftArt.color("ink");count.TextStrokeTransparency=.3
+	peek.board,peek.holder,peek.scale,peek.q=board,holder,scale,q
+	peek.fades={disc=disc,chip=chip,stars=stars,count=count}
+	self.peeking=peek
+	self.promptAfter=self.clock+P.prompt
+	if self.d.event then pcall(self.d.event,"PeekShown")end
+	return true
+end
+function Client:endGiftPeek()
+	local peek=self.peeking
+	if not peek then return end
+	self.peeking=nil
+	pcall(function()peek.folder:Destroy()end)
+	pcall(function()peek.board:Destroy()end)
+	if self.d.bear then pcall(self.d.bear,nil)end
+end
+-- The Peek's cues and the Bear, each frame (before the egg is posed): the egg's extra rock in degrees.
+function Client:stepGiftPeek(dt)
+	local peek=self.peeking
+	if not peek then return 0 end
+	peek.t+=dt
+	local P=GiftArt.Peek
+	local s=GiftArt.peek(peek.t,peek.reduced)
+	peek.sample=s
+	for _,cue in ipairs(GiftArt.due(GiftArt.PeekCues,peek.last,peek.t))do
+		self:play(cue.sound,cue.speed,cue.volume)
+		if cue.buzz and self.d.haptic then pcall(self.d.haptic,cue.buzz)end
+		if cue.zzz and self.egg then pcall(function()self.egg.zzz:Emit(1)end)end
+		if cue.pill then self:say(Client.giftPeekWords(self.view).sweet,math.max(.5,P.seconds-P.pill+.2),2)end
+	end
+	peek.last=peek.t
+	if self.d.bear then
+		pcall(self.d.bear,if peek.reduced then nil else{lean=P.bear.lean*s.lean,back=s.back,hop=s.hop,paws=P.bear.paws*s.paws})
+	end
+	if s.done then self:endGiftPeek();return 0 end
+	return s.rock
+end
+-- The crack, its light, the shafts and the disc on the egg as posed this frame (`frame` at its base, the face +Z).
+function Client:placeGiftPeek(frame,scale,squash)
+	local peek=self.peeking
+	local s=peek and peek.sample
+	if not s then return end
+	local P=GiftArt.Peek
+	local C=P.crack
+	local H=1.3*scale*(squash or 1)
+	local r=.5*scale
+	local function onShell(x,y,out)
+		local z=math.sqrt(math.max(r*r-x*x,.01))+(out or 0)
+		return CFrame.new(x,y,z)*CFrame.Angles(0,math.atan2(x,z),0)
+	end
+	local points=GiftArt.crackPoints()
+	for i,segment in ipairs(peek.segments)do
+		local a,b=points[i],points[i+1]
+		local mx,my=(a.X+b.X)/2,(a.Y+b.Y)/2*H
+		local d=Vector2.new(b.X-a.X,(b.Y-a.Y)*H)
+		local roll=math.atan2(d.Y,d.X)
+		local at=frame*onShell(mx,my,.012)*CFrame.Angles(0,0,roll)
+		segment.Size=Vector3.new(d.Magnitude+.02,math.max(.005,C.line*s.crack),.02)
+		segment.CFrame=at
+		segment.Transparency=if s.crack>.02 then 0 else 1
+		local edge=peek.edges[i]
+		edge.Size=Vector3.new(d.Magnitude+.06,math.max(.005,C.edge*s.crack),.015)
+		edge.CFrame=frame*onShell(mx,my,.004)*CFrame.Angles(0,0,roll)
+		edge.Transparency=if s.crack>.02 then .25 else 1
+	end
+	local centre=frame*onShell(0,C.height*H,.02)
+	peek.lamp.CFrame=centre*CFrame.new(0,0,.3)
+	peek.light.Brightness=P.light.brightness*s.light
+	local S=P.shafts
+	for i,shaft in ipairs(peek.shafts)do
+		local length=S.length*s.shafts
+		shaft.Size=Vector3.new(S.width,.02,math.max(.01,length))
+		shaft.CFrame=centre*CFrame.Angles(0,math.rad(GiftArt.shaft(i)),0)*CFrame.Angles(math.rad(-15),0,0)*CFrame.new(0,0,length/2)
+		shaft.Transparency=if s.shafts>.02 then 1-S.alpha*s.shafts else 1
+	end
+	-- the disc floats in the light in front of the crack
+	local world=(centre*CFrame.new(0,.15,P.disc.out)).Position
+	peek.board.StudsOffsetWorldSpace=world-self.egg.anchor.CFrame.Position
+	peek.board.Enabled=s.disc>.01
+	peek.scale.Scale=if peek.reduced then 1 else math.max(.01,s.discScale)
+	peek.q.Position=UDim2.new(.5,0,.5,s.q)
+	local f=peek.fades
+	local alpha=s.disc
+	f.disc.BackgroundTransparency=1-(1-GiftArt.GlassTransparency)*alpha
+	f.chip.BackgroundTransparency=1-alpha
+	f.stars.TextTransparency=1-alpha
+	f.count.TextTransparency=1-alpha;f.count.TextStrokeTransparency=1-.7*alpha
+	peek.q.TextTransparency=1-alpha;peek.q.TextStrokeTransparency=1-.8*alpha
+	local sil=f.disc:FindFirstChild("Silhouette")
+	if sil then
+		for _,shape in ipairs(sil:GetChildren())do
+			if shape:IsA("Frame")then
+				-- a ring is its stroke only; every other shape is its fill
+				local stroke=shape:FindFirstChildOfClass("UIStroke")
+				if stroke then stroke.Transparency=1-alpha else shape.BackgroundTransparency=1-alpha end
+			end
+		end
+	end
 end
 -- A beat (beta 14 Q2, rows 1 to 3): the pill says `text` for `seconds`, over the other rows, and holds the need bubble
 -- back until BubbleAfter after it ends.
@@ -1358,6 +1522,8 @@ function Client:pose(dt)
 		rock+=tilted
 		if self.looking.t>=Client.Look.seconds then self.looking=nil end
 	end
+	-- The gift Peek (Onboard "gifts"): its three rocks.
+	if self.peeking then rock+=self:stepGiftPeek(dt)end
 	if self.waiting and not reduced then rock=14*math.sin(self.clock*6*2*math.pi);hop=0 end
 	local top,bottomFade,core=0,0,nil
 	if self.hatching then
@@ -1411,6 +1577,7 @@ function Client:pose(dt)
 	end
 	frame=frame*CFrame.Angles(0,0,math.rad(rock))*CFrame.new(0,hop,0)*CFrame.Angles(0,math.pi,0) -- the face looks at the dais
 	self:place(frame,s,squash,top,bottomFade,core)
+	if self.peeking then self:placeGiftPeek(frame,s,squash)end
 	-- Glow, light, sparks, Zzz.
 	local alpha=math.min(1,(halo or 0)+haloBoost)
 	egg.halo.Enabled=alpha>0
@@ -1467,6 +1634,7 @@ function Client:paintPill()
 	if row.hidden then alpha=1 end
 	-- The gift peek is up, or the pet focus (greeting) camera: no pill (it would read as the Bear's speech).
 	for _,item in ipairs(self.beats)do if item.kind=="peek"and not item.keepPill then alpha=1 end end
+	if self.peeking and self.peeking.t<GiftArt.Peek.pill then alpha=1 end
 	if d.focus~=nil and d.focus()==true then alpha=1 end
 	if self:reduced()and alpha<1 then alpha=0 end
 	local key=row.row..":"..row.text..":"..row.size..":"..tostring(row.lift)..":"..tostring(row.help)

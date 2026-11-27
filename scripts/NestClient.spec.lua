@@ -31,9 +31,9 @@ return function(client)
 	end
 	-- The cases below are the nest before the egg corner (its own cases are at the end, CORNER).
 	-- nestfirst=false: these cases pin the beta (27) ticket; the First Hatch ticket has its own case at the end.
-	local ON={flags={OnboardingV3=true},studio=true,corner=false,nestfirst=false}
-	local CORNER={flags={OnboardingV3=true},studio=true,nestfirst=false}
-	local OFF={flags={OnboardingV3=true},studio=true,nest=false,corner=false,nestfirst=false}
+	local ON={flags={OnboardingV3=true},studio=true,corner=false,nestfirst=false,gifts=false}
+	local CORNER={flags={OnboardingV3=true},studio=true,nestfirst=false,gifts=false}
+	local OFF={flags={OnboardingV3=true},studio=true,nest=false,corner=false,nestfirst=false,gifts=false}
 	local NOW=1800000000
 	local function rig(options)
 		options=options or {}
@@ -863,12 +863,12 @@ return function(client)
 		assert(Client.laterDay(7*3600,evening)and not Client.laterDay(7*3600,morning)and Client.laterDay(4*3600+1,evening))
 		assert(not Client.laterDay(3*3600,evening)and not Client.laterDay(0,evening),"8 pm + 3 h is still today")
 		Client.now=function()return morning end
-		local same=rig({env={flags={OnboardingV3=true},studio=true,corner=false}})
+		local same=rig({env={flags={OnboardingV3=true},studio=true,corner=false,gifts=false}})
 		same.fire(state(3600,{tucked=true}));same.client:step(0)
 		assert(same.tickets[1].data.text==UICopy.get("onb3.nest.chipHours",{hours=7}),"ready this afternoon: the countdown, never tomorrow")
 		same.client:clear();Onboard.inject(nil)
 		Client.now=function()return evening end
-		local r=rig({env={flags={OnboardingV3=true},studio=true,corner=false}})
+		local r=rig({env={flags={OnboardingV3=true},studio=true,corner=false,gifts=false}})
 		r.fire(state(3600));r.client:step(0)
 		assert(#r.tickets==0 or r.tickets[1].cancelled,"no ticket before the tuck")
 		r.fire(state(3600,{tucked=true}));r.client:step(0)
@@ -879,11 +879,11 @@ return function(client)
 		r.narrow=false;r.now=NOW;r.fire(state(Nest.Seconds,{tucked=true}));r.client:step(0)
 		assert(d.text==UICopy.get("onb3.nest.chipReady")and d.tone=="gold","ready: the ready words, never tomorrow")
 		r.client:clear();Onboard.inject(nil)
-		local later=rig({env={flags={OnboardingV3=true},studio=true,corner=false}})
+		local later=rig({env={flags={OnboardingV3=true},studio=true,corner=false,gifts=false}})
 		later.fire(state(3600,{n=1}));later.client:step(0)
 		assert(later.tickets[1].data.text==UICopy.get("onb3.nest.chipHours",{hours=7}),"a second egg counts down")
 		later.client:clear();Onboard.inject(nil)
-		local ready=rig({env={flags={OnboardingV3=true},studio=true,corner=false}})
+		local ready=rig({env={flags={OnboardingV3=true},studio=true,corner=false,gifts=false}})
 		ready.now=NOW;ready.fire(state(Nest.Seconds));ready.client:step(0)
 		assert(ready.tickets[1]and ready.tickets[1].data.text==UICopy.get("onb3.nest.chipReady"),"ready and never tucked: the gold ticket shows")
 		ready.client:clear();Onboard.inject(nil)
@@ -892,6 +892,78 @@ return function(client)
 		assert(off.tickets[1].data.text==UICopy.get("onb3.nest.chipHours",{hours=7}),"switch off: today's countdown")
 		off.client:clear();Onboard.inject(nil)
 		Client.now=savedNow
+	end)
+	-- GIFT-ART-BRIEF 4 (Onboard "gifts"): the gift Peek replaces the tile on the tuck and on the Peek verb.
+	local GiftArt=require(Shared.GiftArt)
+	local GIFTS={flags={OnboardingV3=true},studio=true,nestfirst=false}
+	local function giftRig(options)
+		options=options or {}
+		local poses,buzzes,events={},{},{}
+		local r=cornerRig({env=GIFTS,deps={bear=function(pose)table.insert(poses,pose or false)end,
+			haptic=function(name)table.insert(buzzes,name)end,event=function(name)table.insert(events,name)end}})
+		r.poses,r.buzzes,r.events=poses,buzzes,events
+		r.still=options.reduced==true
+		return r
+	end
+	local function texts(root)
+		local out={}
+		for _,o in ipairs(root:GetDescendants())do if o:IsA("TextLabel")then table.insert(out,o.Text)end end
+		return out
+	end
+	test("gift Peek on the tuck: the crack of light, the disc with the gift's kind, the true Stars, no name; prompt off 3 s",function()
+		local r=giftRig()
+		r.fire(state(60,{gift={kind="toy",item="ball",stars=5}}));r.step(.1)
+		assert(r.client.action=="tuck"and r.client:act())
+		local anchor=r.client.egg.anchor
+		assert(anchor:FindFirstChild("GiftPeek")==nil,"no cream tile")
+		local board=anchor:FindFirstChild("GiftPeekDisc")
+		assert(board~=nil,"the disc")
+		local light=r.folder():FindFirstChild("GiftPeekLight")
+		assert(light and light:FindFirstChild("Crack1")and light:FindFirstChild("Shaft4")and light:FindFirstChild("CrackLamp"),"the crack, shafts and lamp")
+		assert(math.abs(r.client.promptAfter-(r.client.clock+GiftArt.Peek.prompt))<1e-6,"the prompt is off for 3 s")
+		assert(r.events[1]=="PeekShown")
+		local words=table.concat(texts(board),"|")
+		assert(string.find(words,"+5 ★",1,true)and string.find(words,"Egg 1 of 7",1,true)and string.find(words,"?",1,true),words)
+		assert(not string.find(words,"Ball",1,true),"the name waits for the hatch")
+		local sil=board:FindFirstChild("Holder"):FindFirstChild("Disc"):FindFirstChild("Silhouette")
+		assert(sil and #sil:GetChildren()==#GiftArt.silhouette("toy"),"the toy's shape")
+		r.step(.1)
+		assert(r.heard("egg_wobble")==1 and r.buzzes[1]=="settle","the rock starts")
+		for _=1,6 do r.step(.1)end
+		assert(r.heard("egg_crack_glint")==1 and r.heard("reveal_shimmer")==1,"the crack at .6")
+		assert(board.Enabled==false or r.client.peeking.sample.disc<.05,"no disc before .8")
+		for _=1,5 do r.step(.1)end
+		assert(board.Enabled and r.heard("bear_boop")==1 and r.heard("reveal_hush")==1,"the disc and the gasp")
+		local gasp=r.poses[#r.poses]
+		assert(gasp and gasp.back>0 and gasp.paws>0,"the Bear hops back, paws up")
+		for _=1,8 do r.step(.1)end
+		assert(r.heard("blanket_rustle")==1 and r.client.egg.clock.Text==UICopy.get("onb3.nest.sweet"),"Sweet dreams! at 1.9")
+		for _=1,6 do r.step(.1)end
+		assert(r.client.peeking==nil and anchor:FindFirstChild("GiftPeekDisc")==nil and r.folder():FindFirstChild("GiftPeekLight")==nil,"over by 2.5")
+		assert(r.poses[#r.poses]==false,"the Bear is given back")
+		assert(not r.client:act()or r.client.action~="peek","nothing stacks")
+		Onboard.inject(nil)
+	end)
+	test("gift Peek: the Peek verb plays the same look; Reduced Motion fades it with no rock and no gasp; the inside line names the kind",function()
+		local r=giftRig()
+		r.fire(state(60));r.step(.1);r.client:act()
+		r.fire(state(60,{tucked=true}));r.step(3.2)
+		assert(r.client.action=="peek")
+		local sent=#r.sent
+		assert(r.client:act()==true and r.client.peeking~=nil and #r.sent==sent and #r.helps==0,"Peek: the look, no card, nothing sent")
+		assert(not r.client:act(),"E never stacks peeks")
+		r.client:clear()
+		local still=giftRig({reduced=true})
+		still.fire(state(60));still.step(.1);still.client:act()
+		for _=1,3 do still.step(.1)end
+		assert(still.client.peeking.sample.rock==0 and still.client.peeking.sample.shafts==0,"no rock or shafts")
+		for _,pose in ipairs(still.poses)do assert(pose==false,"no gasp")end
+		for _=1,19 do still.step(.1)end
+		assert(still.client.peeking==nil,"faded out by 2.2")
+		local view={n=1,pet="bear",gift={kind="hat",item="beanie",stars=10}}
+		assert(Client.inside(view)==UICopy.get("onb3.nest.insideKind",{kind=UICopy.get("onb3.nest.kind.hat"),stars=10}),Client.inside(view))
+		assert(Client.inside({n=1,pet="bear",gift={kind="stars",stars=3}})==UICopy.get("onb3.nest.insideStars",{stars=3}))
+		still.client:clear();Onboard.inject(nil)
 	end)
 	return{passed=#cases,cases=cases}
 end

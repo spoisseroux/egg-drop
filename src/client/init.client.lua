@@ -5223,6 +5223,25 @@ do
     return hit and hit.Position.Y
    end,
    measure=function(text,size)return TextService:GetTextSize(text,size,Enum.Font.FredokaOne,Vector2.new(1000,100)).X end,
+   -- The gift Peek (GIFT-ART-BRIEF 4, Onboard "gifts"): the Bear leans in and gasps while it is by the nest (never over
+   -- a paint wipe's pose), its buzzes, and the onboarding event.
+   bear=function(pose)
+    local pet=roomView.pet
+    if not pet then return end
+    local current=pet.giftPose
+    if current and current.tint then return end
+    if pose==nil then if current and current.nest then pet.giftPose=nil;pet.poseDirty=true end;return end
+    local nest=clientUI.nest
+    local at=nest and nest.root
+    if typeof(at)~="CFrame"or typeof(pet.origin)~="Vector3"or(pet.origin-at.Position).Magnitude>10 then
+     if current and current.nest then pet.giftPose=nil end
+     return
+    end
+    pose.nest=true
+    pet.giftPose=pose;pet.poseDirty=true
+   end,
+   haptic=function(name)pcall(function()require(script.Haptics).play(name)end)end,
+   event=function(name)request:FireServer("onboardEvent",name)end,
    meshes=function()
     local copies=Preview.cloneTemplates()
     if not copies and not asked then asked=true;Preview.loadTemplates(function()end)end
@@ -6126,26 +6145,45 @@ do
      toaster=toaster or require(script.DeckKit).toaster(overlayGui)
      toaster.show(Copy.get(key,{pet=petName()}))
     end
-    -- the ribbon hangs over the machine (an invisible part over the Hatch eggs trail's end)
-    local ribbonPart
-    local function machinePart()
-     local at=clientUI.eggCornerPlace and clientUI.eggCornerPlace()
-     if typeof(at)~="Vector3"then return nil end
-     if not(ribbonPart and ribbonPart.Parent)then
-      ribbonPart=Instance.new("Part");ribbonPart.Name="EggDropGiftRibbonAnchor";ribbonPart.Size=Vector3.new(1,1,1);ribbonPart.Transparency=1
-      ribbonPart.Anchored,ribbonPart.CanCollide,ribbonPart.CanQuery,ribbonPart.CanTouch,ribbonPart.CastShadow=true,false,false,false,false
-      ribbonPart.Parent=workspace
-     end
-     local want=at+Vector3.new(0,6,0)
-     if(ribbonPart.Position-want).Magnitude>.05 then ribbonPart.CFrame=CFrame.new(want)end
-     return ribbonPart
-    end
     local chain
     local seenWaiting={} -- giftSeen asks the server has not saved yet, by id
-    local giftBubble=require(script.GiftBubble).new({parent=playerGui,adornee=petPart,machine=machinePart,reduced=reducedNow,
+    local function haptic(name)pcall(function()require(script.Haptics).play(name)end)end
+    local function machine()return clientUI.eggMachine end
+    -- GIFT-ART-BRIEF 1: the ribbon is a real ribbon on the machine's dial (EggMachineClient:giftRibbon, GiftRibbon); a
+    -- tap on its "Free egg!" tag starts the gift like the chip.
+    local ribbonOptions={gui=function()return playerGui end,text=Copy.get("onbGift.freeEgg"),onTap=function()if chain then chain:resume()end end}
+    local giftBubble=require(script.GiftBubble).new({parent=playerGui,adornee=petPart,reduced=reducedNow,
      text=function(key)return Copy.get(key,{pet=petName()})end,
      onTap=function()if chain then chain:tap()end end,onClose=function()if chain then chain:close()end end,
-     onChip=function()if chain then chain:resume()end end})
+     onChip=function()if chain then chain:resume()end end,
+     -- the chip hides under any menu, card or the Deck
+     hidden=function()
+      return board:GetAttribute("Mode")~="Room"or clientUI.anyModalOpen()==true or Reveal.isOpen()
+     end,
+     distance=function()
+      local part,from=petPart(),rootPosition()
+      return if part and from then(part.Position-from).Magnitude else nil
+     end,
+     play=function(name,speed,volume)return audio:play(name,speed,volume)end,haptic=haptic,
+     ribbon=function(on)local m=machine();if m and m.giftRibbon then m:giftRibbon(on,ribbonOptions)end end})
+    -- GIFT-ART-BRIEF 3: the paint wipe on the pet after "Paint {pet}!"
+    local wipe=require(script.GiftPaintWipe).new({pet=function()return roomView.pet end,
+     play=function(name,speed,volume)return audio:play(name,speed,volume)end,haptic=haptic,
+     rise=function(name,from,to,seconds)
+      local voices=audio.voices and audio.voices[name]
+      local voice=voices and voices[(audio.indices and audio.indices[name])or 1]
+      if voice then voice.PlaybackSpeed=from;TweenService:Create(voice,TweenInfo.new(seconds,Enum.EasingStyle.Sine),{PlaybackSpeed=to}):Play()end
+     end,
+     fade=function(name,seconds)return audio:fadeCue(name,seconds)end,
+     reduced=reducedNow,budget=function()local ok,level=pcall(function()return require(script.AliveBudget).level()end);return ok and level or 0 end,
+     camera=function()return workspace.CurrentCamera end,gui=function()return playerGui end,
+     text=function(key,vars)return Copy.get(key,vars)end})
+    local function petScreen()
+     local part,camera=petPart(),workspace.CurrentCamera
+     if not(part and camera)then return nil end
+     local at,visible=camera:WorldToViewportPoint(part.Position+Vector3.new(0,1.2,0))
+     return if visible then Vector2.new(at.X,at.Y)else nil
+    end
     local drop={paint="Hue",toy="Toy"}
     local pressAction={paint="giftPaintBuy",toy="giftToyBuy"}
     local function petId()local shown=roomView.shownPet;return shown and shown.id or "pip"end
@@ -6153,14 +6191,26 @@ do
     local function present(record)
      local open=function()
       local pool=#ToyCatalog.remaining(nurseryState and nurseryState.toyUnlocks)+1
+      local id=petId()
+      local appearance=nurseryView.appearanceFor and nurseryView.appearanceFor(id)or nil
+      local hue=Hue.ById[record.item]
+      -- a pot the pet already wears: "Deeper {colour}!" and the wipe at 60% length
+      local deeper=record.kind=="paint"and type(appearance)=="table"and appearance.body==record.item
       Reveal.show(playerGui,record,{text=function(key,vars)vars=vars or {};vars.pet=vars.pet or petName();return Copy.get(key,vars)end,
-       pet=petName(),color=Hue.ById[record.item]and Hue.ById[record.item].color or nil,
-       itemName=if record.kind=="paint"then(Hue.ById[record.item]and Hue.ById[record.item].name or record.item)else(ToyCatalog.ById[record.item]and ToyCatalog.ById[record.item].name or record.item),
-       poolSize=pool,play=function(name)return audio:play(name,1,.6)end,
+       pet=petName(),petId=id,appearance=appearance,deeper=deeper,color=hue and hue.color or nil,
+       itemName=if record.kind=="paint"then(hue and hue.name or record.item)else(ToyCatalog.ById[record.item]and ToyCatalog.ById[record.item].name or record.item),
+       poolSize=pool,play=function(name,speed,volume)return audio:play(name,speed,volume)end,haptic=haptic,reduced=reducedNow,petScreen=petScreen,
        act=function(r)
-        if r.kind=="paint"then clientUI.hueIntent:use(petId(),"main",r.item,nil)
-        else clientUI.toyIntent:equip(petId(),r.item,nil)end
-        pcall(function()require(script.Haptics).play("settle")end)
+        if r.kind=="paint"then
+         pcall(wipe.prepare,wipe) -- the colours before the paint, so the sweep has where it starts from
+         clientUI.hueIntent:use(petId(),"main",r.item,nil)
+        else
+         clientUI.toyIntent:equip(petId(),r.item,nil)
+         haptic("settle")
+        end
+       end,
+       landed=function(r)
+        if r.kind=="paint"then pcall(wipe.start,wipe,{pot=hue and hue.color or nil,colour=hue and hue.name or r.item,pet=petName(),duplicate=deeper})end
        end,
        seen=function(r)
         local id=HttpService:GenerateGUID(false)
@@ -6234,6 +6284,8 @@ do
       elseif target=="Dash"then things.show("dash")end
      end,
      crank=function(kind,done)
+      -- the gift's own crank: its first tick unties the ribbon (GIFT-ART-BRIEF 1)
+      local m=machine();if m and m.giftCrank then pcall(m.giftCrank,m)end
       if kind=="snack"then
        local snacks=clientUI.snacks
        if not(snacks and snacks.buyGift)then done("Rejected","Unavailable");return end
@@ -6247,8 +6299,12 @@ do
       nurseryRequest:FireServer("giftEgg",{kind=kind,id=id})
       task.delay(30,function()if waiting[id]==w then waiting[id]=nil;done("Timeout","Timeout")end end)
      end,
-     replay=function(record)present(record)end,
+     replay=function(record)
+      local m=machine();if m and m.giftCrank then pcall(m.giftCrank,m)end
+      present(record)
+     end,
      refused=function(reason)
+      local m=machine();if m and m.giftCrank then pcall(m.giftCrank,m,false)end
       toast(if reason=="PouchFull"then "onbGift.room"elseif reason=="PetNotOut"then "onbGift.bring"else "onbGift.busy")
      end,
      inPark=function()return Attract.parkMember(rootPosition())end,

@@ -328,6 +328,49 @@ function Machine:confirm(cinematic)
 	self.gate=if cinematic then {from=now,cap=now+Machine.Cap,owner=cinematic,crank=self.crank}else nil
 	return true
 end
+-- GIFT-ART-BRIEF 1: the free egg's ribbon on the dial (GiftRibbon) while a gift waits here. on: tie it (once);
+-- off: it fades (an untied one finishes falling). `options` (the first call): GiftRibbon's gui, text, onTap.
+Machine.RibbonArm=30 -- s: a gift crank armed this long ago with no turn no longer unties it
+function Machine:giftRibbon(on,options)
+	if self.destroyed then return false end
+	if options then self.ribbonOptions=options end
+	local view=self.ribbonView
+	if on and self:on()then
+		if view and view.offAt and not view.untieAt then view:destroy();view=nil;self.ribbonView=nil end
+		if not view then
+			local ok,Module=pcall(require,script.Parent:WaitForChild("GiftRibbon"))
+			if not ok then self:warnOnce("ribbon: "..tostring(Module));return false end
+			local o=self.ribbonOptions or {}
+			self.ribbonView=Module.new({gui=o.gui,text=o.text,onTap=o.onTap,clock=self.clock,
+				play=function(name,speed,volume)self:play(name,volume,speed)end,buzz=function()self:buzz("light")end,
+				reduced=function()return self:reduced()end})
+		end
+		self.ribbonWantOff=nil
+		return true
+	end
+	-- The gift's crank is armed (GiftChain hides the ribbon the moment it cranks): it stays tied for its first tick.
+	if view and self.ribbonArmed and self.clock()-self.ribbonArmed<=Machine.RibbonArm then self.ribbonWantOff=true;return false end
+	if view and not view.untieAt then view:off()end
+	return false
+end
+function Machine:ribbonLapse()
+	if self.ribbonArmed and self.clock()-self.ribbonArmed>Machine.RibbonArm then
+		self.ribbonArmed=nil
+		if self.ribbonWantOff and self.ribbonView and not self.ribbonView.untieAt then self.ribbonView:off()end
+		self.ribbonWantOff=nil
+	end
+end
+-- The gift's crank is about to turn (GiftChain's crank or the replay of an unseen gift): its first tick unties the
+-- ribbon. false disarms it (the ask was refused).
+function Machine:giftCrank(armed)
+	if armed==false then
+		self.ribbonArmed=nil
+		if self.ribbonWantOff and self.ribbonView and not self.ribbonView.untieAt then self.ribbonView:off()end
+		self.ribbonWantOff=nil
+		return
+	end
+	self.ribbonArmed=self.clock()
+end
 -- The armed press was refused (Fable R8): no crank, no streak step; the hello nudge and one click instead.
 function Machine:refuse()
 	if not self.armed then return false end
@@ -463,6 +506,11 @@ function Machine:beats()
 		once("click"..index,at,function()
 			self:play("crank_click_"..((index-1)%3+1),Machine.Volume.click,1+.04*(index-1));self:buzz("light")
 		end)
+	end
+	-- GIFT-ART-BRIEF 1: the gift's own crank unties the ribbon on its first tick (a paid crank leaves it tied).
+	if fired.click1 and self.ribbonArmed and self.ribbonView and crank.at>=self.ribbonArmed then
+		if self.clock()-self.ribbonArmed<=Machine.RibbonArm then pcall(self.ribbonView.untie,self.ribbonView)end
+		self.ribbonArmed=nil
 	end
 	once("churn1",.1,function()self:play("egg_tok_1",Machine.Volume.tok)end)
 	once("churn2",math.max(.1,sched.clunk-.2),function()self:play("egg_tok_2",Machine.Volume.tok)end)
@@ -666,7 +714,11 @@ function Machine:step(dt)
 	self:beats()
 	self:shotStep()
 	self:gapStep()
-	if not self:on()then self:rest();self.unboundSince=nil;return end
+	if not self:on()then
+		self:rest();self.unboundSince=nil
+		if self.ribbonView then self.ribbonView:destroy();self.ribbonView=nil end
+		return
+	end
 	local parts=self:bind()
 	if not parts then
 		self.unboundSince=self.unboundSince or self.clock()
@@ -674,6 +726,12 @@ function Machine:step(dt)
 		return
 	end
 	self.unboundSince=nil
+	self:ribbonLapse()
+	if self.ribbonView then
+		local good,problem=pcall(self.ribbonView.step,self.ribbonView,dt or 0,parts,self.d.root and self.d.root())
+		if not good then self:warnOnce("ribbon: "..tostring(problem))end
+		if self.ribbonView and self.ribbonView:gone()then self.ribbonView=nil end
+	end
 	local eye=self.d.camera and self.d.camera()
 	local centre=parts.body.Position
 	if typeof(eye)=="Vector3"and(eye-centre).Magnitude>Machine.Range then self:rest();return end
@@ -1113,6 +1171,7 @@ function Machine:destroy()
 		if self.cinematic.onGateSkip then self.cinematic.onGateSkip=nil end
 	end
 	if self.statReveal then self.statReveal.gate=nil;self.statReveal.onGateSkip=nil end
+	if self.ribbonView then pcall(self.ribbonView.destroy,self.ribbonView);self.ribbonView=nil end
 	pcall(self.rest,self)
 end
 return Machine
