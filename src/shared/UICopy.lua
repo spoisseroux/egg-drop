@@ -712,6 +712,8 @@ end
 -- countdown and no "last chance" (kids audience): the line says when it comes back, never when it goes.
 Table.thisWeek={tab="This week",chip="This week",
  status="This week's pick. Back every {weeks} weeks.",statusShort="Back every {weeks} weeks"}
+-- The fruit trees (GARDEN-B38-BRIEF 3b): the prompt at a fruit tree's trunk, and the Guide's one-time pointer to it.
+Table.fruit={tree="Fruit tree",shake="Shake",guide="Shake the tree!"}
 
 local function freeze(node)
  for _,value in pairs(node)do if type(value)=="table"then freeze(value)end end

@@ -31,7 +31,8 @@ Fruit.OwnerReach=24   -- the player from the fruit (LifePet's leash 16, plus nud
 -- The shake (client-local, as the gust drops): walk into a trunk (root within trunk + Reach of its centre) faster than
 -- Speed; the crown rocks Rock degrees Rocks times in RockTime, Leaves leaf cards fall, one fruit drops with the gust
 -- drop's fall. That slot is empty Hidden seconds, then grows back over Grow; the tree has nothing to shake till then.
-Fruit.Shake=table.freeze({reach=1.6,speed=4,rock=6,rocks=3,rockTime=.6,leaves=8,hidden=60,grow=20,
+-- Beta 38 (GARDEN-B38-BRIEF 3b): the crown rocks 8 degrees, three swings in .7 s easing out, and 12 leaf cards fall.
+Fruit.Shake=table.freeze({reach=1.6,speed=4,rock=8,rocks=3,rockTime=.7,leaves=12,hidden=60,grow=20,
 	slack=2,       -- the server's root may lag the client's
 	gap=75})       -- the server: one shake a tree a player this often (Hidden + Grow, less slack)
 Fruit.Trunk=.6   -- a trunk's radius at crown scale 1 (GardenKeepOut.Trunk)
@@ -44,12 +45,77 @@ Fruit.Look=table.freeze({
 	stem=table.freeze({size=Vector3.new(.3,.08,.08),colour="#6B4A2E",at=Vector3.new(0,.56,0)}), -- a Cylinder stood up
 	leaf=table.freeze({size=Vector3.new(.4,.04,.22),colour="#7FBF4D",at=Vector3.new(.16,.62,0),tilt=25}),
 })
+-- Beta 38 (GARDEN-B38-BRIEF 3a, Fable; Spencer's note 15 "fruit in the trees like Animal Crossing"): the fruit sits in
+-- the canopy. Five slots a tree, all full when grown (Blossom Point seven): `under` hang under the skirt as before, the
+-- rest are seated on the crown's outer face between seatFrom and seatTo degrees under its widest line, sunk `sunk` of
+-- the body into the leaves with a darker leaf disc behind and a two-leaf sprig on top. In the tree the body is `size`
+-- (1.15); a dropped one settles to Look.body.size (.9) over its first bounce. Look only: the rules above are unchanged.
+Fruit.Canopy=table.freeze({slots=5,slotsOf=table.freeze({Landmark_BlossomPointTree=7}),under=2,seatFrom=15,seatTo=40,
+	sunk=.35,size=1.15,
+	hull=.9,       -- [PLACEHOLDER] the leaves' face as a share of the crown's bounding ellipsoid (hulls overstate the leaves)
+	shadow=table.freeze({colour="#2F6B34",thick=.04,across=1.25}),   -- the leaf disc behind a seated fruit
+	sprig=table.freeze({at=Vector3.new(-.16,.62,0),tilt=-25}),       -- the second leaf, mirrored over the first
+})
+-- Three varieties, one a tree (look only), all warm against the lime crowns; `tall` stretches the body upright.
+Fruit.Varieties=table.freeze({
+	sunset=table.freeze({body="#FF8A4C",blush="#FFD166",tall=1}),
+	berry=table.freeze({body="#E8456B",blush="#FF9DB5",tall=1}),
+	pear=table.freeze({body="#F2C14E",blush="#FFF0B0",tall=1.2}),
+	golden=table.freeze({body="#FFC83D",blush="#FFEFC2",tall=1}),
+})
+Fruit.VarietyOf=table.freeze({Tree_05_blossom="sunset",Tree_10_blossom="sunset",Tree_17_blossom="sunset",
+	Tree_07_blossom="berry",Tree_14_blossom="berry",Tree_21_blossom="berry",Tree_19_blossom="pear",
+	Landmark_BlossomPointTree="golden"})
+-- The hanging pendulum: Rest degrees on each fruit's own Period (seconds, from periodMin to periodMax), up to Gust in a
+-- gust; the seated ones half as much. Reduced Motion: still.
+Fruit.Sway=table.freeze({rest=3,gust=10,periodMin=2.2,periodMax=3,seated=.5})
+-- The shake's beats (3b): the first fruit lets go `first` s in (the second swing), and one shake in `secondChance` a
+-- second fruit `second` s after it. A fruit's landing ticks `landBuzz`.
+Fruit.Drops=table.freeze({first=.3,second=.3,secondChance=.25})
+Fruit.LandBuzz="drop"
+-- The prompt (3b): a "Shake" pill at the trunk while a shake is allowed for me. Fable asks for 6 studs; the server's
+-- shake reach (trunk + Shake.reach + Shake.slack, unchanged) is the limit, so the pill shows within half the slack of
+-- the bump's reach and a prompt shake is never refused as Far.
+Fruit.Prompt=table.freeze({reach=6,height=2.4})
+
+-- Pure: tree name -> its variety (sunset when unlisted); its slots (5, Blossom Point 7).
+function Fruit.variety(tree)return Fruit.Varieties[Fruit.VarietyOf[tree]or "sunset"]end
+function Fruit.slotsFor(tree)return Fruit.Canopy.slotsOf[tree]or Fruit.Canopy.slots end
+-- Pure: the body's scale (1 = Look.body.size) for a fruit in the tree (`landed` nil) or one that first landed at
+-- `landed` and finishes its first bounce at `settled`, at `now`: the tree's 1.15 till the landing, easing to .9.
+function Fruit.sizeAt(now,landed,settled)
+	local tree=Fruit.Canopy.size/Fruit.Look.body.size
+	if type(now)~="number"or type(landed)~="number"or now<=landed then return tree end
+	local span=math.max(1e-3,(settled or landed)-landed)
+	local u=math.clamp((now-landed)/span,0,1)
+	return tree+(1-tree)*u*u*(3-2*u)
+end
+-- Pure: the prompt's reach from a trunk's centre (XZ): Fable's 6 when the server allows it, else within the server's.
+function Fruit.promptReach(tree)
+	local S=Fruit.Shake
+	local trunk=type(tree)=="table"and type(tree.trunk)=="number"and tree.trunk or Fruit.Trunk
+	return math.min(Fruit.Prompt.reach,trunk+S.reach+S.slack/2)
+end
+-- Pure: the let-go times after a shake at `now` for a shake numbered `count` (the client's own count): the first on
+-- the second swing, and one shake in four a second (Wind.hash, the same on a re-run). Both clamp to the fruit on the tree.
+function Fruit.dropTimes(now,count)
+	local D=Fruit.Drops
+	local out={now+D.first}
+	if type(count)=="number"and Wind.hash(count,21)<D.secondChance then table.insert(out,now+D.first+D.second)end
+	return out
+end
+
 -- Eating: five bites over 3.2 s, the fruit at each scale after that bite, turning `turn` degrees a bite; three crumbs a
 -- bite in the body's colour; the stem and leaf drop and fade over `stemFade`; the cheeks puff `cheeks` on a bite.
 Fruit.Bites=table.freeze({count=5,time=3.2,scales=table.freeze({1,.78,.58,.40,.22,0}),turn=25,crumbs=3,stemFade=1,
 	stemDrop=.5,cheeks=1.15,cheekTime=.25})
 -- Sounds (existing ids only; tree_shake is a new take to make). Volumes.
+-- Beta 38 (3b): the shake's layer is `shake` (the tree_shake take to record; blanket_rustle stands in) at .6, the
+-- rustles, a low wooden creak, then per fruit a stem pluck and the land thud. An empty shake is the shake and the
+-- rustles alone at `emptyPitch`, so "nothing" sounds different from "something".
 Fruit.Sounds=table.freeze({rustle="asmr_flake",rustles=2,rustleVolume=.5,land="land",landVolume=.4,
+	shake="blanket_rustle",shakeVolume=.6,shakePitch=.8,creak="asmr_creak_a",creakVolume=.3,creakPitch=.7,
+	pluck="asmr_pop_a",pluckVolume=.3,pluckPitch=1.4,emptyPitch=.85,
 	bites=table.freeze({"snack_nom_a","snack_nom_b","snack_nom_c"}),biteVolume=.6,gulp="snack_gulp",gulpVolume=.5,
 	happy="snack_happy_squeak",happyVolume=.5})
 Fruit.Buzz="settle"   -- Haptics, the local player only, on the shake
@@ -95,6 +161,11 @@ function Fruit.shakes(tree,x,z,speed,slack)
 	if type(tree)~="table"or type(x)~="number"or type(z)~="number"then return false end
 	if type(speed)=="number"and speed<Fruit.Shake.speed then return false end
 	return flat(tree.x,tree.z,x,z)<=tree.trunk+Fruit.Shake.reach+(slack or 0)
+end
+-- Pure: may the prompt shake this tree from a root at (x, z)? Within promptReach (no speed: the prompt is the press).
+function Fruit.promptShakes(tree,x,z)
+	if type(tree)~="table"or type(x)~="number"or type(z)~="number"then return false end
+	return flat(tree.x,tree.z,x,z)<=Fruit.promptReach(tree)
 end
 
 -- When gust n lets fruit go at `position` (a crown's centre): the first 1/60 s on the gust's way up that it reaches

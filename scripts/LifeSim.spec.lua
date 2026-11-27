@@ -1490,5 +1490,88 @@ return function(client)
 		assert(Sim.fruitPose(old,rest+Sim.Fruit.nibble*3+.01).phase=="gone"and Sim.fruitPose(old,rest+.01).eatT==nil)
 	end)
 
+	-- Beta 38 (GARDEN-B38-BRIEF 3a): fruit in the canopy ----------------------------------------------------------
+	test("canopy: every fruit tree five slots (Blossom Point seven), all full; two under the skirt, the rest seated 15 to 40 degrees under the widest line, round the face, sunk 35%; keys unique; the switch off keeps today's",function()
+		local Fruit=require(game:GetService("ReplicatedStorage").Shared.GardenFruit)
+		local Kit=require(game:GetService("ReplicatedStorage").Shared.WorldAeroKit)
+		local crowns=Sim.kitCrowns(Kit,require(client.AeroKit).crownFrame,{foliage_blossom=true})
+		local C=Fruit.Canopy
+		assert(#crowns==8,"eight fruit trees")
+		local keys={}
+		local sevens=0
+		for i,crown in ipairs(crowns)do
+			local slots=Sim.fruitStems(i,crown,true)
+			local want=if crown.tree=="Landmark_BlossomPointTree"then 7 else 5
+			if want==7 then sevens+=1 end
+			assert(#slots==want,crown.tree.." "..#slots)
+			local inverse=crown.cframe:Inverse()
+			local h=crown.size/2
+			local seatedAngles={}
+			for _,slot in ipairs(slots)do
+				assert(not keys[slot.key],"unique keys");keys[slot.key]=true
+				assert(slot.key//8==i and slot.k<=7,"the grove's key maths")
+				assert(slot.period>=Fruit.Sway.periodMin and slot.period<=Fruit.Sway.periodMax,"its own period")
+				assert(near(slot.hang,F.hang*C.size/Fruit.Look.body.size,1e-9),"the 1.15 body's hang")
+				-- The body's centre (Sim.fruitHang at rest) in the crown's frame.
+				local centre=inverse*Sim.fruitHang(slot.stem,0,1,slot.hang)
+				if slot.k<=C.under then
+					assert(not slot.seated and slot.amp==1,"hanging")
+					assert(slot.tip.Y<0,"under the skirt")
+					local q=math.sqrt((slot.tip.X/h.X)^2+(slot.tip.Z/h.Z)^2)
+					assert(q<=F.skirt+1e-6,"inside the skirt")
+				else
+					assert(slot.seated and near(slot.amp,Fruit.Sway.seated),"seated, half the sway")
+					-- Its face point on the leaves' face, 15 to 40 degrees under the widest line.
+					local face=inverse*slot.face
+					local d=Vector3.new(face.X/h.X,face.Y/h.Y,face.Z/h.Z)/C.hull
+					assert(near(d.Magnitude,1,1e-6),"on the face")
+					local lat=math.deg(math.asin(-d.Y))
+					assert(lat>=C.seatFrom-1e-6 and lat<=C.seatTo+1e-6,"latitude "..lat)
+					-- Sunk 35%: the centre .3 of the body's radius out along the normal from the face.
+					local out=(slot.centre-slot.face):Dot(slot.normal)
+					assert(near(out,C.size/2*(1-2*C.sunk),1e-6),"sunk ("..out..")")
+					assert(((slot.centre-slot.face).Unit-slot.normal).Magnitude<1e-6,"along the normal")
+					assert(near(centre.Y,(inverse*slot.centre).Y,1e-6),"the hang puts the body on its seat")
+					table.insert(seatedAngles,math.deg(math.atan2(d.Z,d.X))%360)
+				end
+			end
+			-- Spread round the crown: neighbours at least a third of an even share apart.
+			table.sort(seatedAngles)
+			local share=360/#seatedAngles
+			for k=1,#seatedAngles do
+				local gap=((seatedAngles[k%#seatedAngles+1]-seatedAngles[k])%360)
+				if #seatedAngles>1 then assert(gap>=share/3,crown.tree.." seats bunched ("..gap..")")end
+			end
+			-- The switch off (no canopy): today's 2 or 3 under the skirt.
+			local today=Sim.fruitStems(i,crown)
+			assert(#today<=F.slots and(today[1]==nil or today[1].period==nil),"today's stems")
+		end
+		assert(sevens==1,"Blossom Point")
+		-- A canopy slot's sway: 3 at rest, up to 10 in a gust, the seated half; still: none; today's slots unchanged.
+		local slots=Sim.fruitStems(1,crowns[1],true)
+		local hang,seat=slots[1],slots[3]
+		local most,mostSeat,mostGust=0,0,0
+		for t=0,6,.01 do
+			most=math.max(most,math.abs(Sim.fruitSwayOf(hang,T0+t,0,false)))
+			mostSeat=math.max(mostSeat,math.abs(Sim.fruitSwayOf(seat,T0+t,0,false)))
+			mostGust=math.max(mostGust,math.abs(Sim.fruitSwayOf(hang,T0+t,1,false)))
+		end
+		assert(near(most,3,.02)and near(mostSeat,1.5,.02)and near(mostGust,10,.05),most.." "..mostSeat.." "..mostGust)
+		assert(Sim.fruitSwayOf(hang,T0,1,true)==0,"Reduced Motion: still")
+		local plain={k=2,key=10}
+		assert(Sim.fruitSwayOf(plain,T0+1,.5,false)==Sim.fruitSway(2,T0+1,.5,false),"today's pendulum")
+		-- A canopy plan carries its hang, so the tug starts from the seat.
+		local plan=Sim.fruitPlan(1,crowns[1],seat,-1000001,T0,flatWorld())
+		if plan then
+			assert(plan.hang==seat.hang)
+			local loose=Sim.fruitLoose(plan,Vector3.new(1,0,0))
+			local at=Sim.fruitPose(loose,T0).position
+			assert((at-Sim.fruitHang(seat.stem,plan.sway,1,seat.hang)).Magnitude<1e-6,"the tug from the seat")
+		end
+		-- The grove builds the canopy only with world.canopy (the `fruit` switch).
+		assert(#Sim.Grove.new(crowns,flatWorld({canopy=true})).stems[1]==#Sim.fruitStems(1,crowns[1],true))
+		assert(#Sim.Grove.new(crowns,flatWorld()).stems[1]==#Sim.fruitStems(1,crowns[1]))
+	end)
+
 	return{passed=#cases,cases=cases}
 end
