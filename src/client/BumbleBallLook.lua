@@ -1,8 +1,11 @@
 -- Bumble balls: the look, from Parts for now (GARDEN-PLAY-BRIEF section 1 "Look"; our own 300-tri meshes and 256 px
--- textures replace these later). Matte, believable, never a sports ball: Felt is wool felt with a cream seam band,
--- Wicker is woven rattan with two darker bands, Cork is speckled cork with a brass ring; Patch (brief 2) is cream rubber
--- with six round panels and Stripe is sky rubber with two crossed bands and capped crossings (round panels only, never
--- pentagons or hexagons). A blob shadow under each.
+-- textures replace these later). Matte, believable, never a sports ball (round panels only, never pentagons or
+-- hexagons). Beta 38 (GARDEN-B38-BRIEF section 1, Spencer's note 12 "the plain balls are boring"): the three old ones
+-- get toy patterns from the same band and disc system, ids, homes, feel and records unchanged. Felt is a patchwork felt
+-- ball (pale sky felt, three coral, teal and mustard meridian panels, cream caps where they cross); Wicker is the Dot
+-- ball (mustard rubber, fourteen cream dots: six on the axes, eight smaller on the corners); Cork is the Hoop ball (deep
+-- teal rubber, three cream rings round one axis, coral pole caps). Patch (brief 2) is cream rubber with six round panels
+-- and Stripe is sky rubber with two crossed bands and capped crossings. A blob shadow under each.
 -- Anchored, CanCollide/CanQuery/CanTouch off, client only (workspace.BumbleBallsLocal).
 --
 -- Squash: the body is a SpecialMesh sphere so it can squash along world up while the bands spin with travel.
@@ -14,15 +17,40 @@ local function material(name,fallback)
 	local ok,value=pcall(function()return Enum.Material[name]end)
 	return if ok and value then value else fallback
 end
--- band: offset along the spin axis (local X), width, colour, material; `turn` turns a band's axis (Stripe's second band
--- runs round the other way) and `across` sets its diameter. disc: a flat patch on an axis of the ball (local), its outer
--- face `proud` over the surface (brief 2: Patch's six round panels, Stripe's two caps where its bands cross).
+-- band: offset along the spin axis (local X), width, colour, material; `turn` turns a band's axis by any CFrame
+-- (Stripe's second band runs round the other way; Felt's three meridians are 60 degrees apart) and `across` sets its
+-- diameter. disc: a flat patch on an axis of the ball (local), its outer face `proud` over the surface (brief 2: Patch's
+-- six round panels, Stripe's two caps where its bands cross); a disc's own `size` overrides the kind's `disc`.
 local QUARTER=CFrame.Angles(0,math.pi/2,0)
+-- A meridian band: a disc through the centre turned `degrees` about the vertical, so its rim runs pole to pole.
+local function meridian(degrees,color)
+	return table.freeze({offset=0,width=.9,across=2.42,color=color,material="Fabric",turn=CFrame.Angles(0,math.rad(degrees),0)})
+end
+-- The Dot ball's fourteen dots: six on the axes (.8 across), eight on the cube's corners (.6 across).
+local function dots()
+	local out={}
+	for _,axis in ipairs({Vector3.xAxis,-Vector3.xAxis,Vector3.yAxis,-Vector3.yAxis,Vector3.zAxis,-Vector3.zAxis})do
+		table.insert(out,table.freeze({axis=axis,color="#F4E8CF"}))
+	end
+	for _,x in ipairs({1,-1})do for _,y in ipairs({1,-1})do for _,z in ipairs({1,-1})do
+		table.insert(out,table.freeze({axis=Vector3.new(x,y,z).Unit,color="#F4E8CF",size=Vector2.new(.06,.6)}))
+	end end end
+	return table.freeze(out)
+end
 Look.Kinds=table.freeze({
-	felt=table.freeze({color="#E8785A",material="Fabric",bands={{offset=0,width=.12,color="#F4E8CF",material="Fabric"}}}),
-	wicker=table.freeze({color="#C9A36B",material="WoodPlanks",bands={{offset=-.5,width=.16,color="#8A6A3C",material="Wood"},
-		{offset=.5,width=.16,color="#8A6A3C",material="Wood"}}}),
-	cork=table.freeze({color="#B98A5E",material="Cardboard",fallback="Sand",bands={{offset=0,width=.15,color="#D9B24C",material="Metal"}}}),
+	-- Felt, "Patches of felt": pale sky felt (Fable: kept apart from Patch's cream), coral, teal and mustard meridians.
+	felt=table.freeze({color="#CFE6F2",material="Fabric",bands={meridian(0,"#E8785A"),meridian(60,"#7FB8A4"),meridian(120,"#F2C14E")},
+		discs={{axis=Vector3.yAxis,color="#F4E8CF"},{axis=-Vector3.yAxis,color="#F4E8CF"}},
+		disc=Vector2.new(.06,.8),discMaterial="Fabric",proud=.04}),
+	-- Wicker, "Dot": mustard rubber, fourteen cream dots that tumble clearly as it rolls.
+	wicker=table.freeze({color="#F2C14E",material="Rubber",fallback="SmoothPlastic",bands={},discs=dots(),
+		disc=Vector2.new(.06,.8),discMaterial="SmoothPlastic",proud=.02}),
+	-- Cork, "Hoop": deep teal rubber, three cream rings round one axis (sized to the section), coral pole caps.
+	cork=table.freeze({color="#3E8E86",material="Rubber",fallback="SmoothPlastic",bands={
+		{offset=-.62,width=.14,color="#F4E8CF",material="Rubber"},{offset=0,width=.3,color="#F4E8CF",material="Rubber"},
+		{offset=.62,width=.14,color="#F4E8CF",material="Rubber"}},
+		discs={{axis=Vector3.xAxis,color="#E8785A"},{axis=-Vector3.xAxis,color="#E8785A"}},
+		disc=Vector2.new(.06,.7),discMaterial="Rubber",proud=.04}),
 	-- Patch: a cream rubber ball with six round panels, one on each axis, opposite panels alike (any view shows all three).
 	patch=table.freeze({color="#F4E8CF",material="Rubber",fallback="SmoothPlastic",bands={},discs={
 		{axis=Vector3.xAxis,color="#E8785A"},{axis=-Vector3.xAxis,color="#E8785A"},
@@ -78,10 +106,11 @@ function Look.build(id,parent)
 		table.insert(bands,{part=p,offset=(band.turn or CFrame.identity)*CFrame.new(band.offset,0,0),size=size})
 	end
 	for i,disc in ipairs(kind.discs or {})do
-		local size=Vector3.new(kind.disc.X,kind.disc.Y,kind.disc.Y)
+		local flat=disc.size or kind.disc
+		local size=Vector3.new(flat.X,flat.Y,flat.Y)
 		local p=part("Disc"..i,Enum.PartType.Cylinder,size,disc.color,material(kind.discMaterial,Enum.Material.SmoothPlastic))
 		p.Parent=model
-		table.insert(bands,{part=p,offset=Look.discFrame(disc.axis,kind.disc.X,kind.proud),size=size})
+		table.insert(bands,{part=p,offset=Look.discFrame(disc.axis,flat.X,kind.proud),size=size})
 	end
 	local shadow=part("Shadow",Enum.PartType.Cylinder,Vector3.new(.06,R*1.9,R*1.9),Look.ShadowColor,Enum.Material.SmoothPlastic)
 	shadow.Transparency=Look.ShadowAlpha

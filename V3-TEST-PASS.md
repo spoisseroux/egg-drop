@@ -77,6 +77,7 @@ Beta (33), 2026-11-26: player scale (row 60). Beta (32), 2026-11-26: the first e
 | # | Piece | Status | What to try |
 |---|---|---|---|
 | B38-1 | **Balloons: seven in three depths, none over the hub** (`GARDEN-B38-BRIEF.md` 2, note 13) | Built on the worktree branch | Stand on the hub: no balloon overhead. Two low ones (knoll stairs, fountain) carry the mascots; three bigger mid ones over the stream, west and east lawns; two big greyer ones far out past the north rim and the falls, drifting slowly. At night the far two flicker but give no light or sound. On a phone the far pair still shows. Switch: `/alive air off`. |
+| B38-3 | **The three plain balls get toy patterns** (`GARDEN-B38-BRIEF.md` 1, note 12) | Built on the worktree branch | Felt (south of the Toy Lawn): pale sky felt with coral, teal and mustard panels and cream caps. Wicker (fountain lawn): mustard with cream dots. Cork (by the arrival path): teal with three cream rings and coral caps. Kick each: the pattern tumbles as it rolls, squash still works, all matte. Switch: `/alive balls off`. |
 
 ## Scoped, not built
 
