@@ -14,7 +14,8 @@
 -- no receipt. Any error puts the receipt back on the old path (deps.fallback) so the player always meets the Bear.
 -- deps (init.client): gui (PlayerGui), audio, copy(key, vars), inputKind(), reduced(), ready() (the garden is up and
 -- free), toRoom(), character(), pet() (the garden pet visual), appearance(petId), receipt() (lastHatch), ack(id),
--- companion(), event(name), fallback(result), done(replay).
+-- companion(), event(name), fallback(result), done(replay), stand(at, seconds) (optional: the garden Bear rests at
+-- `at` that long, facing the player: the server's GardenState:stand).
 local ContextActionService=game:GetService("ContextActionService")
 local GuiService=game:GetService("GuiService")
 local Input=game:GetService("UserInputService")
@@ -776,9 +777,18 @@ end
 function Story:meet()
 	if self.state~="card"then return end
 	local result=self.result
+	-- Beta (37) note 1: the garden Bear takes over where ours stands (see handOff); ours is kept out of the cleanup.
+	local handing=not self.replaying and self.bear~=nil and self.land~=nil and self.d.stand~=nil
+	local bear,hidden,land=nil,nil,self.land
+	if handing then
+		bear,hidden=self.bear,self.hidden;self.bear,self.hidden=nil,nil
+		-- out of the story's folder (the cleanup destroys it): ours stands in the world on its own until the swap
+		if not pcall(function()bear.model.Parent=workspace end)then self.bear,self.hidden,handing=bear,hidden,false end
+	end
 	self:cleanup()
 	if result and self.d.ack then pcall(self.d.ack,result.id)end
 	if self.d.companion then pcall(self.d.companion)end
+	if handing then self:handOff(bear,hidden,land)end
 	self.acking=result
 	self.ackTries=1;self.ackAt=os.clock()
 	if result then
@@ -794,6 +804,41 @@ function Story:meet()
 		end)
 	end
 	if self.d.done then pcall(self.d.done,false)end
+end
+-- Beta (37) note 1 ("the bear isnt visible bc it teleports somewhere behind us behind a fence"): after Meet the garden
+-- Bear (the server's) was wherever it followed to, behind the player. Now the server is asked to stand it where the egg
+-- opened, facing the player, a beat (V2.Stand.beat) before it follows (GardenState:stand). Ours stays on its blanket
+-- spot, still hiding the garden Bear, until the garden Bear is drawn there (or V2.Stand.wait passes: a refused or slow
+-- ask shows the garden Bear where it is, as before). Same place, same pose: no pop. Movement is already back.
+function Story:handOff(bear,hidden,land)
+	local d=self.d
+	pcall(d.stand,land,V2.Stand.beat+V2.Stand.reach)
+	local function reveal()
+		for p in pairs(hidden or {})do if p.Parent then p.LocalTransparencyModifier=0 end end
+		hidden=nil
+		if bear then pcall(function()bear:destroy()end);bear=nil end
+	end
+	if not pcall(function()bear:update(0)end)then reveal();return end
+	local started=os.clock()
+	local link
+	link=RunService.RenderStepped:Connect(function()
+		local good,swap=pcall(function()
+			local visual=d.pet and d.pet()
+			local model=visual and visual.model
+			-- a rig swap meanwhile: its new parts hide too
+			if model and model.Parent then
+				hidden=hidden or {}
+				for _,p in ipairs(model:GetDescendants())do
+					if p:IsA("BasePart")and not hidden[p]then hidden[p]=true;p.LocalTransparencyModifier=1 end
+				end
+			end
+			pcall(function()bear:update(1/60)end)
+			local at=visual and visual.origin
+			local near=typeof(at)=="Vector3"and V2.standArrived(at,land)
+			return near or os.clock()-started>=V2.Stand.wait or self.disabled
+		end)
+		if not good or swap then link:Disconnect();reveal()end
+	end)
 end
 -- The replay's end: no card, the garden back.
 function Story:finish()

@@ -227,7 +227,9 @@ function Client:build()
 	for i=1,Client.Voices do
 		local holder=Instance.new("Attachment");holder.Name="voice"..i;holder.Parent=anchor
 		local voice=Instance.new("Sound");voice.Name="balloon"..i
-		voice.RollOffMode=Enum.RollOffMode.InverseTapered;voice.RollOffMinDistance=8;voice.RollOffMaxDistance=40
+		-- beta (37) note 14: heard only close by (Lanterns.Sounds.rolloff)
+		voice.RollOffMode=Enum.RollOffMode.InverseTapered
+		voice.RollOffMinDistance=Lanterns.Sounds.rolloff.min;voice.RollOffMaxDistance=Lanterns.Sounds.rolloff.max
 		voice.Volume=0;voice.SoundGroup=group;voice.Parent=holder
 		table.insert(self.voices,{holder=holder,voice=voice,at=-math.huge})
 	end

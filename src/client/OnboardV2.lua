@@ -118,6 +118,16 @@ end
 function V2.mayClaim(gate)return gate.declined~=true end
 -- The card's safety: with no stage (it failed to show) Meet happens at once; a card left up this long meets too.
 V2.CardTimeout=90
+-- Beta (37) note 1 ("the bear ... teleports somewhere behind us behind a fence"): on Meet the garden Bear is asked to
+-- stand where the egg opened, facing the player, a beat (s) before it follows (the server's GardenState:stand owns
+-- the spot; reach s more for the ask to arrive). The story's own Bear stands there until the garden Bear is drawn
+-- within `near` studs of it (or `wait` s pass), then the two swap.
+V2.Stand=table.freeze({beat=1.5,reach=.6,wait=2,near=1.2})
+-- Pure: is the garden Bear drawn at the egg's spot (flat distance)?
+function V2.standArrived(at,land)
+	if typeof(at)~="Vector3"or typeof(land)~="Vector3"then return false end
+	return Vector2.new(at.X-land.X,at.Z-land.Z).Magnitude<=V2.Stand.near and math.abs(at.Y-land.Y)<=2
+end
 
 -- ── Step 2: the stork ────────────────────────────────────────────────────────────────────────────────────────────────
 V2.Stork=table.freeze({
@@ -354,8 +364,11 @@ V2.CrackCopy=table.freeze({Touch="onb2.crack.tap",Gamepad="onb2.crack.pad",other
 -- ── Step 5: what now ─────────────────────────────────────────────────────────────────────────────────────────────────
 V2.Guide=table.freeze({
 	order={"needHi","needNest","needDeck"},
-	ignore=20,                                            -- a prompt ignored this long shrinks and the next shows
-	shrink=1.2,                                           -- the shrink to its icon before the next
+	-- Beta (37) note 3 ("it said youre all set before i even did anything. it just timed out?"): a prompt is never
+	-- skipped. Shown this long (s, counted while it shows) and not done, it nudges instead: the bubble hops and the pet
+	-- chirps softly, again every `nudge` s at most, until it is done.
+	ignore=20,
+	nudge=15,
 	far=12,                                               -- a dotted trail leads to anything further than this (studs)
 	fill=hex("#FFFFFF"),ink=hex("#1B2A4A"),arrow=hex("#FFD86B"),arrowPx=6,arrowHz=1,
 	endCard=2.5,
@@ -366,6 +379,12 @@ V2.GuideIcon=table.freeze({needHi="hand",needNest="moon",needDeck="deck"})
 function V2.guideKey(input)return if input=="Gamepad"then "X"else nil end
 -- Is a guide prompt that has shown since `shownAt` ignored at `now`?
 function V2.ignored(shownAt,now)return type(shownAt)=="number"and type(now)=="number"and now-shownAt>=V2.Guide.ignore end
+-- Pure (beta 37 note 3): is an attention nudge due? shownFor: seconds the prompt has shown, not done; lastAt: the last
+-- nudge (nil: none yet); now: the clock. Never a skip.
+function V2.nudgeDue(shownFor,lastAt,now)
+	if type(shownFor)~="number"or type(now)~="number"or shownFor<V2.Guide.ignore then return false end
+	return type(lastAt)~="number"or now-lastAt>=V2.Guide.nudge
+end
 -- The bubble's arrow lift (px) at t; still under Reduced Motion.
 function V2.arrowLift(t,reduced)
 	if reduced then return 0 end

@@ -65,12 +65,16 @@ Lanterns.Burn=table.freeze({gapMin=6,gapMax=10,length=.8,grow=1.6,ease=.15,lift=
 Lanterns.Flicker=table.freeze({a=7.3,b=11.1,depth=.15,mix=.6})
 -- The lights: the four nearest the camera, at night, at their burners; brightness .5 just lit to .8 at full glow.
 Lanterns.Lights=table.freeze({count=4,range=12,brightness=.5,full=.8})
--- Sounds (Fable): the burn is `asmr_exhale_a/b` pitched .7 within 30 studs of me, plus the new `burner_whoosh` takes
--- once they have ids; the mascot's wave is `snack_happy_squeak` at .3 within 25.
+-- Sounds (Fable): the burn is `asmr_exhale_a/b` pitched .7, plus the new `burner_whoosh` takes once they have ids; the
+-- mascot's wave is `snack_happy_squeak` at .3. Beta (37) note 14 ("the hot air balloon sounds are too loud"): the burn
+-- is a third as loud (.35 -> .12) and only played within 16 studs of me (was 30), and every balloon voice rolls off
+-- sooner (`rolloff`: full to 4 studs, silent past 16; was 8 and 40), so a balloon is heard only close by. The squeak
+-- keeps its volume, within 16 (was 25). There are no loops. The layout is unchanged.
 Lanterns.Sounds=table.freeze({
 	burn=table.freeze({cues=table.freeze({"asmr_exhale_a","asmr_exhale_b","burner_whoosh_a","burner_whoosh_b"}),speed=.7,
-		volume=.35,range=30,vary=.06}),
-	squeak=table.freeze({cues=table.freeze({"snack_happy_squeak"}),speed=1,volume=.3,range=25,vary=.06}),
+		volume=.12,range=16,vary=.06}),
+	squeak=table.freeze({cues=table.freeze({"snack_happy_squeak"}),speed=1,volume=.3,range=16,vary=.06}),
+	rolloff=table.freeze({min=4,max=16}),
 })
 Lanterns.NewTakes=table.freeze({burner_whoosh_a=0,burner_whoosh_b=0}) -- [PLACEHOLDER] ids: Fable's new takes, not uploaded
 

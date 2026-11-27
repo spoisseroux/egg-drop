@@ -296,5 +296,36 @@ return function(server)
             assert(not d.garden:carry(1,spot)and d.garden.actors[1].hop==nil,busy)
         end
     end)
+    -- Beta (37) note 1: the first hatch's Bear stands where its egg opened, facing the owner, then follows.
+    test("first stand: the pet is at the spot at once facing the owner, no hop; the owner moving keeps it; Meet's beat, then it follows",function()
+        local c=fixture(1)
+        c:step(.5)
+        local spot=c.inputs[1].position+Vector3.new(0,-2.975,6)
+        assert(c.garden:stand(1,spot,math.pi,Garden.StandMax+60))
+        local actor=c.garden.actors[1]
+        assert(actor.action=="firstStand"and actor.behavior=="rest"and actor.path==nil and actor.hop==nil)
+        assert((c.garden:position(actor,c.now)-spot).Magnitude<1e-6 and Activity.sample(actor,c.now).yaw==math.pi)
+        assert(actor.endTime-c.now<=Garden.StandMax+1e-6,"the hold is capped")
+        -- the story's card is up for a while; the owner shuffles: still there
+        for _=1,10 do c.inputs[1].position+=Vector3.new(.8,0,0);c:step(.5)end
+        assert(c.garden.actors[1].action=="firstStand"and(c.garden:position(c.garden.actors[1],c.now)-spot).Magnitude<1e-6,"stays while it stands")
+        -- Meet: a beat more, then the usual follow
+        assert(c.garden:stand(1,spot,math.pi,1.5))
+        c:step(.5);assert(c.garden.actors[1].action=="firstStand","the beat")
+        c.inputs[1].position+=Vector3.new(1,0,0)
+        c:step(.5);assert(c.garden.actors[1].action=="firstStand","the beat holds even when the owner moves")
+        for _=1,4 do c:step(.5)end
+        local after=c.garden.actors[1]
+        assert(after.action~="firstStand"and after.standUntil==nil,"then it follows: "..tostring(after.behavior).."/"..tostring(after.action))
+        -- refusals: no actor, a bad spot, Board, a busy pet
+        assert(not c.garden:stand(2,spot,0,5)and not c.garden:stand(1,"x",0,5)and not c.garden:stand(1,spot,0,"5"))
+        for _,busy in ipairs({"park","care","dash","toyReservation"})do
+            local d=fixture(1);d:step(.5)
+            d.garden.actors[1][busy]=1
+            assert(not d.garden:stand(1,spot,0,5),busy)
+        end
+        local b=fixture(1);b.inputs[1].mode="Board";b:step(.5)
+        assert(not b.garden:stand(1,spot,0,5),"Board")
+    end)
     return {passed=#cases,cases=cases}
 end

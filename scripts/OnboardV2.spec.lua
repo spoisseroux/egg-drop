@@ -274,6 +274,16 @@ return function(client)
 		assert(V2.ignored(0,20)and not V2.ignored(0,19.9)and not V2.ignored(nil,30))
 		assert(V2.arrowLift(.5,false)==6 and V2.arrowLift(0,false)==0 and V2.arrowLift(.5,true)==0,"6 px at 1 Hz, still when reduced")
 		assert(UICopy.get("onb2.replay")~="onb2.replay")
+		-- beta (37) note 3: never a skip; a nudge from 20 s, at most every 15 s
+		assert(V2.Guide.nudge==15 and V2.Guide.shrink==nil)
+		assert(V2.nudgeDue(20,nil,0)and not V2.nudgeDue(19,nil,0)and not V2.nudgeDue(40,30,44)and V2.nudgeDue(40,30,45)and not V2.nudgeDue(nil,nil,9))
+	end)
+	test("beta (37) note 1: the Bear stands where the egg opened a beat, then follows; the swap waits for it to be there",function()
+		assert(V2.Stand.beat==1.5 and V2.Stand.wait==2 and V2.Stand.reach>0 and V2.Stand.near>0)
+		local land=Vector3.new(96,4.2,60)
+		assert(V2.standArrived(land+Vector3.new(.5,0,.5),land),"drawn on the blanket spot")
+		assert(not V2.standArrived(land+Vector3.new(3,-1,-2.6),land),"at its follow spot behind the player")
+		assert(not V2.standArrived(land+Vector3.new(0,5,0),land)and not V2.standArrived(nil,land)and not V2.standArrived(land,nil))
 	end)
 	return{passed=#cases,cases=cases}
 end
