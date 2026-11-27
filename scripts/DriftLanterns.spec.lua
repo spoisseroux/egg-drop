@@ -304,7 +304,7 @@ return function(client,offline)
 		r.done();assert(ok,err)
 	end)
 
-	test("motion: it bobs, drifts and sways inside its circle, burns every 6 to 10 s (grows, lifts, exhales within 30); Reduced Motion holds it still but it still sounds; nothing near: asleep",function()
+	test("motion: it bobs, drifts and sways inside its circle, burns every 6 to 10 s (grows, lifts, exhales within 16, a third as loud); Reduced Motion holds it still but it still sounds; nothing near: asleep",function()
 		local r=rig()
 		local ok,err=pcall(function()
 			local l=r.air.lanterns[1]
@@ -323,8 +323,8 @@ return function(client,offline)
 			for _,s in ipairs(r.sounds)do
 				if s.cue=="asmr_exhale_a"or s.cue=="asmr_exhale_b"then
 					burns+=1
-					assert(s.volume==.35 and s.speed>=.7*.94 and s.speed<=.7*1.06,"pitched .7")
-					assert((s.position-r.listener).Magnitude<=30,"within 30")
+					assert(s.volume==Lanterns.Sounds.burn.volume and s.speed>=.7*.94 and s.speed<=.7*1.06,"pitched .7")
+					assert((s.position-r.listener).Magnitude<=Lanterns.Sounds.burn.range,"within its range")
 				end
 				assert(s.cue~="burner_whoosh_a"and s.cue~="burner_whoosh_b","no id yet: never played")
 			end
@@ -332,6 +332,9 @@ return function(client,offline)
 			assert(n>5,"it moves")
 			assert(grew>1.5,"a burn grows the flame ("..grew..")")
 			assert(burns>=1,"a burn exhales")
+			-- beta (37) note 14: about a third of the old .35, heard only close by
+			assert(Lanterns.Sounds.burn.volume<=.12 and Lanterns.Sounds.burn.range<=16 and Lanterns.Sounds.rolloff.max<=16
+				and Lanterns.Sounds.rolloff.min<Lanterns.Sounds.rolloff.max and Lanterns.Sounds.squeak.range<=Lanterns.Sounds.rolloff.max)
 			-- Reduced Motion: still, no growth, but the burns still sound.
 			r.reduced=true;r.tick(.1)
 			local still=l.envelope.CFrame.Position
@@ -348,7 +351,7 @@ return function(client,offline)
 		r.done();assert(ok,err)
 	end)
 
-	test("mascots: ride the basket, look about every 4 to 7 s; the player within 35: turn, wave, hop, squeak within 25, again only after 10 s; cherub's halo over the head; Reduced Motion: still, the squeak stays",function()
+	test("mascots: ride the basket, look about every 4 to 7 s; the player within 35: turn, wave, hop, squeak within 16, again only after 10 s; cherub's halo over the head; Reduced Motion: still, the squeak stays",function()
 		local r=rig()
 		local ok,err=pcall(function()
 			local m=r.air.mascots[1]
@@ -406,11 +409,11 @@ return function(client,offline)
 			assert(v.greets==1,"at most every 10 s")
 			for _=1,120 do r.listener=v.origin+offset;r.tick(.05)end
 			assert(v.greets==2,"again after 10 s")
-			-- Out of 25 but within 35: a wave without the squeak.
+			-- Out of 16 but within 35: a wave without the squeak.
 			local before=squeaks()
 			for _=1,220 do r.listener=v.origin+Vector3.new(30,0,0);r.tick(.05)end
 			local after=squeaks()
-			assert(v.greets==3 and after==before,"no squeak past 25 "..v.greets.." "..before.." "..after)
+			assert(v.greets==3 and after==before,"no squeak past 16 "..v.greets.." "..before.." "..after)
 			-- The halo sits .25 (+/- .05) over a cherub's head.
 			for _,c in ipairs(r.air.mascots)do
 				if c.halo then
