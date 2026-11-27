@@ -1175,6 +1175,7 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
  pendingHatch=function()if openNursery then openNursery()end end,
  closed=function(reason)
   local back=clientUI.hueReturn;clientUI.hueReturn=nil
+  local focusPet=clientUI.hueFocusPet;clientUI.hueFocusPet=nil
   if back=="machine"then
    clientUI.hueView:setMachineSession(nil)
    if reason~="picked-up"and roomView.care then roomView.care:release()end
@@ -1182,6 +1183,15 @@ clientUI.hueView=clientUI.HueEggView.new(safeOverlays,clientUI.hueIntent,{
   if reason=="back"and not roomView.busy and not(nurseryState and nurseryState.lastHatch)then
    if back=="eggs"and openNursery then openNursery()end
    if back=="hub"and clientUI.openHub then clientUI.openHub({slideFrom=-require(script.DeckKit).SlideOffset})end
+   -- Paint, Shine, Dress (plan answer 5): Back from Dress up is back to the pet's focus view, on the same pet
+   -- (opening Dress up ended focus: RoomView ends it under any overlay).
+   if back=="focus"and focusPet~=nil then
+    task.defer(function()
+     local shown=roomView.shownPet
+     if roomView.mode=="Room"and not roomView.busy and not roomView.focusing and not roomView.overlayOpen()and shown and shown.id==focusPet
+      and board:GetAttribute("CompanionId")==focusPet then roomView:focusPet()end
+    end)
+   end
   end
   -- QA Q5: Customize left the Companions hub some other way, so its Back no longer
   -- leads to the machine hub.
@@ -1199,6 +1209,7 @@ clientUI.openHue=function(page,petId,back)
  cancelHatchNavigation();clearPlayInputs();picker:close();journal:close();nurseryView:close("hue")
  if closeMenu then closeMenu()end
  clientUI.hueReturn=back or "eggs"
+ clientUI.hueFocusPet=if back=="focus"then(petId or board:GetAttribute("CompanionId"))else nil
  if back~="machine"then clientUI.hueView:setMachineSession(nil)end
  -- QA v760: Customize never replays a hatch receipt; only the Hatch eggs pages do.
  clientUI.hueView.quietOpen=not purchasePage
