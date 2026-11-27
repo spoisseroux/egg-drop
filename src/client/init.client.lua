@@ -5590,6 +5590,21 @@ do
   clientUI.life=require(script.GardenLife).mount({ambient=clientUI.ambient,
    -- GARDEN-PLAY-BRIEF-2: a tree I shook (the server's check of a fruit from it).
    shook=function(i,drops)fruitSend({kind="shake",tree=i,drops=drops})end,
+   -- Beta 38 review 5: the Shake prompt hides under a menu, the deck, focus and the dash; on a gamepad the pet's Say hi
+   -- (the same X) wins while it is in reach.
+   promptBlocked=function()
+    return board:GetAttribute("Mode")~="Room"or roomView.mode~="Room"or roomView.busy==true or roomView.focusing==true
+     or roomView.focusTransitioning==true or roomView.dashHeld==true or(clientUI.dash~=nil and clientUI.dash.seat~=nil)
+     or clientUI.anyModalOpen()==true or clientUI.roomOverlayOpen()==true
+   end,
+   sayHiNear=function()
+    local prompt,pet=roomView.petPrompt,roomView.pet
+    local character=player.Character
+    local root=character and character:FindFirstChild("HumanoidRootPart")
+    if not prompt or not prompt.Enabled or not pet or typeof(pet.origin)~="Vector3"or not root then return false end
+    return(pet.origin-root.Position).Magnitude<=prompt.MaxActivationDistance
+   end,
+   inputKind=function()return clientUI.inputKind()end,
    notice=function(loose,now)
     local pet=clientUI.lifePet
     return pet~=nil and pet:notice(loose,now)==true

@@ -397,6 +397,12 @@ function Life.mount(deps)
 	self.buzz=deps.buzz or function(name)pcall(function()require(script.Parent.Haptics).play(name)end)end
 	self.shook=deps.shook
 	self.play=deps.play
+	-- Beta 38 review 5 (the Shake prompt beside the pet's Say hi): promptBlocked() true while a menu, the deck, focus or
+	-- the dash is up; sayHiNear() true while the pet's Say hi prompt is on and in its reach; inputKind() "Keyboard",
+	-- "Gamepad" or "Touch". All optional and nil-safe (a throw counts as not blocked / not near).
+	self.promptBlocked=deps.promptBlocked
+	self.sayHiNear=deps.sayHiNear
+	self.inputKind=deps.inputKind
 	-- The Hush (Fable's garden expansion through the cave): quiet() true while the player is in it, so no leaves,
 	-- bubbles, birds or fireflies follow them in (the ones out finish or fade). Optional, nil-safe; a throw is not quiet.
 	self.quiet=deps.quiet
@@ -1540,7 +1546,9 @@ function Life:shakePrompt(folder,i,tree)
 	prompt.MaxActivationDistance=Fruit.promptReach(tree)
 	prompt.Enabled=false
 	pcall(function()
-		prompt.KeyboardKeyCode,prompt.GamepadKeyCode=Enum.KeyCode.E,Enum.KeyCode.ButtonX
+		-- Say hi is E / gamepad X (RoomView): the Shake is R on a keyboard, so both show; on a gamepad it keeps X and
+		-- Say hi wins while the pet is in its reach (Life.shakePromptWanted); touch taps either.
+		prompt.KeyboardKeyCode,prompt.GamepadKeyCode=Life.ShakeKey,Enum.KeyCode.ButtonX
 		prompt.ClickablePrompt=true
 		prompt.Exclusivity=Enum.ProximityPromptExclusivity.OnePerButton
 	end)
@@ -1554,10 +1562,25 @@ function Life:shakePrompt(folder,i,tree)
 	end
 	return{anchor=anchor,prompt=prompt,on=false}
 end
+Life.ShakeKey=Enum.KeyCode.R
+-- Pure: a tree's Shake prompt shows when its shake is allowed (ready), nothing is up over the garden (a menu, the deck,
+-- focus, the dash: blocked), and, on a gamepad, the pet's Say hi (the same button) is not in reach.
+function Life.shakePromptWanted(ready,blocked,sayHiNear,inputKind)
+	return ready==true and blocked~=true and not(sayHiNear==true and inputKind=="Gamepad")
+end
+local function ask(fn,...)
+	if type(fn)~="function"then return nil end
+	local ok,value=pcall(fn,...)
+	return if ok then value else nil
+end
+function Life:shakeBlocked()return ask(self.promptBlocked)==true end
 -- The prompts on while a shake is allowed for me (now past the tree's rest); `on` false: every prompt off.
 function Life:promptStep(now,on)
+	local blocked,near,kind
+	if on~=false then blocked,near,kind=self:shakeBlocked(),ask(self.sayHiNear)==true,ask(self.inputKind)end
 	for i,entry in pairs(self.shakePrompts or {})do
-		local want=on~=false and type(now)=="number"and now>=(self.shakeReady and self.shakeReady[i]or -math.huge)
+		local ready=on~=false and type(now)=="number"and now>=(self.shakeReady and self.shakeReady[i]or -math.huge)
+		local want=Life.shakePromptWanted(ready,blocked,near,kind)
 		if want~=entry.on then entry.on=want;entry.prompt.Enabled=want end
 	end
 end
@@ -1580,6 +1603,7 @@ function Life:stepShake(now,reduced,put)
 	end
 	local ask=self.shakeAsk
 	self.shakeAsk=nil
+	if ask and self:shakeBlocked()then ask=nil end -- a press that landed as a menu, the deck, focus or the dash opened
 	if ask then
 		local crown,tree=self.grove.crowns[ask],self.fruitTrees and self.fruitTrees[ask]
 		if crown and tree and now>=(self.shakeReady[ask]or -math.huge)and Fruit.promptShakes(tree,root.X,root.Z)then
