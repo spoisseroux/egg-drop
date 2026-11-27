@@ -876,6 +876,30 @@ function Story:cleanup()
 		local character=self.d.character and self.d.character()
 		local humanoid=character and character:FindFirstChildOfClass("Humanoid")
 		camera.CameraSubject=humanoid or saved.subject
+		-- Beta 38 (Spencer: the Bear "isnt visible bc it ... behind us"): hand the follow camera back from behind the
+		-- player, looking at where the egg landed (the Bear stands there), so the Bear is in frame, not behind the player.
+		local root=character and character:FindFirstChild("HumanoidRootPart")
+		local land=self.land
+		if root and typeof(land)=="Vector3"and camera.CameraType==Enum.CameraType.Custom then
+			pcall(function()
+				local d=Vector3.new(land.X-root.Position.X,0,land.Z-root.Position.Z)
+				if d.Magnitude<.5 then return end
+				d=d.Unit
+				-- A three-quarter side shot of the two of them: the side with open space (no fence or wall within 12
+				-- studs of the pair), else the player's back. The follow camera keeps this yaw from here.
+				local focus=(root.Position+land)/2+Vector3.new(0,1.5,0)
+				local params=RaycastParams.new()
+				params.FilterType=Enum.RaycastFilterType.Exclude
+				params.FilterDescendantsInstances={character}
+				local side=Vector3.new(-d.Z,0,d.X)
+				local want=root.Position-d*11+Vector3.new(0,5,0)
+				for _,s in ipairs({side,-side})do
+					local dir=(s*.8-d*.6).Unit*12+Vector3.new(0,4,0)
+					if not workspace:Raycast(focus,dir,params)then want=focus+dir;break end
+				end
+				camera.CFrame=CFrame.lookAt(want,focus)
+			end)
+		end
 	end
 	self.ritual,self.popAt,self.creakAt,self.setDown,self.greeted,self.asked=nil,nil,nil,nil,nil,nil
 	self.crack3D,self.crack2D,self.silentAt,self.closer,self.route=nil,nil,nil,0,nil
