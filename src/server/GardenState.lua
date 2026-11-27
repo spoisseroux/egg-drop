@@ -33,7 +33,8 @@ function Garden:transition(actor,behavior,target,duration,action,actionId,via,pr
     local now=self.options.now();local sample=Activity.sample(actor,now)
     local from=sample and sample.position or self.inputs[actor.ownerId].anchor
     local continuing=actor.behavior==behavior and actor.action==action and behavior=="follow"
-    if action~="firstStand"then actor.standUntil=nil end -- any other action ends the first hatch's stand
+    -- any other action ends the first hatch's stand (and the lead's jump-spin holds the same way)
+    if action~="firstStand"and action~="leadCheer"then actor.standUntil=nil end
     local previousTarget=Activity.vector(actor.to)
     if not continuing then actor.generation+=1 end
     actor.behavior,actor.action=behavior,action
@@ -116,7 +117,7 @@ function Garden:release(actor)
     end
 end
 function Garden:reset(actor,input)
-    self:release(actor);actor.mode=input.mode;actor.focusUntil=nil
+    self:release(actor);actor.mode=input.mode;actor.focusUntil=nil;actor.lead=nil
     actor.wanderCount,actor.nextWanderAt,actor.idleSince=0,nil,self.options.now()
     self:transition(actor,if input.mode=="Board" then "rest" else "follow",input.anchor,.5)
 end
@@ -157,7 +158,8 @@ function Garden:sync(inputs,freshOwnerId)
             -- Park pets stay in the playground while their owner walks around the kerb. The first hatch's stand
             -- (Garden:stand) holds until its beat is over.
             local standing=actor.standUntil~=nil and self.options.now()<actor.standUntil
-            if actor.mode=="Room" and actor.behavior~="follow" and not actor.park and not actor.dash and not standing then self:release(actor);self:transition(actor,"follow",input.anchor,.5) end
+            -- The lead to the nest (Garden:lead) runs ahead on its own rules.
+            if actor.mode=="Room" and actor.behavior~="follow" and not actor.park and not actor.dash and not standing and not actor.lead then self:release(actor);self:transition(actor,"follow",input.anchor,.5) end
         end
         if actor.care and self.care then self.care:tick(actor,input)end
     end
@@ -214,10 +216,10 @@ function Garden:greeting(now,ordered)
         local i=((self.greetingCursor or 0)+offset-1)%#ordered+1
         local first=ordered[i]
         -- Park pets greet only through the park director (6 s cadence, 45 s per pair).
-        if first.mode~="Room" or first.pairId or first.park or first.dash or first.action=="firstStand" or(first.behavior~="follow" and first.behavior~="rest") then continue end
+        if first.mode~="Room" or first.pairId or first.park or first.dash or first.action=="firstStand" or first.lead or first.action=="leadCheer" or(first.behavior~="follow" and first.behavior~="rest") then continue end
         for delta=1,#ordered-1 do
             local second=ordered[(i+delta-1)%#ordered+1]
-            if second.mode~="Room" or second.pairId or second.park or second.dash or second.action=="firstStand" or(second.behavior~="follow" and second.behavior~="rest") then continue end
+            if second.mode~="Room" or second.pairId or second.park or second.dash or second.action=="firstStand" or second.lead or second.action=="leadCheer" or(second.behavior~="follow" and second.behavior~="rest") then continue end
             local a,b=self:position(first,now),self:position(second,now)
             if distance(a,b)>9 then continue end
             -- Pets go up: never across floors (a pet on the cliff path and one on the lawn under it). nil: as before.
@@ -339,6 +341,8 @@ function Garden:decide()
             if now>actor.focusUntil then self:reset(actor,input) end
             continue
         end
+        -- The lead ends when anything else takes the pet (care, a race, the park, the deck).
+        if actor.lead and(actor.care or actor.dash or actor.park or actor.mode~="Room")then actor.lead=nil;self.dirty=true end
         if actor.care or actor.dash then continue end
         -- Park pets (actor.park, set only by ParkDirector) skip follow, wander and the 22-stud recall.
         if actor.park and self.park then self.park:tick(actor,input,now) continue end
@@ -347,6 +351,8 @@ function Garden:decide()
             continue
         end
         local position=self:position(actor,now)
+        -- The lead to the nest (onboarding v3 brief section 1): its own rules, never the catch-up, leash or wander.
+        if actor.lead then self:leadStep(actor,input,position,now);continue end
         -- Beta (12) QA G1: a pet too far behind, or stuck, hops to a landing by the owner (Room mode only).
         if actor.mode=="Room"and self:catchUp(actor,input,position,now)then continue end
         -- v859 leash: too far from the owner ends any play or interaction (release frees a toy
@@ -496,6 +502,180 @@ function Garden:stand(id,spot,yaw,hold)
     actor.catch={}
     return true
 end
+-- ── The lead to the nest (onboarding v3 brief section 1, switch Onboard "lead"; PetLead's rules) ─────────────────────
+-- The owner's pet runs ahead along `points` (the client's trail route, checked by init.server with PetLead.clean) to
+-- `goal` (3 studs short of the nest's prompt), stops 12 studs ahead and looks back, runs on when the owner comes within
+-- 7, arrives and bounces facing `nest` until the lead ends (leadEnd, leadCheer, or anything else taking the pet). A
+-- nudge (leadBack) runs it back along its route to about 5 studs from the owner, or poofs it to them when no route
+-- point is near (lost: the client sends a new route). Stuck while running (a safety hold): a poof to the next route
+-- point. The snapshot carries {seq, phase, lost} for the client's words; every screen draws the run, hops and spin.
+local ZERO=Vector3.zero
+local function leadModule()return require(Shared.PetLead)end
+local function holdLeg(at,yaw,seconds)
+    return {from=Activity.pack(at),to=Activity.pack(at),v0={0,0,0},v1={0,0,0},duration=seconds,yaw=yaw,turn=0}
+end
+-- Pure: brake from a walk (a quarter second, as the planner's), turn to `face`, hold `hold` s; `before` s of standing
+-- first (the start's hops). path, seconds, where it ends, its heading.
+function Garden.leadSettle(from,velocity,yaw,face,hold,before)
+    local path,total={},0
+    if before and before>0 then table.insert(path,holdLeg(from,yaw,before));total+=before end
+    if velocity.Magnitude>.05 then
+        local stop=from+velocity*.125
+        local leg=Activity.leg(from,stop,velocity,ZERO,math.max(velocity.Magnitude,.1),.25,yaw)
+        if leg then table.insert(path,leg);total+=leg.duration;from=stop;yaw=select(3,Activity.legPose(leg,leg.duration))end
+    end
+    if typeof(face)=="Vector3"then
+        local d=face-from
+        if Vector2.new(d.X,d.Z).Magnitude>.05 then
+            local heading=math.atan2(d.X,d.Z)
+            local turn=math.atan2(math.sin(heading-yaw),math.cos(heading-yaw))
+            if math.abs(turn)>=.12 then
+                local seconds=Activity.turnSeconds(turn)
+                table.insert(path,{from=Activity.pack(from),to=Activity.pack(from),v0={0,0,0},v1={0,0,0},duration=seconds,yaw=yaw,turn=turn,turnDuration=seconds,pivot=true})
+                total+=seconds
+            end
+            yaw=heading
+        end
+    end
+    hold=math.max(.05,hold or .05)
+    table.insert(path,holdLeg(from,yaw,hold));total+=hold
+    return path,total,from,yaw
+end
+-- Can this pet lead (or cheer) now? In the garden, and nothing else has it (a greeting gives way: release ends it).
+function Garden:leadFree(actor)
+    return actor~=nil and actor.mode=="Room"and not actor.park and not actor.care and not actor.dash and not actor.toyReservation
+end
+function Garden:lead(id,points,goal,nest)
+    local actor,input=self.actors[id],self.inputs[id]
+    if not input or not self:leadFree(actor)or typeof(goal)~="Vector3"then return false end
+    if type(points)~="table"then points={}end
+    for _,p in ipairs(points)do if typeof(p)~="Vector3"then return false end end
+    local Lead=leadModule()
+    local now=self.options.now()
+    local sample=Activity.sample(actor,now)
+    local at=sample and sample.position or input.anchor
+    self:release(actor)
+    actor.leadSeq=(actor.leadSeq or 0)+1
+    actor.lead={seq=actor.leadSeq,points=points,goal=goal,nest=if typeof(nest)=="Vector3"then nest else nil,phase="start"}
+    -- the start: two hops where it stands (PetLead.pose), then a turn to the way
+    local face=goal
+    for _,p in ipairs(points)do if Lead.flat(p,at)>1.5 then face=p;break end end
+    local path,seconds=Garden.leadSettle(at,ZERO,sample and sample.yaw or actor.yaw or 0,face,.05,Lead.startHops())
+    -- "investigate", not "rest": a lead's long holds never sit or doze (PetSitPose, PetExpression), its face curious
+    self:transition(actor,"investigate",at,seconds,"leadStart",nil,nil,{path=path,duration=seconds})
+    actor.from,actor.to=Activity.pack(at),Activity.pack(at)
+    actor.catch={};actor.idleSince=now
+    return true
+end
+function Garden:leadRun(actor,position,now)
+    local Lead=leadModule()
+    local lead=actor.lead
+    local sample=Activity.sample(actor,now)
+    local velocity=sample and sample.velocity or ZERO
+    local yaw=sample and sample.yaw or actor.yaw or 0
+    local targets=Lead.ahead(lead.points,position,lead.goal)
+    local accept=self.options.validToyPath
+    local path,seconds=Activity.through(position,targets,velocity,Lead.Run/Activity.ThroughPace,yaw,function(leg)return accept==nil or accept({leg})end)
+    if not path then
+        -- no smooth walk fits: the server's own planner, straight to the goal round the water and the props
+        local planner=self.options.planPath or Activity.plan
+        path,seconds=planner(position,lead.goal,velocity,Lead.Run*3,0,yaw,nil,ZERO)
+    end
+    lead.phase,lead.stuckAt,lead.stuckFrom="run",nil,nil
+    self:transition(actor,"investigate",lead.goal,0,"leadRun",nil,nil,{path=path,duration=seconds})
+end
+function Garden:leadHold(actor,position,now,face,action,phase)
+    local Lead=leadModule()
+    local sample=Activity.sample(actor,now)
+    local moving=sample and now<actor.endTime
+    local path,seconds,at=Garden.leadSettle(position,if moving then sample.velocity else ZERO,sample and sample.yaw or actor.yaw or 0,face,Lead.Hold)
+    actor.lead.phase=phase
+    self:transition(actor,"investigate",at,seconds,action,nil,nil,{path=path,duration=seconds})
+    actor.from,actor.to=Activity.pack(position),Activity.pack(at)
+end
+function Garden:leadStep(actor,input,position,now)
+    local Lead=leadModule()
+    local lead=actor.lead
+    -- far past any nudge (a teleport, a lost owner): the lead ends and it follows; the client asks again
+    if Lead.flat(position,input.position)>Lead.MaxGap then
+        actor.lead=nil;actor.idleSince=now;self:transition(actor,"follow",input.anchor,.6);return
+    end
+    local nest=lead.nest or lead.goal
+    -- poofed off its route: it waits by the owner for the client's new route (never a run off the route)
+    local next=if lead.lost then nil else Lead.decide(lead,{now=now,pet=position,owner=input.position,goal=lead.goal,moving=now<actor.endTime})
+    if next=="run"then self:leadRun(actor,position,now)
+    elseif next=="wait"then self:leadHold(actor,position,now,input.position,"leadWait","wait")
+    elseif next=="arrive"then self:leadHold(actor,position,now,nest,"leadArrive","arrive")
+    elseif next=="poof"then
+        local spot=Lead.ahead(lead.points,position,lead.goal)[1]
+        actor.hop={seq=(actor.hop and actor.hop.seq or 0)+1,from=Activity.pack(position),why="lead"}
+        actor.from,actor.to=Activity.pack(spot),Activity.pack(spot);actor.path=nil
+        actor.startTime,actor.endTime=now,now
+        self:leadRun(actor,spot,now)
+    elseif(lead.phase=="wait"or lead.phase=="arrive")and now>=actor.endTime-.05 then
+        -- a long wait or arrival: held again, facing the same way
+        self:leadHold(actor,position,now,if lead.phase=="wait"then input.position else nest,actor.action,lead.phase)
+    end
+end
+-- A nudge: back along the route to about 5 studs from the owner, or a poof to them. False when it is not leading.
+function Garden:leadBack(id)
+    local actor,input=self.actors[id],self.inputs[id]
+    local lead=actor and actor.lead
+    if not lead or not input or actor.mode~="Room"or lead.phase=="start"or lead.phase=="arrive"or lead.phase=="back"then return false end
+    local Lead=leadModule()
+    local now=self.options.now()
+    local sample=Activity.sample(actor,now)
+    local position=sample and sample.position or input.anchor
+    local yaw=sample and sample.yaw or actor.yaw or 0
+    local velocity=if sample and now<actor.endTime then sample.velocity else ZERO
+    local way=Lead.backWay(lead.points,position,input.position)
+    if way then
+        local accept=self.options.validToyPath
+        local path,seconds=Activity.through(position,way,velocity,Lead.Run/Activity.ThroughPace,yaw,function(leg)return accept==nil or accept({leg})end)
+        if not path then
+            local planner=self.options.planPath or Activity.plan
+            path,seconds=planner(position,way[#way],velocity,Lead.Run*3,0,yaw,nil,ZERO)
+        end
+        lead.phase="back"
+        self:transition(actor,"investigate",way[#way],0,"leadBack",nil,nil,{path=path,duration=seconds})
+        return true
+    end
+    -- off the route: it poofs to a landing by the owner and the client sends a new route from there
+    local landing=self.options.landing and self.options.landing(input,false,position)
+    if typeof(landing)~="Vector3"then return false end
+    actor.hop={seq=(actor.hop and actor.hop.seq or 0)+1,from=Activity.pack(position),why="lead"}
+    actor.from,actor.to=Activity.pack(landing),Activity.pack(landing);actor.path=nil
+    actor.startTime,actor.endTime=now,now
+    self:leadHold(actor,landing,now,input.position,"leadWait","wait")
+    lead.lost=true
+    return true
+end
+-- The lead is over (parked, paused, the prompt done): it follows as usual.
+function Garden:leadEnd(id)
+    local actor,input=self.actors[id],self.inputs[id]
+    if not actor or not actor.lead or not input then return false end
+    actor.lead=nil;actor.idleSince=self.options.now();self.dirty=true
+    -- petted (Focus) or on the deck meanwhile: only the lead goes; that mode keeps the pet
+    if actor.mode=="Room"then self:transition(actor,"follow",input.anchor,.5)end
+    return true
+end
+-- The jump-spin (tucked in, all set) where it stands, then it follows as usual. Ends a lead.
+function Garden:leadCheer(id)
+    local actor,input=self.actors[id],self.inputs[id]
+    if not input or not self:leadFree(actor)then return false end
+    local Lead=leadModule()
+    local now=self.options.now()
+    local sample=Activity.sample(actor,now)
+    local at=sample and sample.position or input.anchor
+    local velocity=if sample and now<actor.endTime then sample.velocity else ZERO
+    actor.lead=nil
+    self:release(actor)
+    local path,seconds,stop=Garden.leadSettle(at,velocity,sample and sample.yaw or actor.yaw or 0,nil,Lead.Cheer.hold)
+    self:transition(actor,"rest",stop,seconds,"leadCheer",nil,nil,{path=path,duration=seconds})
+    actor.from,actor.to=Activity.pack(at),Activity.pack(stop)
+    actor.standUntil=now+seconds;actor.idleSince=now+seconds
+    return true
+end
 function Garden:remove(id)
     local actor=self.actors[id]
     if actor then self:release(actor);self.actors[id]=nil;self.inputs[id]=nil;self.dirty=true end
@@ -528,7 +708,8 @@ function Garden:snapshot()
             behavior=actor.behavior,action=actor.action,actionId=actor.actionId,peerId=actor.peerId,startTime=actor.startTime,endTime=actor.endTime,
             from=actor.from,to=actor.to,via=actor.via,path=actor.path,yaw=actor.yaw,charmVisible=actor.charmVisible~=false,requestGeneration=actor.lastFocusSeq or 0,
             parkId=actor.park and actor.park.parkId or nil,toyRole=actor.toyRole,toyStartTime=actor.toyStartTime,care=actor.care and table.clone(actor.care)or nil,dash=actor.dash,
-            hop=actor.hop and{seq=actor.hop.seq,from=actor.hop.from}or nil}
+            hop=actor.hop and{seq=actor.hop.seq,from=actor.hop.from}or nil,
+            lead=actor.lead and{seq=actor.lead.seq,phase=actor.lead.phase,lost=actor.lead.lost}or nil}
     end
     -- park is nil unless FeatureFlags.Park attached a director (then the snapshot is unchanged).
     return {version=Activity.Version,revision=self.revision,actors=actors,toy=table.clone(self.toy),careBay=self.care and self.care:snapshot()or nil,

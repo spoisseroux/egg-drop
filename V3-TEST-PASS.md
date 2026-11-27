@@ -76,6 +76,8 @@ Beta (33), 2026-11-26: player scale (row 60). Beta (32), 2026-11-26: the first e
 
 | # | Piece | Status | What to try |
 |---|---|---|---|
+| L1 | Onboarding v3: the Bear leads you to the nest (`/onboard lead on`, needs `guide`) | Built, specs pass offline; not in Studio yet | `/freshsave`, hatch the Bear, pet it. "Follow Bear!" / "A new egg is waiting": it hops twice, runs to the nest, stops 12 studs ahead and beckons; walk to it and it runs on. Stand still 8 s: it comes back, "This way!". Ignore three: it follows you with a moon chip (tap it: it leads again). Open a menu mid-lead: it stops, and leads again 2.5 s after. Reach the nest: "Tuck the egg in!" sits on the nest; tuck: spin, hearts, toast. "Play for Stars!" closes only when a round is played. A second player should see the Bear run |
+| L2 | Onboarding v3: "You're all set!" celebration (`/onboard allset2 on`) | Built, specs pass offline; not in Studio yet | After all three are really done, back in the garden: the Bear jump-spins, bubbles and confetti rise, the card pops with its headshot, three stamps land (Pet, Nest, Stars), the title punches, "What's next?" opens Things to do. Any tap after 0.4 s, B or Esc closes it; 5 s on its own. Reduced Motion: no confetti, spin or sweep |
 
 ## Scoped, not built
 

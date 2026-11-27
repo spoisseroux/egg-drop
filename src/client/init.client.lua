@@ -3494,6 +3494,8 @@ do
   local Trail=require(script.PetTrail)
   local Kit=require(script.DeckKit)
   local trail=Trail.new({gui=overlayGui,ringColor=Kit.Tint.companions,chipColor=Kit.Tint.companions})
+  -- The v3 brief's lead (LeadTrail) asks this trail for its lead mode (leadBy) once it has one (switch trail2).
+  clientUI.petTrail=trail
   local state={pet=nil}
   local function face(visual)
    if state.pet and state.pet~=visual then state.pet.faceOwner=nil;state.pet.poseDirty=true end
@@ -5797,11 +5799,29 @@ do
     return model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart",true)
    end
    local function nestAt()local f=clientUI.nestPlace;local at=type(f)=="function"and f()or nil;return if typeof(at)=="Vector3"then at else nil end
+   -- The v3 brief's 2b bubble sits on the nest: an invisible part over its prompt (in its own model, so the bubble's
+   -- height reads the part, not the world).
+   local nestHolder,nestPart
+   local function nestAnchor()
+    local at=nestAt()
+    if not at then return nil end
+    if not(nestPart and nestPart.Parent)then
+     nestHolder=Instance.new("Model");nestHolder.Name="EggDropLeadNestAnchor"
+     nestPart=Instance.new("Part");nestPart.Name="Anchor";nestPart.Size=Vector3.new(1,2,1);nestPart.Transparency=1
+     nestPart.Anchored,nestPart.CanCollide,nestPart.CanQuery,nestPart.CanTouch,nestPart.CastShadow=true,false,false,false,false
+     nestPart.Parent=nestHolder;nestHolder.Parent=workspace
+    end
+    local want=at+Vector3.new(0,1.5,0)
+    if(nestPart.Position-want).Magnitude>.05 then nestPart.CFrame=CFrame.new(want)end
+    return nestPart
+   end
    local needs
    -- The bubble's BillboardGui is made the first time a bubble shows.
    -- Beta 14 Q2 (BubbleHold): the napping egg's beat holds the bubble back; without a nest, exactly as before.
    local bubble=require(script.BubbleHold).new(function()
-    return require(script.NeedBubble).new({parent=player:WaitForChild("PlayerGui"),adornee=petPart,
+    return require(script.NeedBubble).new({parent=player:WaitForChild("PlayerGui"),
+     adornee=function()if needs and needs.bubbleOn=="nest"then return nestAnchor()or petPart()end;return petPart()end,
+     chipAdornee=petPart,onChip=function()if needs then needs:chipTap()end end,
      reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
      -- Onboarding v2 (Onboard "guide"): never a key name on a computer; the pad's X picture.
      keyHint=function()
@@ -5825,6 +5845,54 @@ do
     -- the first pet's settle buzz and the end card.
     guide=function()return Onboard.on("guide")end,
     words=function(id)local key,vars=Needs.guideWords(id,petName());return if key then Copy.get(key,vars)else nil end,
+    -- The v3 brief: the lead to the nest (Onboard "lead") and the new end card (Onboard "allset2").
+    lead=function()return Onboard.leadOn()end,allSet2=function()return Onboard.on("allset2")end,nestOn=function()return Onboard.on("nest")end,
+    copy=function(key)return Copy.get(key,{pet=petName()})end,
+    leadDeps=(function()
+     local leadTrail=require(script.LeadTrail).new({things=trail,leaders=function()return{clientUI.petTrail}end})
+     local function reducedNow()return reduceEffects()==true or GuiService.ReducedMotionEnabled end
+     local toaster
+     return{
+      send=function(_,body)request:FireServer("petLead",body)end,
+      -- the trail's own route (dry, over a bridge when it must; pathfinding yields): from the pet to the nest's prompt
+      plan=function(from,to,done)
+       task.spawn(function()
+        local Route=require(script.ThingsTrail)
+        local ok,points=pcall(Route.route,Route.pathfind,from,to)
+        done(if ok then points else nil)
+       end)
+      end,
+      actor=function()
+       local snapshot=roomView.garden and roomView.garden.snapshot
+       return snapshot and snapshot.actors and snapshot.actors[tostring(player.UserId)]
+      end,
+      serverNow=function()return workspace:GetServerTimeNow()end,
+      pet=function()
+       local part=petPart();local pet=roomView.pet
+       if not part then return nil end
+       return if pet and typeof(pet.origin)=="Vector3"then pet.origin else part.Position,pet and pet.model
+      end,
+      root=rootPosition,nest=nestAt,trail=leadTrail,targetName=function()return Copy.get("onb3.nest.title")end,
+      -- the look back: the paw wave (the hop is every screen's) and a chirp
+      beckon=function()
+       local pet=roomView.pet
+       if pet and not pet.destroyed and not reducedNow()then pcall(function()pet:greet()end)end
+       local shown=roomView.shownPet;if shown and shown.cue then audio:play(shown.cue,1.15,.3)end
+      end,
+      hop=function()bubble:hop()end,
+      chirp=function()local shown=roomView.shownPet;if shown and shown.cue then audio:play(shown.cue,1.1,.3)end end,
+      event=function(name)request:FireServer("onboardEvent",name)end,
+      -- tucked: six hearts on the pet and the settle buzz (the jump-spin is the server's, every screen)
+      celebrate=function()
+       local pet=roomView.pet
+       if pet and not pet.destroyed and roomView.affection then pcall(function()roomView.affection:bondBurst(pet.secondaryColor,reducedNow())end)end
+       pcall(function()require(script.Haptics).play("settle")end)
+      end,
+      toast=function(key)
+       toaster=toaster or require(script.DeckKit).toaster(overlayGui)
+       toaster.show(Copy.get(key,{pet=petName()}))
+      end}
+    end)(),
     far=function(where)
      local at=if where=="Nest"then nestAt()else nil
      local from=rootPosition()
@@ -5850,6 +5918,15 @@ do
     firstPet=function()pcall(function()require(script.Haptics).play("settle")end)end,
     allSet=function()
      request:FireServer("onboardEvent","AllSet")
+     -- The v3 brief section 3 (Onboard "allset2"): the celebration card; off, the exhale card as before.
+     if needs and needs.allSet2 then
+      local shown=roomView.shownPet
+      require(script.AllSetCard).show(player:WaitForChild("PlayerGui"),{copy=Copy.get,pet=petName(),petId=shown and shown.id or "pip",
+       play=function(name,speed,gain)return audio:play(name,speed,gain)end,haptic=function(name)require(script.Haptics).play(name)end,
+       reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
+       cheer=function()request:FireServer("petLead",{kind="cheer"})end,next=function()clientUI.openThings()end})
+      return
+     end
      require(script.GuideEndCard).show(player:WaitForChild("PlayerGui"),{copy=Copy.get,
       play=function(name,speed,gain)return audio:play(name,speed,gain)end,reduced=function()return reduceEffects()==true end})
     end,

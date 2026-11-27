@@ -297,6 +297,12 @@ local Table={
   guide={pet="Pet {pet}!",nest="Tuck the egg in!",deck="Play for Stars!",allSet="You're all set!",deckIcon="Deck",ballIcon="Ball",eggsIcon="Eggs"},
   replay="Watch the first hatch again",
  },
+ -- Onboarding v3 brief section 1 (Onboard "lead", qa-2026-11-27-beta37/ONBOARDING-V3-BRIEF.md): two lines, a headline
+ -- of 16 characters or fewer and a sub-line of 28 or fewer; the post-tuck toast.
+ onbLead={pet="Pet {pet}!",follow="Follow {pet}!",followSub="A new egg is waiting",tuck="Tuck the egg in!",tuckSub="It hatches tomorrow",
+  deck="Play for Stars!",deckSub="Stars buy eggs and toys",thisWay="This way!",toast="Sweet dreams! Come back tomorrow to hatch it."},
+ -- Section 3 (Onboard "allset2"): the celebration card.
+ onbAllSet={title="You're all set!",pet="Pet",nest="Nest",stars="Stars",sub="{pet} loves it here.",next="What's next?"},
  -- v1 track A onboarding: coach cards (CoachCards.lua), each shown once ever (coachMask).
  -- A title of three words or fewer and one short line; the game assumes merge-game players.
  coach={effortPay="Good effort",
