@@ -29,7 +29,7 @@ ui.book.entry.line,"Pages to fill, Stars to find",,Collection book
 ui.book.eyebrow,Garden,,"Collection book; also ui.hub.eyebrow, ui.report.category.garden, ui.store.eyebrow"
 ui.book.failed,Not claimed,,Collection book
 ui.book.found,Found,,Collection book
-ui.book.hint.back,Back,,"Collection book; also ui.input.action.back, ui.phoneDeck.b.back, ui.r1.reveal.exit, ui.stats.hint.back"
+ui.book.hint.back,Back,,"Collection book; also ui.input.action.back, ui.pet.cuddle.back, ui.phoneDeck.b.back, ui.r1.reveal.exit"
 ui.book.hint.claim,Claim,,Collection book
 ui.book.hint.move,Move,,Collection book
 ui.book.hint.pages,Pages,,Collection book
@@ -141,7 +141,7 @@ ui.dash.ask.title,Leave the race?,,Menu text
 ui.dash.ask.yes,Leave,,"Menu text; also ui.dash.line.yes, ui.results.leave.narrow"
 ui.dash.band,{band} · Dash level {level},,Menu text; e.g. {band} · Dash level 10
 ui.dash.bestShort,Best {best} s,,Menu text; e.g. Best {best} s; also ui.dash.result.best
-ui.dash.clear,Nice!,,Menu text
+ui.dash.clear,Nice!,,Menu text; also ui.onb2.deck.nice
 ui.dash.clover,Lucky clover!,,Menu text
 ui.dash.dash,Dash,,Menu text; also ui.r3.help.dash.c.title
 ui.dash.done,Done,,"Menu text; also ui.names.reveal.done, ui.onb3.strip.tiny.done"
@@ -261,6 +261,9 @@ ui.e2.tease.one,Someone's on the way… 1 more stamp,,Menu text
 ui.e2.tease.short,Someone's on the way…,,Menu text
 ui.finds.gain,+{count} Smarts,,Menu text; e.g. +3 Smarts
 ui.finds.name,Garden find,,Menu text
+ui.fruit.guide,Shake the tree!,,Menu text
+ui.fruit.shake,Shake,,Menu text
+ui.fruit.tree,Fruit tree,,Menu text
 ui.hatch.display.charm,A charm for your pet,,Hatch eggs screen
 ui.hatch.display.finish,A material for your pet,,Hatch eggs screen
 ui.hatch.display.firstFriend,Your first friend,,Hatch eggs screen
@@ -612,18 +615,21 @@ ui.onb2.crack.click,Click the egg!,,Menu text; also ui.onboarding.crack.click
 ui.onb2.crack.pad,Crack it!,,Menu text
 ui.onb2.crack.tap,Tap the egg!,,Menu text; also ui.onboarding.crack.tap
 ui.onb2.deck.click,Click to drop,,Menu text
+ui.onb2.deck.close,So close!,,Menu text
 ui.onb2.deck.drop,Drop a ball!,,Menu text
 ui.onb2.deck.hatching,It's hatching!,,Menu text
 ui.onb2.deck.match,Match two!,,Menu text
+ui.onb2.deck.numOne,1,,Menu text
+ui.onb2.deck.numTwo,2,,Menu text
 ui.onb2.deck.one,1 more!,,Menu text
 ui.onb2.deck.two,2 more!,,Menu text
-ui.onb2.guide.allSet,You're all set!,,Menu text
+ui.onb2.guide.allSet,You're all set!,,Menu text; also ui.onbAllSet.title
 ui.onb2.guide.ballIcon,Ball,,"Menu text; also catalog.ToyCatalog.ById.ball.name, catalog.BookCatalog.Pages.toys.items.1.name"
-ui.onb2.guide.deck,Play for Stars!,,Menu text
+ui.onb2.guide.deck,Play for Stars!,,Menu text; also ui.onbLead.deck
 ui.onb2.guide.deckIcon,Deck,,Menu text
 ui.onb2.guide.eggsIcon,Eggs,,Menu text
-ui.onb2.guide.nest,Tuck the egg in!,,Menu text
-ui.onb2.guide.pet,Pet {pet}!,,Menu text; e.g. Pet Bear!
+ui.onb2.guide.nest,Tuck the egg in!,,Menu text; also ui.onbLead.tuck
+ui.onb2.guide.pet,Pet {pet}!,,Menu text; e.g. Pet Bear!; also ui.onbLead.pet
 ui.onb2.replay,Watch the first hatch again,,Menu text
 ui.onb2.stork.delivery,A delivery!,,Menu text
 ui.onb3.charm.name,Nest Charm,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
@@ -704,6 +710,17 @@ ui.onb3.tip.park,Pets play together in here.,,"First-session onboarding: pet bub
 ui.onb3.tip.style,Dress up your Pocket Deck here.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
 ui.onb3.week.line,{pet} loves the garden. A new egg naps in the nest after every hatch.,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip; e.g. Bear loves the garden. A new egg naps in the nest after every hatch."
 ui.onb3.week.title,Welcome week done!,,"First-session onboarding: pet bubbles, Sleepy Nest, results strip"
+ui.onbAllSet.nest,Nest,,Menu text
+ui.onbAllSet.next,What's next?,,Menu text
+ui.onbAllSet.pet,Pet,,Menu text
+ui.onbAllSet.stars,Stars,,"Menu text; also ui.r3.help.dash.d.title, ui.report.category.stars, ui.store.starsRow"
+ui.onbAllSet.sub,{pet} loves it here.,,Menu text; e.g. Bear loves it here.
+ui.onbLead.deckSub,Stars buy eggs and toys,,Menu text
+ui.onbLead.follow,Follow {pet}!,,Menu text; e.g. Follow Bear!
+ui.onbLead.followSub,A new egg is waiting,,Menu text
+ui.onbLead.thisWay,This way!,,Menu text
+ui.onbLead.toast,Sweet dreams! Come back tomorrow to hatch it.,,Menu text
+ui.onbLead.tuckSub,It hatches tomorrow,,Menu text
 ui.onboarding.crack.pad,Press A!,,First-round coaching
 ui.onboarding.spend.give,Give to {pet},,First-round coaching; e.g. Give to Bear; also ui.r4.customize.toys.give
 ui.onboarding.spend.line,Choose a Toy Egg when you're ready.,,First-round coaching
@@ -833,6 +850,9 @@ ui.park.throw,Throw,,Pet Park chip
 ui.park.waitIdle,Pets are playing,,Pet Park chip
 ui.pet.capped,{pet}'s had plenty of pets today,,Petting reward; e.g. Bear's had plenty of pets today
 ui.pet.cappedSolo,Plenty of pets today,,Petting reward
+ui.pet.cuddle.friend,your pet,,Petting reward
+ui.pet.cuddle.loves,{pet} loves this!,,Petting reward; e.g. Bear loves this!
+ui.pet.cuddle.rub,Rub {pet}!,,Petting reward; e.g. Rub Bear!
 ui.pet.hello,First hello! +{count} ★,,Petting reward; e.g. First hello! +3 ★
 ui.pet.star,+1 ★,,Petting reward
 ui.phoneDeck.b.items,Items,,Menu text
@@ -871,7 +891,6 @@ ui.r3.help.dash.a.title,Run,,Menu text
 ui.r3.help.dash.b.line,Tap Jump at each hoop.,,Menu text
 ui.r3.help.dash.c.line,Hold Dash to zoom. Let go to rest.,,Menu text
 ui.r3.help.dash.d.line,"Two Stars a race, five races a day.",,Menu text
-ui.r3.help.dash.d.title,Stars,,"Menu text; also ui.report.category.stars, ui.store.starsRow"
 ui.r3.help.garden.a.line,"Walk up to a glowing machine to use it, or tap Menu to open any of them from anywhere.",,Menu text
 ui.r3.help.garden.b.line,Open the Menu and pick Quests. Three daily quests and a once-a-day stamp pay Stars.,,Menu text
 ui.r3.help.garden.c.line,Open Companions to recolour and dress your pet. New pieces hatch from eggs.,,Menu text
