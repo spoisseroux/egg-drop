@@ -74,10 +74,12 @@ function Deck2:build()
 	node("UICorner",self.grassFoot,{CornerRadius=corner})
 	self.grassColors={top=G.top,bottom=G.bottom}
 	self.corner=corner
-	self.shadow=self:keep(frame(meter,"Deck2EggShadow",z+3,{AnchorPoint=Vector2.new(.5,.5),BackgroundTransparency=0,BackgroundColor3=D.shadow,Visible=false}))
-	round(self.shadow)
-	node("UIGradient",self.shadow,{Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.5,D.shadowAlpha),
-		NumberSequenceKeypoint.new(1,1)})})
+	-- the soft shadow (beta 39: a round frame with a sideways gradient read as a grey bar, over EggPreview3D's own hard
+	-- one, which WelcomeEgg3D now hides): a radial blob stretched to an ellipse, placed every frame (Deck2:paintShadow)
+	local blob=require(Shared.UnderstoryArt)
+	self.shadow=self:keep(node("ImageLabel",meter,{Name="Deck2EggShadow",BackgroundTransparency=1,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,.5),
+		Image=if blob.filled(blob.Blob)then blob.Blob else "",ImageColor3=WHITE,ImageTransparency=1,ScaleType=Enum.ScaleType.Stretch,
+		ZIndex=z+3,Visible=false,Active=false,Selectable=false}))
 	self.sweepFrame=self:keep(frame(meter,"Deck2Sweep",z+8,{Size=UDim2.fromScale(1,1),BackgroundTransparency=0,BackgroundColor3=WHITE,Visible=false}))
 	node("UICorner",self.sweepFrame,{CornerRadius=corner})
 	self.sweepBand=node("UIGradient",self.sweepFrame,{Rotation=25,Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),
@@ -232,7 +234,19 @@ function Deck2:layoutEgg()
 		ColorSequenceKeypoint.new(1,self.grassColors.bottom)})
 	local footH=math.max(2,math.floor(r*2+.5))
 	self.grassFoot.Position=UDim2.new(0,0,1,-footH);self.grassFoot.Size=UDim2.new(1,0,0,footH)
-	self.shadow.Position=UDim2.new(.5,0,0,math.floor(foot*h+.5));self.shadow.Size=UDim2.new(D.shadowWidth,0,0,math.max(4,math.floor(h*.045+.5)))
+	self.crestY=top
+end
+-- The soft shadow under the 3D egg, on the grass top: follows the egg's centre and width (EggPreview3D's geometry, in
+-- its well at the card's pad), shrinking and fading as the egg hops or rises. Hidden until the 3D egg is in.
+-- rise: the egg's lift in px; fade: its own fade (WelcomeEgg3D:paint, after the pose).
+function Deck2:paintShadow(preview,rise,fade)
+	if not self.alive or not self.shown then return end
+	local g=preview and preview.loaded==true and preview.geo
+	local well=self.egg.well
+	if not(g and well and self.crestY)then set(self.shadow,"ImageTransparency",1);return end
+	local x,y,w,h,transparency=V2.eggShadow(well.Position.X.Offset+g.cx,g.ew,self.crestY,rise,fade)
+	set(self.shadow,"Position",UDim2.fromOffset(x,y));set(self.shadow,"Size",UDim2.fromOffset(w,h))
+	set(self.shadow,"ImageTransparency",transparency)
 end
 
 -- ── Combos ──────────────────────────────────────────────────────────────────────────────────────────────────────

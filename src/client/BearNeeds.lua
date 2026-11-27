@@ -199,6 +199,15 @@ function Needs:abandon()
 	end
 end
 function Needs:saidHi()self.live.saidHi=true end
+-- The onboarding fun pass (PetCuddle.First): is the petting screen opening now the guide's first pet (the 3 s heart,
+-- the burst closes the screen)? A session latch, not the open prompt: the greeting itself closes "Pet me!" (beta 39:
+-- any frame of focus, a refused first try included, closed it before the screen read it, so the first visit never
+-- closed). Owed from the guide's start while "Pet me!" was still open, until a first visit's burst (firstCuddleDone);
+-- never for a returning save, a pet already said hi to, or once the guide is all set.
+function Needs:firstCuddle()
+	return self.guide==true and self.firstPetOwed==true and not self.dead and not self.allSet
+end
+function Needs:firstCuddleDone()self.firstPetOwed=false end
 -- The v3 brief's parked chip was tapped: the lead again.
 function Needs:chipTap()
 	local lead=self.nestLead
@@ -334,6 +343,8 @@ function Needs:step(now,dt)
 			if returning and leadOn and Needs.resumable(state)then returning=false;self.returning=false;self.resumed=true end
 			self.guide=d.guide~=nil and d.guide()==true and not returning
 			if self.guide then self.order=Needs.GuideOrder;self.skipped={};self.shownFor={};self.nudgedAt={}end
+			-- the fun pass's first petting visit (PetCuddle.First) is owed from here until its burst (Needs:firstCuddle)
+			self.firstPetOwed=self.guide==true and not Needs.closed("needHi",f)
 			self.lead=self.guide and leadOn
 			if self.lead and d.leadDeps then self.nestLead=NestLead.new(d.leadDeps)end
 			self.allSet2=self.guide and d.allSet2~=nil and d.allSet2()==true

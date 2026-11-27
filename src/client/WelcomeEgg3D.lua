@@ -235,6 +235,12 @@ function Egg:paint()
 	for _,d in ipairs(preview.bloom or {})do d.Visible=false end
 	for _,key in ipairs({"sheenClip","glow","crack","white"})do local f=preview[key];if f then f.Visible=false end end
 	for _,s in ipairs(preview.sparkles or {})do s.holder.Visible=false end
+	-- deck2 (beta 39): the preview's own hard black contact pill read as a grey bar under the egg; the card's soft
+	-- shadow on the grass (WelcomeDeck2:paintShadow) takes its place
+	if self.deck2 then
+		if preview.shadow then preview.shadow.Visible=false end
+		self.deck2:paintShadow(preview,(hop+lift)*(preview.geo.H or 0),math.max(fade,1-reveal))
+	end
 	local parts=preview.parts or {}
 	if parts.Core then parts.Core.Transparency=1 end
 	-- a cream base under the map, so a frame without it is never grey (Fable B37 1b)
