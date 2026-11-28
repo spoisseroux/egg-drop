@@ -4,6 +4,7 @@
 Follows artifacts/qa-2026-11-28-music/MUSIC-BRIEF.md (Fable, 2026-11-28).
 
   python scripts/build_music.py                      # v4 (current): garden day + night without the pads
+  python scripts/build_music.py --version deck-v4    # Pocket Deck v4 "Marimba Pop" (140 BPM) + its lite
   python scripts/build_music.py --version v3         # v3: garden beds with pads + the exciting Pocket Deck
   python scripts/build_music.py --version v2         # the first-pass v2 render
   python scripts/build_music.py --with boing,la-chop # v3 with the risky samples back on
@@ -217,7 +218,7 @@ def crest_db(x):
     return todb(np.abs(x).max()) - todb(np.sqrt((x ** 2).mean()))
 
 
-def seam_stats(x):
+def seam_stats(x, bar=None):
     """Loop seam check: the wrap (last sample -> first sample) against the track's own motion."""
     w = int(0.05 * SR)
     last, first = x[-w:], x[:w]
@@ -230,10 +231,11 @@ def seam_stats(x):
     hf = fft_filter(x, lambda f: mag_hp(f, 8000, 4))
     e = (hf ** 2).sum(axis=1)
     win = int(0.02 * SR)
-    nb = int(round(len(x) / BAR))
+    bl = bar or BAR
+    nb = int(round(len(x) / bl))
     at = lambda c: e[(np.arange(c - win // 2, c + win // 2)) % len(e)].mean()
     seam_e = at(0)
-    bars = [at(barf(k)) for k in range(1, nb)]
+    bars = [at(int(round(k * bl))) for k in range(1, nb)]
     lag = int(0.004 * SR)
     a = last[-lag:].mean(axis=1)
     b = first[:lag].mean(axis=1)
@@ -250,7 +252,7 @@ def seam_stats(x):
     }
 
 
-def measure(x, name):
+def measure(x, name, bar=None):
     m = {
         "file": name,
         "frames": int(len(x)),
@@ -261,7 +263,7 @@ def measure(x, name):
         "loudness_range_lu": round(loudness_range(x), 2),
         "mono_loss_db": round(mono_loss_db(x), 2),
         "share_above_6k": round(hf_share(x), 4),
-        "seam": seam_stats(x),
+        "seam": seam_stats(x, bar),
     }
     return m
 
@@ -1541,17 +1543,18 @@ def note_env(n, att, tau, rel):
     return e
 
 
-def pad_render(n, notes_per_bar, tab, det_cents=7.0, breathe_bars=2):
+def pad_render(n, notes_per_bar, tab, det_cents=7.0, breathe_bars=2, bar=None):
     """Sustained pad: each bar's chord tones, legato across bar lines (half-beat raised-cosine overlap; a held
     note keeps its phase, so it does not dip), three detuned voices (centre, left -det, right +det), and a slow
     loop-periodic breathing on each note."""
+    bl = bar or BAR
     out = np.zeros((n, 2))
-    xf = int(BEAT / 2)
+    xf = int(bl / 8)
     r = 0.5 - 0.5 * np.cos(np.pi * (np.arange(2 * xf) + 0.5) / (2 * xf))
-    nb = int(round(n / BAR))
+    nb = int(round(n / bl))
     cyc = nb / breathe_bars
     for b, notes in enumerate(notes_per_bar):
-        frames = np.arange(barf(b) - xf, barf(b + 1) + xf, dtype=np.int64)
+        frames = np.arange(int(round(b * bl)) - xf, int(round((b + 1) * bl)) + xf, dtype=np.int64)
         w = np.ones(len(frames))
         w[: 2 * xf] = r
         w[-2 * xf:] = r[::-1]
@@ -2161,10 +2164,579 @@ def build_v3(args):
     return report
 
 
+# ============================================================================= Pocket Deck v4, "Marimba Pop"
+# artifacts/qa-2026-11-28-music/DECK-V4-BRIEF.md (Fable). Spencer: a different deck song, maybe faster, like other
+# drop-and-merge puzzle games, still on the garden's melody. 140 BPM, re-synthesized from the transcription below:
+# marimba lead, glock doubling, Karplus-Strong nylon chops, a round bass, ocarina dyads, hand percussion.
+
+BAR4 = 75600                      # 140 BPM: 60 / 140 * 4 * 44100, exact
+SIX4 = BAR4 // 16                 # 4725 frames per 16th
+N_DECK4 = 64 * BAR4               # 4,838,400
+N_LITE4 = 32 * BAR4               # 2,419,200 (exactly half)
+DECK4_LUFS, DECK4_TP = -17.5, -1.5
+LITE4_LUFS, LITE4_TP = -22.0, -6.0
+DECK4_PREVIEWS = os.path.join(QA_DIR, "previews-deck-v4")
+
+CELL4 = {"X": [0, 4, 6, 8, 10, 12], "Y": [0, 2, 4, 8, 10, 12]}
+_MEL4 = [("X", "C4 E4 G4 C5 G4 E4"), ("Y", "G4 A4 G4 E4 G4 E4"), ("X", "C4 E4 G4 C5 G4 E4"), ("Y", "E4 G4 E4 C4 E4 C4"),
+         ("X", "E4 G4 E4 B4 G4 E4"), ("Y", "E4 A4 E4 G4 B4 G4"), ("X", "E4 G4 B4 C5 G4 E4"), ("Y", "E4 G4 E4 C4 E4 C4"),
+         ("X", "C4 E4 G4 C5 G4 E4"), ("Y", "E4 A4 E4 E4 G4 E4"), ("X", "C4 E4 G4 C5 G4 E4"), ("Y", "E4 G4 E4 C4 G4 C4"),
+         ("X", "E4 G4 B4 C5 B4 G4"), ("Y", "E4 A4 E4 G4 B4 G4"), ("X", "E4 G4 B4 C5 G4 E4"), ("Y", "E4 G4 E4 C4 E4 C4")]
+MEL4 = [[(s, int(librosa.note_to_midi(n))) for s, n in zip(CELL4[c], notes.split())] for c, notes in _MEL4]
+_n = lambda s: [int(librosa.note_to_midi(x)) for x in s.split()]
+# (first half voicing, second half voicing) per chord bar
+CHORDS4 = [(_n("F3 A3 C4 D4"), _n("E3 G3 A3 C4")), (_n("F3 A3 C4 D4"), _n("F3 A3 C4 D4")),
+           (_n("D3 F#3 A3 B3"), _n("E3 G3 A3 C4")), (_n("E3 F#3 A3 C4"), _n("D3 F#3 A3 B3")),
+           (_n("F3 A3 C4 D4"), _n("E3 G3 A3 C4")), (_n("F3 A3 C4 D4"), _n("F3 A3 C4 D4")),
+           (_n("G3 B3 D4 E4"), _n("E3 G3 B3 D4")), (_n("E3 F#3 A3 C#4"), _n("D3 F#3 A3 B3"))]
+# bass roots per half bar. Bars 4 and 8 open on F#, not the brief's A: Spencer's bass stem sits on F#/G there
+# (measured in build_deck_v4 and reported), and F# is a tone of both voicings.
+ROOTS4 = [("D", "A"), ("F", "F"), ("D", "A"), ("F#", "D"), ("D", "A"), ("F", "F"), ("G", "E"), ("F#", "D")]
+LEAD2_4 = [_n("B4 D5"), _n("D5 B4"), _n("C5 A4"), _n("G4 A4"), _n("D5 B4"), _n("B4 D5"), _n("A4 C5"), _n("A4 G4")]
+_PC = {"C": 0, "C#": 1, "D": 2, "D#": 3, "E": 4, "F": 5, "F#": 6, "G": 7, "G#": 8, "A": 9, "A#": 10, "B": 11}
+
+
+def p4(bar, slot=0.0):
+    return int(round((bar - 1) * BAR4 + slot * SIX4))
+
+
+def root4(cb, half):
+    return voice(_PC[ROOTS4[cb][half]], 38)          # D2..C#3
+
+
+# --- instruments (all synthesized)
+
+def s_marimba(midi, vel, rng):
+    f = hz(midi)
+    tau = 0.28 * (523.25 / f) ** 0.6
+    n = int(min(1.6, 5 * tau) * SR)
+    t = np.arange(n) / SR
+    y = (np.sin(2 * np.pi * f * t) * np.exp(-t / tau)
+         + vel * db(-18) * np.sin(2 * np.pi * 3.93 * f * t) * np.exp(-t / 0.06)      # brief: -14; -18 clears 2-5 kHz
+         + vel * db(-24) * np.sin(2 * np.pi * 9.6 * f * t) * np.exp(-t / 0.02))
+    k = int(0.005 * SR)
+    bp = lambda fr: 1.0 / np.sqrt(1 + (2 * (fr / 1200 - 1200 / np.maximum(fr, 1e-9))) ** 2)
+    y[:k] += fft_filter_padded(rng.standard_normal(k), bp) * db(-18) * 3 * np.linspace(1, 0, k)
+    return y * note_env(n, 0.003, 10, 0.01)
+
+
+def s_glock(midi, rng):
+    f = hz(midi)
+    n = int(1.6 * SR)
+    t = np.arange(n) / SR
+    y = (np.sin(2 * np.pi * f * t) * np.exp(-t / 0.5) + db(-22) * np.sin(2 * np.pi * 2.76 * f * t) * np.exp(-t / 0.15)
+         + db(-26) * np.sin(2 * np.pi * 5.4 * f * t) * np.exp(-t / 0.05))
+    # brief: low-pass 6 kHz; 2.2 kHz (4th order) keeps the top notes out of the merge-SFX band
+    return fft_filter_padded(y * note_env(n, 0.001, 10, 0.02), lambda fr: mag_lp(fr, 2200, 4))
+
+
+def ks_pluck(midi, tau, rng):
+    """Karplus-Strong nylon string: noise burst low-passed 3 kHz, loop filter 0.5(1 + z^-1) x 0.996, fractional
+    delay by linear interpolation, vectorized one period at a time; damped with exp(-t/tau)."""
+    f = hz(midi)
+    n = int(min(1.6, 6 * tau) * SR)
+    period = SR / f - 0.5                         # the two-tap average adds half a sample
+    L = int(np.floor(period))
+    d = period - L
+    y = np.zeros(n + L + 2)
+    burst = fft_filter_padded(rng.standard_normal(L + 2), lambda fr: mag_lp(fr, 2200, 2))
+    y[:L + 2] = burst
+    g = 0.996 * 0.5
+    i = L + 2
+    while i < len(y):
+        j = min(len(y), i + L - 1)
+        a = y[i - L: j - L]
+        b = y[i - L - 1: j - L - 1]
+        c = y[i - L - 2: j - L - 2]
+        y[i:j] = g * ((1 - d) * (a + b) + d * (b + c))
+        i = j
+    y = y[L + 2:]
+    t = np.arange(n) / SR
+    y = y[:n] * np.exp(-t / tau) * note_env(n, 0.0005, 10, 0.01)
+    return fft_filter_padded(y, lambda fr: mag_lp(fr, 2000, 2))           # muted nylon
+
+
+def s_bass4(midi, rng, tau=0.22):
+    n = int(min(2.0, 5 * tau) * SR)
+    t = np.arange(n) / SR
+    f = hz(midi) * 2 ** ((40 / 1200) * np.maximum(0, 1 - t / 0.025))      # falls 40 cents in 25 ms
+    ph = osc(f)
+    tri2 = sum(((-1) ** ((k - 1) // 2)) * np.sin(k * 2 * ph) / k ** 2 for k in (1, 3, 5))
+    y = np.sin(ph) + db(-10) * tri2 + db(-18) * np.sin(3 * ph)
+    y *= np.exp(-t / tau)
+    c = int(0.004 * SR)
+    y[:c] += fft_filter_padded(rng.standard_normal(c), lambda fr: mag_lp(fr, 800, 2)) * 0.3 * np.linspace(1, 0, c)
+    y = y * note_env(n, 0.002, 10, 0.02)
+    return y + phone_weight(y, -6)
+
+
+def s_ocarina(midi, dur, rng):
+    n = int((dur + 0.06) * SR)
+    t = np.arange(n) / SR
+    vib = np.where(t > 0.12, np.minimum(1, (t - 0.12) / 0.1), 0) * (12 / 1200) * np.sin(2 * np.pi * 5.5 * t)
+    f = hz(midi) * 2 ** vib
+    ph = osc(f)
+    y = np.sin(ph) + db(-20) * np.sin(2 * ph) + db(-28) * np.sin(3 * ph)
+    fc = hz(midi)
+    bp = lambda fr: 1.0 / np.sqrt(1 + (8 * (fr / fc - fc / np.maximum(fr, 1e-9))) ** 2)
+    y += fft_filter_padded(rng.standard_normal(n), bp) * db(-26) * 4
+    e = np.minimum(1, t / 0.025) * np.where(t > dur, np.exp(-(t - dur) / 0.02), 1.0)
+    return y * e * note_env(n, 0.0, 10, 0.01)
+
+
+def s_clap(rng):
+    n = int(0.3 * SR)
+    t = np.arange(n) / SR
+    bp = lambda fr: 1.0 / np.sqrt(1 + (1.5 * (fr / 1200 - 1200 / np.maximum(fr, 1e-9))) ** 2)
+    nz = fft_filter_padded(rng.standard_normal(n), lambda fr: bp(fr) * mag_lp(fr, 2000, 2))
+    e = np.zeros(n)
+    for k in range(3):
+        a = int(k * 0.01 * SR)
+        seg = np.arange(n - a) / SR
+        e[a:] += np.where(seg < 0.008, 1.0, 0.0) if k < 2 else np.exp(-seg / 0.09)
+    return nz * e * note_env(n, 0.0005, 10, 0.01)
+
+
+def s_tamb(rng):
+    n = int(0.2 * SR)
+    t = np.arange(n) / SR
+    return fft_filter_padded(rng.standard_normal(n), lambda fr: mag_hp(fr, 6000, 4)) * np.exp(-t / 0.05) * note_env(n, 0.001, 10, 0.01)
+
+
+def transcription_check(G):
+    """Ear-proxy: the table's melody re-synthesized with sines at 117 BPM against Spencer's melody stem."""
+    stem = G["melody"].mean(axis=1).astype(np.float32)
+    n = len(stem)
+    syn = np.zeros(n)
+    six = BAR / 16
+    for b in range(16):
+        for s, m in MEL4[b]:
+            a = int(round((b * 16 + s) * six))
+            ln = int(1.5 * six)
+            t = np.arange(ln) / SR
+            syn[a: a + ln] += np.sin(2 * np.pi * hz(m) * t) * note_env(ln, 0.003, 0.15, 0.01)
+    hop = 512
+    cq = lambda x: np.abs(librosa.cqt(x.astype(np.float32), sr=SR, hop_length=hop, fmin=librosa.note_to_hz("C3"), n_bins=60))
+    S, R = cq(stem), cq(syn)
+    S, R = np.log1p(S / S.max() * 100), np.log1p(R / R.max() * 100)
+    fb = lambda b: (int(round(b * BAR / hop)), int(round((b + 1) * BAR / hop)))
+    corr, ctrl = [], []
+    for b in range(16):
+        a, e = fb(b)
+        a2, e2 = fb((b + 1) % 16)
+        m = min(e - a, e2 - a2)
+        corr.append(float(np.corrcoef(R[:, a:a + m].ravel(), S[:, a:a + m].ravel())[0, 1]))
+        ctrl.append(float(np.corrcoef(R[:, a:a + m].ravel(), S[:, a2:a2 + m].ravel())[0, 1]))
+    hits = 0
+    misses = []
+    for b in range(16):
+        for s, m in MEL4[b]:
+            a = int(round((b * 16 + s) * six / hop)) + 1
+            e = a + max(1, int(six / hop))
+            top = int(np.argmax(S[:, a:e].mean(axis=1))) + int(librosa.note_to_midi("C3"))
+            if top == m:
+                hits += 1
+            else:
+                misses.append(f"bar {b + 1} slot {s}: table {librosa.midi_to_note(m, unicode=False)}, stem {librosa.midi_to_note(top, unicode=False)}")
+    return {"notes_matched": hits, "notes_total": 96, "misses": misses,
+            "per_bar_corr_mean": round(float(np.mean(corr)), 3), "per_bar_corr_min": round(float(np.min(corr)), 3),
+            "shifted_bar_control_mean": round(float(np.mean(ctrl)), 3)}
+
+
+def bass_root_check(G):
+    """Spencer's bass stem in the first half of bars 4 and 8 (three clean source phrases): A or F#?"""
+    b = G["bass"].mean(axis=1).astype(np.float32)
+    hop = 1024
+    C = np.abs(librosa.cqt(b, sr=SR, hop_length=hop, fmin=librosa.note_to_hz("C1"), n_bins=36))
+    out = {}
+    for bar in (4, 8):
+        acc = np.zeros(12)
+        for rep in range(3):
+            a, e = barf(rep * 8 + bar - 1) // hop, barf(rep * 8 + bar - 0.5) // hop
+            seg = C[:, a:e].sum(axis=1)
+            for k in range(36):
+                acc[k % 12] += seg[k]
+        acc /= acc.max()
+        out[f"bar{bar}_first_half"] = {"A": round(float(acc[9]), 2), "F#": round(float(acc[6]), 2),
+                                        "G": round(float(acc[7]), 2), "strongest": librosa.midi_to_note(24 + int(np.argmax(acc)), unicode=False)[:-1]}
+    out["chosen_root"] = "F#"
+    out["chord_stem_voicing"] = {"bar4": "E3 F#3 A3 C4", "bar8": "E3 F#3 A3 C#4"}
+    return out
+
+
+def build_deck_v4(args):
+    disabled = set(s.strip() for s in (args.without or "").split(",") if s.strip())
+    on = lambda name: name not in disabled
+    pal = Palette(args.seed, sorted(disabled))
+    report = {"version": "deck-v4", "brief": "artifacts/qa-2026-11-28-music/DECK-V4-BRIEF.md", "bpm": 140.0,
+              "bar_frames": BAR4, "seed": args.seed, "disabled": sorted(disabled)}
+    print("deck-v4: loading stems")
+    G, D = load_all(report)
+    print("deck-v4: checking the transcription and the bar 4 / 8 bass roots")
+    report["transcription_check"] = transcription_check(G)
+    report["bass_root_check"] = bass_root_check(G)
+    print("  transcription:", {k: v for k, v in report["transcription_check"].items() if k != "misses"})
+    print("  bass roots:", report["bass_root_check"])
+
+    jit = lambda layer, bar, slot: int(round(np.random.default_rng(
+        [args.seed, layer, (bar - 1) % 16, int(slot * 4)]).uniform(-0.005, 0.005) * SR))
+    rng = np.random.default_rng(args.seed + 400)
+    cache = {}
+
+    def snd(key, fn):
+        if key not in cache:
+            cache[key] = unit(fn())
+        return cache[key]
+
+    def mel(bar):
+        return MEL4[(bar - 1) % 16]
+
+    def cb(bar):
+        return (bar - 1) % 8
+
+    class Bus:
+        def __init__(self, n):
+            self.mix = Mix(n)
+
+        def hit(self, name, y, frame, gain_db, pan=0.0, send=None):
+            self.mix.hit(name, y, frame, db(gain_db) * np.sqrt(2), pan, send if send is not None else -60)
+
+    def marimba(bus, bar, gain=0.0, octave=12, slots=None, layer=1, glock=False):
+        for s, m in mel(bar):
+            if slots is not None and s not in slots:
+                continue
+            soft = -5.0 if (s in (6, 10) and (bar - 1) % 2 == 0) else 0.0
+            vel = db(soft)
+            y = snd(("mar", m + octave, round(vel, 3)), lambda: s_marimba(m + octave, vel, np.random.default_rng(m)))
+            bus.hit("marimba", y, p4(bar, s) + jit(layer, bar, s), gain + soft, 0.0, -16)
+            if glock:
+                g = snd(("glk", m + 24), lambda: s_glock(m + 24, np.random.default_rng(m + 1)))
+                bus.hit("glock", g, p4(bar, s) + jit(layer + 10, bar, s), gain - 17 + soft, 0.1, -12)
+
+    def music_box(bus, bar, gain, slots=(0, 8)):
+        for s, m in mel(bar):
+            if s in slots:
+                y = snd(("mb", m + 12), lambda: s_music_box(m + 12, 1.0, None, dur=0.6))
+                bus.hit("music-box", y, p4(bar, s) + jit(3, bar, s), gain, 0.0, -12)
+
+    def chop(bus, bar, slots, tau, gain, strings=3, held=False):
+        c = cb(bar)
+        for i, s in enumerate(slots):
+            voicing = CHORDS4[c][0 if s < 8 else 1]
+            notes = voicing[-strings:]
+            order = notes if i % 2 == 0 else notes[::-1]
+            for k, m in enumerate(order):
+                y = snd(("ks", m, tau), lambda: ks_pluck(m, tau, np.random.default_rng(m * 7 + int(tau * 1000))))
+                bus.hit("chop" if not held else "stab", y, p4(bar, s) + int(k * 0.009 * SR) + jit(4, bar, s),
+                        gain - 3, -0.2, -20)
+
+    def arp(bus, bar, gain):
+        c = cb(bar)
+        for half in (0, 1):
+            for k, m in enumerate(CHORDS4[c][half]):
+                s = half * 8 + 2 * k
+                y = snd(("ks", m, 0.25), lambda: ks_pluck(m, 0.25, np.random.default_rng(m * 7 + 250)))
+                bus.hit("arp", y, p4(bar, s) + jit(5, bar, s), gain, -0.2, -20)
+
+    def bass(bus, bar, pattern, gain, nxt=None):
+        c = cb(bar)
+        r0, r1 = root4(c, 0), root4(c, 1)
+        hits = {"roots": [(0, r0), (8, r1)], "whole": [(0, r0)]}.get(pattern)
+        if pattern == "two-step":
+            coming = root4((c + 1) % 8, 0)
+            hits = [(0, r0), (8, r1), (14, coming - 7 if coming - 7 >= 33 else coming + 5)]
+        elif pattern == "octave":
+            hits = [(0, r0), (4, r0 + 12), (8, r1), (12, r1 + 12), (14, root4((c + 1) % 8, 0) - 7 + 12)]
+        elif pattern == "walk":
+            hits = []
+            for half in (0, 1):
+                tones = sorted(set(voice(m % 12, 38) for m in CHORDS4[c][half]))
+                root = root4(c, half)
+                seq = [root] + [x for x in tones if x != root]
+                for k in range(4):
+                    hits.append((half * 8 + 2 * k, seq[k % len(seq)]))
+        tau = 0.8 if pattern == "whole" else 0.22
+        for s, m in hits:
+            y = snd(("bass", m, tau), lambda: s_bass4(m, np.random.default_rng(m), tau=tau))
+            bus.hit("bass", y, p4(bar, s), gain)
+
+    def ocarina(bus, bar, gain, slots=(12,), held=3):
+        for s in slots:
+            for m in LEAD2_4[cb(bar)]:
+                y = snd(("oca", m, held), lambda: s_ocarina(m, held * SIX4 / SR, np.random.default_rng(m + 3)))
+                bus.hit("ocarina", y, p4(bar, s) + jit(6, bar, s), gain, 0.2, -12)
+
+    kick = snd("kick", lambda: fft_filter_padded(s_kick(np.random.default_rng(args.seed + 41)), lambda f: mag_lp(f, 3000, 2)))
+    rimv = sorted(pal.variants["tok"], key=lambda q: -q[0])[0]
+    rim = snd("rim", lambda: pal.render("tok", rimv[0] + 12, rimv[1], rimv[2]))
+    toks = [snd(("tok", v[0]), lambda v=v: pal.render("tok", *v)) for v in sorted(pal.variants["tok"], key=lambda q: -q[0])]
+    claps = [snd(("clap", i), lambda i=i: s_clap(np.random.default_rng(args.seed + 90 + i))) for i in range(2)]
+    tambs = [snd(("tamb", i), lambda i=i: s_tamb(np.random.default_rng(args.seed + 95 + i))) for i in range(3)]
+    toms = [snd(("tom", m), lambda m=m: s_tom(m, np.random.default_rng(args.seed + 50 + m))) for m in (57, 55, 52, 50)]
+
+    def shaker(bus, bar, gain):
+        for k in range(16):
+            sw = 0.12 * SIX4 if k % 2 else 0.0                       # 56% swing
+            y = snd(("shk", k % 3), lambda k=k: fft_filter_padded(s_shaker(1.0, 1.0, np.random.default_rng(args.seed + 100 + k % 3)),
+                                                                  lambda f: mag_hp(f, 5500, 4)))
+            bus.hit("shaker", y, p4(bar, k) + int(sw), gain + (2 if k % 4 == 0 else 0), 0.25 if k % 2 else -0.25, -24)
+
+    # ---------------------------------------------------------------- main, 64 bars
+    print("deck-v4: main")
+    N = N_DECK4
+    keep, rest = Bus(N), Bus(N)                     # keep = marimba + the bar-64 tok fill; rest = everything else
+    bounce = (2, 6, 10, 14)
+    for bar in range(1, 65):
+        sec = (bar - 1) // 8
+        if sec == 0:                                    # A hello
+            marimba(keep, bar)
+            chop(rest, bar, bounce, 0.07, -8)
+            bass(rest, bar, "roots", -2)
+            shaker(rest, bar, -22)
+            for s in (4, 12):
+                rest.hit("rim", rim, p4(bar, s), -17, -0.1, -24)
+        elif sec == 1:                                  # A2
+            marimba(keep, bar, glock=(bar % 2 == 1))
+            if bar >= 13:
+                ocarina(rest, bar, -6)
+            chop(rest, bar, bounce, 0.07, -8)
+            bass(rest, bar, "two-step", -2)
+            shaker(rest, bar, -22)
+            for s in (4, 12):
+                rest.hit("rim", rim, p4(bar, s), -17, -0.1, -24)
+            for s in (0, 8):
+                rest.hit("kick", kick, p4(bar, s), -4)
+        elif sec == 2:                                  # B answer
+            if bar in (17, 18, 21, 22):
+                marimba(keep, bar)
+                ocarina(rest, bar, -6)
+            else:
+                ocarina(rest, bar, -6, slots=(4, 12))
+            chop(rest, bar, (3, 8), 0.25, -6, held=True)
+            bass(rest, bar, "walk", -3)
+            for s in (4, 12):
+                rest.hit("rim", rim, p4(bar, s), -17, -0.1, -24)
+            for s in (0, 8):
+                rest.hit("kick", kick, p4(bar, s), -4)
+            if bar == 24:
+                for j in range(4):
+                    rest.hit("tom", toms[j], p4(bar, 12 + j), -8, (0.3, 0.1, -0.1, -0.3)[j], -20)
+        elif sec == 3:                                  # A3
+            marimba(keep, bar, glock=True)
+            chop(rest, bar, bounce, 0.07, -8)
+            bass(rest, bar, "two-step", -2)
+            shaker(rest, bar, -22)
+            for s in (4, 12):
+                rest.hit("rim", rim, p4(bar, s), -17, -0.1, -24)
+            for s in (0, 8):
+                rest.hit("kick", kick, p4(bar, s), -4)
+            for s in (2, 6, 10, 14):
+                rest.hit("tamb", tambs[s % 3], p4(bar, s), -20, 0.3, -24)
+        elif sec == 4:                                  # C breather
+            music_box(rest, bar, -2)
+            bass(rest, bar, "whole", -4)
+        elif sec == 5:                                  # D build
+            marimba(keep, bar, gain=-4, octave=0)
+            chop(rest, bar, bounce, 0.07, -8)
+            bass(rest, bar, "two-step" if bar >= 45 else "roots", -2)
+            for s in range(0, 16, 2):
+                rest.hit("rim", rim, p4(bar, s), -19 + (2 if s % 4 == 0 else 0), -0.1, -24)
+            if bar >= 45:
+                for s in (0, 8):
+                    rest.hit("kick", kick, p4(bar, s), -4)
+            if bar == 48:
+                for j, s in enumerate((8, 9, 10, 11, 12, 13)):
+                    rest.hit("tom", toms[j % 4], p4(bar, s), -8, (0.3, 0.1, -0.1, -0.3)[j % 4], -20)
+        else:                                           # E lift (49-56, 57-60) and E2 home (61-64)
+            lift = bar <= 60
+            marimba(keep, bar, glock=(bar <= 60))
+            if lift:
+                ocarina(rest, bar, -6, held=6)
+            chop(rest, bar, bounce, 0.07, -7, strings=4 if lift else 3)
+            bass(rest, bar, "octave" if lift else "two-step", -2)
+            shaker(rest, bar, -22)
+            if lift:
+                for s in (0, 4, 8, 12):
+                    rest.hit("kick", kick, p4(bar, s), -7)
+                for s in (4, 12):
+                    rest.hit("clap", claps[s // 8], p4(bar, s), -10, 0.0, -18)
+                for k in range(16):
+                    rest.hit("tamb", tambs[k % 3], p4(bar, k), -23 + (2 if k % 2 else 0), 0.3, -24)
+            else:
+                for s in (0, 8):
+                    rest.hit("kick", kick, p4(bar, s), -4)
+                for s in (4, 12):
+                    rest.hit("rim", rim, p4(bar, s), -17, -0.1, -24)
+    # breather touches: two plips, one pip pair (E/G/A only)
+    if on("plip"):
+        for bar in (34, 38):
+            v = [q for q in pal.variants["plip"] if q[0] % 12 in (4, 9)][0]
+            keep.hit("plip", snd(("plip", v[0]), lambda v=v: pal.render("plip", *v)), p4(bar, 12), -12, 0.35, -12)
+    if on("pip"):
+        for j, v in enumerate([q for q in pal.variants["pip"] if q[0] % 12 in (7, 9)][:2]):
+            keep.hit("pip", snd(("pip", v[0]), lambda v=v: pal.render("pip", *v)), p4(36, 14 + j), -10, -0.4, -12)
+    # bar 64 beats 3-4: marimba and a tok fill only
+    for j, s in enumerate((12, 13, 14, 15)):
+        keep.hit("tok-fill", toks[j % len(toks)], p4(64, s), -10, (-0.2, 0.0, 0.2, 0.0)[j], -24)
+    if on("garden-ghost"):
+        # Spencer's own melody stem bars 1-8 time-stretched to 140 BPM, under the music box in the breather
+        x = G["melody"][: barf(8)]
+        st = np.stack([librosa.effects.time_stretch(x[:, ch].astype(np.float32), rate=140.0 / 117.0) for ch in range(2)], axis=1)
+        gh = np.zeros((8 * BAR4, 2))
+        gh[: min(len(st), len(gh))] = st[: len(gh)]
+        gh = fft_filter(gh, lambda f: mag_lp(f, 2000, 2))
+        mb_ref = db(-2) * np.sqrt(2)                   # the music box hits at unit body RMS
+        e = (gh ** 2).mean(axis=1)
+        k = int(0.1 * SR)
+        blocks = e[: (len(e) // k) * k].reshape(-1, k).mean(axis=1)
+        gh *= mb_ref * db(-12) / np.sqrt(blocks[blocks > blocks.max() * 1e-3].mean())
+        f = int(0.05 * SR)
+        gh[:f] *= np.linspace(0, 1, f)[:, None]
+        gh[-f:] *= np.linspace(1, 0, f)[:, None]
+        place(rest.mix.dry, gh, p4(33))
+        place(rest.mix.send, gh * db(-12), p4(33))
+    # the silence on bar 48's last 8th, and bar 64's thin ending
+    for bus in (keep, rest):
+        bus.mix.dry = gate(bus.mix.dry, [(p4(48, 14), p4(49))])
+        bus.mix.send = gate(bus.mix.send, [(p4(48, 14), p4(49))])
+    rest.mix.dry = gate(rest.mix.dry, [(p4(64, 8), N)], ramp=441)
+    rest.mix.send = gate(rest.mix.send, [(p4(64, 8), N)], ramp=441)
+    # the pad, breather only
+    pad_notes = [CHORDS4[((h // 2)) % 8][h % 2] for h in range(128)]
+    pad = pad_render(N, pad_notes, TAB_PAD, bar=BAR4 / 2)
+    pad = fft_filter(pad, lambda f: mag_hp(f, 120, 2) * mag_lp(f, 1400, 2))
+    e = (pad ** 2).mean(axis=1)
+    pad *= db(-10) * np.sqrt(2) * np.sqrt(0.5) / np.sqrt(e.mean())
+    pad = gate(pad, [(0, p4(33)), (p4(41), N)], ramp=int(BAR4 / 4))
+    dry = keep.mix.dry + rest.mix.dry + pad
+    send = keep.mix.send + rest.mix.send + pad * db(-14)
+    events = keep.mix.events + rest.mix.events
+
+    def bus_chain(dry, send):
+        y = dry + room(send, 0.2)
+        # merge SFX room: the brief's -3 dB bell at 3 kHz (Q 1), plus a wide -5 dB across 2-5 kHz
+        y = fft_filter(y, lambda f: mag_rbj(f, "peak", 3000, -3, 1.0) * mag_rbj(f, "peak", 3300, -5, 0.6))
+        return y
+
+    print("deck-v4: main bus")
+    main_mix, g_main = glue(bus_chain(dry, send), 1.5)
+    seg = lambda x, a, b: float(_METER.integrated_loudness(x[p4(a): p4(b)]))
+    base = seg(main_mix, 1, 17)
+    g_lift = float(np.clip(1.25 - (seg(main_mix, 49, 61) - base), -4, 4))
+    g_br = float(np.clip(-2.5 - (seg(main_mix, 33, 41) - base), -4, 4))
+    main_mix = gate(main_mix, [(p4(49), p4(61))], value=db(g_lift), ramp=int(0.05 * SR))
+    main_mix = gate(main_mix, [(p4(33), p4(41))], value=db(g_br), ramp=int(0.05 * SR))
+    report["section_gain_db"] = {"lift_49_60": round(g_lift, 2), "breather_33_40": round(g_br, 2)}
+    main_out = finish(main_mix, DECK4_LUFS, DECK4_TP)
+
+    # ---------------------------------------------------------------- lite, 32 bars
+    print("deck-v4: lite")
+    NL = N_LITE4
+    lite = Bus(NL)
+    for bar in range(1, 33):
+        arp(lite, bar, -6)
+        bass(lite, bar, "roots", -5)
+        if bar <= 16:
+            music_box(lite, bar, -3)
+        elif bar <= 24:
+            ocarina(lite, bar, -6)
+        elif bar <= 28:
+            marimba(lite, bar, gain=-6)
+        else:
+            marimba(lite, bar, gain=-6, slots=(0, 8))
+        if 9 <= bar <= 16 or 25 <= bar <= 32:
+            shaker(lite, bar, -26)
+    lpad = pad_render(NL, pad_notes[:64], TAB_PAD, bar=BAR4 / 2)
+    lpad = fft_filter(lpad, lambda f: mag_hp(f, 120, 2) * mag_lp(f, 1400, 2))
+    lpad *= db(-12) * np.sqrt(2) * np.sqrt(0.5) / np.sqrt((lpad ** 2).mean(axis=1).mean())
+    lpad = gate(lpad, [(0, p4(17)), (p4(25), NL)], ramp=int(BAR4 / 4))
+    lite_mix, g_lite = glue(bus_chain(lite.mix.dry + lpad, lite.mix.send + lpad * db(-14)), 1.0)
+    lite_out = finish(lite_mix, LITE4_LUFS, LITE4_TP)
+    report["glue"] = {"main": g_main, "lite": g_lite}
+    report["event_counts"] = {"main": _count(events), "lite": _count(lite.mix.events)}
+
+    # ---------------------------------------------------------------- write + measure
+    os.makedirs(DECK4_PREVIEWS, exist_ok=True)
+    files = {"pocket-deck-v4": main_out, "pocket-deck-lite-v4": lite_out}
+    q = {}
+    for i, (name, x) in enumerate(files.items()):
+        qi = quantize16(x, args.seed + 500 + i)
+        sf.write(os.path.join(OUT_DIR, name + ".wav"), qi, SR, subtype="PCM_16")
+        q[name] = qi.astype(np.float64) / 32767.0
+    print("deck-v4: measuring")
+    meas = {name: measure(x, name + ".wav", bar=BAR4) for name, x in q.items()}
+    mq = q["pocket-deck-v4"]
+    L = lambda a, b: round(seg(mq, a, b), 2)
+    phone = lambda x: round(float(_METER.integrated_loudness(stereo(fft_filter(x.mean(axis=1), lambda f: mag_hp(f, 300, 2))))), 2)
+    band = []
+    for s0 in range(1, 65, 8):
+        y = mq[p4(s0): p4(s0 + 8)]
+        full = 10 * np.log10((y ** 2).mean())
+        b25 = 10 * np.log10((fft_filter(y, lambda f: mag_hp(f, 2000, 4) * mag_lp(f, 5000, 4)) ** 2).mean())
+        band.append(round(full - b25, 1))
+    report["shape"] = {"bars1_16_lufs": L(1, 17), "lift_49_60_lufs": L(49, 61), "breather_33_40_lufs": L(33, 41),
+                       "lift_minus_1_16_lu": round(L(49, 61) - L(1, 17), 2),
+                       "breather_minus_1_16_lu": round(L(33, 41) - L(1, 17), 2),
+                       "band_2_5k_below_full_db_per_8_bars": band}
+    for name, x in q.items():
+        meas[name]["phone_lufs"] = phone(x)
+    v3 = os.path.join(OUT_DIR, "pocket-deck-v3.wav")
+    if os.path.exists(v3):
+        report["phone_pocket_deck_v3"] = phone(sf.read(v3, dtype="float64", always_2d=True)[0])
+    report["files"] = meas
+    if not args.no_encode:
+        print("deck-v4: encoding")
+        for name in files:
+            wav = os.path.join(OUT_DIR, name + ".wav")
+            ogg = os.path.join(OUT_DIR, name + ".ogg")
+            ffmpeg(["-i", wav, "-c:a", "libvorbis", "-q:a", "6", ogg])
+            dec = decode(ogg)
+            meas[name]["ogg"] = {"bytes": os.path.getsize(ogg), "sha256": sha256(ogg), "decoded_frames": int(len(dec)),
+                                 "frames_match": bool(len(dec) == len(q[name])), "seam": seam_stats(dec, bar=BAR4),
+                                 "true_peak_dbtp": round(true_peak_db(dec), 2)}
+            meas[name]["wav_sha256"] = sha256(wav)
+            ffmpeg(["-i", wav, "-c:a", "libmp3lame", "-q:a", "2", os.path.join(DECK4_PREVIEWS, name + ".mp3")])
+        lq = q["pocket-deck-lite-v4"]
+        n = 40 * SR
+        t = np.arange(n) / SR
+        w = np.clip((t - 13.33) / 0.8, 0, 1) - np.clip((t - 26.67) / 0.8, 0, 1)          # 0 main, 1 lite
+        demo = mq[np.arange(n) % len(mq)] * np.cos(w * np.pi / 2)[:, None] + lq[np.arange(n) % len(lq)] * np.sin(w * np.pi / 2)[:, None]
+        f = int(0.5 * SR)
+        demo[-f:] *= np.linspace(1, 0, f)[:, None]
+        write_mp3(demo, os.path.join(DECK4_PREVIEWS, "main-to-lite-and-back-40s.mp3"), args.seed + 510)
+        if os.path.exists(v3):
+            a = sf.read(v3, dtype="float64", always_2d=True)[0][: 20 * SR].copy()
+            f = int(0.03 * SR)
+            a[-f:] *= np.linspace(1, 0, f)[:, None]
+            gap = np.zeros((int(0.6 * SR), 2))
+            p1, p2 = mq[p4(1): p4(17)].copy(), mq[p4(41): p4(57)].copy()
+            for p in (p1, p2):
+                p[:f] *= np.linspace(0, 1, f)[:, None]
+                p[-f:] *= np.linspace(1, 0, f)[:, None]
+            write_mp3(np.concatenate([a, gap, p1, gap, p2]), os.path.join(DECK4_PREVIEWS, "compare-pocket-deck-v3-then-v4.mp3"),
+                      args.seed + 511)
+    with open(os.path.join(QA_DIR, "report-deck-v4.json"), "w", encoding="utf-8", newline="\n") as fh:
+        json.dump(report, fh, indent=2, default=_jsonable)
+        fh.write("\n")
+    print("\n%-22s %10s %9s %8s %8s %6s %7s %6s %6s" % ("file", "frames", "seconds", "LUFS", "dBTP", "LRA", "phone", "mono", ">6k"))
+    for name, m in meas.items():
+        print("%-22s %10d %9.3f %8.2f %8.2f %6.2f %7.2f %6.2f %5.1f%%" % (
+            name, m["frames"], m["seconds"], m["integrated_lufs"], m["true_peak_dbtp"], m["loudness_range_lu"],
+            m["phone_lufs"], m["mono_loss_db"], 100 * m["share_above_6k"]))
+        if "ogg" in m:
+            o = m["ogg"]
+            print("   ogg %d bytes, %d frames (match %s), TP %.2f, seam curvature %.2f" % (
+                o["bytes"], o["decoded_frames"], o["frames_match"], o["true_peak_dbtp"], o["seam"]["wrap_curvature_ratio_p99"]))
+    print("shape:", report["shape"])
+    print("section gains:", report["section_gain_db"])
+    return report
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--version", choices=("v2", "v3", "v4"), default="v4",
-                    help="v4 (default: garden day + night without the pads), v3 (all four), or the first-pass v2")
+    ap.add_argument("--version", choices=("v2", "v3", "v4", "deck-v4"), default="v4",
+                    help="v4 (default: garden day + night without the pads), deck-v4 (Pocket Deck 'Marimba Pop' + lite), "
+                         "v3 (all four), or the first-pass v2")
     ap.add_argument("--pad", choices=("on", "off"), help="garden synth pads (day breathing pad, night darker pad); "
                     "default on for v3, off for v4")
     ap.add_argument("--without", help="comma list of samples to leave out, e.g. eep,kalimba (v3 also: crickets, fun-hits)")
@@ -2172,7 +2744,7 @@ def main():
     ap.add_argument("--seed", type=int, default=SEED)
     ap.add_argument("--no-encode", action="store_true", help="skip OGG/MP3 encoding and previews")
     args = ap.parse_args()
-    build(args) if args.version == "v2" else build_v3(args)
+    {"v2": build, "deck-v4": build_deck_v4}.get(args.version, build_v3)(args)
 
 
 if __name__ == "__main__":
