@@ -82,7 +82,7 @@ ui.coach.fillLine.line,Keep the pile under the line. Stay over it too long and t
 ui.coach.fillLine.short,Keep the pile under the line,,First-round coaching
 ui.coach.fillLine.title,Fill line,,First-round coaching; also ui.notice.fillLine.title
 ui.coach.firstStars.toast,First round cleared,,First-round coaching
-ui.coach.gotIt,Got it,,"First-round coaching; also ui.onb3.nest.help.button, ui.r3.help.done, ui.stats.guide.earned"
+ui.coach.gotIt,Got it,,"First-round coaching; also ui.onb3.nest.help.button, ui.r3.help.done, ui.rack.gotIt, ui.stats.guide.earned"
 ui.coach.hatch.line,Spend Stars on eggs. The odds are on every label.,,First-round coaching
 ui.coach.hatch.title,Hatch eggs,,"First-round coaching; also ui.hub.tile.hatch.name, ui.onboarding.spend.hatch, ui.r3.help.companions.d.title, ui.r3.help.hatch.title"
 ui.coach.hub.key,"Press M for every machine, any time.",,First-round coaching
@@ -95,7 +95,7 @@ ui.coach.item.title,An item!,,First-round coaching; also ui.notice.item.title
 ui.coach.machines.line,Walk up to a glowing machine to use it.,,First-round coaching
 ui.coach.machines.title,Machines,,"First-round coaching; also ui.notice.machines.title, ui.r3.help.garden.a.title"
 ui.coach.missPay,Goal met,,First-round coaching
-ui.coach.next,Next,,First-round coaching; also ui.names.egg.nextValue
+ui.coach.next,Next,,"First-round coaching; also ui.names.egg.nextValue, ui.rack.next"
 ui.coach.park.line,{pet} plays here. Three play dates a day pay +4 ★.,,First-round coaching; e.g. Bear plays here. Three play dates a day pay +4 ★.
 ui.coach.park.title,Pet Park,,"First-round coaching; also ui.notice.parkInvite.title, ui.park.name, ui.r3.help.park.title, ui.r5.station.Park.name"
 ui.coach.quest.line,Today's quests pay Stars. Find them in the menu.,,First-round coaching
@@ -211,6 +211,9 @@ ui.dash.result.today,{done} of {total} today,,Menu text; e.g. {done} of 12 today
 ui.dash.result.tomorrow,Stars again tomorrow,,Menu text
 ui.dash.result.trial,{time} s!,,Menu text; e.g. {time} s!
 ui.dash.result.tryAgain,Try again for a cup!,,Menu text
+ui.dash.say.soon,A Garden Dash starts soon! Join at the starting line.,,Chat message to everyone: a pet race in the garden is about to start
+ui.dash.say.won,{player}'s {pet} won the Garden Dash!,,"Chat message to everyone: who won the pet race ({player} a display name, {pet} the pet's name); e.g. Sam's Bear won the Garden Dash!"
+ui.dash.say.wonPet,{player}'s pet won the Garden Dash!,,Chat message to everyone: who won the pet race ({player} a display name); e.g. Sam's pet won the Garden Dash!
 ui.dash.stats,Stats On,,Menu text
 ui.dash.stones,Take the stones,,Menu text
 ui.dash.sub.fun,All pets equal,,Menu text
@@ -227,6 +230,9 @@ ui.deck.chain.toast,Chain ×{count}! Quick merges in a row score more,,"Pocket D
 ui.deck.feel.best,New best!,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
 ui.deck.feel.toGo.many,{count} goals to go,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. 3 goals to go"
 ui.deck.feel.toGo.one,1 goal to go,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
+ui.deck.goal.ball.make,{where},,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. on the left"
+ui.deck.goal.ball.makeUp,"or bigger, {where}",,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. or bigger, on the left"
+ui.deck.goal.ball.match,"Match two, {where}",,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. Match two, on the left"
 ui.deck.goal.chain,Make {count} quick merges in a row,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. Make 3 quick merges in a row"
 ui.deck.goal.done,Done!,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; also ui.onb3.strip.short.done"
 ui.deck.goal.make,Make {ball} {where},,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. Make a green ball on the left"
@@ -252,7 +258,7 @@ ui.deck.praise.bubbly,Bubbly!,,"Pocket Deck round screen: goal instructions ({ba
 ui.deck.praise.fizzy,Fizzy!,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
 ui.deck.praise.sky,Sky high!,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
 ui.deck.praise.sparkly,Sparkly!,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
-ui.deck.quests.open,Open,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
+ui.deck.quests.open,Open,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; also ui.things.open"
 ui.den.board,Notice board,,Menu text
 ui.den.name,The Play Den,,Menu text; also ui.things.den.name
 ui.den.table,Pocket Deck,,"Menu text; also ui.report.category.deck, ui.things.deck.name, catalog.ToyCatalog.ById.pocket_deck.name, catalog.BookCatalog.Pages.toys.items.3.name"
@@ -290,6 +296,10 @@ ui.hatch.egg.look.name,Customization Egg,,Hatch eggs screen
 ui.hatch.egg.material.description,Smooth and heavy. Hatches one material that changes how your pet's body catches the light.,,Hatch eggs screen
 ui.hatch.egg.material.line,A fresh new coat,,Hatch eggs screen
 ui.hatch.egg.material.per,1 material per egg,,Hatch eggs screen
+ui.hatch.egg.outfit.description,Hatches one of today's outfit picks for your pet. Tap a pick to see it on.,,Hatch eggs screen
+ui.hatch.egg.outfit.line,"Today's picks: hats, tees and more",,Hatch eggs screen
+ui.hatch.egg.outfit.name,Outfit Egg,,Hatch eggs screen; also ui.rack.closet.tile
+ui.hatch.egg.outfit.per,1 outfit per egg,,Hatch eggs screen
 ui.hatch.egg.stat.description,Hatches one Stat Snack. Feed it to your pet: the next XP it earns in that stat counts extra.,,Hatch eggs screen
 ui.hatch.egg.stat.line,A snack that speeds up training,,Hatch eggs screen
 ui.hatch.egg.stat.name,Stat Egg,,Hatch eggs screen
@@ -308,7 +318,7 @@ ui.hatch.look.charmShort,Charm · {each} each,,Hatch eggs screen; e.g. Charm · 
 ui.hatch.look.jar.gloss,Gloss jar,,Hatch eggs screen; also catalog.BookCatalog.Pages.toys.items.7.name
 ui.hatch.look.jar.jelly,Jelly jar,,Hatch eggs screen; also catalog.BookCatalog.Pages.toys.items.9.name
 ui.hatch.look.jar.matte,Matte jar,,Hatch eggs screen; also catalog.BookCatalog.Pages.toys.items.8.name
-ui.hatch.look.later,Later,,Hatch eggs screen; also ui.onbGift.card.later
+ui.hatch.look.later,Later,,"Hatch eggs screen; also ui.onbGift.card.later, ui.rack.reveal.later"
 ui.hatch.look.missing,Charms are {each} each. Still to find: {shapes}.,,Hatch eggs screen; e.g. Charms are {each} each. Still to find: {shapes}.
 ui.hatch.look.notReady,Customization Eggs are not ready yet.,,Hatch eggs screen; also ui.hatch.look.reason.NotReady
 ui.hatch.look.openSaved.charm,Open saved charm,,Hatch eggs screen
@@ -354,7 +364,7 @@ ui.hatch.result.stockToys,{count} toys left to find,,Hatch eggs screen; e.g. 3 t
 ui.hatch.result.tapToSkip,Tap to skip,,Hatch eggs screen
 ui.hatch.result.youGot,YELLOW = YOU GOT,,Hatch eggs screen
 ui.hatch.reveal.banner,{tier} {kind},,Hatch eggs screen; e.g. {tier} {kind}
-ui.hatch.reveal.close,Close,,"Hatch eggs screen; also ui.inspect.close, ui.names.egg.close, ui.r3.help.close, ui.stats.snacks.close"
+ui.hatch.reveal.close,Close,,"Hatch eggs screen; also ui.inspect.close, ui.names.egg.close, ui.r3.help.close, ui.rack.close"
 ui.hatch.reveal.describe.charm.dot,A tiny snowflake that never melts.,,Hatch eggs screen
 ui.hatch.reveal.describe.charm.pebble,"A lucky pebble, smoothed by a very old river.",,Hatch eggs screen
 ui.hatch.reveal.describe.charm.ring,A little ring that floats in its own orbit.,,Hatch eggs screen
@@ -405,7 +415,7 @@ ui.hatch.stat.each,Each stat,,Hatch eggs screen
 ui.hatch.stat.eachLabel,"One of {count} stats, {each} each: {names}",,"Hatch eggs screen; e.g. One of 3 stats, {each} each: {names}"
 ui.hatch.stat.free,Open free egg ({count}),,Hatch eggs screen; e.g. Open free egg (3)
 ui.hatch.stat.freeLine,{count} free eggs to open,,Hatch eggs screen; e.g. 3 free eggs to open
-ui.hatch.stat.hatch,★ Hatch {count},,Hatch eggs screen; e.g. ★ Hatch 3
+ui.hatch.stat.hatch,★ Hatch {count},,Hatch eggs screen; e.g. ★ Hatch 3; also ui.rack.hatch
 ui.hatch.stat.next,Next: {stat} {size},,Hatch eggs screen; e.g. Next: {stat} {size}
 ui.hatch.stat.noPet,Hatch a pet first,,Hatch eggs screen
 ui.hatch.stat.notReady,Stat Eggs are not ready yet.,,Hatch eggs screen; also ui.hatch.stat.reason.Disabled
@@ -435,11 +445,11 @@ ui.hatch.stat.size.feast,Feast · 3x 120 XP,,Hatch eggs screen
 ui.hatch.stat.size.nibble,Nibble · 2x 50 XP,,Hatch eggs screen
 ui.hatch.stat.size.snack,Snack · 2x 120 XP,,Hatch eggs screen
 ui.hatch.stat.today,{count} of {total} left in today's nest,,Hatch eggs screen; e.g. 3 of 12 left in today's nest
-ui.hub.chip.book,{percent}% found,,Pocket menu (machine hub); e.g. {percent}% found
+ui.hub.chip.book,{percent}% found,,Pocket menu (machine hub); e.g. {percent}% found; also ui.things.book.line
 ui.hub.chip.outfits,{owned}/{total} outfits,,Pocket menu (machine hub); e.g. 3/12 outfits
-ui.hub.chip.quests,{done}/{total} today,,Pocket menu (machine hub); e.g. {done}/12 today
+ui.hub.chip.quests,{done}/{total} today,,Pocket menu (machine hub); e.g. {done}/12 today; also ui.things.quests.line
 ui.hub.chip.stamp,Stamp {count}/{total},,Pocket menu (machine hub); e.g. Stamp 3/12
-ui.hub.chip.styles,{owned}/{total} styles,,Pocket menu (machine hub); e.g. 3/12 styles
+ui.hub.chip.styles,{owned}/{total} styles,,Pocket menu (machine hub); e.g. 3/12 styles; also ui.things.style.line
 ui.hub.chip.toys,{owned}/{total} toys,,Pocket menu (machine hub); e.g. 3/12 toys
 ui.hub.promise,"Every machine, one tap away.",,Pocket menu (machine hub)
 ui.hub.status.locked,LOCKED,,Pocket menu (machine hub)
@@ -560,7 +570,7 @@ ui.notice.bond.next,"Keep petting, playing rounds and going on Play dates. The h
 ui.notice.bond.title,Bond grew,,Menu text
 ui.notice.bond.what,Hearts show how close you and {pet} are. Each new level unlocks a trick.,,Menu text; e.g. Hearts show how close you and Bear are. Each new level unlocks a trick.
 ui.notice.customize.next,Open Companions and pick Customize or Wardrobe. New pieces hatch from eggs.,,Menu text
-ui.notice.customize.title,Customize your pet,,Menu text
+ui.notice.customize.title,Customize your pet,,Menu text; also ui.things.customize.name
 ui.notice.customize.what,"Colour jars, charms, toys and outfits change how {pet} looks. Looks only.",,"Menu text; e.g. Colour jars, charms, toys and outfits change how Bear looks. Looks only."
 ui.notice.dashIntro.next,Tap Show me and follow the trail to the race.,,Menu text
 ui.notice.dashIntro.what,Race your pet. It's free!,,Menu text; also ui.r5.station.Dash.line
@@ -730,10 +740,11 @@ ui.onbAllSet.next,What's next?,,Menu text
 ui.onbAllSet.pet,Pet,,Menu text; also ui.pet.unnamed
 ui.onbAllSet.stars,Stars,,"Menu text; also ui.r3.help.dash.d.title, ui.report.category.stars, ui.store.starsRow"
 ui.onbAllSet.sub,{pet} loves it here.,,Menu text; e.g. Bear loves it here.
+ui.onbAllSet.things,More to try in Things to do!,,Menu text
 ui.onbGift.atMachine,Tap the machine!,,Menu text
 ui.onbGift.atMachineSub,Your free egg is inside,,Menu text
 ui.onbGift.bring,Bring {pet} out first.,,Menu text; e.g. Bring Bear out first.
-ui.onbGift.busy,Try again in a moment.,,Menu text
+ui.onbGift.busy,Try again in a moment.,,Menu text; also ui.rack.answer.busy
 ui.onbGift.card.deeper,Deeper {name}!,,Menu text; e.g. Deeper Pet Park!
 ui.onbGift.card.free,Free,,"Menu text; also ui.onbGift.shop.price, ui.paint.free, ui.r4.hue.free"
 ui.onbGift.card.from,A gift from {pet}!,,Menu text; e.g. A gift from Bear!; also ui.onbGift.shop.from
@@ -839,7 +850,7 @@ ui.paint.mix.rose_tide,Violet,,"Menu text; also catalog.BallThemes.ById.bubbles.
 ui.paint.more.hues,Win more pots from the Paint Egg.,,Menu text
 ui.paint.none,No pots yet. Win them from the Paint Egg.,,Menu text
 ui.paint.notice.next,Tap Dress up on your pet. New pieces hatch from eggs.,,Menu text
-ui.paint.notice.title,Dress up your pet,,Menu text
+ui.paint.notice.title,Dress up your pet,,Menu text; also ui.things.dress.name
 ui.paint.notice.what,"Paint, charms, toys and outfits change how {pet} looks. Looks only.",,"Menu text; e.g. Paint, charms, toys and outfits change how Bear looks. Looks only."
 ui.paint.paint,Paint,,Menu text
 ui.paint.painting,Painting…,,Menu text
@@ -1052,6 +1063,52 @@ ui.r5.station.Eggs.machine,Egg machine,,Garden prompt: the name of the egg machi
 ui.r5.station.EggsV3.line,"Toys, looks and snacks for your pet",,Menu text
 ui.r5.station.Journal.line,Dress up and care for your pets,,Menu text
 ui.r5.station.Park.line,Pets play here. Play dates pay Stars,,Menu text
+ui.rack.answer.changed,Today's picks changed. Take a look!,,Menu text
+ui.rack.answer.day,New picks are here!,,Menu text
+ui.rack.answer.done,All picked for today — new picks tomorrow,,Menu text
+ui.rack.answer.full,Your closet is full,,Menu text
+ui.rack.answer.oops,That didn't work. Try again.,,Menu text
+ui.rack.answer.reveal,Open your last egg first.,,Menu text
+ui.rack.back,Missed one? They come back.,,Menu text
+ui.rack.closet.book,"Hats and bits to wear, from the Outfit Egg. Looks only.",,Menu text
+ui.rack.closet.fromEgg,From the Outfit Egg,,Menu text
+ui.rack.closet.go,Hatch one,,Menu text
+ui.rack.closet.hub,"Hats, shirts and more from the Outfit Egg",,Menu text
+ui.rack.closet.more,More colours in the egg,,Menu text
+ui.rack.closet.promise,New picks every day,,Menu text; also ui.rack.line
+ui.rack.closet.reason,This comes from the Outfit Egg,,Menu text
+ui.rack.full,Closet full,,Menu text
+ui.rack.gift.cute,So cute!,,Menu text
+ui.rack.gift.description,It's on! More picks come from the Outfit Egg.,,Menu text
+ui.rack.gift.note,New picks every day!,,Menu text
+ui.rack.gift.per,A gift: 100%,,Menu text
+ui.rack.label,Today's picks,,Menu text; also ui.rack.title
+ui.rack.look.noPity,Every egg has a chance at a charm.,,Menu text
+ui.rack.look.noPityShort,Charms: a chance every egg,,Menu text
+ui.rack.notReady,Not ready,,Menu text
+ui.rack.paintBack,Every colour comes back.,,Menu text
+ui.rack.paintDaily,One colour splashes extra each day,,Menu text
+ui.rack.paintLine,Every colour comes back,,Menu text
+ui.rack.paintTitle,Today's colours,,Menu text
+ui.rack.rarity.common,Common,,Menu text
+ui.rack.rarity.epic,Epic,,Menu text
+ui.rack.rarity.legendary,Sparkle,,Menu text
+ui.rack.rarity.rare,Rare,,Menu text
+ui.rack.rarity.uncommon,Uncommon,,Menu text
+ui.rack.rest,You have today's picks! New picks tomorrow.,,Menu text
+ui.rack.restButton,New picks tomorrow,,Menu text
+ui.rack.reveal.description,Yours to keep. Wear it any time in Dress up.,,Menu text
+ui.rack.reveal.detail,{rarity} · {percent},,Menu text; e.g. {rarity} · {percent}
+ui.rack.reveal.wear,Wear it!,,Menu text
+ui.rack.reveal.worn,{item} on!,,Menu text; e.g. Squeaky Bone on!
+ui.rack.splash,Today's splash,,Menu text
+ui.rack.sticker.common,Common!,,Menu text
+ui.rack.sticker.epic,Epic!,,Menu text
+ui.rack.sticker.legendary,Sparkle!,,Menu text
+ui.rack.sticker.rare,Rare!,,Menu text
+ui.rack.sticker.uncommon,Uncommon!,,Menu text
+ui.rack.teach.odds,Tap to see today's picks!,,Menu text
+ui.rack.yours,Yours,,Menu text
 ui.report.about,What's it about?,,Bug report sheet
 ui.report.category.menus,Menus,,Bug report sheet
 ui.report.category.other,Other,,Bug report sheet
@@ -1256,7 +1313,9 @@ ui.style.effects.title,Effects,,Deck style screen
 ui.style.effects.trail,Drop trail,,Deck style screen
 ui.style.promise.backgrounds,"Backgrounds are earned, not bought.",,Deck style screen
 ui.style.promise.faceplates,Fixed prices. No random plates.,,Deck style screen
+ui.teach.colour,Pick a colour!,,Menu text
 ui.teach.count,{n}/{of},,Menu text; e.g. {n}/{of}
+ui.teach.deckInvite,Let's try playing a game!,,Menu text
 ui.teach.dress,Dress up!,,Menu text
 ui.teach.feed,Feed {pet}!,,Menu text; e.g. Feed Bear!
 ui.teach.go,Go!,,Menu text
@@ -1278,13 +1337,21 @@ ui.teach.things,All the games!,,Menu text
 ui.teach.tipChain,Chain! Quick merges score more,,Menu text
 ui.teach.tipGoal,One down! Tick them all to win,,Menu text
 ui.teach.tipNext,This one's next!,,Menu text
-ui.teach.tour1,Tick these to win!,,Menu text
-ui.teach.tour2,Your balls. Use them well!,,Menu text
+ui.teach.tour1,Do these to win!,,Menu text
+ui.teach.tour2,Win before they run out!,,Menu text
+ui.teach.tourChain,Merge fast for a chain!,,Menu text
+ui.teach.tourHarder,Harder pays more,,Menu text
+ui.teach.tourPays,A win pays Stars ★,,Menu text
+ui.teach.tourQuests,Tap here for quests ★,,Menu text
+ui.teach.tourScore,Your high score. Goals win Stars!,,Menu text
+ui.things.book.name,Fill your collection book,,Things to do page
+ui.things.customize.line,Paint and shine,,Things to do page
 ui.things.dash.gather,Race: {count} of 8,,Things to do page; e.g. Race: 3 of 8
 ui.things.dash.idle,Start a race,,Things to do page
 ui.things.dash.live,A race is on,,Things to do page
 ui.things.dash.prizes,Stars races today: {done} of {total},,Things to do page; e.g. Stars races today: {done} of 12
 ui.things.den.line,Games inside the cave,,Things to do page
+ui.things.dress.line,Try on outfits,,Things to do page
 ui.things.finds.done,All found today,,Things to do page
 ui.things.finds.later,Come back later,,Things to do page
 ui.things.finds.name,Garden finds,,Things to do page
@@ -1292,6 +1359,8 @@ ui.things.finds.one,1 find waiting,,Things to do page
 ui.things.finds.waiting,{count} finds waiting,,Things to do page; e.g. 3 finds waiting
 ui.things.new,New,,Things to do page
 ui.things.play,Play,,Things to do page
+ui.things.quests.name,Finish quests,,Things to do page
+ui.things.style.name,Change your deck style,,Things to do page
 ui.things.tile.line,Every game in the garden,,Things to do page
 ui.things.tile.short,Things,,Things to do page
 ui.thisWeek.status,This week's pick. Back every {weeks} weeks.,,Menu text; e.g. This week's pick. Back every {weeks} weeks.
@@ -1499,6 +1568,75 @@ catalog.WearableCatalog.Variants.29.name,Berry Party Hat,,Catalogue WearableCata
 catalog.WearableCatalog.Variants.30.name,Lime Friendship Bands,,Catalogue WearableCatalog (name)
 catalog.WearableCatalog.Variants.31.name,Lilac Round Specs,,Catalogue WearableCatalog (name)
 catalog.WearableCatalog.Variants.32.name,Tide Star Hoodie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.33.name,Sky Pom Beanie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.34.name,Tangerine Pom Beanie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.35.name,Midnight Pom Beanie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.36.name,Gold Pom Beanie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.37.name,Mint Sun Hat,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.38.name,Grape Sun Hat,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.39.name,Midnight Sun Hat,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.40.name,Gold Sun Hat,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.41.name,Sky Flower Crown,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.42.name,Bubblegum Flower Crown,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.43.name,Midnight Flower Crown,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.44.name,Rose Gold Flower Crown,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.45.name,Cherry Party Hat,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.46.name,Tangerine Party Hat,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.47.name,Midnight Party Hat,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.48.name,Gold Party Hat,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.49.name,Butter Stripy Tee,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.50.name,Bubblegum Stripy Tee,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.51.name,Snow Stripy Tee,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.52.name,Gold Stripy Tee,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.53.name,Cherry Star Hoodie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.54.name,Bubblegum Star Hoodie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.55.name,Snow Star Hoodie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.56.name,Gold Star Hoodie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.57.name,Sky Pearl Beads,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.58.name,Bubblegum Pearl Beads,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.59.name,Midnight Pearl Beads,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.60.name,Gold Pearl Beads,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.61.name,Sky Bell Collar,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.62.name,Grape Bell Collar,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.63.name,Midnight Bell Collar,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.64.name,Snow Bell Collar,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.65.name,Sky Little Hoops,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.66.name,Bubblegum Little Hoops,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.67.name,Midnight Little Hoops,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.68.name,Rose Gold Little Hoops,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.69.name,Mint Star Studs,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.70.name,Grape Star Studs,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.71.name,Midnight Star Studs,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.72.name,Rose Gold Star Studs,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.73.name,Sky Sparkle Eyes,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.74.name,Bubblegum Sparkle Eyes,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.75.name,Midnight Sparkle Eyes,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.76.name,Gold Sparkle Eyes,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.77.name,Cherry Blush Stickers,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.78.name,Grape Blush Stickers,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.79.name,Midnight Blush Stickers,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.80.name,Gold Blush Stickers,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.81.name,Sky Bow Tail,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.82.name,Tangerine Bow Tail,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.83.name,Midnight Bow Tail,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.84.name,Gold Bow Tail,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.85.name,Cherry Acorn Pendant,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.86.name,Grape Acorn Pendant,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.87.name,Midnight Acorn Pendant,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.88.name,Gold Acorn Pendant,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.89.name,Cherry Friendship Bands,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.90.name,Grape Friendship Bands,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.91.name,Midnight Friendship Bands,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.92.name,Gold Friendship Bands,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.93.name,Cherry Round Specs,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.94.name,Bubblegum Round Specs,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.95.name,Midnight Round Specs,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.96.name,Rose Gold Round Specs,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.97.name,Rainbow Pom Beanie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.98.name,Rainbow Bow Tail,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.99.name,Aurora Star Hoodie,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.100.name,Aurora Party Hat,,Catalogue WearableCatalog (name)
+catalog.WearableCatalog.Variants.101.name,Stardust Flower Crown,,Catalogue WearableCatalog (name)
 catalog.RoundItems.ById.bomb.effect,Your next ball bursts on landing and clears a small circle.,,Catalogue RoundItems (effect)
 catalog.RoundItems.ById.bomb.name,Bomb,,Catalogue RoundItems (name)
 catalog.RoundItems.ById.bomb.short,Next ball clears a circle.,,Catalogue RoundItems (short)
