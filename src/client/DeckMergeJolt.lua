@@ -27,11 +27,15 @@ function Jolt:reset()
 end
 function Jolt:rebase()
  self.active=nil;self.offset=Vector2.zero
- -- A node still where this wrote it keeps its rest (a layout mid-press never bakes the offset in); a moved one rebases.
+ -- A node still where this wrote it keeps its rest (a layout mid-press never bakes the offset in) and goes back to it
+ -- (beta 41 review: it stayed offset by the last jolt); a moved one rebases.
  local w=self.written
  for _,entry in ipairs(self.nodes)do
-  if not(w and entry.node.Position==entry.base+UDim2.fromOffset(w.X,w.Y))then entry.base=entry.node.Position end
+  if w and entry.node.Position==entry.base+UDim2.fromOffset(w.X,w.Y)then
+   if entry.node.Parent then entry.node.Position=entry.base end
+  else entry.base=entry.node.Position end
  end
+ self.written=nil
 end
 function Jolt:setOwner(visible,serial,reduced)
  if self.visible~=visible or self.serial~=serial or self.reduced~=reduced then self:reset()end

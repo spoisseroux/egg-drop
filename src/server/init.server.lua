@@ -276,10 +276,12 @@ local function leadKeepOut()
 	if not ok then warn("[KeepOut] lead not read: "..tostring(list));return {}end
 	return list
 end
+-- Beta 41 review: built once per switch state (GardenKeepOut.leadRegionsCached: rebuilt when `scene` or another
+-- prop's switch, or the tree grades, change), not on every leg check.
 local function leadRegions()
 	local ok,list=pcall(function()
 		local Alive=require(ReplicatedStorage.Shared.Alive)
-		return GardenKeepOut.leadRegions(function(feature)return Alive.on(feature)end)
+		return GardenKeepOut.leadRegionsCached(function(feature)return Alive.on(feature)end)
 	end)
 	if not ok then return {}end
 	return list
@@ -498,10 +500,12 @@ local garden = GardenState.new({sharedToyEnabled=false,now=function()return work
     end,
     -- Beta (40): the lead to the nest also walks round the plants the navmesh cannot see (GardenKeepOut.lead: the
     -- understory and the frond bushes, with the solid props), whatever the `keepout` switch says.
-    validLeadPath=function(path)
+    -- Beta 41 review: `exempt` (the walk's start, the lead's goal and nest): a plant one stands in is not counted, as
+    -- Lead.clean lets the route's first leg start in one and its last end in one.
+    validLeadPath=function(path,exempt)
         local scene=gardenScene();if scene==nil then return false end
         if not GardenWalkability.pathAllowed(path,scene.wet)then return false end
-        return GardenWalkability.pathAllowed(path,leadRegions())
+        return GardenWalkability.pathAllowed(path,GardenKeepOut.exempt(leadRegions(),exempt))
     end,
     validRestPath=function(path)
         local scene=gardenScene();return scene~=nil and GardenPathPlanner.restPathClear(path,scene.solids)
@@ -1660,22 +1664,28 @@ local function onBoardRequest(player, action, value, sticker)
 			garden:leadCheer(player.UserId)
 			return
 		end
-		if not leadOn then return end
+		-- beta 41 review: every start refusal shows in the output, once per player per reason (it was silent: after
+		-- three the client went leaderless with nothing to say why)
+		local function refuse(why)
+			board.leadRefused=board.leadRefused or {}
+			if Lead.firstRefusal(board.leadRefused,why)then warn(("[PetLead] start refused for %d: %s"):format(player.UserId,tostring(why)))end
+		end
+		if not leadOn then if kind=="start"then refuse("off")end;return end
 		-- each kind at most once every Asks.gap s, and a bounded number of starts a session
 		if kind~="back"and kind~="start"then return end
 		board.leadAskAt=board.leadAskAt or {}
-		if now-(board.leadAskAt[kind]or -math.huge)<Lead.Asks.gap then return end
+		if now-(board.leadAskAt[kind]or -math.huge)<Lead.Asks.gap then if kind=="start"then refuse("throttled")end;return end
 		board.leadAskAt[kind]=now
 		if kind=="back"then garden:leadBack(player.UserId);return end
 		board.leadStarts=(board.leadStarts or 0)+1
-		if board.leadStarts>Lead.Asks.starts then return end
+		if board.leadStarts>Lead.Asks.starts then refuse("starts");return end
 		local character=player.Character
 		local root=character and character:FindFirstChild("HumanoidRootPart")
 		local actor=garden.actors[player.UserId]
-		if not root or not actor then return end
+		if not root or not actor then refuse("no character");return end
 		local sample=require(ReplicatedStorage.Shared.GardenActivity).sample(actor,workspace:GetServerTimeNow())
 		local pet=sample and sample.position
-		if not pet or Lead.flat(pet,root.Position)>Lead.Far then return end
+		if not pet or Lead.flat(pet,root.Position)>Lead.Far then refuse("pet far");return end
 		local Corner=require(ReplicatedStorage.Shared.EggCorner)
 		local nest=Corner.nestSpot()
 		local skip={}
@@ -1689,33 +1699,38 @@ local function onBoardRequest(player, action, value, sticker)
 		solidParams.FilterDescendantsInstances=skipSolid
 		local route=type(value.route)=="table"and value.route or nil
 		local raw={}
-		for i,point in ipairs(route or {})do if i>Lead.Route.max+1 then return end;raw[i]=point end
-		local points=Lead.clean(raw,{pet=pet,nest=nest,
+		for i,point in ipairs(route or {})do if i>Lead.Route.max+1 then refuse("count");return end;raw[i]=point end
+		local points,why=Lead.clean(raw,{pet=pet,nest=nest,
 			ground=function(p)
 				local hit=workspace:Raycast(p+Vector3.new(0,Lead.Route.ground,0),Vector3.new(0,-Lead.Route.ground*2,0),groundParams)
 				if not hit or hit.Material==Enum.Material.Water then return nil end
 				return hit.Position.Y
 			end,
 			-- a fence, a wall or a prop between two route points at the pet's body height (the ground is not one).
-			-- Beta (40): a sphere the pet's width (Lead.Body), not one thin ray, so a post or a trunk beside the line
-			-- counts; a hit that faces up is a floor or a bump under the sweep, never a wall.
+			-- Beta (40): a sphere, not one thin ray, so a post or a trunk beside the line counts; a hit that faces up
+			-- is a floor or a bump under the sweep, never a wall. Beta 41 review: cast higher (Lead.Cast: its foot 1.3
+			-- over the leg line, was .6), so a kerb or a bridge deck's edge is no wall; characters are skipped (and the
+			-- pets, drawn by the clients, are never here).
 			clear=function(a,b)
-				local up=Vector3.new(0,Lead.Route.body,0)
-				local d=(b+up)-(a+up)
+				local up=Vector3.new(0,Lead.Cast.height,0)
+				local d=b-a
 				if d.Magnitude<.05 then return true end
-				local okCast,hit=pcall(function()return workspace:Spherecast(a+up,Lead.Body,d,solidParams)end)
+				local okCast,hit=pcall(function()return workspace:Spherecast(a+up,Lead.Cast.radius,d,solidParams)end)
 				if not okCast then hit=workspace:Raycast(a+up,d,solidParams)end
-				return hit==nil or hit.Normal.Y>.7
+				if hit==nil then return true end
+				local parent=hit.Instance and hit.Instance.Parent
+				return not Lead.castBlocks(hit.Normal.Y,parent~=nil and parent:FindFirstChildOfClass("Humanoid")~=nil)
 			end,
 			-- beta (40): and the keep-outs the navmesh never sees (the understory, the frond bushes, the props)
 			keepOut=leadKeepOut()})
-		if not points then return end
+		if not points then refuse(why or "route");return end
 		local goal=Lead.trim(points,Lead.Arrive)
 		goal=goal[#goal]
-		if Lead.flat(goal,nest)>Lead.Route.goalNear then return end
+		if Lead.flat(goal,nest)>Lead.Route.goalNear then refuse("goal trimmed");return end
 		-- beta (40): no second simplify: it cut the corners the client's route takes round the bushes (the checked
 		-- route, trimmed, is what the pet runs)
 		local ok=garden:lead(player.UserId,Lead.trim(points,Lead.Arrive),goal,nest)
+		if not ok then refuse("garden")end
 		if ok and board.firstSession then pcall(function()board.firstSession:record("LeadStarted")end)end
 		return
 	elseif action=="firstStand"then

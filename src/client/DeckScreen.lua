@@ -472,13 +472,13 @@ function Screen.new(options)
   q.InputBegan:Connect(function(input)
    local t=input.UserInputType
    if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then
-    self:press(dir,true)
+    self:keyInput(dir,true,input)
     if self.callbacks.dpad then self.callbacks.dpad(dir,input)end
    end
   end)
   q.InputEnded:Connect(function(input)
    local t=input.UserInputType
-   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:press(dir,false)end
+   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:keyInput(dir,false,input)end
   end)
  end
  self.menu=Kit.node("ImageButton",root,{Name="MenuPill",Image=I.menuPill,BackgroundTransparency=1,ZIndex=10,AutoButtonColor=false,
@@ -502,13 +502,13 @@ function Screen.new(options)
   hit.InputBegan:Connect(function(input)
    local t=input.UserInputType
    if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then
-    self:press(id,true)
+    self:keyInput(id,true,input)
     if id=="A"and t==Enum.UserInputType.Touch and self.feel then self.feel:touchTick()end
    end
   end)
   hit.InputEnded:Connect(function(input)
    local t=input.UserInputType
-   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:press(id,false)end
+   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:keyInput(id,false,input)end
   end)
   hit.Activated:Connect(function()local cb=self.callbacks[id];if cb then cb()end end)
  end
@@ -536,11 +536,11 @@ function Screen.new(options)
   -- The B sprite under it presses with it (QA v2 R6.1).
   hit.InputBegan:Connect(function(input)
    local t=input.UserInputType
-   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:press("B",true)end
+   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:keyInput("B",true,input)end
   end)
   hit.InputEnded:Connect(function(input)
    local t=input.UserInputType
-   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:press("B",false)end
+   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:keyInput("B",false,input)end
   end)
   self.itemButton={holder=holder,disc=disc,ring=ring,glyph=glyph,icon=icon,badge=badge,count=count,caption=caption,hit=hit}
  end
@@ -588,6 +588,13 @@ function Screen.new(options)
  GuiService:GetPropertyChangedSignal("PreferredTransparency"):Connect(function()self:applyTransparency()end)
  -- DECK-FEEL-BRIEF 2, 3, 6, 7 (Alive deckfeel): holds, the body press shade, the stepper, the polish.
  self.feel=require(script.Parent.DeckFeelScreen).new(self)
+ -- Beta 41 review: a touch on a drawn key that ends anywhere (slid off the key) lets the key go
+ self.touchHolds=require(script.Parent.DeckFeel).touches()
+ game:GetService("UserInputService").InputEnded:Connect(function(input)
+  if input.UserInputType~=Enum.UserInputType.Touch then return end
+  local id=self.touchHolds:up(input)
+  if id and not self.touchHolds:holding(id)then self:press(id,false)end
+ end)
  return self
 end
 
@@ -720,6 +727,24 @@ end
 -- A press that has already ended (a touch release that dropped): shown for the 90 ms minimum (deckfeel only).
 function Screen:tap(id)
  if self.feel and self.feel:on()then self.feel:tap(id)end
+end
+-- A drawn key's input began or ended on it: a touch is remembered until it ends anywhere (Screen.new's InputEnded).
+function Screen:keyInput(id,down,input)
+ local touch=self.touchHolds~=nil and input~=nil and input.UserInputType==Enum.UserInputType.Touch
+ if down then
+  if touch then self.touchHolds:down(input,id)end
+  self:press(id,true)
+ else
+  if touch then self.touchHolds:up(input)end
+  self:press(id,false)
+ end
+end
+-- Beta 41 review: the deck closing (its Sink, Mode back to Room) lets every held key go: A never stays down with its
+-- lean. Off (no deckfeel), the drawn keys go back to rest.
+function Screen:releaseHolds()
+ local touched=if self.touchHolds then self.touchHolds:clear()else {}
+ if self.feel and self.feel:on()then self.feel:releaseAll();return end
+ for _,id in ipairs(touched)do self:press(id,false)end
 end
 -- The drawn keys' own touch and mouse presses.
 function Screen:press(id,down)

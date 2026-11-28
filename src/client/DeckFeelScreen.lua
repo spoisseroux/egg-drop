@@ -67,6 +67,15 @@ function View:hold(id,down,now)
   end
  end
 end
+-- Beta 41 review: every hold still down goes up (the deck closing mid-touch, a Mode change): no A left pressed with its
+-- lean. Returns the ids it let go.
+function View:releaseAll(now)
+ local out={}
+ for id,h in pairs(self.holds)do if h.down then table.insert(out,id)end end
+ table.sort(out)
+ for _,id in ipairs(out)do self:hold(id,false,now)end
+ return out
+end
 -- Down and up at once: shows for the 90 ms minimum.
 function View:tap(id)self:hold(id,true);self:hold(id,false)end
 -- Keyboard and gamepad presses in menus: hold + release after .10.

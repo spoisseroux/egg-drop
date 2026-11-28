@@ -177,7 +177,7 @@ end
 --   inPark(), fetchCard(), throwTip(), event(name), mask(), park() -> false when this world has no Pet Park,
 --   teach() -> Onboard `teach` on
 function Chain.new(deps)
-	local self=setmetatable({d=deps,session={closed={},count=0},active=nil,lastFree=nil,returned=nil,fetchedBefore=nil},Chain)
+	local self=setmetatable({d=deps,session={closed={},count=0,replayed={}},active=nil,lastFree=nil,returned=nil,fetchedBefore=nil},Chain)
 	return self
 end
 function Chain:read()
@@ -256,10 +256,13 @@ function Chain:shopCrank(kind)
 end
 -- The gift the shop offers now (gift mode), or nil.
 function Chain:offer()return Chain.shopGift(self:read(),self.active)end
--- An unseen gift's card again, from anywhere (the shop opened from the Menu): true when it replays.
+-- An unseen gift's card again, from anywhere (the shop opened from the Menu): true when it replays. Beta 41 review: once
+-- per gift a session; a server that never records it seen (the client stopped retrying giftSeen) then lets the shop open
+-- as usual, never a replay on every open with Hatch eggs out of reach.
 function Chain:replayUnseen()
 	local f=self:read()
 	if not(f.on and f.unseen)then return false end
+	if self.session.replayed[Chain.recordKey(f.unseen)]then return false end
 	if self.active and(self.active.phase=="cranking"or self.active.phase=="reveal")then return false end
 	self.session.closed.unseen=nil
 	self.active={step="unseen",gift=f.unseen.kind,phase="leading",at=self.d.clock(),tapped=true}
@@ -272,9 +275,13 @@ function Chain:crank()
 	self:hide()
 	self:event("GiftCranked")
 	local f=self:read()
-	local done=function(status,reason)
+	-- suppressed (beta 41 review): a Saved answer whose card is not shown (Chain.showCard: AlreadyGranted, its card
+	-- already seen or one up now) is the step's end at once, never a reveal phase held to the stuck timeout
+	local done=function(status,reason,suppressed)
 		if self.active~=a then return end
-		if status=="Saved"then
+		if status=="Saved"and suppressed then
+			a.phase="reveal";self:revealed()
+		elseif status=="Saved"then
 			a.phase="reveal";a.at=self.d.clock()
 		else
 			-- refused: back to parked (the chip, ribbon and row stay while the gift is ready; no bubble again this session)
@@ -285,6 +292,9 @@ function Chain:crank()
 	end
 	if a.step=="unseen"and f.unseen then
 		a.phase="reveal"
+		-- once a session (beta 41 review): the bubble does not ask again, and the shop opens as usual after it
+		self.session.replayed[Chain.recordKey(f.unseen)]=true
+		self.session.closed.unseen=true
 		self.d.replay(f.unseen)
 	else
 		self.d.crank(a.gift,done)

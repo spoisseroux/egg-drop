@@ -569,5 +569,61 @@ return function(server)
 		ctx.keepOut=nil
 		assert(Lead.clean(straight,ctx),"no list: as before")
 	end)
+	-- Beta 41 code review: refused leads were silent, detours could land in a wall, the sweep's foot hit kerbs.
+	test("beta 41 review: a detour the solid check refuses goes to the other side, then a larger push, before it gives up",function()
+		local bush={id="bush 1",x=0,z=20,r=1.5,kind="plant"}
+		local straight={v(0,0),v(0,12),v(0,24),v(0,36),v(0,48),v(0,60)}
+		local base=bush.r+Lead.Body+Lead.Detour
+		-- both sides at the usual push are in a wall (|x| under base + .5): the larger push clears it
+		local function solid(a,b)
+			for _,p in ipairs({a,b})do if math.abs(p.X)>.01 and math.abs(p.X)<base+.5 then return false end end
+			return true
+		end
+		local out=Lead.around(straight,{bush},solid)
+		assert(out,"a larger push clears it")
+		local pushed=false
+		for i,p in ipairs(out)do
+			if math.abs(p.X)>.01 then assert(math.abs(p.X)>=base+.5,"never in the wall: "..p.X);pushed=true end
+			if i>1 then assert(Lead.blocker(out[i-1],p,{bush},Lead.Body,i==2)==nil,"leg "..i.." clear")end
+		end
+		assert(pushed,"a detour point")
+		-- the near side in a wall at every push: the other side
+		local right=Lead.around(straight,{bush},function(a,b)return a.X<=.01 and b.X<=.01 end)
+		for _,p in ipairs(right)do assert(p.X<=.01)end
+		-- no push clears it: nil (and never past the last push)
+		assert(Lead.around(straight,{bush},function(a,b)return math.abs(a.X)<.01 and math.abs(b.X)<.01 end)==nil)
+		assert(Lead.Push[1]==0 and #Lead.Push>=3 and Lead.Push[#Lead.Push]>Lead.Push[2])
+		-- a route point standing in a circle is moved out, and kept off a solid the same way
+		local inside={v(0,0),v(0,10),v(.2,20),v(0,30)}
+		local moved=Lead.around(inside,{bush},solid)
+		assert(moved and moved[3].X>=base+.5-1e-6,"moved out, past the wall: "..tostring(moved and moved[3].X))
+	end)
+	test("beta 41 review: a leg fit cut a corner off that cannot be cleared is tried through the raw route's corner first",function()
+		local raw={v(0,0),v(0,10),v(10,10)}
+		local cut={v(0,0),v(10,10)}
+		local lamp={id="lamp 1",x=5,z=5,r=.45,kind="solid"}
+		assert(Lead.blocker(cut[1],cut[2],{lamp},Lead.Body)==lamp,"the cut leg passes the lamp")
+		local never=function()return false end
+		assert(Lead.around(cut,{lamp},never)==nil,"no raw route: it gives up as before")
+		local out=Lead.around(cut,{lamp},never,raw)
+		assert(out and #out==3 and Lead.flat(out[2],raw[2])<1e-6,"the corner back in")
+		for i=2,#out do assert(Lead.blocker(out[i-1],out[i],{lamp},Lead.Body,i==2)==nil)end
+		local ctx={pet=v(0,0),nest=v(10,10),ground=function()return 4 end,clear=function()return true end,keepOut={lamp}}
+		assert(select(2,Lead.clean(cut,ctx))=="keepout"and Lead.clean(out,ctx),"the server takes the un-cut one")
+		local between=Lead.between(raw,cut[1],cut[2])
+		assert(between and #between==1 and Lead.flat(between[1],raw[2])<1e-6)
+		assert(Lead.between(raw,raw[1],raw[2])==nil and Lead.between(nil,raw[1],raw[3])==nil,"nothing between: nil")
+	end)
+	test("beta 41 review: the sweep's foot clears a kerb; floor hits and characters never block; refusals logged once a reason",function()
+		assert(Lead.castFoot()>=1.3-1e-6,"the foot over a kerb or a deck's edge (was .6)")
+		assert(Lead.Cast.radius<=Lead.Body,"no wider than the pet")
+		assert(Lead.Cast.height+Lead.Cast.radius<=3,"still a pet's height: a low branch or a fence rail counts")
+		assert(Lead.castBlocks(0,false)and Lead.castBlocks(.5,false)and Lead.castBlocks(nil,false),"a wall blocks")
+		assert(not Lead.castBlocks(.9,false)and not Lead.castBlocks(1,false),"a floor never")
+		assert(not Lead.castBlocks(0,true),"a character or a pet never")
+		local seen={}
+		assert(Lead.firstRefusal(seen,"keepout")and not Lead.firstRefusal(seen,"keepout"),"once per reason")
+		assert(Lead.firstRefusal(seen,"blocked")and not Lead.firstRefusal(nil,"x"),"another reason logs; no table: never")
+	end)
 	return{passed=#cases,cases=cases}
 end

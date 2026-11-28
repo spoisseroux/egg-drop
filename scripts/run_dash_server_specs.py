@@ -245,7 +245,9 @@ def client_modules():
                     # Onboarding part 2: the shop's gift mode, the lessons and their pointer.
                     "GiftShop.lua", "TeachLessons.lua", "TeachPointer.lua",
                     # DECK-FEEL-BRIEF: the feel pass's pure rules, the body press and the fresh reopen gate.
-                    "DeckFeel.lua", "DeckPressLean.lua", "DeckFresh.lua", "DeckHandoff.lua"):
+                    "DeckFeel.lua", "DeckPressLean.lua", "DeckFresh.lua", "DeckHandoff.lua",
+                    # Beta 41 code review: the jolt's rebase and the screen's holds (DeckFeel spec).
+                    "DeckMergeJolt.lua", "DeckFeelScreen.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

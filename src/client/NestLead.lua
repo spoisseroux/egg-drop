@@ -18,7 +18,8 @@
 --   point), trail (LeadTrail), targetName(), beckon() (chirp and paw wave), hop() (the bubble), chirp(), event(name),
 --   celebrate() (hearts and the settle buzz), toast(key, vars), hatchLeft() -> seconds to the hatch or nil (the tuck's
 --   countdown words, PetLead.hatchWords), keepOut() -> the lead's keep-out circles (GardenKeepOut.lead; nil: none),
---   segmentOk(a, b) (optional: a detour's legs stay dry).
+--   segmentOk(a, b) (optional: a detour's legs stay dry), solidOk(a, b) (optional, beta 41 review: nothing solid on a
+--   detour's legs: the server's own sweep, Lead.Cast).
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Lead=require(Shared:WaitForChild("PetLead"))
 local NestLead={};NestLead.__index=NestLead
@@ -54,13 +55,15 @@ function NestLead:start(now,from,nest)
 		if self.gen~=mine then return end
 		self.planning=false
 		-- the trail's raw route thinned and re-spaced to the server's caps (Lead.fit: bridge ends kept)
-		if type(points)=="table"then points=Lead.fit(points)end
+		local raw=if type(points)=="table"then points else nil
+		if raw then points=Lead.fit(raw)end
 		if type(points)~="table"or #points<2 then self:failed(self.now or now);return end
 		-- beta (40) ("the pet runs thru meshes"): round the bushes, reeds and props the navmesh cannot see; a route
 		-- that cannot be cleared goes as it is (the server checks it and refuses one through a keep-out)
 		local keepOut=call(self.d.keepOut)
 		if type(keepOut)=="table"and #keepOut>0 then
-			local cleared=Lead.around(points,keepOut,self.d.segmentOk)
+			-- beta 41 review: a detour keeps dry and clear of solids (another side, a larger push, then fit's cut corners)
+			local cleared=Lead.around(points,keepOut,NestLead.legOk(self.d.segmentOk,self.d.solidOk),raw)
 			if cleared then points=cleared end
 		end
 		self.askedAbove=self.seenSeq
@@ -72,6 +75,15 @@ function NestLead:start(now,from,nest)
 		local ok=pcall(self.d.plan,from,nest,done)
 		if not ok then done(nil)end
 	else done({from,nest})end
+end
+-- Pure: one leg check from the dry check and the solid check (either may be missing; neither: nil, no check).
+function NestLead.legOk(dry,solid)
+	if dry==nil and solid==nil then return nil end
+	return function(a,b)
+		if dry and not dry(a,b)then return false end
+		if solid and not solid(a,b)then return false end
+		return true
+	end
 end
 function NestLead:failed(now)
 	-- whatever the server still holds (a lost lead waiting by the player) ends: it follows meanwhile

@@ -680,10 +680,21 @@ function Garden:lead(id,points,goal,nest)
     return true
 end
 -- The leading pet's walks keep its keep-outs (beta 40: validLeadPath, the lead's plants as well as the water and the
--- solid props), else the everyday check.
-function Garden:leadAccept()
+-- solid props), else the everyday check. Beta 41 review: a plant the walk starts in (`from`: the pet stands in a bush)
+-- or the lead's goal or nest stands in is not counted, as Lead.clean allows (it fell back to the straight planner).
+function Garden.leadExempt(from,lead)
+    local out={}
+    if typeof(from)=="Vector3"then table.insert(out,from)end
+    if type(lead)=="table"then
+        if typeof(lead.goal)=="Vector3"then table.insert(out,lead.goal)end
+        if typeof(lead.nest)=="Vector3"then table.insert(out,lead.nest)end
+    end
+    return out
+end
+function Garden:leadAccept(from,lead)
     local check=self.options.validLeadPath or self.options.validToyPath
-    return function(leg)return check==nil or check({leg})end
+    local exempt=Garden.leadExempt(from,lead)
+    return function(leg)return check==nil or check({leg},exempt)end
 end
 -- Run on along the route: "run" at Lead.Run, or "pace" (beta 40: a following owner, looked back at) at Lead.Pace. From
 -- rest facing the owner it arcs round to the way (leadLaunch).
@@ -695,7 +706,7 @@ function Garden:leadRun(actor,position,now,pace)
     local velocity=if moving then sample.velocity else ZERO
     local yaw=sample and sample.yaw or actor.yaw or 0
     local speed=if pace then Lead.Pace else Lead.Run
-    local accept=self:leadAccept()
+    local accept=self:leadAccept(position,lead)
     local path,seconds=nil,nil
     if velocity.Magnitude<.5 then path,seconds=Garden.leadLaunch(position,yaw,lead.points,lead.goal,speed,accept)end
     if not path then
@@ -723,7 +734,7 @@ function Garden:leadHold(actor,position,now,face,action,phase)
         path,seconds,at=Garden.leadArc(position,velocity,yaw,face,Lead.Hold)
         if path then
             local check=self.options.validLeadPath or self.options.validToyPath
-            if check and not check(path)then path=nil end
+            if check and not check(path,Garden.leadExempt(position,actor.lead))then path=nil end
         end
     end
     if not path then path,seconds,at=Garden.leadSettle(position,velocity,yaw,face,Lead.Hold)end
@@ -782,7 +793,7 @@ function Garden:leadBack(id)
     local velocity=if sample and now<actor.endTime then sample.velocity else ZERO
     local way=Lead.backWay(lead.points,position,input.position)
     if way then
-        local path,seconds=Activity.through(position,way,velocity,Lead.Run/Activity.ThroughPace,yaw,self:leadAccept())
+        local path,seconds=Activity.through(position,way,velocity,Lead.Run/Activity.ThroughPace,yaw,self:leadAccept(position,lead))
         if not path then
             local planner=self.options.planPath or Activity.plan
             path,seconds=planner(position,way[#way],velocity,Lead.Run*3,0,yaw,nil,ZERO)

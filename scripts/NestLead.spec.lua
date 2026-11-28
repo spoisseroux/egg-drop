@@ -60,7 +60,8 @@ return function(client)
 			beckon=function()r.beckons+=1 end,hop=function()r.hops+=1 end,chirp=function()r.chirps+=1 end,
 			event=function(name)table.insert(r.events,name)end,celebrate=function()r.celebrations+=1 end,
 			toast=function(key,vars)table.insert(r.toasts,key);r.toastVars=vars end,hatchLeft=function()return r.hatchLeft end,
-			keepOut=function()return r.keepOut end,segmentOk=function(a,b)if r.dry then return r.dry(a,b)end;return true end}
+			keepOut=function()return r.keepOut end,segmentOk=function(a,b)if r.dry then return r.dry(a,b)end;return true end,
+			solidOk=function(a,b)r.solidAsks=(r.solidAsks or 0)+1;if r.solid then return r.solid(a,b)end;return true end}
 		r.needs=Needs.new({bubble=r.bubble,state=function()return r.state end,owned=function()return r.owned end,mask=function()return r.mask end,
 			mark=function(id)table.insert(r.marked,id);r.mask=Coach.with(r.mask,id)end,finishIntro=function()r.mask=Coach.with(r.mask,"gardenIntro")end,
 			follow=function()return true end,needs=function()return true end,returning=function()return r.returning end,
@@ -462,6 +463,24 @@ return function(client)
 		local wet=rig();wet.keepOut={bush};wet.dry=function()return false end
 		wet.toNest()
 		assert(wet.lastRoute and #wet.lastRoute==#plain.lastRoute,"no dry detour: today's route")
+	end)
+	test("beta 41 review: a detour keeps clear of solids too (the client's sweep): a wall on the near side, it goes the other",function()
+		local r=rig()
+		local bush={id="bush 1",x=1,z=24,r=1.6,kind="plant"}
+		r.keepOut={bush}
+		-- the straight way passes the bush on its +x side; a wall there
+		r.solid=function(a,b)return a.X<3 and b.X<3 end
+		r.toNest()
+		assert(r.lastRoute and(r.solidAsks or 0)>0,"the solid check is asked")
+		for i,p in ipairs(r.lastRoute)do
+			assert(p.X<3,"never in the wall")
+			if i>1 then assert(Lead.blocker(r.lastRoute[i-1],p,r.keepOut,Lead.Body,i==2)==nil)end
+		end
+		-- the pure join: no checks, nil; either refusing refuses
+		assert(NestLead.legOk(nil,nil)==nil)
+		local yes,no=function()return true end,function()return false end
+		assert(NestLead.legOk(yes,yes)(v(0,0),v(0,1))and not NestLead.legOk(yes,no)(v(0,0),v(0,1))and not NestLead.legOk(no,nil)(v(0,0),v(0,1)))
+		assert(NestLead.legOk(nil,yes)(v(0,0),v(0,1)))
 	end)
 	return{passed=#cases,cases=cases}
 end

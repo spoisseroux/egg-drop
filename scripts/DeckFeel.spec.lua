@@ -264,5 +264,57 @@ return function(client)
 		local l=Feel.resultLook("loss",false);assert(not l.confetti and l.burst==0 and l.rays==0)
 		local rm=Feel.resultLook("win",true);assert(not rm.slam and rm.burst==0 and not rm.confetti and not rm.bounce)
 	end)
+	-- Beta 41 code review: the jolt's rebase and the touch holds.
+	test("beta 41 review: a rebase puts a node the jolt last wrote back at its base; a moved node takes its new place",function()
+		-- a small UDim2 (offsets only) for the offline run; Studio has its own
+		local saved=UDim2
+		local meta={}
+		local function make(x,y)return setmetatable({x=x,y=y},meta)end
+		meta.__add=function(a,b)return make(a.x+b.x,a.y+b.y)end
+		meta.__eq=function(a,b)return a.x==b.x and a.y==b.y end
+		local fake={fromOffset=make,new=function(_,x,_,y)return make(x or 0,y or 0)end}
+		local ok,problem=pcall(function()
+			UDim2=fake
+			local Jolt=require(client.DeckMergeJolt)
+			local kept={Position=make(10,20),Parent=true}
+			local moved={Position=make(30,40),Parent=true}
+			local j=Jolt.new({kept,moved})
+			j:setOwner(true,1,false)
+			assert(j:emit(1,1,4,1,false,0));j:update(.03)
+			local w=j.written
+			assert(w and(w.X~=0 or w.Y~=0)and kept.Position==make(10+w.X,20+w.Y),"mid-jolt: offset")
+			moved.Position=make(50,60) -- a layout moved this one
+			j:rebase()
+			assert(kept.Position==make(10,20)and j.nodes[1].base==make(10,20),"back at its rest, never left offset")
+			assert(j.nodes[2].base==make(50,60)and moved.Position==make(50,60),"the moved one rebases where it is")
+			assert(j.active==nil and j.written==nil)
+		end)
+		UDim2=saved
+		assert(ok,problem)
+	end)
+	test("beta 41 review: a touch hold lets go when its touch ends anywhere, and every hold goes when the deck closes",function()
+		local t=Feel.touches()
+		local one,two={},{}
+		t:down(one,"A");t:down(two,"Left")
+		assert(t:holding("A")and t:holding("Left"))
+		assert(t:up(one)=="A"and t:up(one)==nil,"ended off the key: A goes once")
+		assert(not t:holding("A")and t:holding("Left"))
+		t:down(one,"B")
+		local all=t:clear()
+		assert(#all==2 and all[1]=="B"and all[2]=="Left"and not t:holding("Left")and t:up(two)==nil,"closing: every one, then none")
+		-- the view: every hold still down goes up (A, its lean)
+		local View=require(client.DeckFeelScreen)
+		local log={}
+		local screen={buttons={},pressButton=function(_,id,down)table.insert(log,id..(if down then "+"else "-"))end,
+			pressDpad=function(_,id,down)table.insert(log,id..(if down then "+"else "-"))end}
+		local v=setmetatable({screen=screen,holds={},lean=Lean.new(),springs={},runners={}},View)
+		v:hold("A",true,0);v:hold("Left",true,0)
+		assert(v:isDown("A")and v:isDown("Left")and v.lean.id=="Left")
+		local let=v:releaseAll(1)
+		assert(#let==2 and let[1]=="A"and let[2]=="Left","both let go")
+		assert(not v:isDown("A")and not v:isDown("Left")and v.lean.id==nil,"no key down, no lean")
+		assert(table.find(log,"A-")and table.find(log,"Left-"))
+		assert(#v:releaseAll(2)==0,"nothing held: nothing")
+	end)
 	return{passed=#cases,cases=cases}
 end

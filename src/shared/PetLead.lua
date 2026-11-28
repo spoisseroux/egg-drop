@@ -66,7 +66,30 @@ Lead.MaxGap=45         -- the owner further than this from the pet: the lead end
 Lead.Route=table.freeze({max=80,step=24,length=320,startNear=8,goalNear=12,ground=3,body=1.4})
 Lead.Asks=table.freeze({gap=.75,starts=60})
 Lead.Restart=table.freeze({wait=1.5,backoff=2,max=10,tries=3}) -- client: a start the server never took
+-- Beta 41 review: the solid sweep between two route points (the server's Lead.clean clear, the client's detour check):
+-- a sphere `radius` round a centre `height` above the leg line, so its foot sits at height - radius (1.3) and a kerb,
+-- a bridge deck's edge or a lawn bump under it is never a wall (it was 1.4 and .8: the foot at .6). A hit whose normal
+-- points up past `floor` is a floor; a character's or a pet's part never blocks (pets are CanQuery off anyway).
+Lead.Cast=table.freeze({height=2,radius=.7,floor=.7})
+-- Beta 41 review: a detour point that is not clear goes to the other side, then this much further out (studs past
+-- r + Body + Detour), before the leg gives up.
+Lead.Push=table.freeze({0,.8,1.6})
 
+-- Pure: the solid sweep's foot above the leg line (studs): anything lower passes under it.
+function Lead.castFoot()return Lead.Cast.height-Lead.Cast.radius end
+-- Pure: does a sweep's hit block the leg? normalY: the hit's Normal.Y; actor: the hit is a character's or a pet's.
+function Lead.castBlocks(normalY,actor)
+	if actor then return false end
+	return not(type(normalY)=="number"and normalY>Lead.Cast.floor)
+end
+-- Pure (beta 41 review): log a refusal once per player per reason. seen: that player's table; true the first time.
+function Lead.firstRefusal(seen,why)
+	if type(seen)~="table"then return false end
+	why=tostring(why)
+	if seen[why]then return false end
+	seen[why]=true
+	return true
+end
 local function finite(n)return type(n)=="number"and n==n and math.abs(n)<1e6 end
 local function vec(v)return typeof(v)=="Vector3"and finite(v.X)and finite(v.Y)and finite(v.Z)end
 function Lead.flat(a,b)return Vector2.new(a.X-b.X,a.Z-b.Z).Magnitude end
@@ -181,23 +204,34 @@ end
 -- standing in one is moved straight out of it first. The first leg may start inside one (the pet stands in a bush),
 -- the last may end in one (the nest's prompt). Returns the new points, or nil when a leg cannot be cleared or the route
 -- grows past MaxDetours or Route.max points (the caller keeps today's route and the server decides).
-function Lead.around(points,list,ok)
+-- Beta 41 review: `ok(a, b)` is the dry and solid check (the client's sweep, Lead.Cast): a detour point it refuses goes
+-- to the other side, then Push studs further out. A point moved out of a circle is checked against its legs the same
+-- way. `raw` (optional): the route before Lead.fit; a leg that cannot be cleared is tried again through the raw points
+-- fit cut between its ends (a lamp beside a corner fit cut off) before it gives up.
+function Lead.around(points,list,ok,raw)
 	if type(points)~="table"or #points<2 then return nil end
 	if type(list)~="table"or #list==0 then return table.clone(points)end
 	local n=#points
 	local moved=table.clone(points)
 	for i=2,n-1 do
-		local p=moved[i]
-		for _=1,4 do
-			local hit=Lead.blocker(p,p,list,Lead.Body,false)
-			if not hit then break end
-			local x,z,r=circle(hit)
-			local away=Vector3.new(p.X-x,0,p.Z-z)
-			if away.Magnitude<1e-3 then away=Vector3.new(1,0,0)end
-			p=Vector3.new(x,p.Y,z)+away.Unit*(r+Lead.Body+Lead.Detour)
+		local start=moved[i]
+		local placed=nil
+		for _,extra in ipairs(Lead.Push)do
+			local p=start
+			for _=1,4 do
+				local hit=Lead.blocker(p,p,list,Lead.Body,false)
+				if not hit then break end
+				local x,z,r=circle(hit)
+				local away=Vector3.new(p.X-x,0,p.Z-z)
+				if away.Magnitude<1e-3 then away=Vector3.new(1,0,0)end
+				p=Vector3.new(x,p.Y,z)+away.Unit*(r+Lead.Body+Lead.Detour+extra)
+			end
+			local clear=Lead.blocker(p,p,list,Lead.Body,false)==nil
+			-- an untouched point is the pathfinder's own: never second-guessed; a moved one keeps its legs clear
+			if clear and(p==start or ok==nil or(ok(moved[i-1],p)and ok(p,points[i+1])))then placed=p;break end
 		end
-		if Lead.blocker(p,p,list,Lead.Body,false)then return nil end
-		moved[i]=p
+		if not placed then return nil end
+		moved[i]=placed
 	end
 	local out={moved[1]}
 	local added=0
@@ -221,18 +255,28 @@ function Lead.around(points,list,ok)
 			local away=closest-centre
 			local side=Vector3.new(-along.Z,0,along.X)
 			if away.Magnitude>1e-3 then side=if away:Dot(side)>=0 then side else -side end
-			local reach=r+Lead.Body+Lead.Detour
 			local y=a.Y+(b.Y-a.Y)*t
 			local chosen=nil
-			for _,s in ipairs({side,-side})do
-				local p=Vector3.new(x+s.X*reach,y,z+s.Z*reach)
-				local clear=Lead.blocker(p,p,list,Lead.Body,false)==nil
-				if clear and(ok==nil or(ok(a,p)and ok(p,b)))then chosen=p;break end
+			-- this side, the other side, then each a larger push (beta 41 review: a point in a wall is never sent)
+			for _,extra in ipairs(Lead.Push)do
+				local reach=r+Lead.Body+Lead.Detour+extra
+				for _,s in ipairs({side,-side})do
+					local p=Vector3.new(x+s.X*reach,y,z+s.Z*reach)
+					local clear=Lead.blocker(p,p,list,Lead.Body,false)==nil
+					if clear and(ok==nil or(ok(a,p)and ok(p,b)))then chosen=p;break end
+				end
+				if chosen then break end
 			end
-			if not chosen then return nil end
-			added+=1
-			if added>Lead.MaxDetours then return nil end
-			table.insert(queue,1,chosen)
+			if not chosen then
+				-- beta 41 review: the raw route's own corners between a and b (Lead.fit cut them) before giving up
+				local between=Lead.between(raw,a,b)
+				if not between then return nil end
+				for k=#between,1,-1 do table.insert(queue,1,between[k])end
+			else
+				added+=1
+				if added>Lead.MaxDetours then return nil end
+				table.insert(queue,1,chosen)
+			end
 		end
 	end
 	if #out>Lead.Route.max then return nil end
@@ -247,6 +291,21 @@ function Lead.around(points,list,ok)
 	end
 	if #spaced>Lead.Route.max then return nil end
 	return spaced
+end
+-- Pure (beta 41 review): the raw route's points strictly between a and b along it (the corners Lead.fit cut from the
+-- leg a-b), or nil when there are none (nothing to try).
+function Lead.between(raw,a,b)
+	if type(raw)~="table"or #raw<3 then return nil end
+	local fromAlong=Lead.progress(raw,a)
+	local toAlong=Lead.progress(raw,b)
+	if toAlong<=fromAlong then return nil end
+	local out={}
+	local walked=0
+	for i=1,#raw do
+		if i>1 then walked+=flat(raw[i-1],raw[i])end
+		if walked>fromAlong+.05 and walked<toAlong-.05 and flat(raw[i],a)>.05 and flat(raw[i],b)>.05 then table.insert(out,raw[i])end
+	end
+	return if #out>0 then out else nil
 end
 -- Pure (the server's check of the client's route). raw: the route the client sent (Vector3s from the pet to the nest's
 -- prompt). ctx: {pet (the pet's position now), nest (where the nest stands), ground(point) -> y or nil, clear(a, b) ->

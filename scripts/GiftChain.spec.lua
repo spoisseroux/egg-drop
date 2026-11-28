@@ -224,5 +224,35 @@ return function(client)
 		assert(Chain.next(Chain.facts(dash,{returned=false,teach=true}))=="dash","teach: the same session")
 	end)
 
+	-- Beta 41 code review.
+	test("beta 41 review: a Saved answer whose card is suppressed ends the step at once, never held to the stuck timeout",function()
+		local r=rig(snapshot({gifts={owed=true,granted={},ready="paint"}}))
+		assert(r.chain:shopCrank("paint")and r.chain:holds())
+		r.cranks[1].done("Saved",nil,true)
+		assert(not r.chain:holds()and r.chain.active==nil,"no reveal phase: the garden's prompts go on")
+		assert(r.chain.session.lastReveal==r.now and table.find(r.events,"GiftDone"),"done: the gap starts now")
+		-- a card that does show: held until it closes, as before
+		local c=rig(snapshot({gifts={owed=true,granted={},ready="paint"}}))
+		c.chain:shopCrank("paint");c.cranks[1].done("Saved")
+		assert(c.chain:holds()and c.chain.active.phase=="reveal")
+		c.chain:revealed();assert(not c.chain:holds())
+	end)
+	test("beta 41 review: an unseen gift replays once a session; then the shop opens as usual and no bubble asks again",function()
+		local u=rig(snapshot({gifts={owed=true,granted={paint=true},unseen={kind="paint",item="tide",id="u"}}}))
+		assert(u.chain:replayUnseen()and #u.replays==1)
+		u.chain:revealed()
+		-- the server never recorded it seen (giftSeen gave up): still unseen in the snapshot
+		assert(not u.chain:replayUnseen()and #u.replays==1,"the second shop open opens the shop")
+		u.run(10);assert(not u.shown and not u.chain:holds(),"no bubble for it again this session")
+		assert(not u.chain:replayUnseen(),"and never again this session")
+		-- another unseen gift: its own one replay
+		u.state=snapshot({gifts={owed=true,granted={paint=true,toy=true},unseen={kind="toy",item="ball",id="w"}}})
+		assert(u.chain:replayUnseen()and #u.replays==2)
+		-- the bubble's replay at the machine counts too
+		local b=rig(snapshot({gifts={owed=true,granted={paint=true},unseen={kind="paint",item="tide",id="u"}}}))
+		b.run(2);b.near=true;b.chain:tap();assert(#b.replays==1)
+		b.chain:revealed();assert(not b.chain:replayUnseen(),"then the shop opens")
+	end)
+
 	return {passed=#cases,cases=cases}
 end

@@ -2163,6 +2163,8 @@ roomView.transition.onSettled=function() if layout then layout();updateHud() end
 -- DECK-FEEL-BRIEF 5 (deckfeel): at the end of the close's Sink, under the opaque shade, the well forgets its balls, so a
 -- reopen always draws fresh. 1 step 4: the panels stagger up as the LCD content fades in.
 roomView.transition.onSunk=function()
+ -- beta 41 review: the deck has gone: every drawn key still held lets go (A and its lean)
+ pcall(function()clientUI.deck:releaseHolds()end)
  if clientUI.DeckFeel.switch()then clientUI.DeckFresh.forget(clientUI.fresh);clientUI.freshHide()end
 end
 roomView.transition.onLit=function()clientUI.deck.feel:stagger()end
@@ -4794,6 +4796,8 @@ board:GetAttributeChangedSignal("Mode"):Connect(function()
 	picker:close()
 	journal:close()
 	local mode = board:GetAttribute("Mode")
+	-- beta 41 review: back to the room, no drawn key stays held (a touch still down as the deck went)
+	if mode == "Room" then pcall(function() clientUI.deck:releaseHolds() end) end
 	if nurseryView then nurseryView:close("forced") end
     if clientUI.hueView then clientUI.hueView:close("forced")end
 	if clientUI.stats then clientUI.stats.close("forced")end
@@ -6118,6 +6122,21 @@ do
       segmentOk=function(a,b)
        local Route=require(script.ThingsTrail)
        return require(ReplicatedStorage.Shared.GardenWalkability).segmentAllowed(a,b,Route.wet())
+      end,
+      -- beta 41 review: and nothing solid on it (the server's own sweep, PetLead.Cast; characters and Terrain skipped,
+      -- pets are CanQuery off)
+      solidOk=function(a,b)
+       local Lead=require(ReplicatedStorage.Shared.PetLead)
+       local up=Vector3.new(0,Lead.Cast.height,0)
+       local d=b-a
+       if d.Magnitude<.05 then return true end
+       local skip={workspace.Terrain}
+       for _,other in ipairs(Players:GetPlayers())do if other.Character then table.insert(skip,other.Character)end end
+       local params=RaycastParams.new();params.RespectCanCollide=true;params.FilterType=Enum.RaycastFilterType.Exclude
+       params.FilterDescendantsInstances=skip
+       local okCast,hit=pcall(function()return workspace:Spherecast(a+up,Lead.Cast.radius,d,params)end)
+       if not okCast then return true end
+       return hit==nil or not Lead.castBlocks(hit.Normal.Y,hit.Instance.Parent~=nil and hit.Instance.Parent:FindFirstChildOfClass("Humanoid")~=nil)
       end}
     end)(),
     far=function(where)
@@ -6407,9 +6426,10 @@ do
      if packet.status=="Saved"and type(packet.gift)=="table"then
       -- the Hatch eggs screen (gift mode) closes before the egg comes out (its close never ends the gift's shot)
       if nurseryView:isOpen()then nurseryView:close("gift")end
-      -- ARCH-REVIEW-P2 2: a second ask answered AlreadyGranted never shows the card again
-      if Chain.showCard(packet,presented,Reveal.isOpen())then present(packet.gift)end
-      w.done("Saved")
+      -- ARCH-REVIEW-P2 2: a second ask answered AlreadyGranted never shows the card again; beta 41 review: then the
+      -- step ends at once (w.done's third value), never a reveal phase holding the garden's prompts
+      if Chain.showCard(packet,presented,Reveal.isOpen())then present(packet.gift);w.done("Saved")
+      else w.done("Saved",nil,true)end
      else
       local machine=clientUI.eggMachine
       if machine then pcall(machine.refuse,machine)end
@@ -6458,8 +6478,8 @@ do
      end,
      crank=function(kind,chainDone)
       -- the shop's latch lets go with the chain's answer (EggHatchView gift mode)
-      local function done(status,reason)
-       chainDone(status,reason)
+      local function done(status,reason,suppressed)
+       chainDone(status,reason,suppressed)
        local v=shopDone;shopDone=nil
        if v then pcall(v,status)end
       end

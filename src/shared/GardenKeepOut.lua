@@ -141,6 +141,54 @@ function KeepOut.leadRegions(on,graded)
 	end
 	return out
 end
+-- Beta 41 review: KeepOut.leadRegions built once per switch state. The key is the tree grades and every prop and plant
+-- feature's on(feature) (the understory's `scene` among them), so a switch that changes rebuilds the list; the same
+-- state answers the same frozen list.
+local featureCache={}
+local leadRegionCache={key=nil,list=nil}
+local function leadFeatures(graded)
+	local key=if graded then "graded"else "today"
+	if featureCache[key]then return featureCache[key]end
+	local out,seen={},{}
+	for _,list in ipairs({KeepOut.all(graded),KeepOut.plants()})do
+		for _,entry in ipairs(list)do
+			local f=entry.feature
+			if f~=nil and not seen[f]then seen[f]=true;table.insert(out,f)end
+		end
+	end
+	featureCache[key]=table.freeze(out)
+	return featureCache[key]
+end
+function KeepOut.leadRegionsCached(on,graded)
+	if graded==nil then
+		local okGrades,Grades=pcall(function()return require(Shared.TreeGrades)end)
+		graded=okGrades and Grades.on()or false
+	end
+	local parts={if graded then "graded"else "today"}
+	for _,f in ipairs(leadFeatures(graded))do table.insert(parts,f.."="..tostring(on==nil or on(f)==true))end
+	local key=table.concat(parts,",")
+	if leadRegionCache.key~=key then
+		leadRegionCache.key,leadRegionCache.list=key,table.freeze(KeepOut.leadRegions(on,graded))
+	end
+	return leadRegionCache.list
+end
+-- Pure (beta 41 review): `regions` less every circle record one of `points` stands in (flat distance under R). The
+-- lead's walks leave a plant the pet stands in and end at a goal beside one, as Lead.clean allows. No points: the same
+-- list.
+function KeepOut.exempt(regions,points)
+	if type(points)~="table"or #points==0 then return regions end
+	local out={}
+	for _,c in ipairs(regions)do
+		local inside=false
+		if c.KeepOut and type(c.X)=="number"and type(c.Z)=="number"and type(c.R)=="number"then
+			for _,p in ipairs(points)do
+				if typeof(p)=="Vector3"and Vector2.new(p.X-c.X,p.Z-c.Z).Magnitude<c.R then inside=true;break end
+			end
+		end
+		if not inside then table.insert(out,c)end
+	end
+	return out
+end
 
 -- Pure geometry (XZ) ----------------------------------------------------------------------------------------------
 -- The distance from (px, pz) to the segment a-b.

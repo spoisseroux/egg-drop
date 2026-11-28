@@ -120,6 +120,26 @@ Feel.Hold=table.freeze({
  stick=.25,                      -- the stick past .25
  haptic=table.freeze({strength=.2,ms=18}), -- A on touch: an 18 ms light tick (none for the d-pad)
 })
+-- Beta 41 review: the drawn keys' touch holds, by the touch that pressed them. A touch that ends anywhere (off the key:
+-- UserInputService.InputEnded) lets its key go, and the deck closing lets every one go. Pure bookkeeping.
+local Touches={};Touches.__index=Touches
+function Feel.touches()return setmetatable({held={}},Touches)end
+function Touches:down(input,id)if input~=nil and id~=nil then self.held[input]=id end end
+-- The key this touch held (and now lets go), or nil.
+function Touches:up(input)
+ local id=self.held[input]
+ self.held[input]=nil
+ return id
+end
+-- Every key still held (each once), and none held after.
+function Touches:clear()
+ local out,seen={},{}
+ for _,id in pairs(self.held)do if not seen[id]then seen[id]=true;table.insert(out,id)end end
+ table.clear(self.held)
+ table.sort(out)
+ return out
+end
+function Touches:holding(id)for _,v in pairs(self.held)do if v==id then return true end end;return false end
 -- When a press that went down at `downAt` may show as released (never before the minimum hold).
 function Feel.releaseAt(downAt,now)return math.max(now,(downAt or now)+Feel.Hold.minHold)end
 -- Touch drag direction. `state` keeps {dir, movedAt} between frames; `dx` is this frame's pointer move (px).
