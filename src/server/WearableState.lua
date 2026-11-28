@@ -11,7 +11,7 @@ local Catalog=require(Shared.WearableCatalog)
 local Eggs=require(Shared.EggCatalog)
 local Gate=require(Shared.LevelGate)
 local Stats=require(script.Parent.StatState)
-local State={Limit=Catalog.OwnedLimit,KeyLimit=24}
+local State={Limit=Catalog.OwnedLimit,KeyLimit=24,ClosetReason="FromOutfitEgg"}
 -- Weekly shelf (slice C): a purchase made in shelf week `week` pays the shelf price when the
 -- item is on that week's shelf, otherwise the catalogue price. The module is Lane K's; a
 -- build without it (or with FeatureFlags.WeeklyShelf off) simply always pays full price.
@@ -86,7 +86,10 @@ function State.price(petId,itemId,week)
 	local item=Catalog.item(petId,itemId)
 	return if item then expectedPrice("wearable",itemId,item.price,week)else nil
 end
-function State.check(state,petId,itemId,price,week,gates,listWeek)
+-- `closet` (DailyRack "rack", frozen in the purchase when it was asked): clothes come from the Outfit Egg, so only a
+-- level-gated row or the "This week" pick sells (WearableCatalog.closetSells); anything else is FromOutfitEgg, no charge.
+-- An item already owned stays owned and wearable (equipResult never reads it). nil (an older pending purchase) = off.
+function State.check(state,petId,itemId,price,week,gates,listWeek,closet)
 	if not Eggs.isOwned(state.inventoryMask,petId)then return false,"Unowned"end
 	local item=if type(listWeek)=="number"then Catalog.forPet(petId,listWeek).byId[itemId]else Catalog.item(petId,itemId)
 	-- A weekly row is only ever sold by its own week (never through the clock's list).
@@ -98,6 +101,7 @@ function State.check(state,petId,itemId,price,week,gates,listWeek)
 		if item and item.gate==nil then item=nil end
 	end
 	if not item or item.egg==true then return false,"NotForSale"end
+	if closet==true and not Catalog.closetSells(item)then return false,State.ClosetReason end
 	local expected=expectedPrice("wearable",itemId,item.price,week)
 	if price~=nil and price~=expected then return false,"PriceChanged"end
 	if State.owns(state,petId,itemId)then return false,"AlreadyOwned"end
@@ -107,10 +111,10 @@ function State.check(state,petId,itemId,price,week,gates,listWeek)
 	return true,nil,item,expected
 end
 
--- candidate = { petId, itemId, price, operationId, equip, week, listWeek }
+-- candidate = { petId, itemId, price, operationId, equip, week, listWeek, closet }
 function State.applyBuy(state,candidate,gates)
 	if type(candidate)~="table"or not id(candidate.petId)or not id(candidate.itemId)then return false,"InvalidWearable"end
-	local ok,why,item,expected=State.check(state,candidate.petId,candidate.itemId,candidate.price,candidate.week,gates,candidate.listWeek)
+	local ok,why,item,expected=State.check(state,candidate.petId,candidate.itemId,candidate.price,candidate.week,gates,candidate.listWeek,candidate.closet)
 	if not ok then return false,why end
 	local row=State.row(state,candidate.petId)
 	table.insert(row.owned,item.id)

@@ -27,11 +27,33 @@ local ThisWeek=require(Shared.ThisWeek)
 -- Levels matter (S2): level-gated recolours (the chip, the bar and the way to the training).
 local Levels=require(Shared.Levels)
 local Locked=require(script.Parent.LockedItem)
+-- The daily rack, lane C (ROTATION-BRIEF 1 "Wardrobe with the switch on" and 2 "Colour selector"; ctx.closet, the
+-- DailyRack "rack" switch): the closet (one card per base item, "From the Outfit Egg" on what the pet does not own,
+-- only level-gated rows and the This week pick for sale) and the swatch row (owned colours, one equip at a time).
+-- Off (ctx.closet not true): the Wardrobe exactly as before.
+local Swatches=require(script.Parent.WardrobeSwatches)
+local Finish=require(script.Parent.WearableFinish)
 local Shop={}
 Shop.__index=Shop
 Shop.Size=Vector2.new(848,608)
 Shop.ConfirmSeconds=3
 local TierChip={common={"COMMON",Color3.fromHex("#9BE3A8")},rare={"RARE",Color3.fromHex("#8CC8FF")},showcase={"SHOWCASE",Color3.fromHex("#E6B3FF")}}
+-- Outfit Egg rows carry a rarity (ROTATION-BRIEF 3 pills: Common grey, Uncommon green, Rare blue, Epic purple, Sparkle gold).
+local RarityChip={common={"COMMON",Color3.fromHex("#D3D8DF")},uncommon={"UNCOMMON",Color3.fromHex("#9BE3A8")},rare={"RARE",Color3.fromHex("#8CC8FF")},
+ epic={"EPIC",Color3.fromHex("#E6B3FF")},legendary={"SPARKLE",Color3.fromHex("#FFD86B")}}
+Shop.RarityChip=RarityChip
+-- The closet's words: UICopy keys (lane B owns UICopy; these fall back to the English until the keys land).
+Shop.ClosetCopy=table.freeze({
+ fromEgg={"rack.closet.fromEgg","From the Outfit Egg"},
+ go={"rack.closet.go","Hatch an Outfit Egg"},
+ tile={"rack.closet.tile","Outfit Egg"},
+ more={"rack.closet.more","More colours come from the Outfit Egg."},
+ promise={"rack.closet.promise","Clothes come from the Outfit Egg."},
+ reason={"rack.closet.reason","Clothes come from the Outfit Egg now."}})
+function Shop.closetCopy(name)
+ local row=Shop.ClosetCopy[name];if not row then return ""end
+ return if UICopy.has(row[1])then UICopy.get(row[1])else row[2]
+end
 local SlotNote={Hat="Hats sit on the crown",Shirt="Sleeves move with the arms",Neck="Draws over a shirt",EarPiercing="A pair, one for each ear",
  Eyes="Replaces the eyes",Mouth="Replaces the neutral smile",Tail="Replaces the tail"}
 
@@ -43,14 +65,15 @@ Shop.NoneId="none"
 -- with no items for this pet has no cards at all (the empty line shows instead).
 -- `owned` (the pet's owned ids): a gated item it owns stays listed while gates are off.
 -- `tab` (optional): the "This week" tab holds its one pick and no None card.
-function Shop.tileList(petId,slot,owned,tab)
+-- `closet` (the rack switch): the closet's cards (WearableCatalog.closetTab): one per base item, plus unowned gated rows.
+function Shop.tileList(petId,slot,owned,tab,closet)
  if not petId then return {}end -- before the first open there is no pet yet (slice E)
  if type(tab)=="table"and tab.thisWeek then
   -- The tab already decided the pick is listed (Shop.thisWeekTab); status decides what it sells.
   local item=Catalog.forPet(petId,math.huge).byId[tab.thisWeek]
   return if item then {item}else {}
  end
- local items=Catalog.shopTab(petId,slot,owned)
+ local items=if closet==true then Catalog.closetTab(petId,slot,owned)else Catalog.shopTab(petId,slot,owned)
  if #items==0 then return {}end
  local list={{id=Shop.NoneId,none=true,slot=slot,name=UICopy.get("r4.wardrobe.none")}}
  for _,item in ipairs(items)do table.insert(list,item)end
@@ -72,7 +95,8 @@ function Shop.item(petId,id)
  local item=Catalog.item(petId,id)
  if item then return item end
  local any=Catalog.forPet(petId,math.huge).byId[id]
- return if any and(any.gate~=nil or any.weekly==true)then any else nil
+ -- An Outfit Egg row (never sold) resolves too, so an owned one is seen, worn and taken off.
+ return if any and(any.gate~=nil or any.weekly==true or any.egg==true)then any else nil
 end
 -- Pure: the None card's pane. Current when nothing is worn in the slot.
 function Shop.noneStatus(petId,slot,ctx)
@@ -89,9 +113,14 @@ function Shop.status(petId,itemId,ctx)
  if not item then return {kind="invalid",text="",button=nil}end
  local row=ctx.row or {owned={},equipped={}}
  local owned=table.find(row.owned or {},itemId)~=nil
+ -- The closet: what the pet does not own and the Wardrobe no longer sells comes from the Outfit Egg (the button opens it).
+ if not owned and ctx.closet==true and not Catalog.closetSells(item)then
+  return {kind="egg",text=Shop.closetCopy("fromEgg"),button=Shop.closetCopy("go"),enabled=true}
+ end
  if not owned and not Shop.forSale(petId,itemId,ctx)then return {kind="invalid",text="",button=nil}end
- if owned and Catalog.equippedIn(petId,row.equipped,item.slot)==itemId then return {kind="equipped",text="",button=UICopy.get("r4.equipped"),enabled=false}end
- if owned then return {kind="owned",text="",button="Wear",enabled=true}end
+ local more=if ctx.closet==true then Shop.closetCopy("more")else ""
+ if owned and Catalog.equippedIn(petId,row.equipped,item.slot)==itemId then return {kind="equipped",text=more,button=UICopy.get("r4.equipped"),enabled=false}end
+ if owned then return {kind="owned",text=more,button="Wear",enabled=true}end
  local wallet=ctx.wallet or 0
  -- Levels matter (S2): below the level the pane shows the way there; the card shows the chip.
  local gate=Locked.info(item,ctx.levels)
@@ -120,6 +149,7 @@ function Shop.tileStatus(petId,itemId,ctx,slot)
  if s.kind=="buy"then return Deal.priceText(s.price,s.full),"stars"end
  if s.kind=="short"then return Deal.priceText(s.price,s.full),"dim"end
  if s.kind=="locked"then return "","dim"end -- the chip stands where the price would
+ if s.kind=="egg"then return Shop.closetCopy("tile"),"soft"end
  return "","dim"
 end
 -- This week: the pane line for the pick, longest first ("This week's pick. Back every 8 weeks.", then the short one).
@@ -145,10 +175,13 @@ end
 -- Slice B: only slot tabs with at least one item for this pet are shown (Ankle stays
 -- hidden until an anklet exists). A pet with no wearables at all keeps every tab, so
 -- the screen still has a tab bar and the empty line.
-function Shop.tabsFor(petId,owned,week)
+function Shop.tabsFor(petId,owned,week,closet)
  local list={}
  if petId then
-  for _,tab in ipairs(Catalog.Tabs)do if #Catalog.shopTab(petId,tab.slot,owned)>0 then table.insert(list,tab)end end
+  for _,tab in ipairs(Catalog.Tabs)do
+   local cards=if closet==true then Catalog.closetTab(petId,tab.slot,owned)else Catalog.shopTab(petId,tab.slot,owned)
+   if #cards>0 then table.insert(list,tab)end
+  end
   -- This week: its own tab, last in line so the Wardrobe never opens on a sale item (only while the switch is on and
   -- this pet's rig sells the pick).
   local pick=Shop.thisWeekTab(petId,week)
@@ -305,7 +338,14 @@ function Shop:items()
  if not self.petId then return {}end
  local tab=self:tabInfo()
  if tab.thisWeek then return Shop.tileList(self.petId,tab.slot,self:owned(),tab)end
+ if self:closet()then return Catalog.closetTab(self.petId,tab.slot,self:owned())end
  return Catalog.shopTab(self.petId,tab.slot,self:owned())
+end
+function Shop:closet()return self.ctx.closet==true end
+-- A closet card stands for its base item's family: its face is the colour worn (else the base, else the first owned).
+function Shop:faceOf(tile)
+ if not tile or not tile.family then return tile and tile.id end
+ return Catalog.closetFace(self.petId,tile.family,self:owned(),self.ctx.row and self.ctx.row.equipped)
 end
 function Shop:slot()return self:tabInfo().slot end
 -- The pane status of a card (None included).
@@ -349,6 +389,63 @@ function Shop:buildPane(pane,pw,ph,compact)
  local action,state=Kit.button(pane,"Action",{variant="primary",text="Wear",glyph="A",size=Vector2.new(pw-pad*2,actionH),textSize=if compact then 16 else nil,selectable=false})
  action.Position=UDim2.fromOffset(pad,ph-pad-actionH);self.action,self.actionState=action,state
  action.Activated:Connect(function()self:act()end)
+ -- The colour selector (closet only): a row of round swatches along the foot of the preview well, scrolling sideways
+ -- when the owned colours do not fit. Built empty; paintSwatches fills it for the focused card.
+ local rowH=Swatches.Size+Swatches.Ring*2+4
+ local strip=Kit.node("ScrollingFrame",well,{Name="Swatches",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.new(0,6,1,-rowH-6),
+  Size=UDim2.new(1,-12,0,rowH),CanvasSize=UDim2.fromOffset(0,0),ScrollBarThickness=0,ZIndex=well.ZIndex+4,Selectable=false,
+  ScrollingDirection=Enum.ScrollingDirection.X,Visible=false})
+ self.swatchStrip,self.swatchKey,self.swatchButtons=strip,nil,{}
+end
+-- The swatch row for the focused card: visible in the closet when the card's base has two or more owned colours.
+-- A ring marks the colour worn; a sparkle colour's swatch moves (WearableFinish) unless motion is reduced.
+function Shop:paintSwatches(item)
+ local strip=self.swatchStrip;if not strip then return end
+ local list=if self:closet()and item and self.petId then Catalog.swatchRow(self.petId,item.id,self:owned())else nil
+ strip.Visible=list~=nil
+ self.root:SetAttribute("Swatches",if list then #list else 0)
+ if not list then self.swatchButtons={};self.swatchKey=nil;for _,child in ipairs(strip:GetChildren())do child:Destroy()end;return end
+ local ids={};for _,row in ipairs(list)do table.insert(ids,row.id)end
+ local key=table.concat(ids,",")
+ local width=math.max(1,strip.AbsoluteSize.X>0 and strip.AbsoluteSize.X or 160)
+ if key~=self.swatchKey then
+  self.swatchKey=key;self.swatchButtons={}
+  for _,child in ipairs(strip:GetChildren())do child:Destroy()end
+  local xs,canvas=Swatches.layout(#list,width)
+  strip.CanvasSize=UDim2.fromOffset(canvas,0)
+  for index,row in ipairs(list)do
+   local size=Swatches.Size
+   local b=Instance.new("TextButton");b.Name="Swatch_"..row.id;b.Text="";b.AutoButtonColor=false;b.BorderSizePixel=0
+   b.Size=UDim2.fromOffset(size,size);b.Position=UDim2.fromOffset(xs[index],Swatches.Ring+2);b.ZIndex=strip.ZIndex+1;b.Selectable=false
+   b.BackgroundColor3=Finish.still(row);b:SetAttribute("ItemId",row.id)
+   Kit.node("UICorner",b,{CornerRadius=UDim.new(.5,0)})
+   Kit.node("UIStroke",b,{Name="Edge",Thickness=1.5,Color=Kit.Sticker.cream,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+   local ring=Kit.node("Frame",b,{Name="Worn",BackgroundTransparency=1,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),
+    Size=UDim2.new(1,Swatches.Ring*2+2,1,Swatches.Ring*2+2),ZIndex=b.ZIndex+1,Visible=false})
+   Kit.node("UICorner",ring,{CornerRadius=UDim.new(.5,0)})
+   Kit.node("UIStroke",ring,{Thickness=Swatches.Ring,Color=Kit.color("ink"),ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+   b.Parent=strip
+   b.Activated:Connect(function()self:wearSwatch(row.id)end)
+   self.swatchButtons[index]={button=b,ring=ring,row=row}
+  end
+ end
+ local worn=Catalog.equippedIn(self.petId,self.ctx.row.equipped,item.slot)
+ for _,entry in ipairs(self.swatchButtons)do
+  local on=entry.row.id==worn
+  entry.ring.Visible=on
+  entry.button:SetAttribute("AccessibleLabel",Swatches.label(entry.row,on))
+ end
+end
+-- Sparkle colours' swatches move at the finish stepper's pace (called from the open clock).
+function Shop:stepSwatches(now)
+ if not self.swatchStrip or not self.swatchStrip.Visible then return end
+ if now-(self.swatchClock or 0)<1/Finish.Hz then return end
+ self.swatchClock=now
+ local reduced=Finish.reducedNow()
+ for _,entry in ipairs(self.swatchButtons or {})do
+  if Finish.moves(entry.row,reduced)then entry.button.BackgroundColor3=Finish.color(entry.row,now,false)
+  elseif Finish.kind(entry.row)then entry.button.BackgroundColor3=Finish.still(entry.row)end
+ end
 end
 
 function Shop:buildTiles(parent,x0,y0,tileW,tileH,gap,cols)
@@ -356,8 +453,12 @@ function Shop:buildTiles(parent,x0,y0,tileW,tileH,gap,cols)
  if self.tileRoot then self.tileRoot:Destroy()end
  local holder=Kit.frame(parent,"Tiles",nil,UDim2.new(),UDim2.fromScale(1,1));holder.ZIndex=parent.ZIndex+1;self.tileRoot=holder
  self.tiles={}
- for index,item in ipairs(Shop.tileList(self.petId,self:slot(),self:owned(),self:tabInfo()))do
+ local closet=self:closet()and not self:tabInfo().thisWeek
+ for index,item in ipairs(Shop.tileList(self.petId,self:slot(),self:owned(),self:tabInfo(),closet))do
   local col,row=(index-1)%cols,math.floor((index-1)/cols)
+  -- The closet: a base item's card stands for its family and shows its face (the colour worn, else one owned).
+  local family=if closet and not item.none and not item.variant then item.id else nil
+  if family then item=Shop.item(self.petId,Catalog.closetFace(self.petId,family,self:owned(),self.ctx.row.equipped))or item end
   -- T2: pressable tile with a lip (4 px in the 12 px desktop gap, 3 px in the 8 px phone gap).
   local tile,tileState=Kit.tile(holder,"Tile_"..item.id,{selectable=false,radius=12,compact=gap<12,
    position=UDim2.fromOffset(x0+col*(tileW+gap),y0+row*(tileH+gap)),size=UDim2.fromOffset(tileW,tileH)})
@@ -365,6 +466,7 @@ function Shop:buildTiles(parent,x0,y0,tileW,tileH,gap,cols)
   tile:SetAttribute("AccessibleLabel",item.name);tile:SetAttribute("ItemId",item.id)
   -- Swatch: the item's own colour (or the pet's secondary for tinted items).
   local side=tileH-20
+  local variantDot=nil
   local _,swatch=Kit.previewWell(tile,"Swatch",UDim2.fromOffset(10,10),UDim2.fromOffset(side,side),10);swatch.BackgroundTransparency=0
   if item.none then
    Kit.paint(swatch,"BackgroundColor3","well")
@@ -374,20 +476,23 @@ function Shop:buildTiles(parent,x0,y0,tileW,tileH,gap,cols)
    swatch.BackgroundColor3=variant or(if item.primary then Color3.fromHex(item.primary)else Kit.Color.soft)
    local tier=TierChip[item.tier]or TierChip.common
    local dot=Kit.frame(swatch,"TierDot",nil,UDim2.new(1,-12,0,4),UDim2.fromOffset(8,8),999);dot.BackgroundTransparency=0;dot.BackgroundColor3=tier[2];dot.ZIndex=swatch.ZIndex+3
-   -- Slice B: a recolour carries its colour as a dot over the card preview (cream ring).
-   if variant then
+   -- Slice B: a recolour carries its colour as a dot over the card preview (cream ring). A closet card always has one
+   -- (hidden on the base colour): its face changes with the colour worn.
+   if variant or family then
     local chipSize=if side>=60 then 14 else 12
     local colour=Kit.frame(swatch,"VariantDot",nil,UDim2.new(1,-chipSize-3,1,-chipSize-3),UDim2.fromOffset(chipSize,chipSize),999)
-    colour.BackgroundTransparency=0;colour.BackgroundColor3=variant;colour.ZIndex=swatch.ZIndex+3
+    colour.BackgroundTransparency=0;colour.BackgroundColor3=variant or Color3.new(1,1,1);colour.ZIndex=swatch.ZIndex+3;colour.Visible=variant~=nil
     Kit.node("UIStroke",colour,{Name="VariantRing",Thickness=1.5,Color=Kit.Sticker.cream,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
-    tile:SetAttribute("Variant",true);tile:SetAttribute("VariantColor",variant:ToHex())
+    tile:SetAttribute("Variant",variant~=nil);tile:SetAttribute("VariantColor",if variant then variant:ToHex()else nil)
+    variantDot=colour
    end
   end
   local tx=10+side+12
   local nameLabel=txt(tile,"Name",item.name,"text",tx,tileH/2-20,tileW-tx-8,20,{TextSize=14,TextTruncate=Enum.TextTruncate.AtEnd})
   local status=txt(tile,"Counter","","soft",tx,tileH/2+2,tileW-tx-8,18,{TextSize=13})
   self.tiles[index]={id=item.id,button=tile,status=status,name=nameLabel,stroke=stroke,swatch=swatch,role=item.role,slot=item.slot,primary=item.primary,none=item.none,
-   variantColor=Shop.variantColor(item)}
+   variantColor=Shop.variantColor(item),family=family,dot=variantDot}
+  if family then tile:SetAttribute("Family",family)end
   -- Levels matter (S2): the requirement chip where the price stands (hidden while locked) and the
   -- small lock, made only for a gated item while gates are on.
   if Locked.on()and item.gate~=nil then
@@ -439,7 +544,8 @@ function Shop:build(view)
  -- Slice B: the tabs this pet has items for; the front tab stays on its slot when it can.
  local frontId=self.tabList and self.tabList[self.tab]and self.tabList[self.tab].id
  self.levelsKey=Levels.key()
- self.tabList=Shop.tabsFor(self.petId,self:owned(),self.ctx.thisWeek);self.tabKey=Shop.tabKey(self.tabList)
+ self.closetKey=self:closet()
+ self.tabList=Shop.tabsFor(self.petId,self:owned(),self.ctx.thisWeek,self:closet());self.tabKey=Shop.tabKey(self.tabList)
  self.tab=1;for i,tab in ipairs(self.tabList)do if tab.id==frontId then self.tab=i end end
  local labels={};for _,tab in ipairs(self.tabList)do table.insert(labels,Shop.tabLabel(tab))end
  if phone then
@@ -471,7 +577,7 @@ function Shop:build(view)
   self.list=list
   -- QA v2 R2.5: footer chips per device (R2's HintGlyphs), explained once (HintLegend).
   local footer=Kit.frame(content,"Footer",nil,UDim2.fromOffset(24,566),UDim2.fromOffset(800,24))
-  local promise=txt(footer,"Small","Fixed prices. No random items.","dim",500,0,300,24,{Name="Promise",TextXAlignment=Enum.TextXAlignment.Right})
+  local promise=txt(footer,"Small",if self:closet()then Shop.closetCopy("promise")else "Fixed prices. No random items.","dim",500,0,300,24,{Name="Promise",TextXAlignment=Enum.TextXAlignment.Right})
   local legend=HintLegend.attach(footer,800,"wardrobe",{{"browse",UICopy.get("input.action.browse")},{"tab",UICopy.get("r4.wardrobe.slot")},
    {"confirm",UICopy.get("r4.wardrobe.buyOrWear")},{"back",UICopy.get("input.action.back")}})
   self.legend=legend
@@ -556,13 +662,62 @@ function Shop.replayEquips(petId,confirmed,equips)
  for _,order in ipairs(equips or {})do if order.petId==petId then result=Shop.applyEquip(petId,result,order.itemId,order.wear,order.slot)end end
  return result
 end
+-- Every equip not answered yet, oldest first: those sent, then the swatch row's queued tap (last tap wins).
+function Shop:openEquips()
+ local list=table.clone(self.equips or {})
+ local queued=self.swatchQueue and self.swatchQueue.queued
+ if queued then table.insert(list,queued)end
+ return list
+end
+-- Pure: would wearing `order` change the confirmed look? (A queued tap that changes nothing is never sent.)
+function Shop.changes(petId,confirmed,order)
+ local after=Shop.applyEquip(petId,confirmed,order.itemId,order.wear,order.slot)
+ for k,v in pairs(after)do if(confirmed or {})[k]~=v then return true end end
+ for k,v in pairs(confirmed or {})do if after[k]~=v then return true end end
+ return false
+end
+-- The closet's equips (a swatch, the Wear button, the None card): one in flight, the last tap waiting behind it.
+function Shop:queueEquip(itemId,wear,slot)
+ if not self.petId or(self.pending and self.pending.action~="wearableEquip")then return false end
+ self.equips=self.equips or {}
+ self.swatchQueue=self.swatchQueue or Swatches.new()
+ if #self.equips==0 and not self.swatchQueue:busy()then self.confirmed=table.clone(self.ctx.row.equipped or {})end
+ local order={id=game:GetService("HttpService"):GenerateGUID(false),action="wearableEquip",petId=self.petId,slot=slot,itemId=itemId,wear=wear}
+ local send=self.swatchQueue:tap(order)
+ if send then
+  self.pending=send;table.insert(self.equips,send)
+  if self.callbacks.equip then self.callbacks.equip(send)end
+ end
+ self.ctx.row={owned=self.ctx.row.owned,equipped=Shop.replayEquips(self.petId,self.confirmed,self:openEquips())}
+ self.errorId,self.errorText=nil,nil
+ require(script.Parent.UIClick).play(if wear then "equip"else "unequip")
+ self:refresh();return true
+end
+-- A swatch tap: wear that owned colour.
+function Shop:wearSwatch(itemId)
+ local item=self.petId and Shop.item(self.petId,itemId)
+ if not item or not table.find(self.ctx.row.owned or {},itemId)then return false end
+ if self.legend then self.legend.dismiss()end
+ if Catalog.equippedIn(self.petId,self.ctx.row.equipped,item.slot)==itemId then return false end
+ return self:queueEquip(itemId,itemId,item.slot)
+end
+-- Gamepad X / keyboard C: the next owned colour of the focused card (wraps).
+function Shop:cycleSwatch(delta)
+ local id=self:focusedId();local item=id and id~=Shop.NoneId and Shop.item(self.petId,id)
+ local list=item and self:closet()and Catalog.swatchRow(self.petId,item.id,self:owned())
+ if not list then return false end
+ local at=1;for i,row in ipairs(list)do if row.id==item.id then at=i end end
+ return self:wearSwatch(list[(at-1+(delta or 1))%#list+1].id)
+end
 function Shop:setContext(ctx)
  if ctx.wallet then self.ctx.wallet=ctx.wallet end
  if ctx.row then
   -- The server's word; an optimistic equip in flight stays on until its own result says otherwise.
   self.confirmed=table.clone(ctx.row.equipped or {})
-  self.ctx.row={owned=ctx.row.owned,equipped=Shop.replayEquips(self.petId,self.confirmed,self.equips)}
+  self.ctx.row={owned=ctx.row.owned,equipped=Shop.replayEquips(self.petId,self.confirmed,self:openEquips())}
  end
+ -- The closet (DailyRack "rack"): nil keeps what the shop had.
+ if ctx.closet~=nil then self.ctx.closet=ctx.closet==true end
  if ctx.stages then self.ctx.stages=ctx.stages end
  -- Levels matter: the pets' levels (the owner snapshot's) for the requirement chips.
  self.ctx.levels=if Locked.on()then ctx.levels or Locked.levels()else nil
@@ -574,7 +729,7 @@ function Shop:setContext(ctx)
  else self.ctx.thisWeek=Deal.thisWeek()or false end
  if self.wallet then self.wallet.set(self.ctx.wallet)end
  -- The runtime switch flipped while the shop is open: list, chips and tabs again.
- if self.visible and self.levelsKey~=Levels.key()then self:build(self.view);self:relayout();return end
+ if self.visible and(self.levelsKey~=Levels.key()or self.closetKey~=self:closet())then self:build(self.view);self:relayout();return end
  if self.visible then self:refresh()end
 end
 
@@ -698,8 +853,23 @@ function Shop:pumpPreviews()
   end
  end
 end
+-- A closet card's face follows the colour worn (a swatch tap, a refusal rolled back): name, colour dot and preview.
+function Shop:repaintFace(tile)
+ if not tile.family then return end
+ local face=self:faceOf(tile)
+ if face==tile.id then return end
+ local item=Shop.item(self.petId,face);if not item then return end
+ tile.id=face;tile.variantColor=Shop.variantColor(item)
+ tile.name.Text=item.name
+ tile.button:SetAttribute("AccessibleLabel",item.name);tile.button:SetAttribute("ItemId",item.id)
+ tile.button:SetAttribute("Variant",tile.variantColor~=nil);tile.button:SetAttribute("VariantColor",if tile.variantColor then tile.variantColor:ToHex()else nil)
+ if tile.dot then tile.dot.Visible=tile.variantColor~=nil;if tile.variantColor then tile.dot.BackgroundColor3=tile.variantColor end end
+ self:detachPreview(tile)
+ tile.swatch.BackgroundColor3=self:swatchColor(tile)
+end
 function Shop:refresh()
  if self.emptyLine then self.emptyLine.Visible=Shop.ownsNothing(self.ctx.row)end
+ for _,tile in ipairs(self.tiles or {})do self:repaintFace(tile)end
  -- Tinted items show this pet's own palette colour (its secondary, face...), not grey.
  local palette=Palette.resolve(self.petId,self.callbacks.appearance and self.callbacks.appearance(self.petId)or nil)
  for index,tile in ipairs(self.tiles)do
@@ -766,6 +936,7 @@ function Shop:paintPane()
   self:paintLock(nil)
   if self.deal then self.deal.set(false)end
   if self.weekChip then self.weekChip.root.Visible=false end
+  self:paintSwatches(nil)
   if self.visible and self.petId then self:paintPreview()end;return
  end
  local item=Shop.item(self.petId,id)
@@ -774,9 +945,13 @@ function Shop:paintPane()
   self.note.Text=UICopy.get("r4.wardrobe.noneNote")
  else
   self.tier.root.Visible=true;self.name.Text=item.name
-  local tier=TierChip[item.tier]or TierChip.common;self.tier.set(tier[1],"sticker",tier[2]) -- T6: tier sticker, ink on the tier colour
+  local tier=TierChip[item.tier]or TierChip.common
+  -- An Outfit Egg row shows its rarity instead (the shop's pills).
+  if item.egg==true and RarityChip[item.rarity]then tier=RarityChip[item.rarity]end
+  self.tier.set(tier[1],"sticker",tier[2]) -- T6: tier sticker, ink on the tier colour
   self.note.Text=Shop.note(self.petId,id,self.ctx.stages)
  end
+ self:paintSwatches(if id~=Shop.NoneId then item else nil)
  local status=self:statusOf(id)
  if self.deal then self.deal.set(status.full~=nil,self.dealWidth)end
  -- This week: the chip on the pick in every state (bought or not) while it is this week's.
@@ -795,7 +970,7 @@ function Shop:paintPane()
  local gate=if status.kind=="locked"then status.gate else nil
  self:paintLock(gate)
  if gate and not(self.errorId==id and self.errorText)then Kit.fitText(self.status,{gate.line,gate.needs})end
- local tone=if status.kind=="equipped"then "accent"elseif status.kind=="short"or(self.errorId==id and self.errorText)then(if self.view then "dangerText"else "danger")else "soft"
+ local tone=if status.kind=="equipped"and status.text==""then "accent"elseif status.kind=="short"or(self.errorId==id and self.errorText)then(if self.view then "dangerText"else "danger")else "soft"
  Kit.paint(self.status,"TextColor3",function()return colorOf(tone,self.status,"TextColor3")end)
  self.action.Visible=status.button~=nil
  if status.button then
@@ -842,7 +1017,7 @@ function Shop:showItem(itemId)
  for index,tab in ipairs(self.tabList)do
   if tab.slot==item.slot and(tab.thisWeek==nil or tab.thisWeek==itemId)then
    if index~=self.tab and self:setTab(index)==false then return false end
-   for i,tile in ipairs(self.tiles)do if tile.id==itemId then self:focus(i,true);return true end end
+   for i,tile in ipairs(self.tiles)do if tile.id==itemId or(tile.family~=nil and tile.family==(item.base or item.id))then self:focus(i,true);return true end end
   end
  end
  return false
@@ -896,7 +1071,13 @@ function Shop:act()
  local status=self:statusOf(id)
  local slot=self:slot()
  local opId=game:GetService("HttpService"):GenerateGUID(false)
- if status.kind=="owned"then
+ if status.kind=="owned"and self:closet()then
+  return self:queueEquip(id,if id==Shop.NoneId then false else id,slot)
+ elseif status.kind=="egg"then
+  -- The closet: "From the Outfit Egg" opens Hatch eggs on the Outfit Egg (init.client's outfitEgg).
+  if self.pending or not self.callbacks.outfitEgg then return false end
+  return self.callbacks.outfitEgg(self.petId,id)~=false
+ elseif status.kind=="owned"then
   -- QA Q2.4: optimistic. The pet wears it (or takes it off) at once; the save runs in
   -- the background and only a refusal puts the previous look back, with a toast.
   self.equips=self.equips or {}
@@ -945,7 +1126,7 @@ function Shop:result(message)
  if index then
   if message.status=="Retrying"then return false end
   local order=table.remove(self.equips,index)
-  local latest=index>#self.equips -- nothing newer was tapped after it
+  local latest=index>#self.equips and not(self.swatchQueue and self.swatchQueue.queued) -- nothing newer was tapped after it
   if self.pending==order then self.pending=self.equips[#self.equips]end
   if message.status=="Saved"then
    if order.petId==self.petId then self.confirmed=Shop.applyEquip(order.petId,self.confirmed,order.itemId,order.wear,order.slot)end
@@ -956,14 +1137,22 @@ function Shop:result(message)
    if self.callbacks.rolledBack then self.callbacks.rolledBack(order)
    else self.toaster=self.toaster or Kit.toaster(self.host);self.toaster.show(UICopy.get("shop.rolledBack"))end
   end
-  self.ctx.row={owned=self.ctx.row.owned,equipped=Shop.replayEquips(self.petId,self.confirmed,self.equips)}
+  -- The closet's queue: the answer for the one in flight sends the last tap waiting behind it (if it changes anything).
+  if self.swatchQueue then
+   local nextOrder=self.swatchQueue:settle(order.id,function(o)return o.petId~=order.petId or Shop.changes(o.petId,self.confirmed,o)end)
+   if nextOrder then
+    self.pending=nextOrder;table.insert(self.equips,nextOrder)
+    if self.callbacks.equip then self.callbacks.equip(nextOrder)end
+   end
+  end
+  self.ctx.row={owned=self.ctx.row.owned,equipped=Shop.replayEquips(self.petId,self.confirmed,self:openEquips())}
   if self.visible then self:refresh()end;return true
  end
  if not self.pending or self.pending.action=="wearableEquip"or message.id~=self.pending.id then return false end
  if message.status=="Retrying"then return false end
  local order=self.pending;self.pending=nil
  if message.status~="Saved"then
-  self.errorId,self.errorText,self.errorFit=order.itemId,UICopy.get(Reasons[message.reason]or "shop.failed.saved"),nil
+  self.errorId,self.errorText,self.errorFit=order.itemId,if message.reason=="FromOutfitEgg"then Shop.closetCopy("reason")else UICopy.get(Reasons[message.reason]or "shop.failed.saved"),nil
   if message.reason=="NeedStars"then
    local item=Shop.item(order.petId or self.petId,order.itemId)
    local price=item and Deal.quote("wearable",order.itemId,item.price,self.ctx.week)
@@ -982,7 +1171,7 @@ function Shop:open(petId,ctx)
  self.visible=true;self.root.Visible=true;self.confirmId,self.errorId=nil,nil
  Kit.shadeOpen(self,self.shade,function(covered)self.root.Visible=not covered end)
  -- Slice B: another pet can have other tabs; rebuild the bar when the set changes.
- if Shop.tabKey(Shop.tabsFor(self.petId,self:owned(),self.ctx.thisWeek))~=self.tabKey or self.levelsKey~=Levels.key()then self:build(self.view);self:relayout()end
+ if Shop.tabKey(Shop.tabsFor(self.petId,self:owned(),self.ctx.thisWeek,self:closet()))~=self.tabKey or self.levelsKey~=Levels.key()or self.closetKey~=self:closet()then self:build(self.view);self:relayout()end
  self:fit(self.host.AbsoluteSize)
  if self.visual and self.visualPet~=self.petId then self.visual:destroy();self.visual=nil end
  self:setTab(self.tab)
@@ -993,7 +1182,7 @@ function Shop:open(petId,ctx)
  if self.clock then self.clock:Disconnect()end
  self.previewFeedback=self.previewFeedback or require(script.Parent.PreviewFeedback).new()
  self.clock=RunService.RenderStepped:Connect(function(dt)
-  if self.visible then self:pumpPreviews()end
+  if self.visible then self:pumpPreviews();self:stepSwatches(os.clock())end
   local v=self.visual;if not self.visible or not v or v.destroyed then return end
   local idle=require(script.Parent.PreviewFeedback).pointerIdle()
   self.previewFeedback:step(os.clock(),self.root.Visible and idle and not GuiService.ReducedMotionEnabled and not GuiService.MenuIsOpen,v)

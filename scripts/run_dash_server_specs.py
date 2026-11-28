@@ -98,7 +98,10 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          "DailyRack", "RackEgg", "RackCrossVersion",
          # DECK-AERO-BRIEF (qa-2026-11-28-beta44, switch deckglass): the glass palette from every plate (the brief's
          # 25-plate table, the rule for plates without a row), the contrast floors, the recipe, pill states and motion.
-         "DeckGlass"]
+         "DeckGlass",
+         # The daily rack, lane C (wear and finishes): the closet's rules and the server's refusal, and older saves keeping
+         # their clothes in the closet.
+         "WardrobeCloset", "ClosetCrossVersion"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
@@ -184,7 +187,10 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # Beta (44) note 18: the pet click's gates (see-through GUI, the roam reason, the need bubble's drawn hit).
           "PetClickGates",
           # Onboarding shorter (qa-2026-11-28-beta44): Things to do's learn rows and ticks, Show me, the window focus.
-          "ThingsLearn"]
+          "ThingsLearn",
+          # The daily rack, lane C: the Wardrobe's colour selector (its one-at-a-time equip queue) and the sparkle picks'
+          # animated finishes.
+          "WardrobeSwatches", "WearableFinish"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -281,7 +287,9 @@ def client_modules():
                     # MUSIC-BRIEF 3 and 4: the v2 music's ids and rules (AmbientAudio requires it).
                     "MusicTracks.lua",
                     # Beta (44) note 18: the pet's click target (its pure gates) and the rig bounds it reads.
-                    "PetClickTarget.lua", "PetRigBounds.lua"):
+                    "PetClickTarget.lua", "PetRigBounds.lua",
+                    # The daily rack, lane C: the swatch row's equip queue and the finishes' pure rules.
+                    "WardrobeSwatches.lua", "WearableFinish.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")
