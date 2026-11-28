@@ -143,7 +143,8 @@ return function(client)
 		-- a pick whose toy is not owned: drawn locked, 0 units, after the ones you can get, never a percent
 		local picks=Skins.picks(DAY)
 		local lockedToy=picks[1].toy
-		local unlocks={ball=true,bone=true,sparkler=true,wobble_top=true,squeaky_carrot=true,pocket_deck=true};unlocks[lockedToy]=nil
+		-- only the other two dealt toys owned: no undealt owned toy can take the locked pick's place (ToySkins.picks)
+		local unlocks={[picks[2].toy]=true,[picks[3].toy]=true}
 		local some=snapshot({unlocks=unlocks})
 		local list=Rack.entries(some.rack.toy)
 		local seenLocked=false
@@ -189,7 +190,7 @@ return function(client)
 
 	test("the Toy Colour Egg's sheet: the toy in that colour; a locked toy says where it comes from",function()
 		local picks=Skins.picks(DAY)
-		local unlocks={ball=true,bone=true,sparkler=true,wobble_top=true,squeaky_carrot=true,pocket_deck=true};unlocks[picks[1].toy]=nil
+		local unlocks={[picks[2].toy]=true,[picks[3].toy]=true} -- no undealt owned toy to take the locked place
 		local s=snapshot({unlocks=unlocks})
 		local sheet=Rack.sheet(s.rack.toy,{egg="toycolour"})
 		assert(sheet.kind=="toycolour"and sheet.title==Copy.get("rack.toy.title")and #sheet.cards==#s.rack.toy.items)
