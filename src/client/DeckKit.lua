@@ -123,6 +123,8 @@ Kit.Type={
  BodyMedium={16,14,sans(Enum.FontWeight.Medium)},Small={14,12,sans(Enum.FontWeight.Regular)},
  Label={13,12,sans(Enum.FontWeight.Bold)},Counter={18,15,mono(Enum.FontWeight.Bold)},
  CounterL={34,22,mono(Enum.FontWeight.Bold)},Strong={16,14,sans(Enum.FontWeight.Bold)},
+ -- DECK-AERO-BRIEF 2 (Alive deckglass): the glass HUD's numbers in Builder Sans ExtraBold (Roboto Mono leaves the deck).
+ HudCounter={18,15,sans(Enum.FontWeight.ExtraBold)},HudCounterL={34,22,sans(Enum.FontWeight.ExtraBold)},
 }
 -- Roles drawn in the display face, and the face they use under Kit.DisplayMin.
 Kit.DisplayRoles={Title=true,Name=true,Button=true}
@@ -380,7 +382,7 @@ end
 -- Words stay on; numbers, pet and player names, ids and rich text built from parts
 -- (tier circles, capped goal markup) are off, so they are never translated or
 -- captured once per value.
-Kit.FixedRoles={Counter=true,CounterL=true}
+Kit.FixedRoles={Counter=true,CounterL=true,HudCounter=true,HudCounterL=true}
 function Kit.fixedText(label)label.AutoLocalize=false;return label end
 -- Rich text: translate only while the text has no markup (a tag would be translated
 -- with it, or captured once per circle size).
@@ -1667,11 +1669,18 @@ function Kit.hudLabel(label,color)
    h=label:GetAttribute("FeelPillH")or(if pill=="compact"then 20 else 24)
    w=if text==""then 0 else math.ceil(Kit.measure(text,label:GetAttribute("KitRole")or "Label",label.TextSize).X)+2*pad
    x=if ax==Enum.TextXAlignment.Right then lx+lw-w+pad elseif ax==Enum.TextXAlignment.Center then lx+math.floor((lw-w)/2)else lx-pad
-   local corner=tab:FindFirstChildOfClass("UICorner");if corner then corner.CornerRadius=UDim.new(0,if pill=="compact"then 6 else 8)end
-   local lip=tab:FindFirstChild("FeelLip")or node("UIGradient",tab,{Name="FeelLip",Rotation=90})
-   local k=math.clamp((h-2)/math.max(1,h),.5,.99)
-   lip.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.new(1,1,1)),ColorSequenceKeypoint.new(k,Color3.new(1,1,1)),
-    ColorSequenceKeypoint.new(math.min(.999,k+.001),Color3.new(.68,.68,.68)),ColorSequenceKeypoint.new(1,Color3.new(.68,.68,.68))})
+   local corner=tab:FindFirstChildOfClass("UICorner")
+   if tab:GetAttribute("Glass")then
+    -- DECK-AERO-BRIEF 2 (Alive deckglass; DeckGlassUI.pill): a gel pill, full radius, no lip (its fill is GlassFill).
+    if corner then corner.CornerRadius=UDim.new(.5,0)end
+    local lip=tab:FindFirstChild("FeelLip");if lip then lip:Destroy()end
+   else
+    if corner then corner.CornerRadius=UDim.new(0,if pill=="compact"then 6 else 8)end
+    local lip=tab:FindFirstChild("FeelLip")or node("UIGradient",tab,{Name="FeelLip",Rotation=90})
+    local k=math.clamp((h-2)/math.max(1,h),.5,.99)
+    lip.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.new(1,1,1)),ColorSequenceKeypoint.new(k,Color3.new(1,1,1)),
+     ColorSequenceKeypoint.new(math.min(.999,k+.001),Color3.new(.68,.68,.68)),ColorSequenceKeypoint.new(1,Color3.new(.68,.68,.68))})
+   end
   end
   local y=label.Position.Y.Offset-label.AnchorPoint.Y*lh+math.floor((lh-h)/2)
   tab.Position=UDim2.new(label.Position.X.Scale,x,label.Position.Y.Scale,y)
@@ -1680,6 +1689,7 @@ function Kit.hudLabel(label,color)
  end
  for _,property in ipairs({"Text","Position","Size","Visible","TextSize","AbsoluteSize"})do label:GetPropertyChangedSignal(property):Connect(place)end
  label:GetAttributeChangedSignal("FeelPill"):Connect(place);label:GetAttributeChangedSignal("FeelPillH"):Connect(place)
+ tab:GetAttributeChangedSignal("Glass"):Connect(place)
  -- The tab follows its label only (a card that hides or shows its children by hand never
  -- leaves a visible label without its tab).
  tab:GetPropertyChangedSignal("Visible"):Connect(function()if tab.Visible~=(label.Visible and label.Text~="")then place()end end)

@@ -1471,7 +1471,13 @@ function Screen:paintChain(chain)
  -- Painted only when the state flips (a theme change keeps the right colour, as paintEyebrow).
  local function lit(on)
   if h.chainLit==on then return end
-  h.chainLit=on;Kit.paint(label,"TextColor3",if on then "stars"else role)
+  h.chainLit=on
+  -- DECK-AERO-BRIEF 3 (deckglass): the live chain is its pill's `warn` state; gold text only at 18 px and up, and a
+  -- label that is itself a pill (the phone's "CHAIN ×n" in Goals) only changes its pill.
+  local tab=Kit.hudTabOf(label)
+  if tab and tab:GetAttribute("Glass")then require(script.Parent.DeckGlassUI).setState(tab,"GlassLive",on);return end
+  if self.feel then self.feel:chainLit(on)end
+  Kit.paint(label,"TextColor3",if on and(not self.feel or self.feel:goldText(label.TextSize))then "stars"else role)
  end
  if chain<2 or chain<=last then
   if chain<last or chain<2 then h.chainToken=(h.chainToken or 0)+1;lit(false)end
@@ -1635,6 +1641,8 @@ function Screen.paintEyebrow(h,statusOn,tint)
  h.eyebrowState=state
  -- Toy Shell 3.5: a tabbed eyebrow keeps its ink text; the tab turns Stars gold for a status.
  local tab=Kit.hudTabOf(h.goalsEyebrow)
+ -- DECK-AERO-BRIEF 2 (deckglass): a gel pill keeps the plate's colour; a status line is its `warn` state.
+ if tab and tab:GetAttribute("Glass")then require(script.Parent.DeckGlassUI).setState(tab,"GlassStatus",statusOn);return end
  if tab then tab:SetAttribute("FixedTab",true);tab.BackgroundColor3=if statusOn then Kit.Color.stars else Kit.HudTabColors.GOALS;return end
  local color=if statusOn then Kit.Color.stars else(tint and Kit.tintColor(tint))or Kit.Color.dim
  Kit.paint(h.goalsEyebrow,"TextColor3",function()return color end)

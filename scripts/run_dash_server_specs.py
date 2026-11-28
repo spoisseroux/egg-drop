@@ -92,7 +92,10 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # Teach more (qa-2026-11-27-beta42, ARCH-REVIEW-TEACH): the lessons remembered (teachMask), and older builds keeping it.
          "TeachMarks", "TeachMarksCrossVersion",
          # Onboarding shorter (qa-2026-11-28-beta44, ARCH-REVIEW-SIMPLIFY Q1 and 1): the deck tour's untouched round.
-         "TourRound"]
+         "TourRound",
+         # DECK-AERO-BRIEF (qa-2026-11-28-beta44, switch deckglass): the glass palette from every plate (the brief's
+         # 25-plate table, the rule for plates without a row), the contrast floors, the recipe, pill states and motion.
+         "DeckGlass"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.

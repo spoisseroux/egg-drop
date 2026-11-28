@@ -30,11 +30,14 @@ Alive.PlaceId=107705084891479 -- Pocket Pals Beta
 -- the Happy heart, the lean, the glass plates, the spots). Missing = on. Off = the petting screen exactly as before.
 -- MUSIC-BRIEF (qa-2026-11-28-music) 3 and 4: `music2` is the v2 music (MusicTracks: the garden's day and night pair crossed
 -- with the hour, the deck track and its lite variant). Missing = on; off, or while its ids are 0, today's music exactly.
+-- DECK-AERO-BRIEF (qa-2026-11-28-beta44): `deckglass` is the Pocket Deck's glass HUD and Welcome deck (DeckGlass,
+-- DeckGlassUI): plate-coloured glass cards, gel pills, tracks and the well's frame. It dresses the `deckfeel` HUD, so it
+-- needs that switch too. Missing = on. Off = the deck exactly as before.
 Alive.Features=table.freeze({"springs","menus","close","wind","life","scene","snack","windbed","asmr","wobble","balls","crunch","air",
- "fruit","keepout","aerohatch","deckjuice","pet2","paint","deckfeel","music2"})
+ "fruit","keepout","aerohatch","deckjuice","pet2","paint","deckfeel","music2","deckglass"})
 local FlagNames=table.freeze({springs="AliveSprings",menus="AliveMenus",close="AliveClose",wind="AliveWind",life="AliveLife",
  scene="AliveScene",snack="AliveSnack",windbed="AliveWindbed",asmr="AliveAsmr",wobble="AliveWobble",balls="AliveBalls",
- crunch="AliveCrunch",air="AliveAir",fruit="AliveFruit",keepout="AliveKeepOut",aerohatch="AliveAeroHatch",deckjuice="AliveDeckJuice",pet2="AlivePet2",paint="AlivePaint",deckfeel="AliveDeckFeel",music2="AliveMusic2"})
+ crunch="AliveCrunch",air="AliveAir",fruit="AliveFruit",keepout="AliveKeepOut",aerohatch="AliveAeroHatch",deckjuice="AliveDeckJuice",pet2="AlivePet2",paint="AlivePaint",deckfeel="AliveDeckFeel",music2="AliveMusic2",deckglass="AliveDeckGlass"})
 -- What a missing or malformed config value means, where it is not on.
 Alive.Defaults=table.freeze({windbed=false})
 

@@ -53,6 +53,11 @@ function View.sparkPath(a,b,t)
 	local u=1-t
 	return a*(u*u)+c*(2*u*t)+b*(t*t)
 end
+-- Alive deckglass (DECK-AERO-BRIEF; Shared.DeckGlass, which also needs deckfeel).
+function View.glassOn()
+	local ok,on=pcall(function()return require(game:GetService("ReplicatedStorage").Shared.DeckGlass).switch()end)
+	return ok and on==true
+end
 function View.new(hosts,d)
 	d=d or {};local self=setmetatable({hosts=hosts,d=d,progress=Progress.new(),age=0,loop=0,links={},alive=true,sparks={}},View)
 	local host=hosts.meter
@@ -140,9 +145,14 @@ function View:paint()
 	local reduced=s.reduced==true
 	local touch=s.device=="Touch"
 	self.ghost.Visible=input and touch and not reduced
-	self.glyph.Visible=input and(not touch or reduced)
-	self.glyph.Text=self:copy(if reduced and touch then "onboarding.welcome.static"elseif s.device=="Gamepad"then "onboarding.welcome.gamepad"
-		elseif self.egg3d then "onb2.deck.click"else "onboarding.welcome.keyboard") -- onboarding v2: no key names
+	local glyphKey=if reduced and touch then "onboarding.welcome.static"elseif s.device=="Gamepad"then "onboarding.welcome.gamepad"
+		elseif self.egg3d then "onb2.deck.click"else "onboarding.welcome.keyboard" -- onboarding v2: no key names
+	-- DECK-AERO-BRIEF 1 (Alive deckglass): "Click to drop" showed twice (the board's pill and this foot line): the pill
+	-- keeps it, the foot line goes.
+	local showGlyph=input and(not touch or reduced)
+	if showGlyph and glyphKey=="onb2.deck.click"and View.glassOn()then showGlyph=false end
+	self.glyph.Visible=showGlyph
+	self.glyph.Text=self:copy(glyphKey)
 	local side=View.fit(self.hosts.meter.AbsoluteSize.X,self.hosts.meter.AbsoluteSize.Y)
 	self.egg.Size=UDim2.fromOffset(math.floor(side/scale),math.floor(side/scale))
 	-- Onboarding v2 step 1 (Onboard "egg3d"): the 3D egg and its pips take the pixel egg's place once it is drawn.

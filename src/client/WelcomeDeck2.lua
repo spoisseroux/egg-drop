@@ -12,6 +12,10 @@
 --   combo 3    the pips fly into the egg, one light sweep, then the egg's rise (WelcomeEgg3D) and the tuck; the onboarding
 --              fun pass: until the deck tucks for the stork the egg knocks every 0.4 s and the border pulses gold
 -- Reduced Motion: no loops, arc, knock, pops, flight or sweep; colour, words, sound and buzz stay.
+-- DECK-AERO-BRIEF 4 (Alive deckglass, DeckGlassUI): the sky card is the glass card recipe (glassTop mixed 25% to accent ->
+-- glassBottom, no 1 px highlight), the egg card a light world (white mixed 35% to accent -> accent mixed 35% to glassTop)
+-- with the same rim and gloss, both and NEXT at radius 12, the empty pips in the track colour; every colour from the
+-- equipped plate. Off: as before.
 -- WelcomeEgg3D owns it: Deck2.new(egg) after the egg is built; counted(n, clock) when the server's count reaches n;
 -- step(clock) -> the combos whose pips popped now; paint(clock, combos, drops, line); comboSpark(from, tier).
 local Shared=game:GetService("ReplicatedStorage").Shared
@@ -58,11 +62,22 @@ function Deck2:build()
 	local egg=self.egg
 	local meter=egg.meter
 	local z=meter.ZIndex
+	-- DECK-AERO-BRIEF 4 (Alive deckglass): the three cards share radius 12 and the glass rim, coloured from the plate.
+	local okGlass,GlassUI=pcall(require,script.Parent.DeckGlassUI)
+	self.glassUI=if okGlass and GlassUI.on()then GlassUI else nil
+	if self.glassUI then self:glassRadii()end
 	local corner=cornerOf(meter.Parent)
 	-- The egg card: a sky fill with the flash stroke, the grass arc, the shadow, the sweep.
 	self.fill=self:keep(frame(meter,"Deck2EggSky",z+1,{Size=UDim2.fromScale(1,1),BackgroundTransparency=0,BackgroundColor3=WHITE,Visible=false}))
 	node("UICorner",self.fill,{CornerRadius=corner})
 	node("UIGradient",self.fill,{Rotation=90,Color=ColorSequence.new(D.eggTop,D.eggBottom)})
+	if self.glassUI then
+		-- a light little world: white mixed 35% to accent over accent mixed 35% to glassTop (no bounce: the grass is there)
+		local UI=self.glassUI
+		UI.card(self.fill,{radius=corner.Offset,shadow=false,bounce=false,body=function()
+			local p=UI.palette();return ColorSequence.new(p.eggTop,p.eggBottom)
+		end})
+	end
 	local G=require(Shared.HatchAero).Grass
 	self.grassClip=self:keep(frame(meter,"Deck2GrassClip",z+2,{ClipsDescendants=true,Visible=false}))
 	self.grassHill=frame(self.grassClip,"Hill",z+2,{AnchorPoint=Vector2.new(.5,0),BackgroundTransparency=0,BackgroundColor3=WHITE})
@@ -92,6 +107,24 @@ function Deck2:build()
 	-- over the egg's viewport (WelcomeEgg3D's well is z + 5, EggPreview3D draws at z + 6)
 	self:buildPips(z+9)
 	if egg.cover then self:buildCard()end
+end
+-- deckglass: the coach card, the egg card and NEXT share radius 12 (Deck2:destroy puts the HUD's radius back).
+function Deck2:glassRadii()
+	local UI=self.glassUI
+	local egg=self.egg
+	local host=egg.meter.Parent
+	local hud=host and host.Parent
+	self.radiiWas={}
+	for _,card in ipairs({egg.coach or false,host or false,hud and hud:FindFirstChild("Next")or false})do
+		if card and card:GetAttribute("Glass")and not self.radiiWas[card]then
+			self.radiiWas[card]=card:GetAttribute("GlassRadius")
+			UI.setRadius(card,D.glassRadius)
+		end
+	end
+end
+-- The empty pip's colour: the track colour under deckglass, else the navy egg.
+function Deck2:pipEmpty()
+	return if self.glassUI then self.glassUI.palette().track else D.pipEmpty
 end
 -- Three egg pips: a CanvasGroup body (a round foot and a narrower crown, so the two read as one egg when faded), a
 -- white glint when filled, and a pop ring. Beta 42 note 11 (C11): an empty pip is a solid navy egg (WelcomeEgg3D's
@@ -129,8 +162,19 @@ function Deck2:buildCard()
 	self.coverColor=cover.BackgroundColor3
 	cover.BackgroundColor3=WHITE
 	self.sky=self:keep(node("UIGradient",cover,{Name="Deck2Sky",Rotation=90,Color=ColorSequence.new(D.skyTop,D.skyBottom)}))
-	local r=cornerOf(cover).Offset
-	self.highlight=self:keep(frame(cover,"Deck2Highlight",z+1,{Position=UDim2.fromOffset(r,1),Size=UDim2.new(1,-r*2,0,1),BackgroundTransparency=D.highlight,BackgroundColor3=WHITE}))
+	if self.glassUI then
+		-- deckglass: the glass card recipe, body glassTop mixed 25% to accent -> glassBottom; the rim and gloss replace
+		-- the 1 px highlight. The cover sits 2 px inside its card, so its corner is the card's 12 less 2.
+		local UI=self.glassUI
+		local c=cover:FindFirstChildOfClass("UICorner")or node("UICorner",cover)
+		c.CornerRadius=UDim.new(0,D.glassRadius-2)
+		UI.card(cover,{radius=D.glassRadius-2,shadow=false,body=function()
+			local p=UI.palette();return ColorSequence.new(p.skyTop,p.glassBottom)
+		end})
+	else
+		local r=cornerOf(cover).Offset
+		self.highlight=self:keep(frame(cover,"Deck2Highlight",z+1,{Position=UDim2.fromOffset(r,1),Size=UDim2.new(1,-r*2,0,1),BackgroundTransparency=D.highlight,BackgroundColor3=WHITE}))
+	end
 	self.bubbles={}
 	for i=1,D.bubbles do
 		local size=D.bubbleSizes[i]or 12
@@ -423,10 +467,11 @@ function Deck2:paintPips(clock,combos,reduced)
 		local c=(well.AbsolutePosition+well.AbsoluteSize/2-row.AbsolutePosition)/math.max(.01,k)
 		target=c
 	end
+	local empty=self:pipEmpty()
 	for i,p in ipairs(self.pips)do
 		local filled=V2.pip(i,combos)=="filled"
-		set(p.foot,"BackgroundColor3",if filled then D.pipFilled else D.pipEmpty)
-		set(p.crown,"BackgroundColor3",if filled then D.pipFilled else D.pipEmpty)
+		set(p.foot,"BackgroundColor3",if filled then D.pipFilled else empty)
+		set(p.crown,"BackgroundColor3",if filled then D.pipFilled else empty)
 		set(p.glint,"Visible",filled)
 		local alpha=if filled then 0 else D.pipEmptyAlpha
 		local scale=1
@@ -516,6 +561,10 @@ function Deck2:destroy()
 	local egg=self.egg
 	if egg.cover and self.coverColor then egg.cover.BackgroundColor3=self.coverColor end
 	if egg.line and self.lineWas then for k,v in pairs(self.lineWas)do egg.line[k]=v end end
+	if self.glassUI and self.radiiWas then
+		for card,radius in pairs(self.radiiWas)do if card.Parent and type(radius)=="number"then self.glassUI.setRadius(card,radius)end end
+		self.radiiWas=nil
+	end
 	for _,o in ipairs(self.made)do o:Destroy()end
 	table.clear(self.made)
 end

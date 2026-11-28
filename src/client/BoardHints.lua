@@ -92,6 +92,18 @@ function Hints:sizeHint()
  self.hintText.TextWrapped=w>(self.W or 300)-12
 end
 
+-- DECK-AERO-BRIEF 4 (Alive deckglass): the idle pill ("Click to drop") is a secondary key (#FFFFFF -> #DDEBFA, ink
+-- label) with a 2 px `good` rim; off, the LCD pill with its accent ring as before. Checked each time it shows.
+function Hints:glassLook()
+ local ok,UI=pcall(require,script.Parent.DeckGlassUI)
+ local on=ok and UI.on()
+ if on==(self.glass==true)then return end
+ self.glass=on
+ if on then UI.secondaryKey(self.hint,self.hintText);return end
+ local key=self.hint:FindFirstChild("GlassKey");if key then key.Enabled=false end
+ self.hint.BackgroundTransparency=.06
+ Kit.paint(self.hint,"BackgroundColor3","well");Kit.stroke(self.hint,"accent",2,0);Kit.paint(self.hintText,"TextColor3","text")
+end
 -- The first drop of the session hides the idle hint for good.
 function Hints:noteDrop()
  self.dropped=true
@@ -133,6 +145,7 @@ function Hints:step(now,state)
   if self.hintText.Text~=text then self.hintText.Text=text;self:sizeHint()end
   if not self.hint.Visible then
    self.hint.Visible=true;self.shownAt=now
+   self:glassLook()
   end
   local t=now-(self.shownAt or now)
   if state.reduced then

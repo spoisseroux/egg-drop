@@ -137,5 +137,7 @@ return table.freeze({PetTrail=true,FirstHelloBonus=true,RoundTwoNudge=true,ToyPi
  AliveDeckFeel=true,
  -- AliveMusic2 (MUSIC-BRIEF 3 and 4, qa-2026-11-28-music): the v2 music (MusicTracks); beta and Studio only.
  AliveMusic2=true,
+ -- AliveDeckGlass (DECK-AERO-BRIEF, qa-2026-11-28-beta44): the Pocket Deck's glass HUD (DeckGlass); beta and Studio only.
+ AliveDeckGlass=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
  PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,PlayerScale=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true,TierPets=true,ParkTopLawn=true,ThisWeek=true})

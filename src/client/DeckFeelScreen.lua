@@ -17,6 +17,9 @@ local TweenService=game:GetService("TweenService")
 local Kit=require(script.Parent.DeckKit)
 local Feel=require(script.Parent.DeckFeel)
 local Lean=require(script.Parent.DeckPressLean)
+-- DECK-AERO-BRIEF (Alive deckglass, with deckfeel): the glass dresses what the polish built (DeckGlassUI, required only
+-- while the switch is on).
+local Glass=require(game:GetService("ReplicatedStorage").Shared.DeckGlass)
 
 local View={};View.__index=View
 local PressTick=nil
@@ -183,7 +186,8 @@ function View:stagger()
    table.insert(items,{id=id or frame,frame=frame,x=frame.Position.X.Offset,y=frame.Position.Y.Offset,w=frame.Size.X.Offset})
   end
  end
- for _,child in ipairs(host:GetChildren())do if child:IsA("Frame")and child.Size.X.Offset>0 then add(child)end end
+ -- (deckglass: a card's shadow follows its card, so it is not a panel of its own)
+ for _,child in ipairs(host:GetChildren())do if child:IsA("Frame")and child.Size.X.Offset>0 and not child:GetAttribute("GlassShadow")then add(child)end end
  add(s.well,"well")
  local g=s.geometry
  local left,right=0,0
@@ -206,8 +210,10 @@ local function isEyebrow(child)
 end
 -- Restyles a freshly built HUD (Screen:buildHud / buildCompactHud).
 function View:built(g)
- self.cards=nil;self.nextBase=nil;self.last={};self.goalsDone={}
+ self.cards=nil;self.nextBase=nil;self.last={};self.goalsDone={};self.pills=nil
+ self.glass=false
  if not self:on()then return end
+ self.glass=Glass.switch()
  local s=self.screen
  local host=s.hudRoot;if not host then return end
  local compact=g.phone==true or g.compact==true
@@ -219,12 +225,15 @@ function View:built(g)
    self.cards[card.Name]=card
    local corner=card:FindFirstChildOfClass("UICorner")
    if corner and card.Name~="QuestHandle"then corner.CornerRadius=UDim.new(0,radius)end
-   node("Frame",card,{Name="FeelHighlight",BackgroundColor3=Color3.new(1,1,1),BackgroundTransparency=P.highlight,BorderSizePixel=0,
-    Position=UDim2.fromOffset(math.floor(radius*.7),1),Size=UDim2.new(1,-2*math.floor(radius*.7),0,1),ZIndex=card.ZIndex,Active=false})
-   local inner=node("Frame",card,{Name="FeelInner",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(1,1),
-    Size=UDim2.new(1,-2,1,-2),ZIndex=card.ZIndex,Active=false})
-   node("UICorner",inner,{CornerRadius=UDim.new(0,math.max(0,radius-1))})
-   node("UIStroke",inner,{Color=Color3.new(0,0,0),Transparency=P.stroke,Thickness=1,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+   -- deckglass: the glass's rim and gloss take the highlight's and inner stroke's place (DeckGlassUI.card).
+   if not self.glass then
+    node("Frame",card,{Name="FeelHighlight",BackgroundColor3=Color3.new(1,1,1),BackgroundTransparency=P.highlight,BorderSizePixel=0,
+     Position=UDim2.fromOffset(math.floor(radius*.7),1),Size=UDim2.new(1,-2*math.floor(radius*.7),0,1),ZIndex=card.ZIndex,Active=false})
+    local inner=node("Frame",card,{Name="FeelInner",BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.fromOffset(1,1),
+     Size=UDim2.new(1,-2,1,-2),ZIndex=card.ZIndex,Active=false})
+    node("UICorner",inner,{CornerRadius=UDim.new(0,math.max(0,radius-1))})
+    node("UIStroke",inner,{Color=Color3.new(0,0,0),Transparency=P.stroke,Thickness=1,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+   end
    self:pill(card,compact)
   end
  end
@@ -253,7 +262,21 @@ function View:built(g)
  -- The next balls' rest positions (their 1 px bob).
  self.nextBase={}
  for index,slot in ipairs(h.next or {})do self.nextBase[index]=slot.ball.Position end
+ -- DECK-AERO-BRIEF 2-5 (deckglass): glass cards, gel pills, tracks, the well's frame, the counters, the bubbles.
+ if self.glass then self.pills=require(script.Parent.DeckGlassUI).dressHud(s,g,self.cards)end
 end
+-- deckglass: the pill on `card` (by name) takes a state flag; one sweep across a card.
+function View:glassState(name,key,on)
+ local tab=self.glass and self.pills and self.pills[name]
+ if tab then require(script.Parent.DeckGlassUI).setState(tab,key,on)end
+end
+function View:glassSweep(name)
+ local card=self.glass and self.cards and self.cards[name]
+ if card then require(script.Parent.DeckGlassUI).sweep(card)end
+end
+-- The chain is live (Screen:paintChain): its pill turns `warn`. Gold as text only at 18 px and up (rule 3).
+function View:chainLit(on)self:glassState("Chain","GlassLive",on)end
+function View:goldText(size)return not self.glass or Glass.goldText(size)end
 -- A card's eyebrow becomes a pill 14 / 12 in (24 tall, 10 pad, 2 px lip); its content moves to 12 under the pill
 -- where the card has room (never past its foot).
 function View:pill(card,compact)
@@ -315,6 +338,9 @@ function View:score(score,chain)
    return busy
   end)end
  end
+ -- deckglass 5: the gloss sweeps the card whose value went up.
+ if type(score)=="number"and type(last.score)=="number"and score>last.score then self:glassSweep("Score")end
+ if type(chain)=="number"and type(last.chain)=="number"and chain>last.chain then self:glassSweep("Chain")end
  last.score,last.chain=score,chain
 end
 
@@ -331,7 +357,8 @@ function View:paint(data)
  local r,g,b=Feel.levelTint(stepper and stepper.key or name)
  if r then
   local tint=Color3.fromRGB(r,g,b)
-  Kit.hudLabel(h.diffName,tint)
+  -- deckglass: the level's name is a plate-coloured pill (one pill colour per plate); the bars keep the level's tint.
+  if not self.glass then Kit.hudLabel(h.diffName,tint)end
   for _,bar in ipairs(h.diffBars or {})do if bar.BackgroundTransparency<.5 then bar.BackgroundColor3=tint end end
  end
  local card=h.diffName.Parent
@@ -343,11 +370,16 @@ function View:paint(data)
   local from=os.clock()
   self:run("tick",function(now)local t=now-from;pad.PaddingTop=UDim.new(0,math.round(2*Feel.tickAt(t)));return t<Feel.Polish.ballsEase end)
  end
+ -- deckglass: a ball spent sweeps the card; three or fewer left turns its pill `bad`; every goal done turns Goals' `good`.
+ if type(eggs)=="number"and type(self.last.eggs)=="number"and eggs<self.last.eggs then self:glassSweep("EggsLeft")end
+ if type(eggs)=="number"then self:glassState("EggsLeft","GlassLow",Glass.ballsLow(eggs))end
+ if data.goals then self:glassState("Goals","GlassDone",Glass.allDone(data.goals))end
  self.last.eggs=eggs
  -- A goal that completes: its check fills in (.3 s) with goal_tick.
  for index,goal in ipairs(data.goals or {})do
   local slot=h.goals and h.goals[index]
   local was=self.goalsDone[index]
+  if goal.done and was==false then self:glassSweep("Goals")end
   if goal.done and was==false and slot and slot.check and not self:reduced()then
    local scale=slot.check.root:FindFirstChild("FeelFill")or node("UIScale",slot.check.root,{Name="FeelFill"})
    local from=os.clock()
