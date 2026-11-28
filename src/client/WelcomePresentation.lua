@@ -258,6 +258,11 @@ end
 -- Host acknowledgement/rejection clears a local button latch. Retrying keeps it
 -- true; never infer a failed save from a timeout and present another reward.
 function View:setSkipPending(pending)self.pending=pending==true;self:paint()end
+-- Beta (44) note 4: is the combo round's 3D egg on screen (through its hold and finale)? DeckScreen keeps the calm
+-- Welcome layout while it is (DeckCalm.held).
+function View:eggShown()
+	return self.alive==true and self.egg3d~=nil and self.egg3d.shown==true
+end
 function View:checkpoint()
 	return {progress=self.progress,snapshot=self.snapshot and table.clone(self.snapshot),age=self.age,loop=self.loop,interacted=self.interacted,pending=self.pending,replayed=self.replayed}
 end

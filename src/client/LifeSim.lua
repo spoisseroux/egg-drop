@@ -1792,7 +1792,15 @@ function Loose:step(now,active,view,world,pets,cap,live,notice)
 	local list,seen=self.list,self.seen
 	local camera=view and view.camera
 	local keep={}
-	for _,plan in ipairs(active)do keep[plan.id]=true end
+	-- Beta (44) note 19: this client's shake drop (plan.shake) is always drawn, its rustle and bounce are heard: it
+	-- takes the room of the oldest other fruit when the cap is full, and the lowest level (cap 0) still draws it. The
+	-- other fruit share what the shake drops leave of the cap.
+	local shakes=0
+	for _,plan in ipairs(active)do
+		keep[plan.id]=true
+		if plan.shake==true and not live and seen[plan.id]~=false then shakes+=1 end
+	end
+	local others=math.max(0,(cap or 0)-shakes)
 	for id in pairs(seen)do if not keep[id]then seen[id]=nil end end
 	for index=#list,1,-1 do
 		local loose=list[index]
@@ -1800,18 +1808,26 @@ function Loose:step(now,active,view,world,pets,cap,live,notice)
 		if not keep[loose.id]or loose.pose.phase=="gone"then
 			table.remove(list,index)
 			if keep[loose.id]then seen[loose.id]=false end -- faded early: never drawn again
-		elseif index>(cap or 0)or(camera and(position-camera).Magnitude>Sim.Drop)then
+		elseif camera and(position-camera).Magnitude>Sim.Drop then
 			table.remove(list,index);seen[loose.id]=nil
 		end
 	end
+	-- Past the others' room (a shrunk cap, a new shake drop): the oldest other fruit go first (drawn again on room).
+	local drawn=0
+	for _,loose in ipairs(list)do if loose.shake~=true then drawn+=1 end end
+	local at=1
+	while drawn>others and at<=#list do
+		if list[at].shake==true then at+=1 else seen[list[at].id]=nil;table.remove(list,at);drawn-=1 end
+	end
 	for _,plan in ipairs(active)do
-		if #list>=(cap or 0)then break end
-		if seen[plan.id]==nil then
+		local shake=plan.shake==true
+		if seen[plan.id]==nil and(shake or drawn<others)then
 			if live then seen[plan.id]=false
 			elseif not camera or(plan.p4-camera).Magnitude<=Sim.Drop then
 				local loose=Sim.fruitLoose(plan,view and view.right)
 				seen[plan.id]=loose
 				table.insert(list,loose)
+				if not shake then drawn+=1 end
 			end
 		end
 	end

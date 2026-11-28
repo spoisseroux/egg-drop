@@ -150,6 +150,18 @@ return function(client,parent)
    local b=reduced.aeroParts.bubbles[1];local before=b.node.Position
    reduced.clock+=2;at(reduced,1.5);assert(b.node.Position==before and reduced.raysImage.Rotation==0,"Reduced Motion: still rays and bubbles")
   end)
+  test("beta (44) note 1: the well's clip is a rounded CanvasGroup, its corner the well's radius less the inset",function()
+   for _,size in ipairs({{844,390},{1280,720}})do
+    local stage=open(size[1],size[2],{aero=true})
+    local clip=stage.clip
+    assert(clip:IsA("CanvasGroup")and clip.ClipsDescendants,"a CanvasGroup clips to its rounded corner")
+    local corner=clip:FindFirstChildOfClass("UICorner");assert(corner and corner==stage.clipCorner)
+    local radius=stage.wellCorner.CornerRadius.Offset
+    assert(corner.CornerRadius.Offset==radius-Kit.patternInset(radius)and corner.CornerRadius.Offset>0,tostring(corner.CornerRadius))
+    assert(clip.Position.X.Offset==Kit.patternInset(radius))
+   end
+   assert(Stage.clipCornerRadius(16)==16-Kit.patternInset(16)and Stage.clipCornerRadius(0)==0)
+  end)
   test("layout: phone 844x390 matches the spec rects; 812x354, 568x320, PC and portrait stay on screen",function()
    local L=Stage.geometry(844,390)
    assert(L.wellSeat.x==24 and L.wellSeat.y==20 and L.wellSeat.w==380 and L.wellSeat.h==292 and L.tray.x==420 and L.primary.x==626 and L.primary.y+L.primary.h==370)

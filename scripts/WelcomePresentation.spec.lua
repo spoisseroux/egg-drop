@@ -12,6 +12,9 @@ return function(client,gui,modules)
 	local function sync()return view:update(table.clone(s))end
 	assert(View.fit(120,80)==64 and View.fit(12,12)==0,"8px inset on every side")
 	assert(sync()=="onboarding.welcome.friend"and cues==0 and view.ghost.Visible)
+	-- Beta (44) note 4: eggShown is the 3D egg's own shown flag (DeckScreen holds the calm deck on it).
+	assert(view:eggShown()==false,"no 3D egg: nothing holds the calm deck")
+	view.egg3d={shown=true};assert(view:eggShown()==true);view.egg3d.shown=false;assert(view:eggShown()==false);view.egg3d=nil
 	s.charge=2;assert(sync()=="onboarding.welcome.match"and cues==1 and view.cracks[1].Visible and not view.cracks[2].Visible)
 	s.charge=4;assert(sync()=="onboarding.welcome.more"and cues==2 and view.cracks[2].Visible)
 	for _=1,33 do view:step(.25)end

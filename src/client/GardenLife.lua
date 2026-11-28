@@ -1515,7 +1515,11 @@ function Life:activeFruit(now)
 			table.insert(active,plan)
 		end
 	end
-	table.sort(active,function(a,b)return a.start<b.start end)
+	-- Beta (44) note 19: this client's shake drops first (Loose:step draws them before any other fruit), then oldest first.
+	table.sort(active,function(a,b)
+		if(a.shake==true)~=(b.shake==true)then return a.shake==true end
+		return a.start<b.start
+	end)
 	return active
 end
 -- The tree shake: the player walks into a fruit tree's trunk faster than Shake.speed (the root's own speed between two

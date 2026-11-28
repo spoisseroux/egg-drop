@@ -153,6 +153,8 @@ function Focus.new(parentGui, callbacks)
 	end))
 	table.insert(self.connections, UserInputService.WindowFocusReleased:Connect(function()self:loseWindowFocus()end))
  table.insert(self.connections,UserInputService.WindowFocused:Connect(function()self:gainWindowFocus()end))
+ -- Beta (44) note 18: alt-tab back by a click may never fire WindowFocused; any input is the player back in the window.
+ table.insert(self.connections,UserInputService.InputBegan:Connect(function(input)self:noteInput(input)end))
 	table.insert(self.connections,UserInputService.GamepadDisconnected:Connect(function(kind)if self.openingADevice==kind then self.openingADevice=nil end;if self.heldGreet and self.heldGreet.device==kind then self:cancelPointer()end;if self.openingGreetDevice==kind then self.openingGreetDevice=nil end end))
 	table.insert(self.connections, parentGui.Destroying:Connect(function() self:destroy() end))
 	table.insert(self.connections,root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self.hintLayoutKey=nil;self.helperLayoutKey=nil;self:layoutRoamHint();self:layoutSaveHelper();self:layoutFocusRow();if self.bondInfo then self:setBond(self.bondInfo)end end))
@@ -398,6 +400,10 @@ function Focus:loseWindowFocus()
  if self.heldTouches then table.clear(self.heldTouches)end
 end
 function Focus:gainWindowFocus()self.windowActive=true end
+-- Beta (44) note 18: any input (a key, a click, a touch, a pad button) while away counts as focus back.
+function Focus:noteInput(input)
+ if self.windowActive==false and input~=nil and input.UserInputType~=Enum.UserInputType.MouseMovement then self:gainWindowFocus()end
+end
 
 function Focus:checkContactDeadline()
  if self.windowActive==false then self:cancelPointer();return true end
@@ -433,6 +439,7 @@ function Focus:inside(point)
 	return true
 end
 function Focus:beginPointer(input)
+ self:noteInput(input)
  if not pointer(input)or self.windowActive==false or self.pointer or not self.active or not self:canOwnInput()or not self.callbacks.canReact()then return false end
  if(input.UserInputType==Enum.UserInputType.Touch and self.retiredTouches and self.retiredTouches[input])
   or(input.UserInputType==Enum.UserInputType.MouseButton1 and self.retiredMouse)then return false end

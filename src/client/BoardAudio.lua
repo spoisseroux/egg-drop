@@ -253,6 +253,11 @@ function Audio.new()
 	table.insert(self.connections, UserInputService.WindowFocused:Connect(function()
 		self:setDeviceActive(true)
 	end))
+	-- Beta (44) note 2: a WindowFocused that never comes (alt-tab back by a click) left every effect muted. Any input
+	-- means the player is here again.
+	table.insert(self.connections, UserInputService.InputBegan:Connect(function()
+		if self.deviceActive == false then self:setDeviceActive(true) end
+	end))
 	local warmup = {}
 	local missing = {}
 	for _, cue in ipairs(cues) do
@@ -285,6 +290,7 @@ function Audio.new()
 					table.insert(failed, id)
 				end
 			end) end)
+			self.warmupDone = true
 			if not self.destroyed and (not ok or #failed > 0) then
 				warn("Egg Drop could not load audio " .. table.concat(failed, ", "))
 			end
@@ -548,7 +554,17 @@ function Audio:play(name, speed, volume, owner)
 	end
 	local index = (self.indices[name] or 0) % #voices + 1
 	local voice = voices[index]
-	if not voice or voice.IsLoaded==false then return false end
+	if not voice or voice.IsLoaded==false then
+		-- Beta (44) note 2: a cue that never loaded (after the warm-up) was silent with no trace. Studio says so, once per cue.
+		if voice and self.warmupDone and RunService:IsStudio() then
+			self.unloadedWarned = self.unloadedWarned or {}
+			if not self.unloadedWarned[name] then
+				self.unloadedWarned[name] = true
+				warn("Egg Drop audio cue " .. name .. " is not loaded (" .. tostring(voice.SoundId) .. ")")
+			end
+		end
+		return false
+	end
 	if name == "hatch_rise" then self:duck("hatch", 1.2, 0.22)
 	elseif name == "hatch" then self:duck("hatch", 0.9, 0.22) end
 	self.indices[name] = index

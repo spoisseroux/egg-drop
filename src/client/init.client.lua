@@ -779,6 +779,7 @@ local function stationContext()
 		snapshot=nurseryState,rank=board:GetAttribute("OwnedPets") or 0,trials=board:GetAttribute("TrialMask") or 0}
 end
 roomView.canRoam=function()return LoungeStations.canRoam(stationContext())end
+roomView.roamBlock=function()return LoungeStations.roamBlock(stationContext())end
 roomView.stations=LoungeStations.new({player=player,read=stationContext,
 	lounge=function()return workspace:FindFirstChild("EggDropLounge")end,
 	triggered=ProximityPromptService.PromptTriggered,routes={
@@ -6276,7 +6277,8 @@ do
    clientUI.attract.options.tipShown=function(id)local bit=Tips.TipBits[id];if bit then clientUI.coach:mark(bit)end end
    clientUI.attract.options.focus=function()return needs:focus()end
    function roomView.interactPet(view,...)
-    if os.clock()-petKeyAt>.3 and needs:petTap("tap")then return true end
+    -- Beta (44) note 18: a click on the Bear opens the petting screen; only the bubble's own pill (and G) does a need.
+    if os.clock()-petKeyAt>.3 and not needs:claimsPetTap("tap")and needs:petTap("tap")then return true end
     return interact(view,...)
    end
    -- The bubble's own key (Needs.Keys): G or L2, unused elsewhere in the garden; passed on while no bubble shows.

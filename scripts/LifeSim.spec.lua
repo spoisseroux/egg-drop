@@ -1150,6 +1150,22 @@ return function(client)
 		raced:step(plan.t5,{shaken},{camera=eye,right=view.right},world,nil,3,false)
 		raced:step(plan.t5+.1,{shaken},{camera=eye,right=view.right},world,nil,3,true)
 		assert(raced.list[1].quick==plan.t5+.1,"a race still fades it")
+		-- Beta (44) note 19: my shake drop is drawn with the cap full (the oldest other fruit goes) and at cap 0.
+		local function copy(id,shake)local c=table.clone(plan);c.id=id;c.shake=shake;return table.freeze(c)end
+		local o1,o2,o3,s1=copy("o1"),copy("o2"),copy("o3"),copy("s1",true)
+		local function ids(loose)local out={};for _,l in ipairs(loose.list)do out[l.id]=true end;return out end
+		local full=Sim.Loose.new()
+		full:step(now,{o1,o2,o3},view,world,nil,3,false);assert(#full.list==3)
+		full:step(now+.01,{s1,o1,o2,o3},view,world,nil,3,false)
+		local seen=ids(full)
+		assert(#full.list==3 and seen.s1 and not seen.o1 and seen.o2 and seen.o3,"the shake drop in, the oldest other out")
+		local late=Sim.Loose.new()
+		late:step(now,{o1,o2,o3},view,world,nil,3,false);late:step(now+.01,{o1,o2,o3,s1},view,world,nil,3,false)
+		seen=ids(late);assert(#late.list==3 and seen.s1 and not seen.o1,"listed last (grove order): drawn all the same")
+		local low=Sim.Loose.new();low:step(now,{o1,s1},view,world,nil,0,false)
+		assert(#low.list==1 and low.list[1].id=="s1","the lowest level still draws my shake drop")
+		local racedShake=Sim.Loose.new();racedShake:step(now,{s1},view,world,nil,3,true)
+		assert(#racedShake.list==0,"a live race draws none, a shake drop too")
 		-- After all that, the grove is untouched: the same active list and the same hanging.
 		assert(#grove:active(now)==1 and grove:active(now)[1]==plan and grove:hanging(plan.key,now)==nil)
 		assert(#grove:active(plan.gone+.01)==0,"gone from the grove once faded")

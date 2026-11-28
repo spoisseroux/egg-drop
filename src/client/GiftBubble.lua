@@ -36,7 +36,7 @@ end
 
 function Bubble.new(options)
 	local self=setmetatable({options=options,time=0},Bubble)
-	local gui=node("BillboardGui",options.parent,{Name="EggDropGiftBubble",Size=UDim2.fromOffset(300,96),AlwaysOnTop=true,Active=true,
+	local gui=node("BillboardGui",options.parent,{Name="EggDropGiftBubble",Size=UDim2.fromOffset(268,Bubble.H+8),AlwaysOnTop=true,Active=true,
 		LightInfluence=0,ResetOnSpawn=false,Enabled=false,MaxDistance=140,ZIndexBehavior=Enum.ZIndexBehavior.Sibling})
 	local pill=node("TextButton",gui,{Name="Pill",Text="",AutoButtonColor=false,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),
 		Size=UDim2.fromOffset(260,Bubble.H),BackgroundColor3=Bubble.Fill,BorderSizePixel=0,Selectable=true})
