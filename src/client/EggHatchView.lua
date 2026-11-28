@@ -1510,7 +1510,7 @@ function View:paintEggPane()
  self.eggName.Text=recipe.name
  local promise=self.shopRoot and self.shopRoot:FindFirstChild("Promise",true)
  local statPet=self.statPet and self.statPet()
- if promise then promise.Text=if id=="stat"then(StatOdds.rows(self.state,statPet).note or UICopy.get("hatch.promise"))elseif id=="look"then View.lookOdds(self.state).note elseif id=="material"and(self.state.materialPoolVersion or MaterialCatalog.PoolVersion)==4 then require(script.Parent.MaterialDisclosure).promise(self.state)else UICopy.get("hatch.promise")end
+ if promise then promise.Text=if id=="stat"then(StatOdds.rows(self.state,statPet).note or UICopy.get("hatch.promise"))elseif id=="look"then View.lookOdds(self.state).note elseif id==RackShop.Tile then UICopy.get("rack.back")elseif id=="material"and(self.state.materialPoolVersion or MaterialCatalog.PoolVersion)==4 then require(script.Parent.MaterialDisclosure).promise(self.state)else UICopy.get("hatch.promise")end
  self.eggPrice.set("★ "..recipe.cost,"sticker",Kit.Color.stars) -- T6: the pane's one sticker
  local gift=self:giftSelected()
  if gift then
@@ -1547,7 +1547,8 @@ function View:paintEggPane()
   local row=Kit.frame(self.oddsHolder,"Odds_"..r.id,if phone then nil else "well",UDim2.fromOffset(c*(cw+8),ri*pitch),UDim2.fromOffset(cw,rowH),6)
   if not phone then row.BackgroundTransparency=0 end
   local textSize=if phone then 13 else 15;local inset=if phone then 0 else 12
-  local valueWidth=math.max(70,math.ceil(Kit.measure(r.value,"Counter",textSize).X)+4)
+  -- the rack's rows carry a pill too, so their odds column is only as wide as "17%" (beta 45: names were cut to 3 letters)
+  local valueWidth=math.max(if r.pill and not odds.restricted then 34 else 70,math.ceil(Kit.measure(r.value,"Counter",textSize).X)+4)
   -- the daily rack: a colour dot before the name and a rarity pill before the odds (the rows are buttons)
   local dotW=if r.color then rowH*.5+6 else 0
   local pillW=if r.pill and not odds.restricted then math.ceil(Kit.measure(r.pill,"Small",if phone then 10 else 12).X)+12 else 0
