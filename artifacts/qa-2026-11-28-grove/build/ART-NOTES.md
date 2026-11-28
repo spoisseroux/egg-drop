@@ -83,3 +83,15 @@ Checks the builder asserts: no ring vertex over the island except crowns and bou
 - Lanterns are one mesh with warm and aqua vertex colours. If Neon ignores vertex colour they will all take the part colour.
 - `W7_Crystals__*` and `W7_Water__waterfall_sky` hang below the island (to Y -90 and -68) and now pass through the moat surface. They are not in `hides`; the Sky Falls cut is the runtime's (review point 3).
 - `canopyBottomY` is 133.3. The `high_falls` balloon top has to stay under it.
+
+## In-game pass (later on 2026-11-28)
+
+The pack was rebuilt after the first in-game captures: see `../INGAME-CRITIQUE.md` for what changed, what to re-upload and the runtime values. Where it differs, that file is the current one. In short:
+
+- `grove-stone.png` rebaked warm (mean .89 .87 .82); the tier walls carry block tone and foot shading in their vertex colours.
+- `GV_Bank__stone` is a plinth that meets the island's cliff feet (cap Y -4, shoulder Y -6.5); `W7_Underside__*` moved to `hides`. Its faces were inside out in places; fixed.
+- Vine curtains became 144 tapered strands that lie on the rock; ferns moved to the lips (60).
+- Lanterns are 1.6 to 2.2 studs in radius. Rays are 15 to 22 studs wide at the lawn, with their own texture `tex/grove-ray.png`.
+- Wall block offsets corrected (no tread faces down).
+- Total on screen 44,849 triangles (budget 45,000), 32,781 unique; `GV_Bank__stone` 3,168, `GV_Dressing__leaf` 3,744, `GV_Props__paint` 2,260; the rest as in the table above.
+- New review renders: `build-skirt.png`, `build-skirtb.png`, `build-cove.png` (the island's foot). All `build-*.png` here are from the rebuilt pack.

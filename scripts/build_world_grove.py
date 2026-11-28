@@ -4,16 +4,20 @@ ARCH-REVIEW-GROVE.md). Fable lane: art only. Nothing here touches Studio, src/ o
 Run in BACKGROUND Blender only, never saving a .blend:
   blender.exe -b --factory-startup --python scripts/build_world_grove.py -- [--renders garden,wide,within,up,dusk]
                                                     [--res 1280] [--samples 48] [--skip-textures] [--skip-export]
+                                                    [--void-check]   (review renders: the BACK of any single-sided mesh
+                                                    shows in a flat colour, as in game it is a hole; cameras skirt,
+                                                    skirtb and cove look at the island's foot)
 
 The playable island (assets/world/world-v7.fbx) is loaded only to measure its footprint and to stand in the review
 renders; it is never exported. Round it the script builds the hollow as game meshes:
-- near band: GV_Bank__stone (seals the band from the island's cliff bottoms down to the moat bed and out to the first
-  wall's foot; moat spires), GV_Moat__water (the water surface, 30 studs below the lawn)
+- near band: GV_Bank__stone (the plinth the island stands on: a mossed cap tucked inside the cliff shell above the cliff
+  feet, a shoulder just past the island's edge below them, then down to the moat bed and out to the first wall's foot;
+  moat spires), GV_Moat__water (the water surface, 30 studs below the lawn)
 - mid band: three cliff tiers, each a stone wall mesh (stepped strata) and a moss cap mesh (treads, lips, ledges),
   four waterfall gorges (GV_Falls__fall), ledge spires and stone lantern posts (GV_Rocks__stone), ledge trees
 - the giants: nine old trees from 3 trunk and 3 crown variants (one mesh per variant, placed by `instances`), their
   crowns arching in over the rim round an oval sky opening, with the sun gate left empty toward the 10.5 sun
-- dressing: ferns and vine curtains (leaf), six scenery tree houses, rope bridges, lantern strings, small trunks
+- dressing: lip ferns and hanging vine strands (leaf), six scenery tree houses, rope bridges, lantern strings, small trunks
   (GV_Props__paint, vertex-coloured), lanterns and windows (GV_Glow__glow, vertex-coloured warm/aqua)
 - far band: eight opaque forest-rim sector meshes (GV_Far_1..8__leaf)
 Everything is opaque geometry: no alpha cards anywhere.
@@ -22,6 +26,7 @@ Writes:
 - assets/world/grove/grove.fbx            every pack mesh (static: origin at its bounds centre; giants: at the root)
 - assets/world/grove/grove-manifest.json  the contract the runtime and the upload gate read
 - assets/world/grove/tex/grove-{stone,moss,bark,leaf}.png   four tiling 1024 colour maps, drawn procedurally here
+- assets/world/grove/tex/grove-ray.png    256 x 1024 white with alpha: the god rays' Beam texture (Y along the beam)
 - artifacts/qa-2026-11-28-grove/build/build-<camera>.png    Cycles renders of the BUILT pack (with --renders)
 
 ONE coordinate rule: Roblox (X, Y, Z) = Blender (x, z + 4, -y). (grove.py's "Blender (x, y, z) = Roblox (x, -z, y - 4)"
@@ -63,7 +68,11 @@ TAU = math.tau
 CX, CY = 12.0, 8.0            # the hollow's centre (Blender), as the mockup
 PREFIX = "GV_"                # unique to this pack (world-finish-template-names)
 WATER_Z = -30.0               # Blender; Roblox Y -26 (arch review: the moat surface at or below -25)
-BANK_TOP_Z = -12.8            # under the island's cliff bottoms (lowest: W7_Rocks__cliff_rock at Blender -12.16)
+BANK_TOP_Z = -8.0             # the plinth's cap: 1 stud ABOVE the island's cliff feet (Blender -9 all round the rim),
+                              # tucked inside the cliff shell, so no sight line passes under the cliffs (in-game critique 4)
+SHOULDER_Z = -10.5            # the plinth's shoulder: 1.5 studs below the cliff feet, 1.5 studs outside the island's edge
+CLIFF_FOOT_Z = -9.0           # where the island's rim cliffs end (measured: Roblox Y -5.0 to -4.0 round the whole rim)
+CAP_IN = 14.0                 # the cap runs this far in under the island from the bank's top ring
 CANOPY_MIN_Y = 130.0          # Roblox: crown undersides over the island stay above this (balloons fly below)
 MID_MIN = 45.0                # studs past the rim every mid and far piece keeps
 FALLS = [0.55, 2.35, 3.75, 5.35]                                  # gorge angles (Blender, about the centre)
@@ -140,6 +149,7 @@ class Footprint:
         self.x0, self.y0, self.n = -180, -180, 400
         occ = np.zeros((self.n, self.n), bool)
         zmin = np.full((self.n, self.n), 1e9)
+        zmax = np.full((self.n, self.n), -1e9)
         for o in objects:
             me = o.data
             me.calc_loop_triangles()
@@ -161,7 +171,9 @@ class Footprint:
                 ok = (ix >= 0) & (ix < self.n) & (iy >= 0) & (iy < self.n)
                 occ[ix[ok], iy[ok]] = True
                 np.minimum.at(zmin, (ix[ok], iy[ok]), p[ok, 2])
+                np.maximum.at(zmax, (ix[ok], iy[ok]), p[ok, 2])
         self.occ = occ
+        self.zmax = zmax
         self.zmin = float(zmin[occ].min())
         inner = occ.copy()
         inner[1:-1, 1:-1] = occ[1:-1, 1:-1] & occ[:-2, 1:-1] & occ[2:, 1:-1] & occ[1:-1, :-2] & occ[1:-1, 2:]
@@ -179,6 +191,8 @@ class Footprint:
         np.maximum.at(out, k, r)
         for _ in range(3):  # a cell is wider than a bin near the centre: fill single gaps
             out = np.maximum(out, np.minimum(np.roll(out, 1), np.roll(out, -1)))
+        while (out == 0).any():  # a wider gap (small radii): take a filled neighbour, never 0 (the bank's top ring
+            out = np.where(out == 0, np.maximum(np.roll(out, 1), np.roll(out, -1)), out)   # fell to the centre there)
         self.outline = out
         dil = np.max([np.roll(out, s) for s in range(-12, 13)], axis=0)
         raw = np.maximum(dil, [rin((i + .5) / NB * TAU) for i in range(NB)])
@@ -187,6 +201,7 @@ class Footprint:
             sm = np.mean([np.roll(sm, s) for s in range(-20, 21)], axis=0)
         self.rim = np.maximum(sm, dil + 1.0)                      # R(theta): the ring's reference radius
         self.top = np.min([np.roll(out, s) for s in range(-10, 11)], axis=0) - 3.0   # the bank's top ring
+        self.shoulder = dil + 1.5                                                    # the plinth's shoulder, past the edge
 
     @staticmethod
     def _at(table, theta):
@@ -200,6 +215,14 @@ class Footprint:
 
     def bank_top(self, theta):
         return self._at(self.top, theta)
+
+    def shoulder_r(self, theta):
+        return self._at(self.shoulder, theta)
+
+    def top_z(self, p):
+        """The island's highest surface over this cell (None off the island)."""
+        ix, iy = math.floor(p[0] - self.x0), math.floor(p[1] - self.y0)
+        return float(self.zmax[ix, iy]) if 0 <= ix < self.n and 0 <= iy < self.n and self.occ[ix, iy] else None
 
     def inside(self, p):
         ix, iy = math.floor(p[0] - self.x0), math.floor(p[1] - self.y0)
@@ -395,13 +418,16 @@ class Terrain:
         c, s = math.cos(th), math.sin(th)
 
         def blk(row, amp):
-            return (noise.cell(Vector(((R + w1) * c / 22, (R + w1) * s / 22, row * 5.3))) - .5) * 2 * amp
-        mid = (d0 + 15 + w1 - 9) / 2
-        rows = [(d0, BANK_TOP_Z, "bank"), (d0 + 4 + blk(1, 1.2), -17.5, "bank"), (d0 + 9 + blk(2, 1.5), -24, "bank"),
-                (d0 + 15, WATER_Z - 1.5, "bank"), (mid, WATER_Z - 4, "bank"), (w1 - 9, WATER_Z - 1.5, "bank"),
-                (w1 - 3, WATER_Z + 1.2, "bank")]
+            # noise.cell is -1..1. (The first build took it for 0..1: offsets ran -3 * amp .. amp, some treads came
+            # out narrower than nothing and turned face down, which is a hole in a single-sided mesh.)
+            return noise.cell(Vector(((R + w1) * c / 22, (R + w1) * s / 22, row * 5.3))) * amp
+        ds = fp.shoulder_r(th) - R
+        # the plinth the island stands on: a flat cap under the cliffs, a shoulder past their feet, then down to the bed
+        rows = [(d0 - CAP_IN, BANK_TOP_Z, "bank"), (d0, BANK_TOP_Z, "bank"), (ds, SHOULDER_Z, "bank"),
+                (ds + 3 + blk(1, 1.0), -17.5, "bank"), (ds + 7 + blk(2, 1.2), -24, "bank"),
+                (ds + 12, WATER_Z - 1.5, "bank"), (w1 - 9, WATER_Z - 1.5, "bank"), (w1 - 3, WATER_Z + 1.2, "bank")]
         a, z0 = w1, zf
-        info = {"R": R, "w1": w1, "zf": zf, "g": g, "tiers": []}
+        info = {"R": R, "w1": w1, "zf": zf, "g": g, "tiers": [], "ds": ds}
         for k, (top, (fr, lean, tread)) in enumerate(zip((L1, L2, L3), self.TIERS)):
             foot_d, foot_z = a, z0
             for i in range(1, len(fr)):
@@ -427,6 +453,12 @@ class Terrain:
         return Vector((CX + r * math.cos(th), CY + r * math.sin(th), z))
 
 
+BANK_OUT_ROWS = 5                                   # rows[0..5] are the island side of the bank (cap, shoulder, slopes)
+PLINTH_MOSS, PLINTH_EDGE = (.62, .86, .46), (.80, .93, .70)   # the cap and shoulder: mossed stone (a tint on the tile)
+BANK_COLS = (PLINTH_MOSS, PLINTH_MOSS, PLINTH_EDGE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE)
+RISER_FOOT = (.90, .89, .87)
+
+
 def columns():
     n = 144
     ths = [TAU * j / n for j in range(n)]
@@ -442,6 +474,7 @@ def build_terrain(T, M):
     mesh_of = {"bank": M["Bank"], "T1s": M["T1s"], "T1m": M["T1m"], "T2s": M["T2s"], "T2m": M["T2m"], "T3s": M["T3s"], "T3m": M["T3m"]}
     n = len(ths)
     wraps = {}
+    turned = 0
     for j in range(n):
         a, b = secs[j], secs[(j + 1) % n]
         tha, thb = ths[j], ths[(j + 1) % n] + (TAU if j == n - 1 else 0)
@@ -458,9 +491,25 @@ def build_terrain(T, M):
                 w = wraps.setdefault(tag, max(8, round(TAU * (a["R"] + da) / TILE["stone"])))
                 uvs = [(tha / TAU * w, run_a / 32), (thb / TAU * w, run_b / 32), (thb / TAU * w, (run_b + lb) / 32),
                        (tha / TAU * w, (run_a + la) / 32)]
-            mb.poly(pts, uvs, WHITE, facing=inward * .6 + UP)
+            cols, facing = WHITE, inward * .6 + UP
+            if tag == "bank":
+                # The island-side slopes face OUT from the centre. (They were given the walls' inward rule: the steep
+                # ones turned inside out and vanished in game, where a mesh is single-sided.)
+                if i < BANK_OUT_ROWS:
+                    nq = (pts[1] - pts[0]).cross(pts[3] - pts[0]) + (pts[3] - pts[2]).cross(pts[1] - pts[2])
+                    turned += (nq.dot(facing) < 0) != (nq.dot(UP - inward * .6) < 0)
+                    facing = UP - inward * .6
+                cols = [BANK_COLS[i]] * 2 + [BANK_COLS[i + 1]] * 2
+            elif mb.texture == "stone":
+                # each riser: its own block tone, and a soft crease shadow at its foot (the ring casts no shadows)
+                k = .5 + .5 * noise.cell(Vector((round(tha * 9), i * 3.7, 11.0)))
+                tone = (1 - .06 * k, 1 - .065 * k, 1 - .08 * k)
+                foot = tuple(t * f for t, f in zip(tone, RISER_FOOT))
+                cols = [foot, foot, tone, tone]
+            mb.poly(pts, uvs, cols, facing=facing)
             run_a += la
             run_b += lb
+    print("GROVE bank faces the walls' inward rule would turn inside out:", turned)
     # the moat's surface: one flat ring from under the bank to under the far shore
     W = M["Water"]
     for j in range(n):
@@ -597,6 +646,7 @@ class Dressing:
     def lantern(self, p, big=1.0, kind=None, source="string", hang=True):
         kind = kind or ("warm" if self.rng.random() < .6 else "aqua")
         col = WARM if kind == "warm" else AQUA
+        p = Vector(p)
         blob(self.M["Glow"], p, 1.3 * big, 1.15, SPH_LAMP, 0, 1, col)
         if hang:
             top = Vector(p) + UP * 1.3 * big
@@ -611,7 +661,7 @@ class Dressing:
         if not planks:
             ribbon(P, pts, .22, UP, ROPE)
             for i in range(1, n, 2):
-                self.lantern(pts[i] + Vector((0, 0, -2.9)), .8, source="string")
+                self.lantern(pts[i] + Vector((0, 0, -2.9 * 1.4)), 1.4, source="string")
             return
         fine = [a.lerp(b, i / (n * 3)) + Vector((0, 0, -sag * math.sin(math.pi * i / (n * 3)))) for i in range(n * 3 + 1)]
         for i in range(n * 3):
@@ -622,7 +672,7 @@ class Dressing:
             for i in range(0, n + 1, 2):
                 ribbon(P, [pts[i] + sd * off, pts[i] + sd * off + UP * 3.4], .2, dirn, ROPE)
         for i in range(2, n - 1, 2):
-            self.lantern(pts[i] + sd * (2.4 if i % 4 else -2.4) + UP * 4.9, .8, source="bridge", hang=False)
+            self.lantern(pts[i] + sd * (2.4 if i % 4 else -2.4) + UP * (3.3 + 1.5 * 1.2), 1.2, source="bridge", hang=False)
 
 
 # ------------------------------------------------------------------------------------------------------------ build
@@ -637,7 +687,7 @@ def build(fp):
         "Falls": MB("Falls__fall", "falls", "mid", "", 2, double=True, kind="fall", note="white water sheets; vertex-coloured, u across, v = studs / 16 down the flow"),
         "Rocks": MB("Rocks__stone", "rocks", "mid", "stone", 2, note="ledge spires and stone lantern posts"),
         "TreeLeaf": MB("LedgeTrees__leaf", "trees", "mid", "leaf", 2, smooth=True),
-        "Dress": MB("Dressing__leaf", "dressing", "dressing", "leaf", 1, double=True, note="ferns and vine curtains"),
+        "Dress": MB("Dressing__leaf", "dressing", "dressing", "leaf", 1, double=True, note="lip ferns and hanging vine strands"),
         "Props": MB("Props__paint", "props", "dressing", "", 1, double=True, kind="paint",
                     note="tree houses, decks, rope bridges, lantern strings, small trunks; vertex-coloured, no texture"),
         "Glow": MB("Glow__glow", "lanterns", "dressing", "", 1, smooth=True, kind="glow",
@@ -730,7 +780,7 @@ def build(fp):
             ribbon(P, [p, p + UP * 3.2], .25, Vector((-math.sin(a * .628), math.cos(a * .628), 0)), WOOD_DARK)
         rail = [c + Vector((math.cos(TAU * k / 16), math.sin(TAU * k / 16), 0)) * (rr + 4.1) + UP * 4.2 for k in range(17)]
         ribbon(P, rail, .22, UP, ROPE)
-        D.lantern(c + inward * (rr + 4.2) + UP * 7, 1.2, "warm", "deck")
+        D.lantern(c + inward * (rr + 4.2) + UP * 7.8, 1.7, "warm", "deck", hang=False)
         ribbon(P, [c + inward * (rr + 4.2) + UP, c + inward * (rr + 4.2) + UP * 5.5], .2, side, WOOD_DARK)
         houses.append((c + UP, rr + 4.3, g["th"]))
     gate = sum(GATE) / 2
@@ -792,7 +842,7 @@ def build(fp):
         p = T.at(th, ld + 2.2, lz + .6)
         tube(M["Rocks"], [p - UP, p + UP * 4.6], [.75, .55], 5, cap=False, smooth=False, wraps=1)
         cone(M["Rocks"], p + UP * 4.6, [(1.1, 0), (1.1, .4), (0, 1.1)], 5, WHITE)
-        D.lantern(p + UP * 7.2, 1.15, None, "post", hang=False)
+        D.lantern(p + UP * 7.9, 1.7, None, "post", hang=False)
         posts += 1
 
     # ledge trees: small trunks (painted) and rounded crowns
@@ -817,20 +867,21 @@ def build(fp):
             blob(M["TreeLeaf"], c, H * rng.uniform(.26, .36), .72, SPH_TREE, .26, .12, tint, UNDER_LEAF)
         trees += 1
 
-    # ferns on the ledges and at the wall feet; vine curtains over the lips
+    # ferns along the ledge lips (where they show against the wall from below)
     DR = M["Dress"]
     ferns = 0
     for _ in range(400):
-        if ferns >= 100:
+        if ferns >= 60:
             break
         th = rng.uniform(0, TAU)
         sec = T.section(th)
-        k = rng.randrange(3)
-        lo, hi, z = sec["tiers"][k]["ledge"]
-        if hi - lo < 4:
+        if sec["g"] > .25:
             continue
-        p = T.at(th, rng.uniform(lo + .5, hi), z + .2)
-        size = rng.uniform(2.6, 5.2)
+        k = rng.randrange(3)
+        ld, lz = sec["tiers"][k]["lip"]
+        d = rng.uniform(.8, 3.4)
+        p = T.at(th, ld + d, lz + .29 * d + .1)
+        size = rng.uniform(3.4, 6.2)
         tint = rng.choice(((.9, 1, .9), (1, 1, .85), (.85, 1, .95)))
         for bld in range(6):
             a = TAU * bld / 6 + rng.uniform(-.3, .3)
@@ -843,26 +894,57 @@ def build(fp):
                     [(u0, 0), (u0 + size * .4 / 24, size * .5 / 24), (u0, size / 24), (u0 - size * .4 / 24, size * .5 / 24)],
                     tint, True)
         ferns += 1
-    vines = 0
-    for _ in range(400):
-        if vines >= 96:
+
+    # Hanging vines. In game the old curtains (flat cards up to 6 studs wide, hung 3 studs clear of the lip and longer than
+    # the stratum under it) read as floating green squares. Now: bundles of three thin tapered strands with leaves, each
+    # draped over a stratum's edge and lying on the rock face down to no further than that stratum's foot.
+    n_col = len(ths)
+    risers = [i for i, row in enumerate(secs[0]["rows"][:-1]) if row[2] and row[2][0] == "T" and row[2].endswith("s")]
+
+    def wall_point(th, i):
+        """Row `i` of the wall at any angle, as the MESH has it (a chord between the two columns either side)."""
+        th %= TAU
+        j = max(k for k in range(n_col) if ths[k] <= th)
+        t0, t1 = ths[j], ths[j + 1] if j + 1 < n_col else TAU
+        ra, rb_ = secs[j]["rows"][i], secs[(j + 1) % n_col]["rows"][i]
+        return T.at(t0, ra[0], ra[1]).lerp(T.at(t1 % TAU, rb_[0], rb_[1]), (th - t0) / (t1 - t0))
+    vines = strands = 0
+    for _ in range(600):
+        if vines >= 48:
             break
         th = rng.uniform(0, TAU)
-        sec = T.section(th)
-        if sec["g"] > .3:
+        if gorge(th) > .3:
             continue
-        k = rng.randrange(3)
-        ld, lz = sec["tiers"][k]["lip"]
-        inward = Vector((-math.cos(th), -math.sin(th), 0))
-        tan = Vector((-inward.y, inward.x, 0))
-        p = T.at(th, ld + 1.0, lz + .8)
-        ln = rng.uniform(9, 28)
-        half = rng.uniform(1.4, 3.2)
-        pts = [p, p + inward * 2.2 - UP * .6, p + inward * 3.0 - UP * ln * .5, p + inward * 3.3 - UP * ln]
-        ribbon(DR, pts, half, tan, rng.choice(((.92, 1, .9), (1, 1, .86), (.84, .98, .92))), taper=True, u0=rng.random())
+        i = rng.choice(risers)
+        top0 = wall_point(th, i + 1)
+        if top0.z - wall_point(th, i).z < 7:
+            continue
+        r_here = math.hypot(top0.x - CX, top0.y - CY)
+        tint = rng.choice(((.80, .95, .78), (.90, 1, .80), (.74, .92, .82)))
+        for sn in range(3):
+            th_s = th + ((sn - 1) * rng.uniform(1.1, 1.9) + rng.uniform(-.3, .3)) / r_here
+            top, bot = wall_point(th_s, i + 1), wall_point(th_s, i)
+            h = top.z - bot.z
+            inward = Vector((-math.cos(th_s), -math.sin(th_s), 0))
+            tan = Vector((-inward.y, inward.x, 0))
+            ln = min(22.0, h * rng.uniform(.45, .92))
+            r0 = rng.uniform(.38, .55)
+
+            def face(f):
+                return top.lerp(bot, f) + inward * .55
+            pts = [top - inward * 1.3 + UP * .45, top + inward * .5 - UP * .2,
+                   face(.5 * ln / h) + tan * rng.uniform(-.5, .5), face(ln / h)]
+            tube(DR, pts, [r0, r0, r0 * .7, r0 * .15], 3, tint, cap=False, wraps=1)
+            for q, f in enumerate((.3, .55, .8)):
+                at = pts[1].lerp(pts[3], f) + inward * .3
+                side = tan * (1 if (q + sn) % 2 else -1)
+                size = rng.uniform(1.5, 2.3) * (1 - .3 * f)
+                DR.poly([at + UP * .35, at - UP * .35 + inward * .2, at + side * size - UP * size * .55 + inward * .5],
+                        None, tint, False)
+            strands += 1
         vines += 1
     counts = {"giants": len(giants), "houses": len(houses), "bridges": bridges, "lanternStrings": strings, "posts": posts,
-              "ledgeTrees": trees, "ferns": ferns, "vineCurtains": vines}
+              "ledgeTrees": trees, "ferns": ferns, "vineCurtains": vines, "vineStrands": strands}
     return T, M, giants, variants, instances, falls, lanterns, counts
 
 
@@ -925,22 +1007,26 @@ def lerp_img(a, b, k):
 
 
 def tex_stone(n, rng):
-    """Pale blue-white limestone: crisp crack lines, warm cream patches, faint strata."""
+    """Warm white limestone: crisp grey cracks, cream patches, a few cool patches, faint strata.
+    In game the first bake (mean .81 .85 .88, blue-grey cracks) went sky-blue under WorldAero's haze (#CFEFFF, density
+    .29) and blue sky light. The tile is now warm of neutral, so the haze brings it back to pale blue-white, not ice."""
     tone = fbm(n, 3, rng, 4)
-    img = ramp(tone, [(.30, (.74, .82, .90)), (.50, (.84, .89, .93)), (.70, (.91, .94, .95))])
-    cream = np.clip((fbm(n, 4, rng, 3) - .56) / .10, 0, 1)
-    img = lerp_img(img, np.array((.95, .91, .80)), cream * .85)
+    img = ramp(tone, [(.30, (.90, .88, .83)), (.50, (.96, .94, .89)), (.70, (1.0, .985, .95))])
+    cream = np.clip((fbm(n, 4, rng, 3) - .50) / .12, 0, 1)
+    img = lerp_img(img, np.array((.96, .87, .68)), cream * .9)
+    cool = np.clip((fbm(n, 5, rng, 3) - .60) / .10, 0, 1)
+    img = lerp_img(img, np.array((.85, .90, .94)), cool * .5)
     strata = fbm(n, 2, rng, 3, fy=28)
     img *= (1 - .07 * np.clip((strata - .55) / .1, 0, 1))[..., None]
     big = voronoi_edge(n, 7, rng, 1.0)
     fine = voronoi_edge(n, 19, rng, .6)
-    line = 1 - np.clip(big / .035, 0, 1)
-    hair = (1 - np.clip(fine / .05, 0, 1)) * .45
-    img = lerp_img(img, np.array((.40, .49, .58)), np.clip(line, 0, 1) * .9)
-    img = lerp_img(img, np.array((.56, .64, .72)), hair * (1 - line))
-    bevel = np.clip((big - .035) / .10, 0, 1)            # a light lip beside each crack keeps them crisp, not dark
-    img *= (.94 + .06 * bevel)[..., None]
-    img *= (1 + .04 * (pnoise(n, 256, rng) - .5))[..., None]
+    line = 1 - np.clip(big / .045, 0, 1)
+    hair = (1 - np.clip(fine / .05, 0, 1)) * .6
+    img = lerp_img(img, np.array((.40, .39, .40)), np.clip(line, 0, 1) * .95)
+    img = lerp_img(img, np.array((.60, .59, .58)), hair * (1 - line))
+    bevel = np.clip((big - .045) / .10, 0, 1)            # a light lip beside each crack keeps them crisp
+    img *= (.92 + .08 * bevel)[..., None]
+    img *= (1 + .05 * (pnoise(n, 256, rng) - .5))[..., None]
     return np.clip(img, 0, 1)
 
 
@@ -1008,6 +1094,27 @@ def tex_leaf(n, rng):
     return np.clip(img, 0, 1)
 
 
+RAY_PX, RAY_STUDS = (256, 1024), 140.0   # width x height; image Y runs ALONG the Beam (as water-strand.png), X across
+
+
+def tex_ray(rng):
+    """God-ray shaft for the Beams: white, alpha only. A broad soft body, straight soft bands and a few fine streaks
+    (light does not wander), clear edges; each band breathes slowly along Y and the tile repeats along Y."""
+    w, h = RAY_PX
+    u = ((np.arange(w) + .5) / w)[None, :]
+    y = ((np.arange(h) + .5) / h)[:, None] * TAU
+    edge = np.clip(np.minimum(u, 1 - u) / .26, 0, 1)
+    edge = edge * edge * (3 - 2 * edge)
+    alpha = .50 * np.exp(-((u - .5) / .27) ** 2) * (1 + .10 * np.sin(y + 1.0))
+    for lo, hi, amp_lo, amp_hi, count in ((.045, .10, .14, .30, 6), (.012, .022, .10, .20, 5)):
+        for _ in range(count):
+            cx, wd, amp = rng.uniform(.16, .84), rng.uniform(lo, hi), rng.uniform(amp_lo, amp_hi)
+            k, ph = int(rng.integers(1, 3)), rng.uniform(0, TAU)
+            alpha = alpha + amp * (1 + .22 * np.sin(y * k + ph)) / 1.22 * np.exp(-((u - cx) / wd) ** 2)
+    alpha = np.clip(alpha / alpha.max() * .92, 0, 1) * edge
+    return np.concatenate([np.ones((h, w, 3)), alpha[..., None]], axis=-1)
+
+
 def write_textures():
     TEX.mkdir(parents=True, exist_ok=True)
     out = {}
@@ -1026,6 +1133,21 @@ def write_textures():
             print("GROVE texture", path.name, "mean", [round(float(x), 3) for x in rgb.reshape(-1, 3).mean(axis=0)])
         out[name] = {"color": "assets/world/grove/tex/" + path.name, "colorId": "", "studsPerTile": TILE[name], "pixels": 1024,
                      "texelsPerStud": round(1024 / TILE[name], 2), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+    path = TEX / "grove-ray.png"
+    if "--skip-textures" not in ARGV or not path.exists():
+        rgba = tex_ray(np.random.default_rng(4190))
+        image = bpy.data.images.new("grove-ray", RAY_PX[0], RAY_PX[1], alpha=True)
+        image.alpha_mode = "STRAIGHT"
+        image.pixels.foreach_set(rgba[::-1].astype(np.float32).ravel())
+        image.filepath_raw = str(path)
+        image.file_format = "PNG"
+        image.save()
+        bpy.data.images.remove(image)
+        print("GROVE texture", path.name, "mean alpha", round(float(rgba[..., 3].mean()), 3), "max", round(float(rgba[..., 3].max()), 3))
+    out["ray"] = {"color": "assets/world/grove/tex/" + path.name, "colorId": "", "studsPerTile": RAY_STUDS, "pixels": list(RAY_PX),
+                  "alpha": True, "use": "Beam.Texture for the god rays (no mesh wears it): image Y along the beam, X across; "
+                                        "studsPerTile is the Beam's TextureLength",
+                  "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
     return out
 
 
@@ -1072,7 +1194,7 @@ def main():
         if o.type == "MESH" and o.name.startswith(EXCLUDE):
             bpy.data.objects.remove(o)
     fp = Footprint(island_objs)
-    assert fp.zmin >= BANK_TOP_Z + .4, ("the island reaches below the bank top", fp.zmin)
+    assert BANK_TOP_Z > CLIFF_FOOT_Z > SHOULDER_Z, "the plinth must straddle the cliff feet"
     textures = write_textures()
     T, M, giants, variants, instances, falls, lanterns, counts = build(fp)
 
@@ -1101,6 +1223,15 @@ def main():
         for p, d in zip(world, dists):
             if d < 0 and not (p.z <= BANK_TOP_Z + .3 or p.z + 4 >= CANOPY_MIN_Y):
                 violations.append((mb.name, rb(p), round(d, 2)))
+        if key == "Bank":   # the plinth's cap stays buried: under the island's own surface wherever it is over the island
+            cover = sorted((round(fp.top_z(p) - p.z, 2), rb(p)) for p, d in zip(world, dists)
+                           if d < -2.5 and fp.top_z(p) is not None)
+            print("GROVE plinth cap vertices under the island:", len(cover), "least cover", cover[:4])
+            assert cover and cover[0][0] >= .3, ("the plinth's cap shows through the island", cover[:4])
+            bank_cover = cover[0][0]
+        if mb.role in ("tier", "bank"):   # no face of the terrain looks down (a mesh is single-sided in game)
+            down = [rb(obj.data.vertices[t.vertices[0]].co) for t in obj.data.polygons if t.normal.z < -.25]
+            assert not down, (mb.name, "triangles facing down", len(down), down[:5])
         min_rim = min(dists)
         lo, hi = extent(obj)
         size = [round(hi.x - lo.x, 4), round(hi.z - lo.z, 4), round(hi.y - lo.y, 4)]
@@ -1168,8 +1299,8 @@ def main():
         for p, gap in keep_off:
             assert math.hypot(foot.x - p.x, foot.y - p.y) >= gap, ("ray too near", rb(p), x, y)
         top = foot + sun_b * ((208 - foot.z) / sun_b.z)
-        w = rr.uniform(9, 16)
-        rays.append({"from": rb(top), "to": rb(foot), "w0": round(w * .55, 2), "w1": round(w, 2), "phone": phone})
+        w = rr.uniform(15, 24)                        # broad soft shafts (in game the 9..16 ones were lost on the walls)
+        rays.append({"from": rb(top), "to": rb(foot), "w0": round(w * .5, 2), "w1": round(w, 2), "phone": phone})
 
     # a few slow soap bubbles: closed loops inside the opening, under the canopy
     bubbles = []
@@ -1179,7 +1310,8 @@ def main():
         bubbles.append({"path": path, "closed": True, "radius": [2.2, 3.0, 1.8, 2.6][i], "seconds": [150, 190, 170, 210][i]})
 
     hides = sorted(p["name"] for p in json.loads((ROOT / "assets/world/world-v7-manifest.json").read_text())["parts"]
-                   if p["name"].startswith(("W7_Backdrop", "W7_DriftRocks", "W7_Islets", "W7_CastleFlag", "W7_Water__cloud")))
+                   if p["name"].startswith(("W7_Backdrop", "W7_DriftRocks", "W7_Islets", "W7_CastleFlag", "W7_Water__cloud",
+                                            "W7_Underside")))   # the plinth seals the cliff feet now (in-game critique 4)
     manifest = {
         "note": "Generated by scripts/build_world_grove.py. Roblox studs. The Hidden Grove ring round the unchanged island.",
         "version": 1,
@@ -1203,17 +1335,21 @@ def main():
                             "and `to` (degrees from +X toward -Z, about the centre)"},
         "opening": opening,
         "canopyBottomY": round(canopy_bottom, 2),
-        "moat": {"surfaceY": WATER_Z + 4, "bedOpaque": True, "bankTopY": BANK_TOP_Z + 4,
-                 "note": "GV_Bank__stone runs from under the island's cliff bottoms to the first wall's foot, under the water"},
+        "moat": {"surfaceY": WATER_Z + 4, "bedOpaque": True, "bankTopY": BANK_TOP_Z + 4, "shoulderY": SHOULDER_Z + 4,
+                 "cliffFootY": CLIFF_FOOT_Z + 4,
+                 "note": "GV_Bank__stone is the plinth the island stands on: a cap inside the cliff shell at bankTopY (above "
+                         "the cliff feet), a shoulder 1.5 studs past the island's edge at shoulderY (below them), then down "
+                         "to the bed and out to the first wall's foot, under the water. W7_Underside is in hides"},
         "center": rb(Vector((CX, CY, 0))),
         "lanterns": lanterns,
         "falls": falls,
         "bubbles": bubbles,
         "hides": hides,
-        "keeps": ["W7_Underside__cliff_rock"],
+        "keeps": [],
         "counts": counts,
         "budget": BUDGET,
-        "checks": {"islandIntrusions": 0, "midMinRimDist": MID_MIN, "canopyMinY": CANOPY_MIN_Y, "islandLowestY": round(fp.zmin + 4, 2)},
+        "checks": {"islandIntrusions": 0, "midMinRimDist": MID_MIN, "canopyMinY": CANOPY_MIN_Y, "islandLowestY": round(fp.zmin + 4, 2),
+                   "plinthCapMinCover": bank_cover},
         "totals": {"triangles": total, "meshes": len(meshes), "instances": len(instances), "groups": groups,
                    "uniqueTriangles": sum(m["tris"] for m in meshes.values())},
         "triangles": total,
@@ -1242,8 +1378,11 @@ def bsdf(m):
     return next(n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
 
 
-def render_material(kind, texture):
-    m = bpy.data.materials.new("GV_" + (texture or kind))
+VOID_CHECK = "--void-check" in ARGV   # review only: any BACK of a single-sided mesh renders magenta (in game it is a hole)
+
+
+def render_material(kind, texture, double=False):
+    m = bpy.data.materials.new("GV_" + (texture or kind) + ("_2" if double else ""))
     m.use_nodes = True
     nt, b = m.node_tree, bsdf(m)
     L = nt.links.new
@@ -1269,6 +1408,18 @@ def render_material(kind, texture):
         if kind in ("glow", "fall"):
             L(vc.outputs["Color"], b.inputs["Emission Color"])
             b.inputs["Emission Strength"].default_value = 2.5 if kind == "glow" else .8
+    if VOID_CHECK and not double:
+        out = next(n for n in nt.nodes if n.type == "OUTPUT_MATERIAL")
+        geo = nt.nodes.new("ShaderNodeNewGeometry")
+        em = nt.nodes.new("ShaderNodeEmission")
+        em.inputs["Color"].default_value = {"stone": (1, 0, 1, 1), "moss": (1, 0, 0, 1), "leaf": (1, .4, 0, 1),
+                                            "bark": (1, 1, 0, 1)}.get(texture, (0, 0, 1, 1))
+        em.inputs["Strength"].default_value = 8
+        mx = nt.nodes.new("ShaderNodeMixShader")
+        L(geo.outputs["Backfacing"], mx.inputs[0])
+        L(b.outputs[0], mx.inputs[1])
+        L(em.outputs[0], mx.inputs[2])
+        L(mx.outputs[0], out.inputs["Surface"])
     return m
 
 
@@ -1277,10 +1428,13 @@ def render(manifest, objs, island, fp):
     REVIEW.mkdir(parents=True, exist_ok=True)
     mats = {}
     for name, entry in manifest["meshes"].items():
-        key = (entry["kind"], entry["texture"])
+        key = (entry["kind"], entry["texture"], entry["doubleSided"])
         if key not in mats:
             mats[key] = render_material(*key)
         objs[name].data.materials.append(mats[key])
+
+    def mat_of(kind):
+        return next(m for k, m in mats.items() if k[0] == kind)
     # the giants as the runtime will place them: straight from the manifest's instances
     for inst in manifest["instances"]:
         src = objs[inst["mesh"]]
@@ -1431,9 +1585,9 @@ def render(manifest, objs, island, fp):
         vs.inputs["Density"].default_value = .0005 if night else .0012
         em.inputs["Color"].default_value = (.62, .9, 1, 1) if night else (1, .97, .82, 1)
         em.inputs["Strength"].default_value = .22 if night else 1.5
-        bsdf(mats[("glow", "")]).inputs["Emission Strength"].default_value = 14 if night else 2.5
-        bsdf(mats[("fall", "")]).inputs["Emission Strength"].default_value = 2.0 if night else .8
-        bsdf(mats[("water", "")]).inputs["Emission Strength"].default_value = 1.5 if night else .45
+        bsdf(mat_of("glow")).inputs["Emission Strength"].default_value = 14 if night else 2.5
+        bsdf(mat_of("fall")).inputs["Emission Strength"].default_value = 2.0 if night else .8
+        bsdf(mat_of("water")).inputs["Emission Strength"].default_value = 1.5 if night else .45
         bsdf(cm).inputs["Emission Strength"].default_value = .03 if night else .08
         for m in bpy.data.materials:
             if m.name.startswith("W1_glow"):
@@ -1477,7 +1631,13 @@ def render(manifest, objs, island, fp):
     except TypeError:
         pass
     # the mockup's cameras (eye, target, vertical fov), Blender studs
+    def pol(deg, r, z):
+        return (CX + r * math.cos(math.radians(deg)), CY + r * math.sin(math.radians(deg)), z)
     table = {
+        # the island's foot (in-game critique 4): low over the moat, steep from above, and across a cove from the lawn
+        "skirt": (pol(205, 168, -16), pol(205, 120, -8), 60),
+        "skirtb": (pol(60, 186, 30), pol(60, 150, -9), 55),
+        "cove": (pol(236, 104, 8), pol(262, 76, -7), 70),
         "garden": ((-12, -30, 10.5), (-52, 60, 19), 70),
         "garden2": ((40, -52, 9.0), (110, 40, 42), 70),
         "wide": ((99, -155, 122), (0, 25, 12), 62),   # the mockup's (62, -158, 122) now stands inside giant 9: moved along the rim
