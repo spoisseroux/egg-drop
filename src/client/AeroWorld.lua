@@ -82,7 +82,8 @@ end
 
 -- options (fixtures): world, lighting, data, clock {look, now, apply}, switch {on, changed, trees, treesChanged},
 -- level, reduced, reducedChanged, camera, defer, delay, additions, warn; the grove's: grove (GroveWorld), groveOn,
--- groveChanged, groveData, groveTemplates, groveCamera, groveConnect, phone, hour. The game passes only clock.
+-- groveChanged, groveData, groveTemplates, groveCamera, groveConnect, phone, hour, motionReduced. The game passes only
+-- clock.
 function World.new(options)
 	options=options or {}
 	local self=setmetatable({world=options.world or workspace,lighting=options.lighting or game:GetService("Lighting"),
@@ -160,6 +161,9 @@ function World.new(options)
 		local board=boards and player and boards:FindFirstChild(tostring(player.UserId))
 		return GuiService.ReducedMotionEnabled or board~=nil and board:GetAttribute("ReducedEffects")==true
 	end
+	-- WorldMotion's own rule for the WaterFlow emitters (Motion:reduced: the device setting alone): a hidden emitter the
+	-- grove gives back returns in that state (GroveWorld.settleBackdrop).
+	self.motionReduced=options.motionReduced or function()return GuiService.ReducedMotionEnabled==true end
 	-- What HollowClock paints while the layer is on (Clock.look). paint(values): the garden hour's look, nil for WorldAero.
 	self.look={Hour=Values.Hour,Daylight=Values.Daylight,CloudColor=Values.CloudColor,
 		paint=function(values)self:paintLight(values)end,reduced=function()return self.reduced()==true end,
@@ -660,12 +664,16 @@ end
 function World:hideGrove()
 	local built=self.grove
 	if not(built and self.room)then return end
+	-- Streaming: what left the room is given back and let go first, so the records hold only what is there.
+	Grove.prune(self.groveHidden,function(item)return self:inside(item)end,World.restore)
 	Grove.hideBackdrop(function(records,item,key,value)return self:set(records,item,key,value)end,self.groveHidden,self.folders,
 		GroveRules.hides(built.data))
 end
 -- quiet: the caller drops the additions itself (a new room, the layer off), so they are not rebuilt here.
 function World:dropGrove(quiet)
 	self.groveLoading=nil
+	local okReduced,reduced=pcall(self.motionReduced)
+	Grove.settleBackdrop(self.groveHidden,okReduced and reduced==true)
 	self:restoreAll(self.groveHidden)
 	local built=self.grove
 	self.grove=nil

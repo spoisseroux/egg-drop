@@ -156,7 +156,9 @@ function Motion:apply(t)
 	end
 	if self.still~=false then
 		for _,beam in ipairs(self.beams)do beam.TextureSpeed=beam:GetAttribute("WorldFlowSpeed")or .15 end
-		-- The Hidden Grove's hidden backdrop (GroveWorld, attribute GroveHidden) stays off.
+		-- The Hidden Grove's hidden backdrop (GroveWorld, attribute GroveHidden) stays off. When the grove gives one back
+		-- it returns in the Reduced Motion state of that moment (GroveWorld.settleBackdrop, this rule: on unless
+		-- reduced), so skipping it here never leaves it off with motion on, nor on under Reduced Motion.
 		for _,emitter in ipairs(self.emitters)do if emitter:GetAttribute("GroveHidden")~=true then emitter.Enabled=true end end
 		self.still=false
 	end
@@ -173,9 +175,10 @@ function Motion:apply(t)
 	for _,e in ipairs(self.entries)do
 		local part=e.part
 		if not part.Parent then continue end
-		-- ARCH-REVIEW-GROVE 2: a part the Hidden Grove hides (GroveWorld) stops stepping until it shows again.
-		if part:GetAttribute("GroveHidden")==true then continue end
 		if eye and not e.far and(e.rest.Position-eye).Magnitude>Motion.Range+part.Size.Magnitude*.5 then continue end
+		-- ARCH-REVIEW-GROVE 2: a part the Hidden Grove hides (GroveWorld) stops stepping until it shows again. After the
+		-- cheap range check, so an out-of-range mover never reads its attribute.
+		if part:GetAttribute("GroveHidden")==true then continue end
 		if e.chime and scene then
 			-- Beta 14 W3 row 2: the chime's own swing, at its own rate, near the camera only.
 			if t<e.chimeAt or(eye and(e.rest.Position-eye).Magnitude>Motion.Chime.range)then continue end
