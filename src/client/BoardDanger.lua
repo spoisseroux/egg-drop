@@ -211,7 +211,7 @@ function Danger:update(pressure,published,now,reduced,audible,roundOver)
  -- Tag.
  self:set(self.tag,"Visible",state~="over"and not safe)
  self:set(self.tag,"TextColor3",if state=="near"then Danger.Amber else Danger.White)
- self:set(self.tag,"TextTransparency",if state=="near"then 0 else .35)
+ self:set(self.tag,"TextTransparency",if state=="near"then 0 else(self.calmTag or .35))
  -- Haze: fades in and out over 0.2 s (instant under Reduced Motion).
  local target=Danger.hazeAlpha(state,shownLeft)
  local dt=if self.lastNow then math.clamp(now-self.lastNow,0,.1)else 0;self.lastNow=now
@@ -229,6 +229,18 @@ function Danger:update(pressure,published,now,reduced,audible,roundOver)
  self:set(self.detail,"Text",detail)
  self:set(self.detail,"TextColor3",if red then Danger.Red else Danger.Amber)
  return state
+end
+-- DECK-FEEL-BRIEF 4 (Alive deckfeel; DeckFeelBoard calls it after update): the calm line's dashes march left by
+-- `offset` px, its colour eases toward coral near the line, and its tag fades to 40% after the first drop.
+-- feel(nil) puts all of it back.
+function Danger:feel(offset,color,quietTag)
+ self:set(self.dashes,"Position",UDim2.new(0,offset or 0,.5,0))
+ local tone=color or Danger.White
+ if self.dashTone~=tone then
+  self.dashTone=tone
+  for _,dash in ipairs(self.dashes:GetChildren())do if dash:IsA("Frame")then dash.BackgroundColor3=tone end end
+ end
+ self.calmTag=if quietTag then .6 else nil
 end
 
 function Danger:destroy()

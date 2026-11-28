@@ -803,7 +803,28 @@ function Results:showInPlace(data,view)
  self.data=data;self.visible=true;self.host.Parent.Visible=true
  if opening then self.inPlace.opened=os.clock();self.inPlace:reset();self.focus=if data.pending then 2 else 1 end
  self.inPlace:paint(data)
- self.feedback:setCountWindow(.30,.35);self.feedback:setBeats({})
+ -- DECK-FEEL-BRIEF 8 (Alive deckfeel): the results sequence, its beats and its opening cues (DeckFeelResults).
+ local Feel=require(script.Parent.DeckFeel)
+ if Feel.switch()then
+  local spec=Feel.recapSpec()
+  self.feedback:setCountWindow(spec.countStart,spec.countSpan);self.feedback:setFeel(spec)
+  self.feedback:setBeats(Feel.resultBeats(data.goals and #data.goals or 0,math.min(5,data.rows and #data.rows or 0),data.newBest==true))
+  local done=0
+  for _,goal in ipairs(data.goals or {})do if goal.done then done+=1 end end
+  local kind=Feel.resultKind(data.outcome,done)
+  if opening then
+   self.inPlace.feelFx=require(script.Parent.DeckFeelResults).new(self.inPlace,kind)
+   local audio=self.options.audio
+   if audio and audio.play then for _,cue in ipairs(Feel.openingCues(kind))do audio:play(cue[1],cue[2],cue[3])end end
+  end
+  -- So close names what was reached ("1 goal to go"), never what was lost.
+  local left=(data.goals and #data.goals or 0)-done
+  if kind=="close"and left>0 then
+   self.inPlace.subtitle.Text=if left==1 then UICopy.get("deck.feel.toGo.one")else UICopy.get("deck.feel.toGo.many",{count=left})
+  end
+ else
+  self.feedback:setCountWindow(.30,.35);self.feedback:setBeats({});self.feedback:setFeel(nil)
+ end
  if data.result then self.feedback:observe(data.result,true)end
  if not self.feedback.active then self.inPlace:paintCount(nil)end
  self.inPlace:start()
@@ -811,7 +832,7 @@ end
 function Results:show(data,compact)
  if type(compact)=="table"and compact.inPlace then return self:showInPlace(data,compact)end
  if self.inPlace then self.feedback:cancel();self.inPlace:destroy();self.inPlace=nil;self.root=nil;self.visible=false end
- self.feedback:setCountWindow(nil,nil)
+ self.feedback:setCountWindow(nil,nil);self.feedback:setFeel(nil)
  local opening=not self.visible
  if opening then self.spinOrigin=os.clock();self.lossCued=false end
  -- Onboarding v3 slice E: the See you tomorrow strip (a model from Results.tomorrow, set by the client; nil = none).
@@ -877,8 +898,13 @@ function Results:show(data,compact)
  -- Losing always has a sound (QA 2026-11-13): the `lose` cue once per results
  -- screen, as soon as the miss is known (on opening, or when a pending save lands).
  if audio and audio.play and Results.missLook(data)and not self.lossCued then
-  self.lossCued=true;audio:play("lose",1,.45)
-  if loss then audio:play("meter_fill",1,.25)end
+  self.lossCued=true
+  if require(script.Parent.DeckFeel).switch()then
+   for _,cue in ipairs(require(script.Parent.DeckFeel).openingCues("loss"))do audio:play(cue[1],cue[2],cue[3])end
+  else
+   audio:play("lose",1,.45)
+   if loss then audio:play("meter_fill",1,.25)end
+  end
  elseif opening and audio and audio.play then
   if self.feedback.active then audio:play("win",1,.5)
   elseif not data.pending and Kit.reduced()then audio:play("stars_total",1,.4)end

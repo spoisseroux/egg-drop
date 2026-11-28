@@ -647,6 +647,12 @@ function View:activate(id)
  local button=self.buttons[id];local state=button and Kit.buttonState(button)
  if not state or not state.enabled or not self.owner.visible then return false end
  if os.clock()-self.opened<.3 and not self:reduced()then return false end
+ -- DECK-FEEL-BRIEF 8: A during the sequence lands it on its final state (the next press acts; by 1.9 s it has landed).
+ if self.feelFx and self.feelFx:skip(os.clock()-self.opened)then
+  if self.owner.feedback.active then self.owner.feedback:cancel(true)end
+  self:paintCount(nil)
+  return true
+ end
  local callback=self.owner.callbacks[({[1]="replay",[3]="picker",[5]="hatch",[2]="leave"})[id]]
  if callback then Kit.pulse(button);callback();return true end
  return false
@@ -677,13 +683,18 @@ function View:step()
    item[1].GroupTransparency=1-e
    item[1].Position=UDim2.fromOffset(item[2].x+item[4]*(1-e),item[2].y+item[5]*(1-e))
   end
-  local h=if reduced then 1 else math.clamp((t-E.headline[1])/E.headline[2],0,1)
-  self.headline.scale.Scale=(self.headlineFit or 1)*(if h>=1 then 1 else 1.5-.5*backOut(h))
-  self.headline.root.Rotation=6+(-3-6)*(1-(1-h)^3)
-  local p=if reduced then 1 else math.clamp((t-E.star[1])/E.star[2],0,1)
-  self.star.scale.Scale=if p>=1 then 1 else .55+.45*backOut(p)
+  if not self.feelFx then
+   local h=if reduced then 1 else math.clamp((t-E.headline[1])/E.headline[2],0,1)
+   self.headline.scale.Scale=(self.headlineFit or 1)*(if h>=1 then 1 else 1.5-.5*backOut(h))
+   self.headline.root.Rotation=6+(-3-6)*(1-(1-h)^3)
+   local p=if reduced then 1 else math.clamp((t-E.star[1])/E.star[2],0,1)
+   self.star.scale.Scale=if p>=1 then 1 else .55+.45*backOut(p)
+  end
   self.settled=reduced or t>=1
  end
+ -- DECK-FEEL-BRIEF 8 (Alive deckfeel): the results sequence (DeckFeelResults) owns the headline, goals, rows, Star,
+ -- count, burst, confetti, new best and buttons until it lands.
+ if self.feelFx and not self.feelFx.done then self.feelFx:step(t,self.data)end
  -- Growth cuts (TomorrowStrip): the strip arrives last, 1 s after the count-up ends (fade, and an 8 px rise
  -- unless Reduced Motion); its today-chip hits take input only once it is in.
  if self.strip then

@@ -472,13 +472,13 @@ function Screen.new(options)
   q.InputBegan:Connect(function(input)
    local t=input.UserInputType
    if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then
-    self:pressDpad(dir,true)
+    self:press(dir,true)
     if self.callbacks.dpad then self.callbacks.dpad(dir,input)end
    end
   end)
   q.InputEnded:Connect(function(input)
    local t=input.UserInputType
-   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:pressDpad(dir,false)end
+   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:press(dir,false)end
   end)
  end
  self.menu=Kit.node("ImageButton",root,{Name="MenuPill",Image=I.menuPill,BackgroundTransparency=1,ZIndex=10,AutoButtonColor=false,
@@ -501,11 +501,14 @@ function Screen.new(options)
   self.buttons[id]={holder=holder,base=base,gloss=gloss,letter=letter,hit=hit}
   hit.InputBegan:Connect(function(input)
    local t=input.UserInputType
-   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:pressButton(id,true)end
+   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then
+    self:press(id,true)
+    if id=="A"and t==Enum.UserInputType.Touch and self.feel then self.feel:touchTick()end
+   end
   end)
   hit.InputEnded:Connect(function(input)
    local t=input.UserInputType
-   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:pressButton(id,false)end
+   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:press(id,false)end
   end)
   hit.Activated:Connect(function()local cb=self.callbacks[id];if cb then cb()end end)
  end
@@ -533,11 +536,11 @@ function Screen.new(options)
   -- The B sprite under it presses with it (QA v2 R6.1).
   hit.InputBegan:Connect(function(input)
    local t=input.UserInputType
-   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:pressButton("B",true)end
+   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:press("B",true)end
   end)
   hit.InputEnded:Connect(function(input)
    local t=input.UserInputType
-   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:pressButton("B",false)end
+   if t==Enum.UserInputType.MouseButton1 or t==Enum.UserInputType.Touch then self:press("B",false)end
   end)
   self.itemButton={holder=holder,disc=disc,ring=ring,glyph=glyph,icon=icon,badge=badge,count=count,caption=caption,hit=hit}
  end
@@ -583,6 +586,8 @@ function Screen.new(options)
  self.back.root.Activated:Connect(function()if self.back.enabled and self.callbacks.back then self.callbacks.back()end end)
  self.toaster=Kit.toaster(options.viewRoot)
  GuiService:GetPropertyChangedSignal("PreferredTransparency"):Connect(function()self:applyTransparency()end)
+ -- DECK-FEEL-BRIEF 2, 3, 6, 7 (Alive deckfeel): holds, the body press shade, the stepper, the polish.
+ self.feel=require(script.Parent.DeckFeelScreen).new(self)
  return self
 end
 
@@ -701,10 +706,26 @@ function Screen:pressButton(id,down)
  local drop=if down then b.diameter*.07 else 0
  b.letter.Position=UDim2.new(.5,0,0,b.diameter/2+drop)
 end
--- Keyboard or gamepad presses show on the hardware too.
+-- Keyboard or gamepad presses show on the hardware too. DECK-FEEL-BRIEF 2 (Alive deckfeel): flash is a hold and a
+-- release after .10 (90 ms at least on screen), with the press scale, spring and body lean.
 function Screen:flash(id)
+ if self.feel and self.feel:on()then self.feel:flash(id);return end
  if id=="A"or id=="B"then self:pressButton(id,true);task.delay(.1,function()self:pressButton(id,false)end)
  else self:pressDpad(id,true);task.delay(.1,function()self:pressDpad(id,false)end)end
+end
+-- Every input mirrors on the hardware for as long as it is held (deckfeel); off: a key down flashes as before.
+function Screen:hold(id,down)
+ if self.feel and self.feel:on()then self.feel:hold(id,down)elseif down then self:flash(id)end
+end
+-- A press that has already ended (a touch release that dropped): shown for the 90 ms minimum (deckfeel only).
+function Screen:tap(id)
+ if self.feel and self.feel:on()then self.feel:tap(id)end
+end
+-- The drawn keys' own touch and mouse presses.
+function Screen:press(id,down)
+ if self.feel and self.feel:on()then self.feel:hold(id,down)
+ elseif id=="A"or id=="B"then self:pressButton(id,down)
+ else self:pressDpad(id,down)end
 end
 
 -- Merge shake (QA 2026-11-13 Q1 item 8): the whole Pocket Deck (shell, LCD and
@@ -722,9 +743,14 @@ function Screen:shakeHits()
  if self.itemButton then table.insert(list,self.itemButton.hit)end
  return list
 end
-function Screen:setShake(offset,reduced)
- local want=Screen.shakeOffset(offset,reduced==true or Kit.reduced())
+function Screen:setShake(offset,reduced,parallax)
+ local still=reduced==true or Kit.reduced()
+ local want=Screen.shakeOffset(offset,still)
  self.shakeWant=want
+ -- DECK-FEEL-BRIEF 3: the LCD counter-moves (the screen sits deeper than the keys). Taken off with the shake.
+ local p=if typeof(parallax)=="Vector2"and not still then parallax else Vector2.zero
+ local hadP=self.parallaxApplied or Vector2.zero
+ if p~=hadP and self.lcd then self.lcd.Position+=UDim2.fromOffset(p.X-hadP.X,p.Y-hadP.Y);self.parallaxApplied=p end
  local have=self.shakeApplied or Vector2.zero
  if want==have then return false end
  local d=UDim2.fromOffset(want.X-have.X,want.Y-have.Y)
@@ -1444,7 +1470,7 @@ end
 
 function Screen:buildHud(g)
  if self.hudRoot then self.hudRoot:Destroy()end
- if g.phone then self:buildCompactHud(g);Kit.hudTabs(self.hudRoot);return end
+ if g.phone then self:buildCompactHud(g);Kit.hudTabs(self.hudRoot);if self.feel then self.feel:built(g)end;return end
  self.builtMode=g.mode;local compact=g.compact
  local host=Kit.frame(self.content,"HUD",nil,UDim2.new(),UDim2.fromScale(1,1));self.hudRoot=host
  local h={};self.hud=h
@@ -1567,6 +1593,7 @@ function Screen:buildHud(g)
  h.goalLine=math.ceil((h.goals[1]and h.goals[1].text.TextSize or 16)*Kit.LineHeight)
  -- Toy Shell 3.5: the caps labels sit on coloured tabs.
  Kit.hudTabs(host)
+ if self.feel then self.feel:built(g)end
  -- A rebuilt HUD has empty control rows; repaint them on the next setHud.
  self.lastHud=nil;self.controlsKey=nil
 end
@@ -1642,6 +1669,7 @@ end
 local starAttributes={"NextPowerUp","PreviewPowerUp1","PreviewPowerUp2"}
 function Screen:stepNext(now,mood,themeId,board)
  local h=self.hud;if not h or not h.next or not self.visible then return 0 end
+ if self.feel then self.feel:stepNext(now)end
  local tick=math.floor(now/BallFaces.Tick)
  if self.nextTick==tick and self.nextTheme==themeId then return 0 end
  self.nextTick,self.nextTheme=tick,themeId
@@ -1726,8 +1754,8 @@ function Screen:setHud(data)
  h.diffName.Text=data.difficulty or "Medium";h.diffChip.set("★ "..(data.multiplier or "×1"),if compact then "gold"else Screen.ChipKind)
  h.pays.Text=data.winPays or "6–8"
  if h.controls then
-  local rows=controlRows[data.input or "Keyboard"]or controlRows.Keyboard
-  local key=data.input or "Keyboard"
+  local rows=Screen.levelHintRows(controlRows[data.input or "Keyboard"]or controlRows.Keyboard,data.levelHint)
+  local key=(data.input or "Keyboard")..(if data.levelHint then ":level"else "")
   if self.controlsKey~=key then
    self.controlsKey=key
    for index,slot in ipairs(h.controls)do
@@ -1738,6 +1766,14 @@ function Screen:setHud(data)
    end
   end
  end
+ if self.feel then self.feel:paint(data)end
+end
+-- DECK-FEEL-BRIEF 6: "▲▼ Level" leads the hints while the Difficulty card is the control (keyboard and gamepad).
+function Screen.levelHintRows(rows,on)
+ if not on then return rows end
+ local out={{"▲▼",UICopy.get("deck.level.hint")}}
+ for _,row in ipairs(rows)do table.insert(out,row)end
+ return out
 end
 
 -- Compact HUD paint: same data contract as setHud. Goals may carry
@@ -1800,6 +1836,7 @@ function Screen:setScore(score,chain)
   h.chain.Text="×"..tostring(chain or 0);h.chainBar.set(math.min(5,chain or 0))
  end
  self:paintChain(chain)
+ if self.feel then self.feel:score(score,chain)end
  return true
 end
 -- Beta 34 QA: phone Goals rows are built for three goals one line each (goalPitch apart). With one or two goals the
@@ -1916,10 +1953,10 @@ function Screen:setCompactHud(data)
  if h.diffChip then h.diffChip.set("★ "..(data.multiplier or "×1"),Screen.ChipKind);h.diffChip.label.TextSize=12 end
  h.pays.Text=data.winPays or "6–8"
  if h.controls then
-  local key=data.input or "Keyboard"
+  local key=(data.input or "Keyboard")..(if data.levelHint then ":level"else "")
   if self.controlsKey~=key then
    self.controlsKey=key
-   local rows=compactRows[key]or compactRows.Keyboard
+   local rows=Screen.levelHintRows(compactRows[data.input or "Keyboard"]or compactRows.Keyboard,data.levelHint)
    local shown=math.min(#h.controls,#rows)
    local cr=g.controls;local ch=30+shown*28
    h.controlsCard.Position=UDim2.fromOffset(cr.x,cr.y+cr.h-ch);h.controlsCard.Size=UDim2.fromOffset(cr.w,ch)
@@ -1948,6 +1985,7 @@ function Screen:setCompactHud(data)
    end
   end
  end
+ if self.feel then self.feel:paint(data)end
 end
 -- Welcome borrows existing passive HUD wells; field geometry and all play hit
 -- targets remain owned by the unchanged layout. Rebuilds retain cue/input state.

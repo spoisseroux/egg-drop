@@ -1,6 +1,8 @@
 local TweenService = game:GetService("TweenService")
 local Art = require(script.Parent.DeckArt)
 local Policy = require(script.Parent.PresentationPolicy)
+local Feel = require(script.Parent.DeckFeel)
+local RunService = game:GetService("RunService")
 
 local Transition = {}
 Transition.__index = Transition
@@ -33,7 +35,8 @@ Transition.Timing = { Cover = .26, Rise = .46, Uncover = .30, Lit = .22, Shutter
 -- Studio only: PlayerGui attribute "DeckHandoffSlow" (a number) stretches every phase so a
 -- capture can land inside one. It never applies outside Studio.
 local function timing()
-	local T = Transition.Timing
+	-- DECK-FEEL-BRIEF 1 (Alive deckfeel): the shorter open (shade .20, rise .38, lit .15).
+	local T = if Feel.switch() then Feel.Timing else Transition.Timing
 	if not game:GetService("RunService"):IsStudio() then return T end
 	local player = game:GetService("Players").LocalPlayer
 	local slow = player and player:FindFirstChild("PlayerGui") and player.PlayerGui:GetAttribute("DeckHandoffSlow")
@@ -188,6 +191,8 @@ function Transition:cover(fromDeck, token)
 		self:moveDevice(T.Sink, self:dropDistance(), Enum.EasingStyle.Quad, Enum.EasingDirection.In)
 		if not self:motion(token,self.shade,T.Sink,{BackgroundTransparency=0}) then return false end
 		self.sunk = true -- stays down under the opaque shade until the swap hides it (Transition:reveal / hide)
+		-- DECK-FEEL-BRIEF 5: under the opaque shade the well forgets its balls (init.client: onSunk).
+		if self.onSunk then self.onSunk() end
 	elseif not self:motion(token,self.shade,T.Cover,{BackgroundTransparency=0}) then return false end
 	self.aperture.Visible, self.scan.Visible = false, false
 	return true
@@ -200,7 +205,9 @@ function Transition:reveal(toDeck, token)
 		self.sunk = nil; self:restDevice()
 		if self.heldBoot then self.heldBoot:release();self.heldBoot=nil end
 	end
-	if toDeck and self.deckBoot and self.deckBoot.host.Parent and self.deckVisible and self.deckVisible() then
+	if toDeck and self.deckBoot and self.deckBoot.host.Parent and self.deckVisible and self.deckVisible() and Feel.switch() then
+		return self:revealFeel(token)
+	elseif toDeck and self.deckBoot and self.deckBoot.host.Parent and self.deckVisible and self.deckVisible() then
 		-- QA v735 D2: the handheld comes up from under the shade with its screen dark,
 		-- settles, then powers on.
 		self.boots += 1; self.shade:SetAttribute("Boots",self.boots)
@@ -255,6 +262,66 @@ function Transition:reveal(toDeck, token)
 	else
 		if not self:motion(token,self.shade,timing().Lift,{BackgroundTransparency=1}) then return false end
 	end
+	self:hide(token)
+	return true
+end
+
+-- DECK-FEEL-BRIEF 1 (Alive deckfeel): every open 1.25 s to playable. The handheld arrives from 0.42 body heights
+-- below at .92 scale (UIScale on the device root) and settles through a 4 px overshoot (.38 s) while the shade lifts;
+-- then the session's first open plays the full boot sheet (any press from .15 s skips it), every later one opens the
+-- dark screen from its centre behind a scanline (.12 s, deck_boot at .4); the wordmark frame holds .2 s, and the LCD
+-- content fades in (.15 s) while the panels stagger up (onLit). Input is live when this returns (1.05 s); the held
+-- ball's drop is init.client's (DeckFeelBoard).
+function Transition:revealFeel(token)
+	local O = Feel.Open
+	self.boots += 1; self.shade:SetAttribute("Boots",self.boots)
+	local boot = self.deckBoot
+	boot:hold(); self.heldBoot = boot
+	local device = self.device
+	local distance = self:dropDistance()
+	local scale
+	if device then
+		self.home = self.home or device.Position
+		scale = device:FindFirstChild("FeelRise")
+		if not scale then scale = Instance.new("UIScale"); scale.Name = "FeelRise"; scale.Parent = device end
+	end
+	local lift = tween(self.shade, O.uncover, { BackgroundTransparency = 1 }, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	self.motions[lift] = true
+	local started = os.clock()
+	while true do
+		if not self:owns(token) then if scale then scale.Scale = 1 end; return false end
+		local t = os.clock() - started
+		local y, s = Feel.riseAt(t, distance)
+		if device then device.Position = self.home + UDim2.fromOffset(0, math.round(y)) end
+		if scale then scale.Scale = s end
+		if t >= O.rise then break end
+		RunService.Heartbeat:Wait()
+	end
+	self.motions[lift] = nil
+	self.shade.Visible = false
+	self:restDevice()
+	if scale then scale.Scale = 1 end
+	if self.onSettled then self.onSettled() end
+	local function onDeck() return self.policy.active == token and self.policy.read().mode == "Board" end
+	self.heldBoot = nil
+	self.feelBoots = (self.feelBoots or 0)
+	local full = Feel.fullBoot(self.feelBoots)
+	self.feelBoots += 1
+	self.activeBoot = boot
+	if full then
+		-- The whole sheet, skippable from .15 s (to the wordmark frame below).
+		boot:play({ owns = onDeck, linger = true })
+		boot:wait()
+	else
+		boot:scanOpen(O.scan, onDeck, O.markFrame, O.cueVolume)
+	end
+	self.activeBoot = nil
+	if not onDeck() or not self:owns(token) then return false end
+	boot:mark(O.markFrame)
+	if not boot:holdFor(O.mark, onDeck) or not self:owns(token) then return false end
+	if self.onLit then self.onLit() end
+	boot:fade(O.lit, onDeck)
+	if not onDeck() or not self:owns(token) then return false end
 	self:hide(token)
 	return true
 end

@@ -6,6 +6,9 @@
 -- unchanged: at most 80 ms a Star, every Star counted within 900 ms.
 local Feedback = {}
 Feedback.__index = Feedback
+-- DECK-FEEL-BRIEF 8 (Alive deckfeel): DeckResults hands the clock DeckFeel.recapSpec() (setFeel): the Star lands at .6,
+-- the count runs .6 to 1.5 with its pitch rising 1.0 to 1.5, the finale at 1.5, no early bank chips. nil = as before.
+local Feel = require(script.Parent.DeckFeel)
 Feedback.Duration = 1.1
 
 local function ramp(age, start, duration)
@@ -46,10 +49,10 @@ function Feedback.stagger(age,index,start,gap,duration)
 	return ramp(age,start+(index-1)*gap,duration)
 end
 
-function Feedback.sample(age,countEnd)
+function Feedback.sample(age,countEnd,finaleAt)
 	age=math.max(0,age)
 	countEnd=countEnd or Feedback.CountStart
-	local finale=Feedback.finaleAt(countEnd)
+	local finale=finaleAt or Feedback.finaleAt(countEnd)
 	return {
 		stats = { ramp(age, 0, .38), ramp(age, .17, .32), ramp(age, .34, .30) },
 		-- Currency is already committed. Only the decoration has a progress lane.
@@ -81,6 +84,12 @@ function Feedback:setCountWindow(start,span)
 end
 function Feedback:setBeats(beats)
 	self.beats=beats or {}
+end
+function Feedback:setFeel(spec)
+	self.feelSpec=spec
+end
+function Feedback:finale()
+	return if self.feelSpec then self.feelSpec.finaleAt else Feedback.finaleAt(self.countEnd)
 end
 
 function Feedback:reduced()
@@ -122,10 +131,14 @@ function Feedback:step(dt)
 	if dt>.25 or dt~=dt then self:cancel();return end
 	local before = self.age
 	self.age += math.max(0, dt)
-	for index,threshold in ipairs({.18,.32})do
-		if before<threshold and self.age>=threshold then self:cue("bank",1+(index-1)*.18,.18)end
+	local spec=self.feelSpec
+	if not(spec and spec.banks==false)then
+		for index,threshold in ipairs({.18,.32})do
+			if before<threshold and self.age>=threshold then self:cue("bank",1+(index-1)*.18,.18)end
+		end
 	end
-	if before<Feedback.DropAt and self.age>=Feedback.DropAt then self:cue("star_land",1,.4)end
+	local dropAt=if spec then spec.dropAt else Feedback.DropAt
+	if before<dropAt and self.age>=dropAt then self:cue("star_land",1,.4)end
 	-- Star count-up (batch 2026-11-13): a very short `count_blip` per +1, like rings
 	-- counting up. The cue has one voice, so each blip is cut by the next. Several
 	-- Stars crossing in one frame share a single blip so voices never stack. Until the
@@ -133,9 +146,10 @@ function Feedback:step(dt)
 	local counted=self:countAt(self.age)
 	if counted>self.counted then
 		self.counted=counted
-		if not self:cue(Feedback.BlipCue,math.min(1.6,1+counted*.02),.22)then self:cue("charge",math.min(2,1+counted*.03),.14)end
+		local pitch=if spec then Feel.blipPitch(counted,self.earned)else math.min(1.6,1+counted*.02)
+		if not self:cue(Feedback.BlipCue,pitch,.22)then self:cue("charge",math.min(2,1+counted*.03),.14)end
 	end
-	local finale=Feedback.finaleAt(self.countEnd)
+	local finale=self:finale()
 	if before<finale and self.age>=finale then self:cue("bank",1.36,.14);self:cue("stars_total",1,.5)end
 	for _,beat in ipairs(self.beats)do
 		local at=beat.at+(if beat.finale then finale else 0)
@@ -150,7 +164,7 @@ function Feedback:countAt(age)
 	return math.min(self.earned,1+math.floor((age-start)/self.spacing+1e-6))
 end
 function Feedback:paint(age)
-	local sample=Feedback.sample(age,self.countEnd);sample.counted=self.counted
+	local sample=Feedback.sample(age,self.countEnd,if self.feelSpec then self.feelSpec.finaleAt else nil);sample.counted=self.counted
 	sample.spacing=self.spacing;sample.total=self.earned
 	sample.starPop=Feedback.popAt(age,self.counted,self.spacing)
 	self.render(sample)
@@ -183,6 +197,12 @@ function Feedback:observe(result, visible)
 	self.spacing=math.min(Feedback.CountStep,(self.countSpan or Feedback.CountSpan)/math.max(1,self.earned))
 	self.countEnd=(self.countStart or Feedback.CountStart)+(math.max(1,self.earned)-1)*self.spacing
 	self.duration=Feedback.durationFor(self.earned)
+	if self.feelSpec then
+		-- The count spreads over its whole window (a quarter second a Star at most) and the clock runs past the finale.
+		self.spacing=math.min(.25,(self.countSpan or Feedback.CountSpan)/math.max(1,self.earned-1))
+		self.countEnd=(self.countStart or Feedback.CountStart)+(math.max(1,self.earned)-1)*self.spacing
+		self.duration=math.max(self.duration,self.feelSpec.finaleAt+Feedback.FinaleSpan)
+	end
 	self.counted=0
 	self.active, self.age, self.starts = true, 0, self.starts + 1
 	self.deviceEpoch=if self.audio then self.audio.deviceEpoch or 0 else 0

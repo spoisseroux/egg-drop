@@ -1,5 +1,6 @@
 -- One signed presentation translation. Input targets inherit it; simulation stays fixed.
 local Recipe=require(script.Parent.CareFeedbackData).jolt
+local Lean=require(script.Parent.DeckPressLean)
 local Jolt={};Jolt.__index=Jolt
 -- G1 (QA 2026-11-16): a harder screen kick that scales with the merged tier and
 -- with every chain step. {peak pixels, seconds}; these supersede the amplitudes in
@@ -21,12 +22,16 @@ function Jolt.new(nodes)
  return self
 end
 function Jolt:reset()
- self.active=nil;self.offset=Vector2.zero
+ self.active=nil;self.offset=Vector2.zero;self.written=nil
  for _,entry in ipairs(self.nodes)do if entry.node.Parent then entry.node.Position=entry.base end end
 end
 function Jolt:rebase()
  self.active=nil;self.offset=Vector2.zero
- for _,entry in ipairs(self.nodes)do entry.base=entry.node.Position end
+ -- A node still where this wrote it keeps its rest (a layout mid-press never bakes the offset in); a moved one rebases.
+ local w=self.written
+ for _,entry in ipairs(self.nodes)do
+  if not(w and entry.node.Position==entry.base+UDim2.fromOffset(w.X,w.Y))then entry.base=entry.node.Position end
+ end
 end
 function Jolt:setOwner(visible,serial,reduced)
  if self.visible~=visible or self.serial~=serial or self.reduced~=reduced then self:reset()end
@@ -51,9 +56,23 @@ function Jolt:drop(serial,id,now)
  if self.active and self.active.kind=="merge"and now-self.active.at<self.active.duration then return false end
  self.active={kind="drop",at=now,duration=.09,amplitude=2};return true
 end
+-- DECK-FEEL-BRIEF 3 (Alive deckfeel): the body press (DeckPressLean) is composed here, so there is one position write a
+-- frame and appliedOffset (touch aim) includes it. `offset` is whole px (with the LCD's parallax) or nil.
+function Jolt:setLean(offset)
+ self.lean=if typeof(offset)=="Vector2"and offset~=Vector2.zero then offset else nil
+end
+local function write(self,x,y)
+ self.written=Vector2.new(x,y)
+ for _,entry in ipairs(self.nodes)do if entry.node.Parent then entry.node.Position=entry.base+UDim2.fromOffset(x,y)end end
+end
 function Jolt:update(now)
  local active=self.active
- if not active then return end
+ if not active then
+  -- No jolt: the lean alone (and back to rest once, when it ends).
+  if self.lean then write(self,self.lean.X,self.lean.Y);self.leaning=true
+  elseif self.leaning then self.leaning=false;write(self,0,0)end
+  return
+ end
  local t=math.clamp((now-active.at)/active.duration,0,1)
  if t>=1 then self:reset();return end
  local x,y=0,0
@@ -62,7 +81,12 @@ function Jolt:update(now)
   if t<=b[1]then local u=(t-a[1])/(b[1]-a[1]);u=u*u*(3-2*u);x=a[2]+(b[2]-a[2])*u;y=a[3]+(b[3]-a[3])*u;break end
  end
  local offset=Vector2.new(x,y)*(if active.kind=="drop"then 1 else active.amplitude/peak);self.offset=offset
- for _,entry in ipairs(self.nodes)do if entry.node.Parent then entry.node.Position=entry.base+UDim2.fromOffset(offset.X,offset.Y)end end
+ if self.lean then
+  -- A merge wins outright; a drop's kick adds to the lean under the 3 px cap.
+  x,y=Lean.compose(if active.kind=="merge"then offset else nil,self.lean,if active.kind=="drop"then offset else nil)
+  self.leaning=true;write(self,x,y);return
+ end
+ write(self,offset.X,offset.Y)
 end
 -- Native UDim pixel offsets quantize the curve. Compensate the displacement
 -- actually assigned to the root, so a still finger never changes launch aim.

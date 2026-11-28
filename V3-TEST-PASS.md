@@ -77,7 +77,9 @@ Beta (33), 2026-11-26: player scale (row 60). Beta (32), 2026-11-26: the first e
 
 ## Built, not on the beta yet
 
-Nothing: everything built for beta (40) is on the beta.
+| # | What | Beta | Try | Switch |
+|---|---|---|---|---|
+| 68 | **The Pocket Deck feel pass** (`artifacts/qa-2026-11-27-beta40/DECK-FEEL-BRIEF.md`, beta 40 notes 9-17) | (41) | Open the deck twice: about 1.25 s to playable, the handheld rises and scales in, a cyan scanline opens the screen (the full boot only on the first open); `/freshsave` start: the loading sky fades straight into the deck, no garden flash. Reopen after a round: no old balls; a half-played round's balls come in row by row. Drop by touch / Space / A / tap the drawn A: A presses (and springs) every time; drag or hold arrows: the d-pad wedge shows while aim moves; the body leans a few px toward the pressed side with a soft shade. Idle well: pattern drifts, held ball breathes and blinks, aim dots and FILL LINE dashes march; LEFT / RIGHT fade after the first drop; merges flash the well border, chain x3 glows its top. Reopen: tap the Difficulty card (or Up / Down) before the first drop; no full picker except the first ever round and Difficulty on the results. Cards: rounder, pills set in from the corner. Results: slam, stamps, flips, Star lands at .6, count to 1.5, burst, confetti on a win, Replay by 1.9; A skips. The stale-balls fix is always on. | `/alive deckfeel` |
 
 ## Scoped, not built
 
