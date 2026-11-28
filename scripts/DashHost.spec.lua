@@ -37,7 +37,7 @@ return function(server)
 	local function rig(count)
 		local c={now=5000,serial=0,players={},boards={},remotes={},parked={},beat=signal(),shared=attributes(),sold={},published=0}
 		local function player(id)
-			local p={UserId=id,Parent=true}
+			local p={UserId=id,Parent=true,DisplayName="Racer"..id}
 			local root={Position=Vector3.new(gx+1,gy+3,gz),CFrame=nil}
 			p.root=root;p.humanoid={Health=100}
 			p.Character={FindFirstChild=function(_,name)return if name=="HumanoidRootPart"then root else nil end,
@@ -353,6 +353,55 @@ return function(server)
 			assert(c.host.director.heat.seats[2].anchor==nil,"a hop from the meadow waits at the meadow")
 			c.run(24);r=c.ask(3,"join",1,{hop=true});assert(not r.ok and r.reason=="Missed"and #c.host.director.queue==0,"never queued")
 			c.den=nil;c.run(60);r=c.ask(3,"join",2,{hop=true});assert(r.ok and c.host.director.heat and c.host.director.heat.phase=="gather","den closed: a plain join")
+		end)
+		-- Beta 44 note 22: the server's messages to everyone (DashAnnounce). Pals crawl so the winner is known.
+		local function said(c,kind)
+			local out={}
+			for _,e in ipairs(c.remotes.DashAnnounce and c.remotes.DashAnnounce.sent or {})do
+				assert(e.to==nil,"every message goes to everyone")
+				if e.packet.kind==kind then table.insert(out,e.packet)end
+			end
+			return out
+		end
+		local function crawl(c,seats)for _,seat in ipairs(seats)do c.host.director.heat.race.runners[seat].stride=1 end end
+		local function race(c,id,seq,slow)
+			while c.host.director.heat do c.run(.5)end
+			assert(c.ask(id,"join",seq).ok);c.run(24);crawl(c,slow or {2,3,4})
+			local n=0;while c.host.director.heat and c.host.director.heat.phase~="results"do c.run(1,c.pilot(id));n+=1;assert(n<200)end
+		end
+		test("beta 44 note 22: 'starts soon' to everyone when a race opens, at most once a SoonGap; the remote only exists with Dash on",function()
+			dash({race=false});local c=rig(2);c.run(1);assert(c.remotes.DashAnnounce==nil)
+			dash();c.run(1);assert(c.remotes.DashAnnounce and #said(c,"soon")==0)
+			assert(c.ask(1,"join",1).ok);local soon=said(c,"soon");assert(#soon==1 and next(soon[1],next(soon[1]))==nil,"just {kind='soon'}")
+			assert(c.ask(2,"join",1).ok and #said(c,"soon")==1,"a second seat says nothing")
+			-- Open, empty, open again: rate-limited, never spam.
+			c.run(.4);c.ask(1,"leave",2);c.ask(2,"leave",2);assert(c.host.director.heat==nil)
+			c.run(.4);assert(c.ask(1,"join",3).ok and #said(c,"soon")==1,"inside the gap: nothing")
+			c.run(.4);c.ask(1,"leave",4);c.run(Host.SoonGap);assert(c.ask(1,"join",5).ok and #said(c,"soon")==2,"after the gap: again")
+			-- A Time Trial never says soon.
+			c.run(.4);c.ask(1,"leave",6);c.run(Host.SoonGap);c.run(.4);assert(c.ask(1,"trial",7).ok and #said(c,"soon")==2)
+		end)
+		test("beta 44 note 22: the winner's DisplayName and pet: the saved name pieces when every one is known, else none ('pet'); a pal's win says nothing; no DisplayName, nothing",function()
+			local Names=require(Shared.NameCatalog)
+			dash();local c=rig(1);c.run(1);race(c,1,1)
+			local won=said(c,"won");assert(#won==1,"one winner message: "..#won)
+			assert(won[1].userId==1 and won[1].name=="Racer1"and won[1].petId=="pip"and won[1].pieces==nil,"unnamed: no pieces")
+			c.run(10);assert(#said(c,"won")==1,"once per race")
+			-- Named: the pieces, copied.
+			local state=c.players[1].board.nursery.state
+			local ids={Names.starterIds()[1]};assert(ids[1]);state.petNames={pip=ids}
+			c.run(.4);race(c,1,2);won=said(c,"won");assert(#won==2 and won[2].pieces and won[2].pieces[1]==ids[1]and won[2].pieces~=ids)
+			-- A piece this build does not know: the default words, never half a name.
+			state.petNames={pip={"nope-not-a-piece"}};c.run(.4);race(c,1,3);won=said(c,"won");assert(#won==3 and won[3].pieces==nil)
+			state.petNames=nil
+			-- A pal wins: nothing.
+			while c.host.director.heat do c.run(.5)end
+			assert(c.ask(1,"join",4).ok);c.run(24);c.host.director.heat.race.runners[1].stride=1
+			while c.host.director.heat and c.host.director.heat.phase~="results"do c.run(1)end
+			assert(#said(c,"won")==3,"a pal won")
+			-- No DisplayName (never the user name instead): nothing.
+			assert(Host.wonPacket({UserId=1,Name="x"},state,"pip")==nil and Host.wonPacket(nil,state,"pip")==nil)
+			assert(Host.wonPacket({UserId=1,DisplayName="A"},nil,"pip").pieces==nil)
 		end)
 		test("an error in the host is contained; three and it closes itself, pets free",function()
 

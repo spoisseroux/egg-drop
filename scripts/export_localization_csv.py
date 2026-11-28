@@ -63,11 +63,16 @@ SECTION_NOTES = {
 # One key's own note, for a word that is ambiguous on its own (EGG-CORNER-LOOK 1: "Turn" is the egg machine's prompt).
 KEY_NOTES = {
     "r5.station.Eggs.machine": "Garden prompt: the name of the egg machine (a toy capsule machine full of eggs)",
+    # Beta 44 note 22: Garden Dash messages posted in chat to the whole server ({player} is a display name).
+    "dash.say.soon": "Chat message to everyone: a pet race in the garden is about to start",
+    "dash.say.won": "Chat message to everyone: who won the pet race ({player} a display name, {pet} the pet's name)",
+    "dash.say.wonPet": "Chat message to everyone: who won the pet race ({player} a display name)",
 }
 SAMPLE = {"count": 3, "heat": "Medium", "low": 6, "high": 8, "pet": "Bear", "reward": 5, "item": "Squeaky Bone",
           "owned": 3, "total": 12, "target": 3, "name": "Pet Park", "level": 10,
           "hours": 7, "minutes": 40, "quests": 3, "egg": "Toy Egg",
-          "ball": "a green ball", "where": "on the left", "small": "blue balls", "goal": "make 2 merges anywhere"}
+          "ball": "a green ball", "where": "on the left", "small": "blue balls", "goal": "make 2 merges anywhere",
+          "player": "Sam"}
 
 HARNESS = r'''
 local Sources = SOURCES

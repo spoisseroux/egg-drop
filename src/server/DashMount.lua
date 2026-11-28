@@ -1,8 +1,9 @@
 -- Garden Dash gate (V3-DASH-BUILD-PLAN-2026-11-22, slice S6): the static props, placed from DashCourse as ParkMount
 -- places the park. Placeholder parts until the art lands (Fable): the striped start arch (its balloon is the
--- client's, DashProps), the finish arch, eight lane pads, the waiting pad with its sign beside the line, and the
--- three stepping stones. With DashProps.MaxParts in mind: both together stay under 60 parts. Everything is anchored and non-colliding, non-queryable and non-touching,
--- beside the lounge rather than inside it, so players, pets and every garden raycast pass straight through.
+-- client's, DashProps), the finish arch, eight lane pads, the waiting pad beside the line (no sign since beta 44), and
+-- the three stepping stones. With DashProps.MaxParts in mind: both together stay under 60 parts. Everything is anchored and non-colliding, non-queryable and non-touching,
+-- beside the lounge rather than inside it, so players, pets and every garden raycast pass straight through; the only
+-- exceptions are invisible player colliders: the two start posts (beta 44 note 20) and the river stones.
 -- Hoops and clovers are the client's (layouts differ). Built while Dash is on; removed when it goes off.
 -- Beta 17 (WORLD-ALIVE-LOOK sections 3 and 4), while the Alive `scene` switch is on (Mount.fete): the fete set
 -- (DashFete) in place of the arches, slabs and pad, and the river stones (RiverStones, carved by StoneBuilder) with
@@ -54,6 +55,15 @@ local function startArch(parent,at)
 		part(parent,"StartBanner",Vector3.new(wide,1.4,.5),at*CFrame.new(k*wide,Mount.PostHeight+.7,0),if k==0 then Mount.Cream else Mount.Stripe)
 	end
 end
+-- Beta 44 note 20: the start posts are solid (players walked through them); the way between them stays open. Invisible,
+-- colliding boxes (DashFete.startColliders); pets never stand on them (PetFollow.ground leaves out the whole model).
+local function startColliders(parent,start,width,height)
+	for _,box in ipairs(require(Shared.DashFete).startColliders(Mount.PostOut,width,height))do
+		local item=part(parent,box.name,box.size,start*box.at,Mount.Frame)
+		item.Transparency=1;item.CanCollide=true;item.CanQuery=true
+		item:SetAttribute("DashPart",nil);item:SetAttribute("StartCollider",true)
+	end
+end
 -- The gate's spot on the ground: the waiting pad, what the server measures joins from.
 function Mount.gate()
 	local pad=Course.Pad
@@ -76,19 +86,16 @@ function Mount.build(room,options)
 	model:SetAttribute("DashVersion",Course.Version)
 	model:SetAttribute("Start",start);model:SetAttribute("Finish",finish)
 	startArch(model,start);arch(model,"Finish",finish)
+	startColliders(model,start,.7,Mount.PostHeight)
 	-- Eight slabs side by side, one under each racer of a full heat (DashGrid's slots at the line).
 	for lane=1,Course.LaneCount do
 		local o=Grid.offset(0,false,lane,Course.LaneCount)/100
 		part(model,"Pad_"..lane,Vector3.new(Mount.SlabWidth-.08,.08,.9),start*CFrame.new(-o,.04,-.8),if lane%2==0 then Mount.Banner else Mount.Cream)
 	end
-	-- The waiting pad, off the line, and its sign on the far edge from the course.
+	-- The waiting pad, off the line (beta 44 note 20: its sign is gone).
 	local gate=CFrame.new(Mount.gate())
 	local r=Course.Pad.r/100
 	part(model,"WaitPad",Vector3.new(.16,r*2,r*2),gate*CFrame.new(0,.08,0)*CFrame.Angles(0,0,math.pi/2),Mount.Wait).Shape=Enum.PartType.Cylinder
-	-- Beta 34 note: the board hangs between two posts at its ends, so no post crosses the words.
-	part(model,"SignPost",Vector3.new(.25,3.35,.25),gate*CFrame.new(-1.225,1.675,-r-.4),Mount.Frame)
-	part(model,"SignPost2",Vector3.new(.25,3.35,.25),gate*CFrame.new(1.225,1.675,-r-.4),Mount.Frame)
-	part(model,"Sign",Vector3.new(2.2,1.2,.2),gate*CFrame.new(0,2.6,-r-.4),Mount.Banner)
 	for index,stone in ipairs(Course.Stones)do
 		part(model,"Stone_"..index,Vector3.new(2.2,.3,2.2),CFrame.new(stone.x/100,stone.y/100-.15,stone.z/100),Mount.Stone)
 	end
@@ -202,6 +209,7 @@ function Mount.buildFete(room,options)
 	for lane=1,Course.LaneCount do lanes[lane]=Grid.offset(0,false,lane,Course.LaneCount)/100 end
 	local pieces,ropes=Fete.start(Mount.PostOut,lanes)
 	place(model,start,pieces,ropes,"Start")
+	startColliders(model,start)
 	pieces,ropes=Fete.finish()
 	place(model,finish,pieces,ropes,"Finish")
 	pieces,ropes=Fete.pad(Course.Pad.r/100)

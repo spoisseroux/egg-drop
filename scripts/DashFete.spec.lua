@@ -241,6 +241,29 @@ return function(server)
 		local pad=Fete.pad(2.5)
 		assert(pad[1].material=="Ground"and near(pad[1].size.Y,5))
 	end)
+	test("beta 44 note 20: the start posts are solid boxes, ground to top, over each post's widest part; the way through stays open; the pad has no sign",function()
+		local boxes=Fete.startColliders(PostOut)
+		assert(#boxes==2)
+		local posts={}
+		for _,p in ipairs(Fete.start(PostOut,lanes()))do if string.find(p.name,"^Start%a+Foot$")or string.find(p.name,"^Start%a+Cap$")then table.insert(posts,p)end end
+		assert(#posts==4)
+		for _,box in ipairs(boxes)do
+			local at=box.at.Position
+			assert(near(math.abs(at.X),PostOut)and near(at.Y-box.size.Y/2,0)and near(at.Y+box.size.Y/2,11.85)and near(at.Z,0),box.name)
+			for _,p in ipairs(posts)do
+				if math.sign(p.at.Position.X)==math.sign(at.X)then assert(box.size.X>=p.size.X-1e-6 and box.size.Z>=p.size.Z-1e-6,p.name.." sticks out")end
+			end
+		end
+		-- Every racer's slot is inside the boxes (the boxes are only the posts' own footprint), and the way through is
+		-- about 11 studs: players walk onto the line. (Racing pets are drawn, never physical: PetFollow leaves the model out.)
+		local widest=0;for _,o in ipairs(lanes())do widest=math.max(widest,math.abs(o))end
+		local inner=PostOut-boxes[1].size.X/2
+		assert(inner>=widest+.2 and inner*2>=10,"open "..(inner*2).." widest "..widest)
+		local placeholder=Fete.startColliders(PostOut,.7,10.4)
+		assert(near(placeholder[1].size.X,.7)and near(placeholder[1].size.Y,10.4))
+		for _,p in ipairs(Fete.pad(2.5))do assert(not string.find(p.name,"Sign"),p.name)end
+		assert(#Fete.pad(2.5)==1)
+	end)
 	test("about 50 parts (Mount 60), and every one anchored and out of everybody's way",function()
 		local start=Fete.start(PostOut,lanes())
 		local count=#start+#Fete.finish()+#Fete.pad(2.5)+3 -- the three rope anchors
@@ -251,13 +274,17 @@ return function(server)
 		local room=Instance.new("Folder")
 		local model=Mount.build(room,{fete=true,carve=false})
 		assert(model:GetAttribute("Fete")==true and model:GetAttribute("Start")and model:GetAttribute("Finish"))
-		local colliders,props,beams,stones,landings=0,0,0,0,0
+		local colliders,props,beams,stones,landings,starts=0,0,0,0,0,0
 		for _,node in ipairs(model:GetDescendants())do
 			if node.ClassName=="Part"then
 				assert(node.Anchored==true and node.CanTouch==false,node.Name)
 				if node:GetAttribute("StoneCollider")then
 					colliders+=1
 					assert(node.CanCollide==true and node.Transparency==1 and near(node.Size.Y,2.9))
+				elseif node:GetAttribute("StartCollider")then
+					starts+=1
+					assert(node.CanCollide==true and node.CanQuery==true and node.Transparency==1 and node:GetAttribute("DashPart")==nil)
+					assert(node.Parent==model and near(node.Size.Y,11.85)and near(node.Size.X,Fete.Start.cap.X))
 				elseif node:GetAttribute("LandingCollider")then
 					landings+=1
 					assert(node.CanCollide==true and node.Transparency==1 and near(node.Size.Y,Stones.Landings[landings].width))
@@ -272,6 +299,8 @@ return function(server)
 		end
 		assert(colliders==3,colliders)
 		assert(landings==2,landings)
+		assert(starts==2,"two start post colliders "..starts)
+		for _,name in ipairs({"Sign","SignPost","SignPost2"})do assert(model:FindFirstChild(name)==nil,"beta 44 note 20: no "..name)end
 		assert(props>=40 and props<=60,"props "..props)
 		assert(beams==6,"ropes "..beams) -- start rope, two drops, two guy lines; the finish rope
 		-- three stones, three bands, five company (R13), two landings
@@ -279,6 +308,14 @@ return function(server)
 		local off=Instance.new("Folder")
 		local old=Mount.build(off,{fete=false})
 		assert(old:GetAttribute("Fete")==nil and old:FindFirstChild(Mount.StonesName)==nil and old:FindFirstChild("Stone_1"))
+		-- Off too: the placeholder arch's posts are solid and the sign is gone.
+		local solid=0
+		for _,node in ipairs(old:GetChildren())do
+			if node:GetAttribute("StartCollider")then
+				solid+=1;assert(node.CanCollide==true and node.Transparency==1 and near(node.Size.Y,Mount.PostHeight)and near(node.Size.X,.7))
+			elseif node.ClassName=="Part"then assert(node.CanCollide==false,node.Name)end
+		end
+		assert(solid==2 and old:FindFirstChild("Sign")==nil and old:FindFirstChild("SignPost")==nil)
 		Mount.remove(room);assert(#room:GetChildren()==0)
 	end)
 	test("the carve: the stone builder swaps the cylinders for the carved stone, keeps them when it throws or the mount is gone",function()
