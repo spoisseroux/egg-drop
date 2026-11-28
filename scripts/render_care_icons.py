@@ -5,8 +5,9 @@ transparent, ink #15143A, round caps, plus white copies that tint with ImageColo
 drawn 4x and scaled down with LANCZOS, give the same bytes on every run.
 
   pick-up:  a Pal head (circle r 46 at (128,112), ears r 18 at (92,74) and (164,74), eye holes r 7 at (112,110) and
-            (144,110)) in a cupped hand (an open arc, centre (128,150), r 78, 20 to 160 degrees, stroke 22), with two
-            lift marks over the ears ((76,34)-(92,50) and (180,34)-(164,50), stroke 14).
+            (144,110)) in a cupped hand (an open arc, centre (128,150), r 78, 20 to 160 degrees, stroke 22), with an up
+            chevron over the head ((104,42)-(128,18)-(152,42), stroke 14; Fable's lift marks over the ears read as
+            antennae in review).
   set-down: the same head; the hand arc r 70; no lift marks; a flat ground line (56,236)-(200,236), stroke 14.
 
 Writes assets/ui/care/{pick-up,set-down,pick-up-white,set-down-white}.png.
@@ -70,8 +71,9 @@ def icon(kind, colour):
     draw = ImageDraw.Draw(img)
     if kind == "pick-up":
         arc(draw, 128, 150, 78, 20, 160, 22, colour)
-        stroke(draw, (76, 34), (92, 50), 14, colour)
-        stroke(draw, (180, 34), (164, 50), 14, colour)
+        # an up chevron over the head (the brief's lift marks over the ears read as antennae)
+        stroke(draw, (104, 42), (128, 18), 14, colour)
+        stroke(draw, (152, 42), (128, 18), 14, colour)
     else:
         arc(draw, 128, 150, 70, 20, 160, 22, colour)
         stroke(draw, (56, 236), (200, 236), 14, colour)

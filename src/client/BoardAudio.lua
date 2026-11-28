@@ -195,7 +195,7 @@ end
 -- no voice (play() answers false, quietly). Put each uploaded asset id here. Beta 42 note 12 (POINTER-STORK-BRIEF 2b):
 -- the recipes are in scripts/synth_asmr.py (assets/audio/custom/stork_*.wav, blanket_rustle.wav), plus the coo
 -- (stork_coo: "hoo-roo", once as the glide ends and again at the nod).
-Audio.StorkIds=table.freeze({stork_flap_a=0,stork_flap_b=0,stork_flap_c=0,stork_clack=0,blanket_rustle=0,stork_coo=0,
+Audio.StorkIds=table.freeze({stork_flap_a=102190849490099,stork_flap_b=120255031193805,stork_flap_c=97824823079535,stork_clack=73181136590449,blanket_rustle=129056850979947,stork_coo=99129633711149,
  -- Fable's cathartic crack (AERO-JUICE-BRIEF 4, FirstHatchStory.Takes): new takes, EMPTY SLOTS until synthesised and
  -- uploaded. tap_knuckle (dry fingernail on shell, 40 ms), shell_scatter (a dry clatter tail, 0.6 s), crumb_bounce,
  -- asmr_crack3 (thicker, stage 3).

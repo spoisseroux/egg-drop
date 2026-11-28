@@ -44,7 +44,7 @@ local Checker = { image = "rbxassetid://71708936221007", period = 4, transparenc
 -- The pals sheet (assets/ui/loading/loading-pals.png): 1024x512, 204x256 cells, column = pal (left to
 -- right), row 0 = wave "out", row 1 = "in". A hatless Bear's feet-to-ear-tip height is `bear` of a cell's
 -- height and its feet sit `feet` of it above the cell's bottom edge (render_loading_pals.py prints both).
-local Sheet = { image = "rbxassetid://71645230987767", w = 204, h = 256, bear = 0.726, feet = 10 / 256 }
+local Sheet = { image = "rbxassetid://130441426329229", w = 204, h = 256, bear = 0.726, feet = 10 / 256 }
 local PalCount, CentreScale = 5, 1.12
 -- Wave: swap frames every Swap s for Swaps swaps (in, out, ... ending on "out"), then that last "out"
 -- runs on for Hold s more (0.7 s in all); pal i starts Stagger s after pal i - 1.

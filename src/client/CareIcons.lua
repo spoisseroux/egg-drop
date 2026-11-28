@@ -4,10 +4,10 @@
 -- keeps the old frame-built arrow (DeckArt.carryArrow). Pure data and rules.
 local Icons={}
 Icons.Ids={
-	pickUp=0,       -- assets/ui/care/pick-up.png: a Pal head in a cupped hand, two lift marks (the Pick up key)
-	setDown=0,      -- assets/ui/care/set-down.png: the head in a lower hand over a ground line (the Set down key)
-	pickUpWhite=0,  -- assets/ui/care/pick-up-white.png, tintable with ImageColor3
-	setDownWhite=0, -- assets/ui/care/set-down-white.png
+	pickUp=124702767465463,       -- assets/ui/care/pick-up.png: a Pal head in a cupped hand, an up chevron (the Pick up key)
+	setDown=90478580908151,      -- assets/ui/care/set-down.png: the head in a lower hand over a ground line (the Set down key)
+	pickUpWhite=80346304424230,  -- assets/ui/care/pick-up-white.png, tintable with ImageColor3
+	setDownWhite=99753823277977, -- assets/ui/care/set-down-white.png
 }
 -- The key's icon size (px) inside its 48 px round key.
 Icons.Size=30
