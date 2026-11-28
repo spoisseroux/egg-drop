@@ -1,0 +1,281 @@
+{
+ "assetId": "109554618731968",
+ "operationId": "e8e58467-9631-40fa-8913-4b3e6e64dcb2",
+ "moderation": "Approved",
+ "fbxSha256": "14685a0ab79448afeca4519958d9f64b85c40662beacbf92b23235c6f5551390",
+ "manifestSha256": "4e7f34761b886f5f9dc277b439e973ef75088f7d59242b2cce45ae0b0081f823",
+ "importScale": 3.576,
+ "textures": {
+  "stone": {
+   "decalId": "132162182282059",
+   "image": "rbxassetid://98144499223270"
+  },
+  "moss": {
+   "decalId": "111177864465932",
+   "image": "rbxassetid://98035859522999"
+  },
+  "bark": {
+   "decalId": "72239706323589",
+   "image": "rbxassetid://103897199558703"
+  },
+  "leaf": {
+   "decalId": "136721136978460",
+   "image": "rbxassetid://114119810568848"
+  }
+ },
+ "parts": [
+  {
+   "meshId": "rbxassetid://87822352548709",
+   "name": "GV_Bank__stone",
+   "meshSize": [
+    1334.6409912109375,
+    207.31365966796875,
+    1321.6649169921875
+   ]
+  },
+  {
+   "meshId": "rbxassetid://103590972974529",
+   "name": "GV_Dressing__leaf",
+   "meshSize": [
+    2025.5677490234375,
+    497.1798400878906,
+    2002.4893798828125
+   ]
+  },
+  {
+   "meshId": "rbxassetid://130299237054783",
+   "name": "GV_Falls__fall",
+   "meshSize": [
+    1753.1500244140625,
+    492.19464111328125,
+    1544.8035888671875
+   ]
+  },
+  {
+   "meshId": "rbxassetid://85592621582708",
+   "name": "GV_Far_1__leaf",
+   "meshSize": [
+    883.6485595703125,
+    366.9013671875,
+    1333.4931640625
+   ]
+  },
+  {
+   "meshId": "rbxassetid://111306192080412",
+   "name": "GV_Far_2__leaf",
+   "meshSize": [
+    1345.1962890625,
+    336.83551025390625,
+    989.3712158203125
+   ]
+  },
+  {
+   "meshId": "rbxassetid://86271061276238",
+   "name": "GV_Far_3__leaf",
+   "meshSize": [
+    1307.389404296875,
+    407.1777038574219,
+    1003.3148803710938
+   ]
+  },
+  {
+   "meshId": "rbxassetid://133903264415417",
+   "name": "GV_Far_4__leaf",
+   "meshSize": [
+    905.0056762695312,
+    424.90264892578125,
+    1292.025146484375
+   ]
+  },
+  {
+   "meshId": "rbxassetid://131899351020282",
+   "name": "GV_Far_5__leaf",
+   "meshSize": [
+    998.4622802734375,
+    426.80755615234375,
+    1221.070556640625
+   ]
+  },
+  {
+   "meshId": "rbxassetid://77141847092611",
+   "name": "GV_Far_6__leaf",
+   "meshSize": [
+    1192.774169921875,
+    378.7157287597656,
+    959.574951171875
+   ]
+  },
+  {
+   "meshId": "rbxassetid://71059993433564",
+   "name": "GV_Far_7__leaf",
+   "meshSize": [
+    1214.5347900390625,
+    402.396484375,
+    880.9226684570312
+   ]
+  },
+  {
+   "meshId": "rbxassetid://123696926184704",
+   "name": "GV_Far_8__leaf",
+   "meshSize": [
+    994.8162231445312,
+    342.05084228515625,
+    1235.4447021484375
+   ]
+  },
+  {
+   "meshId": "rbxassetid://70732897716675",
+   "name": "GV_Giant_CrownA__leaf",
+   "meshSize": [
+    512.3031005859375,
+    474.14166259765625,
+    469.98443603515625
+   ]
+  },
+  {
+   "meshId": "rbxassetid://108738820279923",
+   "name": "GV_Giant_CrownB__leaf",
+   "meshSize": [
+    526.5790405273438,
+    450.48809814453125,
+    422.1357727050781
+   ]
+  },
+  {
+   "meshId": "rbxassetid://73312103220620",
+   "name": "GV_Giant_CrownC__leaf",
+   "meshSize": [
+    539.083740234375,
+    512.9434814453125,
+    578.7527465820312
+   ]
+  },
+  {
+   "meshId": "rbxassetid://78756555619650",
+   "name": "GV_Giant_TrunkA__bark",
+   "meshSize": [
+    421.52313232421875,
+    823.1563720703125,
+    330.256103515625
+   ]
+  },
+  {
+   "meshId": "rbxassetid://116781138298538",
+   "name": "GV_Giant_TrunkB__bark",
+   "meshSize": [
+    427.0464782714844,
+    874.3294677734375,
+    351.5829772949219
+   ]
+  },
+  {
+   "meshId": "rbxassetid://80051187875974",
+   "name": "GV_Giant_TrunkC__bark",
+   "meshSize": [
+    516.5157470703125,
+    911.943115234375,
+    392.0991516113281
+   ]
+  },
+  {
+   "meshId": "rbxassetid://72077233257143",
+   "name": "GV_Glow__glow",
+   "meshSize": [
+    1452.9483642578125,
+    286.1382141113281,
+    1429.83349609375
+   ]
+  },
+  {
+   "meshId": "rbxassetid://79868957432395",
+   "name": "GV_LedgeTrees__leaf",
+   "meshSize": [
+    1805.9139404296875,
+    306.6689453125,
+    1819.820556640625
+   ]
+  },
+  {
+   "meshId": "rbxassetid://139943978394641",
+   "name": "GV_Moat__water",
+   "meshSize": [
+    1314.7930908203125,
+    0.00020951693295501173,
+    1297.2772216796875
+   ]
+  },
+  {
+   "meshId": "rbxassetid://80818850617893",
+   "name": "GV_Props__paint",
+   "meshSize": [
+    1724.036376953125,
+    551.80029296875,
+    1736.1920166015625
+   ]
+  },
+  {
+   "meshId": "rbxassetid://138245513780788",
+   "name": "GV_Rocks__stone",
+   "meshSize": [
+    1638.1341552734375,
+    305.50946044921875,
+    1522.40283203125
+   ]
+  },
+  {
+   "meshId": "rbxassetid://87290319167996",
+   "name": "GV_Tier1__moss",
+   "meshSize": [
+    1568.552734375,
+    188.74002075195312,
+    1576.04833984375
+   ]
+  },
+  {
+   "meshId": "rbxassetid://119414973402591",
+   "name": "GV_Tier1__stone",
+   "meshSize": [
+    1430.1212158203125,
+    232.37428283691406,
+    1413.2821044921875
+   ]
+  },
+  {
+   "meshId": "rbxassetid://96788664086325",
+   "name": "GV_Tier2__moss",
+   "meshSize": [
+    1828.6341552734375,
+    189.7618408203125,
+    1825.1253662109375
+   ]
+  },
+  {
+   "meshId": "rbxassetid://117594422424599",
+   "name": "GV_Tier2__stone",
+   "meshSize": [
+    1648.49365234375,
+    233.67984008789062,
+    1655.9906005859375
+   ]
+  },
+  {
+   "meshId": "rbxassetid://104831547373821",
+   "name": "GV_Tier3__moss",
+   "meshSize": [
+    2048,
+    245.00320434570312,
+    2044.37939453125
+   ]
+  },
+  {
+   "meshId": "rbxassetid://101871381869111",
+   "name": "GV_Tier3__stone",
+   "meshSize": [
+    1926.420166015625,
+    287.897705078125,
+    1929.623291015625
+   ]
+  }
+ ],
+ "note": "Read back with InsertService:LoadAsset and game:GetObjects in Studio Edit, 2026-11-28. Grove files are -text in .gitattributes so their bytes (LF) are the same in every checkout."
+}
