@@ -18,22 +18,22 @@
    "band": "near",
    "kind": "stone",
    "texture": "stone",
-   "tris": 2880,
+   "tris": 3168,
    "size": [
-    373.2473,
+    375.161,
     57.9776,
-    369.6183
+    370.7932
    ],
    "shadow": false,
    "doubleSided": false,
    "maxLevel": 2,
-   "minRimDist": -74.04,
+   "minRimDist": -17.69,
    "center": [
-    17.257,
+    16.745,
     -1.625,
-    -32.958
+    -32.46
    ],
-   "hash": "bb929d056e787261",
+   "hash": "76e9c0f2b85d5e53",
    "note": "seals island cliff bottoms to the moat bed; moat spires"
   },
   "GV_Moat__water": {
@@ -51,13 +51,13 @@
    "shadow": false,
    "doubleSided": false,
    "maxLevel": 2,
-   "minRimDist": -66.51,
+   "minRimDist": -2.98,
    "center": [
     16.74,
     -26.0,
     -32.576
    ],
-   "hash": "d12ed6810c41a3c4",
+   "hash": "b69ac4bb2521420a",
    "note": "the existing pool look; no texture"
   },
   "GV_Tier1__stone": {
@@ -68,20 +68,20 @@
    "texture": "stone",
    "tris": 1152,
    "size": [
-    399.9494,
+    401.359,
     64.9861,
-    395.2401
+    396.7168
    ],
    "shadow": false,
    "doubleSided": false,
    "maxLevel": 2,
-   "minRimDist": 46.96,
+   "minRimDist": 48.26,
    "center": [
-    17.355,
+    16.993,
     8.672,
-    -31.176
+    -31.625
    ],
-   "hash": "6d93b3a03270fe9d"
+   "hash": "47cdc77bdcbf0fa2"
   },
   "GV_Tier1__moss": {
    "name": "GV_Tier1__moss",
@@ -91,20 +91,20 @@
    "texture": "moss",
    "tris": 1440,
    "size": [
-    438.6633,
+    440.8736,
     52.7832,
-    440.7595
+    442.0465
    ],
    "shadow": false,
    "doubleSided": false,
    "maxLevel": 2,
-   "minRimDist": 47.83,
+   "minRimDist": 49.14,
    "center": [
-    17.362,
+    17.474,
     16.374,
-    -32.427
+    -32.349
    ],
-   "hash": "113bd296713139e6"
+   "hash": "882835abe6866b26"
   },
   "GV_Tier2__stone": {
    "name": "GV_Tier2__stone",
@@ -114,20 +114,20 @@
    "texture": "stone",
    "tris": 864,
    "size": [
-    461.0197,
+    463.8557,
     65.3512,
-    463.1163
+    465.0684
    ],
    "shadow": false,
    "doubleSided": false,
    "maxLevel": 2,
-   "minRimDist": 76.3,
+   "minRimDist": 77.63,
    "center": [
-    19.273,
+    18.387,
     58.716,
-    -30.865
+    -31.591
    ],
-   "hash": "deeb054a79543b23"
+   "hash": "41cb7dfd79c265a0"
   },
   "GV_Tier2__moss": {
    "name": "GV_Tier2__moss",
@@ -137,20 +137,20 @@
    "texture": "moss",
    "tris": 1152,
    "size": [
-    511.398,
+    512.7253,
     53.069,
-    510.4167
+    511.3871
    ],
    "shadow": false,
    "doubleSided": false,
    "maxLevel": 2,
-   "minRimDist": 77.5,
+   "minRimDist": 78.83,
    "center": [
-    16.827,
+    16.268,
     66.457,
-    -29.854
+    -29.532
    ],
-   "hash": "1926c843ccfe410e"
+   "hash": "9751e0b0a4a82c0d"
   },
   "GV_Tier3__stone": {
    "name": "GV_Tier3__stone",
@@ -160,20 +160,20 @@
    "texture": "stone",
    "tris": 864,
    "size": [
-    538.7449,
+    540.9212,
     80.5138,
-    539.6407
+    540.9575
    ],
    "shadow": false,
    "doubleSided": false,
    "maxLevel": 2,
-   "minRimDist": 110.72,
+   "minRimDist": 111.4,
    "center": [
-    16.638,
+    16.098,
     104.902,
-    -28.439
+    -28.967
    ],
-   "hash": "b8791022fffb0318"
+   "hash": "4ad97896fda7f5dc"
   },
   "GV_Tier3__moss": {
    "name": "GV_Tier3__moss",
@@ -190,13 +190,13 @@
    "shadow": false,
    "doubleSided": false,
    "maxLevel": 2,
-   "minRimDist": 112.24,
+   "minRimDist": 112.92,
    "center": [
     15.709,
     113.4,
     -29.551
    ],
-   "hash": "cc52844a79408ea9"
+   "hash": "045cd25b543a7b63"
   },
   "GV_Falls__fall": {
    "name": "GV_Falls__fall",
@@ -275,23 +275,23 @@
    "band": "dressing",
    "kind": "leaf",
    "texture": "leaf",
-   "tris": 1776,
+   "tris": 3744,
    "size": [
-    566.4727,
-    139.0418,
-    560.0185
+    551.1353,
+    161.0954,
+    536.3699
    ],
    "shadow": false,
    "doubleSided": true,
    "maxLevel": 1,
-   "minRimDist": 58.58,
+   "minRimDist": 51.45,
    "center": [
-    13.251,
-    76.442,
-    -31.766
+    13.387,
+    59.526,
+    -37.965
    ],
-   "hash": "e1c1feaefe4d3862",
-   "note": "ferns and vine curtains"
+   "hash": "ae541ebc2d95ff37",
+   "note": "lip ferns and hanging vine strands"
   },
   "GV_Props__paint": {
    "name": "GV_Props__paint",
@@ -299,10 +299,10 @@
    "band": "dressing",
    "kind": "paint",
    "texture": "",
-   "tris": 2272,
+   "tris": 2260,
    "size": [
     482.146,
-    154.3171,
+    154.6971,
     485.5455
    ],
    "shadow": false,
@@ -311,10 +311,10 @@
    "minRimDist": 43.75,
    "center": [
     22.669,
-    48.834,
+    48.644,
     -32.539
    ],
-   "hash": "e2321895fa9f469b",
+   "hash": "483c3c5fcdede747",
    "note": "tree houses, decks, rope bridges, lantern strings, small trunks; vertex-coloured, no texture"
   },
   "GV_Glow__glow": {
@@ -325,20 +325,20 @@
    "texture": "",
    "tris": 2080,
    "size": [
-    406.3333,
-    80.0217,
-    399.8689
+    407.5717,
+    83.601,
+    401.0467
    ],
    "shadow": false,
    "doubleSided": false,
    "maxLevel": 1,
-   "minRimDist": 44.13,
+   "minRimDist": 43.68,
    "center": [
     15.663,
-    9.45,
+    9.183,
     -30.682
    ],
-   "hash": "36f77acde22d0f5a",
+   "hash": "931bc5ec9b331612",
    "note": "lanterns and windows; vertex-coloured warm #FFD67A / aqua #7AF0FF; Neon at night"
   },
   "GV_Far_1__leaf": {
@@ -877,7 +877,7 @@
    "studsPerTile": 32.0,
    "pixels": 1024,
    "texelsPerStud": 32.0,
-   "sha256": "abd8f4cc97a4e3a8008a3a94be9e329a6b65eca945892b3e52914b0e9bd73fd8"
+   "sha256": "0b017ee3ba3dac9092c83f39d8aeb1a4e0699caf44c249e552c2ef8f5758a8aa"
   },
   "moss": {
    "color": "assets/world/grove/tex/grove-moss.png",
@@ -902,6 +902,18 @@
    "pixels": 1024,
    "texelsPerStud": 42.67,
    "sha256": "bef0a222a204768b7516f2b47e5ed0f4f256d05d6a71d9b7fa6f119da4752eb0"
+  },
+  "ray": {
+   "color": "assets/world/grove/tex/grove-ray.png",
+   "colorId": "",
+   "studsPerTile": 140.0,
+   "pixels": [
+    256,
+    1024
+   ],
+   "alpha": true,
+   "use": "Beam.Texture for the god rays (no mesh wears it): image Y along the beam, X across; studsPerTile is the Beam's TextureLength",
+   "sha256": "3bfb0ecbda90e89bd1dda8f05b7cec9a9c91f622100d5a2ecd0b20a48764698f"
   }
  },
  "rays": [
@@ -916,8 +928,8 @@
     13.0,
     6.0
    ],
-   "w0": 5.0,
-   "w1": 9.09,
+   "w0": 7.56,
+   "w1": 15.11,
    "phone": true
   },
   {
@@ -931,8 +943,8 @@
     13.0,
     52.0
    ],
-   "w0": 5.38,
-   "w1": 9.79,
+   "w0": 8.01,
+   "w1": 16.01,
    "phone": true
   },
   {
@@ -946,8 +958,8 @@
     13.0,
     -4.0
    ],
-   "w0": 6.46,
-   "w1": 11.75,
+   "w0": 9.27,
+   "w1": 18.54,
    "phone": true
   },
   {
@@ -961,8 +973,8 @@
     13.0,
     42.0
    ],
-   "w0": 7.58,
-   "w1": 13.79,
+   "w0": 10.58,
+   "w1": 21.15,
    "phone": true
   },
   {
@@ -976,8 +988,8 @@
     13.0,
     -32.0
    ],
-   "w0": 5.48,
-   "w1": 9.97,
+   "w0": 8.12,
+   "w1": 16.25,
    "phone": false
   },
   {
@@ -991,8 +1003,8 @@
     13.0,
     -42.0
    ],
-   "w0": 5.38,
-   "w1": 9.79,
+   "w0": 8.01,
+   "w1": 16.01,
    "phone": true
   },
   {
@@ -1006,8 +1018,8 @@
     13.0,
     -16.0
    ],
-   "w0": 5.84,
-   "w1": 10.62,
+   "w0": 8.54,
+   "w1": 17.09,
    "phone": false
   },
   {
@@ -1021,8 +1033,8 @@
     13.0,
     -72.0
    ],
-   "w0": 7.87,
-   "w1": 14.3,
+   "w0": 10.91,
+   "w1": 21.82,
    "phone": false
   }
  ],
@@ -1075,8 +1087,10 @@
  "moat": {
   "surfaceY": -26.0,
   "bedOpaque": true,
-  "bankTopY": -8.8,
-  "note": "GV_Bank__stone runs from under the island's cliff bottoms to the first wall's foot, under the water"
+  "bankTopY": -4.0,
+  "shoulderY": -6.5,
+  "cliffFootY": -5.0,
+  "note": "GV_Bank__stone is the plinth the island stands on: a cap inside the cliff shell at bankTopY (above the cliff feet), a shoulder 1.5 studs past the island's edge at shoulderY (below them), then down to the bed and out to the first wall's foot, under the water. W7_Underside is in hides"
  },
  "center": [
   12.0,
@@ -1097,11 +1111,11 @@
   {
    "pos": [
     187.873,
-    37.796,
+    38.596,
     -38.343
    ],
    "kind": "warm",
-   "radius": 1.56,
+   "radius": 2.21,
    "source": "deck"
   },
   {
@@ -1117,11 +1131,11 @@
   {
    "pos": [
     22.044,
-    46.203,
+    47.003,
     -202.671
    ],
    "kind": "warm",
-   "radius": 1.56,
+   "radius": 2.21,
    "source": "deck"
   },
   {
@@ -1137,11 +1151,11 @@
   {
    "pos": [
     -162.862,
-    29.076,
+    29.876,
     -94.934
    ],
    "kind": "warm",
-   "radius": 1.56,
+   "radius": 2.21,
    "source": "deck"
   },
   {
@@ -1157,11 +1171,11 @@
   {
    "pos": [
     -96.244,
-    32.727,
+    33.527,
     116.513
    ],
    "kind": "warm",
-   "radius": 1.56,
+   "radius": 2.21,
    "source": "deck"
   },
   {
@@ -1177,11 +1191,11 @@
   {
    "pos": [
     21.071,
-    47.121,
+    47.921,
     147.796
    ],
    "kind": "warm",
-   "radius": 1.56,
+   "radius": 2.21,
    "source": "deck"
   },
   {
@@ -1197,751 +1211,751 @@
   {
    "pos": [
     155.081,
-    29.486,
+    30.286,
     -169.756
    ],
    "kind": "warm",
-   "radius": 1.56,
+   "radius": 2.21,
    "source": "deck"
   },
   {
    "pos": [
     195.206,
-    30.545,
+    30.745,
     -75.482
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.56,
    "source": "bridge"
   },
   {
    "pos": [
     195.883,
-    25.51,
+    25.71,
     -92.756
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.56,
    "source": "bridge"
   },
   {
    "pos": [
     187.24,
-    22.452,
+    22.652,
     -107.729
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.56,
    "source": "bridge"
   },
   {
    "pos": [
     187.917,
-    21.778,
+    21.978,
     -125.003
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.56,
    "source": "bridge"
   },
   {
    "pos": [
     179.274,
-    23.351,
+    23.551,
     -139.975
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.56,
    "source": "bridge"
   },
   {
    "pos": [
     130.968,
-    26.03,
+    26.23,
     -194.002
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.56,
    "source": "bridge"
   },
   {
    "pos": [
     115.939,
-    24.803,
+    25.003,
     -202.527
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.56,
    "source": "bridge"
   },
   {
    "pos": [
     98.679,
-    25.576,
+    25.776,
     -201.715
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.56,
    "source": "bridge"
   },
   {
    "pos": [
     83.65,
-    28.759,
+    28.959,
     -210.24
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.56,
    "source": "bridge"
   },
   {
    "pos": [
     66.39,
-    34.214,
+    34.414,
     -209.428
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.56,
    "source": "bridge"
   },
   {
    "pos": [
     -72.806,
-    29.202,
+    29.402,
     140.061
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.56,
    "source": "bridge"
   },
   {
    "pos": [
     -58.334,
-    28.069,
+    28.269,
     148.584
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.56,
    "source": "bridge"
   },
   {
    "pos": [
     -41.558,
-    29.175,
+    29.375,
     147.787
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.56,
    "source": "bridge"
   },
   {
    "pos": [
     -27.086,
-    32.867,
+    33.067,
     156.309
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.56,
    "source": "bridge"
   },
   {
    "pos": [
     -10.31,
-    38.798,
+    38.998,
     155.512
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.56,
    "source": "bridge"
   },
   {
    "pos": [
     200.874,
-    -18.361,
+    -19.521,
     -69.318
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     196.169,
-    -24.687,
+    -25.847,
     -87.584
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     191.464,
-    -28.194,
+    -29.354,
     -105.85
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     186.758,
-    -27.851,
+    -29.011,
     -124.116
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     182.053,
-    -23.657,
+    -24.817,
     -142.382
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     177.347,
-    -16.646,
+    -17.806,
     -160.648
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     141.852,
-    -16.349,
+    -17.509,
     -196.074
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     124.263,
-    -23.096,
+    -24.256,
     -200.427
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     106.673,
-    -27.07,
+    -28.23,
     -204.781
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     89.083,
-    -27.258,
+    -28.418,
     -209.135
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     71.494,
-    -23.659,
+    -24.819,
     -213.488
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     53.904,
-    -17.288,
+    -18.448,
     -217.842
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     2.403,
-    -17.743,
+    -18.903,
     -220.216
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -13.994,
-    -23.295,
+    -24.455,
     -217.631
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -30.39,
-    -23.341,
+    -24.501,
     -215.047
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -46.786,
-    -17.881,
+    -19.041,
     -212.462
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -92.35,
-    -18.184,
+    -19.344,
     -189.069
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -106.675,
-    -25.169,
+    -26.329,
     -175.117
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -121.001,
-    -29.25,
+    -30.41,
     -161.165
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -135.326,
-    -29.365,
+    -30.525,
     -147.213
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -149.651,
-    -25.514,
+    -26.674,
     -133.261
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -163.976,
-    -18.76,
+    -19.92,
     -119.309
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -182.733,
-    -18.442,
+    -19.602,
     -77.114
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -183.076,
-    -23.776,
+    -24.936,
     -59.371
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -183.42,
-    -23.371,
+    -24.531,
     -41.629
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -183.763,
-    -17.227,
+    -18.387,
     -23.886
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -170.146,
-    -16.471,
+    -17.631,
     29.586
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -160.986,
-    -23.252,
+    -24.412,
     45.819
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -151.826,
-    -27.182,
+    -28.342,
     62.051
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -142.665,
-    -27.216,
+    -28.376,
     78.284
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -133.505,
-    -23.356,
+    -24.516,
     94.517
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -124.345,
-    -16.644,
+    -17.804,
     110.75
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -86.622,
-    -17.0,
+    -18.16,
     145.155
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -74.66,
-    -20.985,
+    -22.145,
     149.999
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -62.698,
-    -17.432,
+    -18.592,
     154.842
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -17.503,
-    -17.62,
+    -18.78,
     165.318
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     -6.477,
-    -21.066,
+    -22.226,
     166.028
    ],
    "kind": "aqua",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     4.549,
-    -17.824,
+    -18.984,
     166.739
    ],
    "kind": "warm",
-   "radius": 1.04,
+   "radius": 1.82,
    "source": "string"
   },
   {
    "pos": [
     211.708,
-    47.742,
+    48.442,
     -14.966
    ],
    "kind": "warm",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     205.389,
-    46.217,
+    46.917,
     -67.629
    ],
    "kind": "warm",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     189.424,
-    41.871,
+    42.571,
     -169.557
    ],
    "kind": "aqua",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     122.542,
-    37.17,
+    37.87,
     -209.078
    ],
    "kind": "aqua",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     58.605,
-    46.461,
+    47.161,
     -214.253
    ],
    "kind": "warm",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     12.592,
-    46.921,
+    47.621,
     -229.385
    ],
    "kind": "aqua",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     -47.375,
-    39.55,
+    40.25,
     -222.106
    ],
    "kind": "warm",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     -86.61,
-    42.012,
+    42.712,
     -200.4
    ],
    "kind": "warm",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     -182.055,
-    42.013,
+    42.713,
     -109.253
    ],
    "kind": "warm",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     -180.708,
-    43.785,
+    44.485,
     -52.967
    ],
    "kind": "warm",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     -186.208,
-    46.019,
+    46.719,
     -0.951
    ],
    "kind": "aqua",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     -172.562,
-    44.328,
+    45.028,
     50.922
    ],
    "kind": "warm",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     -163.867,
-    37.454,
+    38.154,
     87.722
    ],
    "kind": "aqua",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     -130.734,
-    39.867,
+    40.567,
     123.988
    ],
    "kind": "aqua",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     -86.339,
-    40.224,
+    40.924,
     149.496
    ],
    "kind": "aqua",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     -33.935,
-    40.899,
+    41.599,
     164.979
    ],
    "kind": "warm",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     15.205,
-    40.837,
+    41.537,
     168.021
    ],
    "kind": "warm",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     66.069,
-    47.073,
+    47.773,
     163.178
    ],
    "kind": "aqua",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     155.049,
-    46.452,
+    47.152,
     130.894
    ],
    "kind": "warm",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     186.609,
-    44.396,
+    45.096,
     86.737
    ],
    "kind": "warm",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   },
   {
    "pos": [
     217.535,
-    38.894,
+    39.594,
     48.014
    ],
    "kind": "warm",
-   "radius": 1.49,
+   "radius": 2.21,
    "source": "post"
   }
  ],
@@ -2361,11 +2375,12 @@
   "W7_IsletsB__foliage_blossom",
   "W7_IsletsB__grass",
   "W7_IsletsB__marble",
+  "W7_Underside__bark",
+  "W7_Underside__cliff_rock",
+  "W7_Underside__foliage",
   "W7_Water__cloud"
  ],
- "keeps": [
-  "W7_Underside__cliff_rock"
- ],
+ "keeps": [],
  "counts": {
   "giants": 9,
   "houses": 6,
@@ -2373,8 +2388,9 @@
   "lanternStrings": 8,
   "posts": 21,
   "ledgeTrees": 28,
-  "ferns": 100,
-  "vineCurtains": 96
+  "ferns": 60,
+  "vineCurtains": 48,
+  "vineStrands": 144
  },
  "budget": {
   "mesh": 10000,
@@ -2386,14 +2402,15 @@
   "islandIntrusions": 0,
   "midMinRimDist": 45.0,
   "canopyMinY": 130.0,
-  "islandLowestY": -8.16
+  "islandLowestY": -8.16,
+  "plinthCapMinCover": 0.72
  },
  "totals": {
-  "triangles": 42605,
+  "triangles": 44849,
   "meshes": 28,
   "instances": 18,
   "groups": 40,
-  "uniqueTriangles": 30537
+  "uniqueTriangles": 32781
  },
- "triangles": 42605
+ "triangles": 44849
 }
