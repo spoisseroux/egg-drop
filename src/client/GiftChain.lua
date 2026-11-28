@@ -76,12 +76,17 @@ Chain.Steps=table.freeze({
 	park=table.freeze({head="onbGift.park",sub="onbGift.parkSub",target="Park"}),
 	dash=table.freeze({head="onbGift.dash",sub="onbGift.dashSub",target="Dash"}),
 	nest=table.freeze({head="onbGift.nest",sub="onbGift.nestSub",target="Nest"}),
+	-- Beta 44 notes 5 and 11 (ONBOARD-SIMPLIFY-BRIEF 1, ARCH-REVIEW-SIMPLIFY 8; Onboard `teach`): while the deck lesson is
+	-- next, the pet's own bubble (head only) invites to the deck; a tap opens it (the dock's Deck button wears the
+	-- lesson's ring meanwhile).
+	deck=table.freeze({head="teach.deckInvite",target="Deck"}),
 })
 -- Exempt from the gap and the session count: the first gift, and a gift already given.
 Chain.Exempt=table.freeze({paint=true,unseen=true})
 -- Onboarding part 2 (Onboard `teach`, ONBOARDING-P2-BRIEF 2 rules): every gift step is exempt; the invites (pull, park,
--- dash, nest) count, three a session, 90 s clear of the last reveal.
-Chain.Teach=table.freeze({exempt=table.freeze({paint=true,toy=true,snack=true,unseen=true}),perSession=3,gap=90})
+-- dash, nest) count, three a session, 90 s clear of the last reveal. Beta 44: the deck invite is exempt too.
+Chain.Teach=table.freeze({exempt=table.freeze({paint=true,toy=true,snack=true,unseen=true,deck=true}),perSession=3,gap=90})
+Chain.MaxDt=1 -- s: one step never adds more than this to a bubble's own clock (focus lost, a hitch)
 function Chain.rules(teach)
 	if teach==true then return Chain.Teach end
 	return {exempt=Chain.Exempt,perSession=Chain.PerSession,gap=Chain.Gap}
@@ -101,7 +106,15 @@ function Chain.facts(state,live)
 	for _,n in pairs(dash and type(dash.ribbons)=="table"and dash.ribbons or {})do if type(n)=="number"and n>0 then raced=true end end
 	local playDate=if type(state.playDate)=="table"then state.playDate else {}
 	local fetched=(tonumber(stats.fetches)or 0)>0
+	-- Beta 44 (ARCH-REVIEW-SIMPLIFY 8): the course, from live latches (the save's teachMask with this session's): `teach`
+	-- on, owed the chain, not graduated and the deck lesson not done (the tour, its ignored-three-sessions latch, a round)
+	local teachMask=bit32.bor(tonumber(state.teachMask)or 0,tonumber(live.teachMask)or 0)
+	local function latched(index)return bit32.band(teachMask,2^index)~=0 end
+	local graduated=live.teach==true and latched(16)
+	local deckDone=latched(1)or latched(5)or(tonumber(stats.rounds)or 0)>=1
 	return{
+		course=live.teach==true and g~=nil and g.owed==true and not graduated and not deckDone,
+		deckNext=live.deckNext==true,
 		on=g~=nil and g.owed==true,
 		ready=g and g.ready or nil,
 		unseen=g and type(g.unseen)=="table"and g.unseen or nil,
@@ -118,7 +131,7 @@ function Chain.facts(state,live)
 		parkOn=live.park~=false,
 		teach=live.teach==true,
 		-- The lessons remembered (ARCH-REVIEW-TEACH 5): graduated (teachMask `done`), read only with `teach` on.
-		graduated=live.teach==true and bit32.band(tonumber(state.teachMask)or 0,2^16)~=0,
+		graduated=graduated,
 	}
 end
 -- The step the chain is on now, or nil. A gift already given and unseen first; the nest first on a return.
@@ -128,7 +141,10 @@ function Chain.next(f)
 	if f.nestReady and f.returned then return "nest"end
 	if f.ready=="paint"then return "paint"end
 	if not f.granted.paint then return nil end
-	if not f.paid and f.stars>=Chain.cheapest()then return "pull"end
+	-- beta 44: the deck lesson next (after the Paint gift and its lesson): the deck invite; "You can hatch one!" waits
+	-- for the course to be over (the tour seen)
+	if f.course and f.deckNext then return "deck"end
+	if not f.paid and f.stars>=Chain.cheapest()and not f.course then return "pull"end
 	if f.ready=="toy"then return "toy"end
 	if f.ready=="snack"then return "snack"end
 	local toyDone=f.granted.toy==true or f.toysLeft==0
@@ -151,7 +167,9 @@ Chain.LessonInvites=table.freeze({park=true,dash=true})
 function Chain.may(session,step,now,f,teach)
 	if not step or session.closed[step]then return false end
 	local owedTeach=teach==true and f~=nil and f.on==true
-	if owedTeach and f.graduated==true and Chain.giftOf(step,f)==nil then return false end
+	-- beta 44 (ARCH-REVIEW-SIMPLIFY 7): graduation now comes at about minute 5, so it ends only the deck invite (a
+	-- lesson); "You can hatch one!", the park, the Dash and the nest still invite after it
+	if owedTeach and f.graduated==true and step=="deck"then return false end
 	if f and f.veteran and not owedTeach then return false end
 	local r=Chain.rules(teach)
 	if r.exempt[step]then return true end
@@ -183,7 +201,8 @@ end
 --   crank(kind, done(status, reason)) (paint/toy: the giftEgg ask; snack: the Snack gift buy; both through the machine),
 --   replay(record) (an unseen gift out of the machine again), revealOpen() (a gift card or the Snack's reveal is up),
 --   inPark(), fetchCard(), throwTip(), event(name), mask(), park() -> false when this world has no Pet Park,
---   teach() -> Onboard `teach` on
+--   teach() -> Onboard `teach` on; beta 44 (all optional): teachMask() (this session's latches), deckNext() (the deck
+--   lesson may light), focused() (the window has focus: the bubble clocks), shopOpen() (the Hatch eggs screen is up)
 function Chain.new(deps)
 	local self=setmetatable({d=deps,session={closed={},count=0,replayed={}},active=nil,lastFree=nil,returned=nil,fetchedBefore=nil},Chain)
 	return self
@@ -193,8 +212,13 @@ function Chain:read()
 	if self.returned==nil and type(state)=="table"and type(state.gifts)=="table"then
 		self.returned=state.gifts.granted and state.gifts.granted.paint==true or false
 	end
-	return Chain.facts(state,{returned=self.returned,mask=self.d.mask and self.d.mask(),park=self.d.park and self.d.park(),teach=self:teaching()})
+	local d=self.d
+	return Chain.facts(state,{returned=self.returned,mask=d.mask and d.mask(),park=d.park and d.park(),teach=self:teaching(),
+		teachMask=d.teachMask and d.teachMask(),deckNext=d.deckNext~=nil and d.deckNext()==true})
 end
+-- The window has focus (deps.focused; none: always). Beta 44 (ARCH-REVIEW-SIMPLIFY 10): a bubble's nudge and park clocks
+-- count only focused time.
+function Chain:focused()return self.d.focused==nil or self.d.focused()~=false end
 function Chain:teaching()return self.d.teach~=nil and self.d.teach()==true end
 -- True while the chain holds the garden's prompts back (BearNeeds and the tips read it through the gate).
 function Chain:holds()
@@ -221,6 +245,8 @@ function Chain:atMachine()
 	if not a or not a.gift then return false end
 	if a.step=="unseen"then return self:crank()end
 	self:hide()
+	-- beta 44 note 3 (DIAGNOSIS 3): the shop is open on the gift; no bubble until it closes unpressed ("leading" again)
+	a.phase="shop";a.at=self.d.clock();a.shopSeen=false
 	if self.d.openShop then pcall(self.d.openShop,a.gift)end
 	return true
 end
@@ -254,6 +280,7 @@ end
 -- The shop's "Hatch free!" (ARCH-REVIEW-P2 2): the parked gift without a lead, then the same crank the chip used. A shop
 -- opened from the Menu has no active step: one is built first. False when that gift is not the shop's to give now.
 function Chain:shopCrank(kind)
+	self:hide() -- beta 44 note 3: the bubble goes the moment Hatch free! is pressed, whatever the answer
 	if Chain.shopGift(self:read(),self.active)~=kind then return false end
 	local a=self.active
 	if not(a and a.gift==kind and a.step==kind)then
@@ -341,15 +368,30 @@ function Chain:step(now)
 		local still=Chain.next(f)==a.step or(a.tapped and a.gift~=nil and Chain.parked(f,nil)==a.gift)
 		if not still then self.active=nil;self:hide();a=nil end
 	end
+	-- beta 44 (ARCH-REVIEW-SIMPLIFY 10): the bubble's own clock, focused time only, one step at most MaxDt
+	local dt=math.clamp(now-(self.lastNow or now),0,Chain.MaxDt)
+	self.lastNow=now
+	local held=if self:focused()then dt else 0
+	if a and a.phase=="shop"then
+		-- beta 44 note 3: the shop is open on the gift; no bubble. Closed without Hatch free!: leading again.
+		self.d.bubble.set(false)
+		local open=self.d.shopOpen~=nil and self.d.shopOpen()==true
+		if open then a.shopSeen=true
+		elseif a.shopSeen or now-a.at>=3 then a.phase="leading";a.at=now;a.nearAt=nil;a.best=nil;a.bestAt=nil end
+	end
 	if a and(a.phase=="invited"or a.phase=="nudged")then
+		local showing=false
 		if self.d.gate()~=nil or self.d.busy()then self.d.bubble.set(false)
 		else
 			local s=Chain.Steps[a.step]
 			local near=a.gift~=nil and self.d.near()
 			self.d.bubble.set(true,if near then "onbGift.atMachine"else s.head,if near then "onbGift.atMachineSub"else s.sub)
+			showing=true
 		end
-		if a.phase=="invited"and now-a.at>=Chain.NudgeAfter then a.phase="nudged";a.at=now;self.d.bubble.hop()
-		elseif a.phase=="nudged"and now-a.at>=Chain.ParkAfter then self:park("ignored");a=nil end
+		-- only time the bubble is up counts (a menu, the deck or another prompt over it stops its clock)
+		if showing then a.held=(a.held or 0)+held end
+		if a.phase=="invited"and a.held>=Chain.NudgeAfter then a.phase="nudged";a.held=0;self.d.bubble.hop()
+		elseif a.phase=="nudged"and a.held>=Chain.ParkAfter then self:park("ignored");a=nil end
 	elseif a and a.phase=="leading"and a.gift then
 		-- at the machine: the bubble says Tap the machine! (a tap opens the shop on the gift). Code review: a lead never holds the Bear's prompts for
 		-- long. Standing at the machine untapped parks like an ignored bubble; away from it, LeadPark s with no step

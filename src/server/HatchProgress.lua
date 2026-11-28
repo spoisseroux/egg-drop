@@ -1148,12 +1148,13 @@ function Hatching.welcomeGift(handle, ctx)
 	local resuming = handle.pending and handle.pending.signature == signature
 	if not resuming and WelcomeGift.paid(handle.state) then return true, "AlreadyGranted" end
 	local candidate = if resuming then handle.pending.candidate
-		else table.freeze({ nest = ctx.nest ~= false, mask = Coach.mask(ctx.mask) })
+		else table.freeze({ nest = ctx.nest ~= false, mask = Coach.mask(ctx.mask), teach = Coach.mask(ctx.teach) })
 	local ok, reason = transact(handle, signature, handle.state.revision, function(state, captured)
 		-- Code review: never under another open reservation or reveal (the write would not validate, InvalidData, and
 		-- operationSeq must not move under a saved toy or look reservation): RevealPending, which the host waits on.
 		if Guard.other(state, nil) then return false, "RevealPending" end
-		local due, why = WelcomeGift.due(state, captured.nest, captured.mask)
+		-- beta 44 (ARCH-REVIEW-SIMPLIFY 6): ctx.teach, the board's queued teach latches (the deck tour stands in for a round)
+		local due, why = WelcomeGift.due(state, captured.nest, captured.mask, captured.teach)
 		if not due then return false, why end
 		if state.nectar + WelcomeGift.Bonus > 1000000000 then return false, "BalanceLimit" end
 		WelcomeGift.apply(state)

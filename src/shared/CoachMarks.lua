@@ -131,7 +131,12 @@ end
 -- for a veteran save, never before the first pet (the Welcome round has its own card).
 -- The lessons remembered (ARCH-REVIEW-TEACH 4): a graduated save (ctx.graduated: teachMask `done` with Onboard `teach`
 -- on) gets no teaching card again; these news cards are not lessons and stay.
-Coach.AfterGraduation=table.freeze({petArrived=true,questDone=true,weekDone=true,nestIntro=true})
+-- Beta 44 (ARCH-REVIEW-SIMPLIFY 7): graduation now comes at about minute 5, at the deck tour's end, so the cards that
+-- explain a screen the first time it is used (the fill line, the item card, each machine's first visit, the station
+-- label tips) stay after it; only the old lessons' own cards are gone.
+Coach.AfterGraduation=table.freeze({petArrived=true,questDone=true,weekDone=true,nestIntro=true,
+	fillLine=true,item=true,hatch=true,style=true,companions=true,quests=true,book=true,park=true,
+	tipHatch=true,tipStyle=true,tipCompanions=true,tipPark=true,tipNest=true})
 function Coach.wants(id,ctx)
 	ctx=ctx or {}
 	if not Coach.Bits[id]then return false end

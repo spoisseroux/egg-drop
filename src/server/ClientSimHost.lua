@@ -540,7 +540,7 @@ function Host.advance(board, now, dt, hooks)
 			if host.phase == "Settling" then takeOver(board, state, "Idle")
 			else
 				takeOver(board, state, "Idle")
-				RoundSim.finish(host)
+				if L.idleFinishes(hb.drops) then RoundSim.finish(host) end
 			end
 		end
 	elseif board.mode ~= "Board" then

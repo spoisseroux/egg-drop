@@ -508,7 +508,29 @@ return function(client)
 		assert(Needs.current(facts({teachMask=over},{teach=true}),on)==nil,"the bubbles are over (a later build's new need never comes back)")
 		assert(Needs.current(facts({},{teach=true,teachMask=over}),on)==nil,"this session's latch counts at once")
 		assert(Needs.current(facts({teachMask=over},{teach=false}),on)=="needHi","teach off: beta (42), the latch is not read")
-		assert(Needs.current(facts({teachMask=Teach.with(0,"done")},{teach=true}),on)=="needHi","graduation alone is not the bubbles' end")
+		-- beta 44 (ARCH-REVIEW-SIMPLIFY 5): the server refuses every latch after `done`, so graduation ends them too
+		assert(Needs.current(facts({teachMask=Teach.with(0,"done")},{teach=true}),on)==nil,"graduated: the bubbles are over")
+		assert(Needs.current(facts({teachMask=Teach.with(0,"done")},{teach=false}),on)=="needHi","teach off: not read")
+	end)
+	test("beta 44 (ARCH-REVIEW-SIMPLIFY 8): the deck tour closes Play for Stars!; in the course the deck is the pet's invite",function()
+		local Teach=require(Shared.TeachMarks)
+		local on={on=true,owned=1,order=Needs.GuideOrder}
+		local hi=Coach.with(0,"needHi")
+		local owed={owed=true,granted={paint=true}}
+		-- in the course (teach on, owed the chain, not graduated): needDeck is never asked (GiftChain's "deck" invite asks)
+		local course=facts({coachMask=hi,gifts=owed},{teach=true})
+		assert(course.course==true and not Needs.available("needDeck",course),"in the course: not this bubble")
+		assert(Needs.current(course,on)~="needDeck")
+		-- the tour latched (this session or saved): closed though no round was played
+		local toured=facts({coachMask=hi,gifts=owed},{teach=true,teachMask=Teach.with(0,"deckTour")})
+		assert(toured.rounds==0 and Needs.closed("needDeck",toured),"the tour closes it")
+		assert(Needs.trulyDone(toured,false),"Pet and the tour: the guide is truly done (the card waits for the tour's end)")
+		-- teach off: today's rules (a round played)
+		local off=facts({coachMask=hi,gifts=owed,teachMask=Teach.with(0,"deckTour")},{teach=false})
+		assert(not Needs.closed("needDeck",off)and Needs.available("needDeck",off),"teach off: as before")
+		-- graduated: the course is over, the deck need may show again (a later build) and is closed by the tour's latch
+		local grad=facts({coachMask=hi,gifts=owed,teachMask=Teach.with(Teach.with(0,"done"),"deckTour")},{teach=true})
+		assert(grad.course==false and Needs.closed("needDeck",grad))
 	end)
 	return{passed=#cases,cases=cases}
 end

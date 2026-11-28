@@ -57,6 +57,25 @@ function Words.lines(goal,rich,size)
 	return{UICopy.get(key,{ball=ball.a,where=where}),upper(UICopy.get("deck.goal.short.make",{ball=ball.bare,where=where})),tiny}
 end
 
+-- Beta 44 note 7 (ONBOARD-SIMPLIFY-BRIEF 3): the Goals card draws the target ball itself, so its words drop the colour
+-- word and the dot: "Green ● on the left" is [ball] "on the left", "Make a green ● or bigger on the left" is [ball]
+-- "or bigger, on the left", center_ii's "Match two yellow ●" is [the smaller ball] "Match two, in the middle".
+-- -> {tier, words = {line, short}} for a goal with a ball, or nil (merges and chains keep their lines). The spoken
+-- label stays the full sentence (Words.lines, plain).
+function Words.ball(goal)
+	if type(goal)~="table"or(goal.kind~=nil and goal.kind~="merge")then return nil end
+	if goal.tier==nil and goal.minTier==nil then return nil end
+	local zone=zoneOf(goal)
+	local where=UICopy.get("deck.goal.where."..zone)
+	local whereTiny=UICopy.get("deck.goal.whereTiny."..zone)
+	local tier=math.clamp(goal.tier or goal.minTier or 1,1,5)
+	if goal.tier and goal.id=="center_ii"and tier>1 then
+		return{tier=tier-1,words={UICopy.get("deck.goal.ball.match",{where=where}),UICopy.get("deck.goal.ball.match",{where=whereTiny})}}
+	end
+	local key=if goal.minTier then "deck.goal.ball.makeUp"else "deck.goal.ball.make"
+	return{tier=tier,words={UICopy.get(key,{where=where}),UICopy.get(key,{where=whereTiny})}}
+end
+
 -- "Next, make a green ball or bigger in the middle" (FieldQuestText.nextGoalHint, plain).
 function Words.next(goal)
 	if not goal then return ""end

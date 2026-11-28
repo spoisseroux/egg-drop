@@ -111,7 +111,9 @@ function View.new(owner,v)
  self.payout=scroll(self.left,"PayoutRows");self.goals=scroll(self.right,"Goals")
  -- Actions: a 2 x 2 grid when two 44 px buttons fit side by side, else the stack.
  self.grid=r.w>=176 and r.h>=2*44+4+12+70
- local actionHeight=if self.grid then 2*44+4 else 4*44+3*4
+ -- beta 44 note 21: the grid's keys 8 apart past their lips (DeckResultsLayout.grid)
+ local gridL=Layout.grid(r.w-12)
+ local actionHeight=if self.grid then gridL.total else 4*44+3*4
  self.scrollActions=not self.grid and r.h<actionHeight+68
  -- U7 (v3): the stack compacted to 128 pt (164 when Hatch and Leave cannot share a row).
  if self.v3 and not self.grid then
@@ -122,7 +124,9 @@ function View.new(owner,v)
  self.actions=self.scrollActions and scroll(self.right,"ResultActions")or Instance.new("Frame")
  if not self.scrollActions then
   self.actions.Name="ResultActions";self.actions.BackgroundTransparency=1;self.actions.BorderSizePixel=0;self.actions.ZIndex=self.right.ZIndex+2;self.actions.Parent=self.right
-  self.actions.Position=UDim2.fromOffset(6,r.h-actionHeight-6);self.actions.Size=UDim2.fromOffset(r.w-12,actionHeight)
+  -- beta 44 note 21: the compact stack sits Layout.Pad (8) in from the sides and the foot
+  local inset=if self.compact then Layout.Pad else 6
+  self.actions.Position=UDim2.fromOffset(inset,r.h-actionHeight-inset);self.actions.Size=UDim2.fromOffset(r.w-2*inset,actionHeight)
   self.goals.Size=UDim2.new(1,0,0,r.h-actionHeight-12)
   -- QA v751 P1 follow-up: the fitted phone shell left this pane 14 px shorter (263 px on a
   -- 750x402 phone), which cut the second goal off above the four-button stack. A pane with
@@ -161,7 +165,7 @@ function View.new(owner,v)
  for i=1,3 do self.goalLabels[i]=labelAt(self.goals,"Goal"..i,"",13,"text",pad,28+(i-1)*24,r.w-2*pad,22)end
  self.metrics=labelAt(self.goals,"Metrics","",12,"soft",pad,104,r.w-2*pad,32)
  local names={[1]="Replay",[3]="Difficulty",[5]="Hatch eggs",[2]="Back to garden"}
- local cell=math.floor((r.w-12-4)/2)
+ local cell=gridL.cell
  for i,id in ipairs(ORDER)do
   local size=if self.grid then Vector2.new(cell,44)else Vector2.new(math.max(44,r.w-12),44)
   local button
@@ -181,7 +185,7 @@ function View.new(owner,v)
    end
   else
    button=Kit.button(self.actions,"Action"..id,{text=names[id],size=size,textSize=if self.grid or r.w<150 then 13 else 15,selectable=false,variant=if id==1 then "primary"else nil})
-   button.Position=if self.grid then UDim2.fromOffset(((i-1)%2)*(cell+4),math.floor((i-1)/2)*48)else UDim2.fromOffset(self.scrollActions and 6 or 0,(i-1)*48)
+   button.Position=if self.grid then UDim2.fromOffset(gridL.at(i))else UDim2.fromOffset(self.scrollActions and 6 or 0,(i-1)*48)
   end
   button:SetAttribute("ResultAction",id)
   self.buttons[id]=button

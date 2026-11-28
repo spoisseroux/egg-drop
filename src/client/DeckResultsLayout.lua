@@ -4,8 +4,14 @@
 local Layout={}
 Layout.StripH=48
 Layout.StripGap=6
-Layout.Pad=6
-Layout.Gap=4
+-- Beta 44 note 21 (shot-76, ONBOARD-SIMPLIFY-BRIEF 3, DIAGNOSIS 21): 8 px of pane show between a key's lip and the next
+-- key on every row, and between Hatch and Leave; the stack sits 8 in from the pane's sides and foot. A key's lip hangs
+-- under its rect (Kit.buttonLip: Replay, the primary, 6; the cream keys 3), so a row's pitch is its height, its lip and
+-- the gap.
+Layout.Pad=8
+Layout.Gap=8
+Layout.Edge=table.freeze({[1]=6,[3]=3,[5]=3,[2]=3})
+function Layout.edge(id)return Layout.Edge[id]or 3 end
 Layout.Replay=44
 Layout.Difficulty=36
 Layout.Half=40
@@ -41,24 +47,34 @@ function Layout.halfText(half,labels,measure)
 	return nil
 end
 -- The action rows inside a right pane `rw` wide: {total, rows = {[id] = {x, y, w, h}}, textSize}, y from the stack's
--- top. 128 in all when Hatch and Leave share a row; 164 when they cannot.
+-- top; `total` includes the bottom row's lip. 148 in all when Hatch and Leave share a row (44 + 6 + 8, 36 + 3 + 8,
+-- 40 + 3); 191 when they cannot.
 function Layout.actions(rw,labels,measure)
 	local w=rw-Layout.Pad*2
 	local half=math.floor((w-Layout.Gap)/2)
 	local size=Layout.halfText(half,labels,measure)
 	local rows={}
 	local y=0
-	rows[1]={x=0,y=y,w=w,h=Layout.Replay};y+=Layout.Replay+Layout.Gap
-	rows[3]={x=0,y=y,w=w,h=Layout.Difficulty};y+=Layout.Difficulty+Layout.Gap
+	local function pitch(id,h)return h+Layout.edge(id)+Layout.Gap end
+	rows[1]={x=0,y=y,w=w,h=Layout.Replay};y+=pitch(1,Layout.Replay)
+	rows[3]={x=0,y=y,w=w,h=Layout.Difficulty};y+=pitch(3,Layout.Difficulty)
 	if size then
 		rows[5]={x=0,y=y,w=half,h=Layout.Half}
 		rows[2]={x=w-half,y=y,w=half,h=Layout.Half}
-		y+=Layout.Half
+		y+=Layout.Half+Layout.edge(2)
 	else
-		rows[5]={x=0,y=y,w=w,h=Layout.Full};y+=Layout.Full+Layout.Gap
-		rows[2]={x=0,y=y,w=w,h=Layout.Full};y+=Layout.Full
+		rows[5]={x=0,y=y,w=w,h=Layout.Full};y+=pitch(5,Layout.Full)
+		rows[2]={x=0,y=y,w=w,h=Layout.Full};y+=Layout.Full+Layout.edge(2)
 	end
 	return{total=y,rows=rows,textSize=size or Layout.TextSize,paired=size~=nil}
+end
+-- The 2 x 2 grid (a wide pane): Replay and Difficulty, then Hatch and Leave; `cell` wide keys 44 tall, Gap apart
+-- across, and the top row's deeper lip (Replay's) plus Gap down. -> {cell, total, at(i) -> x, y (i = 1..4 in order)}.
+function Layout.grid(w)
+	local cell=math.floor((w-Layout.Gap)/2)
+	local down=44+math.max(Layout.edge(1),Layout.edge(3))+Layout.Gap
+	return{cell=cell,total=down+44+math.max(Layout.edge(5),Layout.edge(2)),
+		at=function(i)return((i-1)%2)*(cell+Layout.Gap),math.floor((i-1)/2)*down end}
 end
 -- The gamepad on the compact stack: down from Difficulty goes to Hatch; right from Hatch to Leave and left back; up
 -- from either goes to Difficulty. Answers the id to focus, or nil (no move: the caller's own rule).

@@ -17,6 +17,7 @@
 --   Stars  a deck round played after the Bear: saved `stats.rounds` >= Rounds (the Welcome round is not counted)
 -- and never on a veteran save (Coach.veteran), as the guide itself.
 local Coach=require(script.Parent.CoachMarks)
+local Teach=require(script.Parent.TeachMarks)
 local Gift={}
 Gift.Bonus=5
 Gift.Owed=0
@@ -49,26 +50,30 @@ function Gift.mark(state)
 	return true
 end
 -- Pure: the guide's three facts from a save. `mask`: coach bits the server holds but has not saved yet (optional).
-function Gift.facts(state,mask)
+-- Beta 44 (ONBOARD-SIMPLIFY-BRIEF 4, ARCH-REVIEW-SIMPLIFY 6): the card now shows at the deck tour's end, before any round
+-- is played, so Stars is also the tour's latch (`deckTour`, saved or queued in `teach`; the server takes that latch only
+-- while the board is on the deck, TeachMarks.OnDeck).
+function Gift.facts(state,mask,teach)
 	state=if type(state)=="table"then state else {}
 	local merged=Coach.merge(Coach.mask(state.coachMask),Coach.mask(mask))
 	local stats=if type(state.stats)=="table"then state.stats else {}
 	local nest=if type(state.nest)=="table"then state.nest else nil
+	local toured=Teach.has(Teach.merge(state.teachMask,teach),"deckTour")
 	return{
 		pet=Coach.has(merged,"needHi")or state.lastPetAward~=nil,
 		nest=nest~=nil and(nest.tucked==true or(integer(nest.n,1e9)and nest.n>0)),
-		stars=integer(stats.rounds,1e15)and stats.rounds>=Gift.Rounds,
+		stars=(integer(stats.rounds,1e15)and stats.rounds>=Gift.Rounds)or toured,
 	}
 end
 -- Pure: may the gift be paid on this save now? -> true, or false and the reason:
 --   AlreadyGranted (paid before), NotOwed (an old save, or its Bear came with the switch off), Veteran, NotDone.
 -- nestRequired false: the nest is off in this world, so Pet and Stars only (as BearNeeds.trulyDone).
-function Gift.due(state,nestRequired,mask)
+function Gift.due(state,nestRequired,mask,teach)
 	if type(state)~="table"then return false,"NotOwed"end
 	if Gift.paid(state)then return false,"AlreadyGranted"end
 	if not Gift.owed(state)then return false,"NotOwed"end
 	if Coach.veteran(state.totalWins)then return false,"Veteran"end
-	local f=Gift.facts(state,mask)
+	local f=Gift.facts(state,mask,teach)
 	if not f.pet or not f.stars or(nestRequired~=false and not f.nest)then return false,"NotDone"end
 	return true
 end

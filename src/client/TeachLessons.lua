@@ -26,12 +26,18 @@
 -- Rules: one pointer at a time; never beside a card or reveal; a lesson is done only by its saved fact, whoever caused
 -- it, never by a timer. Ignored for Ignore s: the pointer fades and that lesson waits for the next session (parked).
 -- Pure rules first (TeachLessons.spec), then the controller.
+-- Beta 44, onboarding shorter (artifacts/qa-2026-11-28-beta44/ONBOARD-SIMPLIFY-BRIEF.md section 4, ARCH-REVIEW-SIMPLIFY 5
+-- and 10; Spencer's notes 12 to 14): the lessons that stay are dress, reset and deck; the rest are Things to do rows
+-- (their bits stay, read where saved, never asked for). The deck lesson is done by the tour (`deckTour`) or a round. The
+-- client no longer asks "done:finished" by itself: the all-set card does, at the tour's end (Lessons.allSet). The ignore
+-- clock counts only time the window has focus (alt-tabbing never parks a lesson).
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Coach=require(Shared:WaitForChild("CoachMarks"))
 local Teach=require(Shared:WaitForChild("TeachMarks"))
 local Toys=require(Shared:WaitForChild("ToyCatalog"))
 local Lessons={};Lessons.__index=Lessons
-Lessons.Order=table.freeze({"dress","reset","deck","menu","quests","park","dash","snacks","stats","wardrobe"})
+Lessons.Order=table.freeze({"dress","reset","deck"})
+Lessons.MaxDt=.25 -- s: one frame never adds more than this to the ignore clock (a hitch, a throttled background window)
 Lessons.Ignore=12 -- s a pointer shows untouched before it fades (back once next session)
 Lessons.ResetSeen=1.5 -- s the Back to white card is on screen, ringed, before the reset lesson is saved
 Lessons.Words=table.freeze({dress="teach.dress",paint="teach.paint",deck="teach.deck",menu="teach.menu",things="teach.things",
@@ -84,7 +90,9 @@ function Lessons.done(id,f)
 	local l=f.latched or {}
 	if l[id]then return true end
 	if id=="dress"then return f.painted==true end
-	if id=="deck"or id=="deckTour"then return(f.rounds or 0)>=1 end -- a field round played; the Welcome round is not counted
+	-- a field round played (the Welcome round is not counted), or (beta 44) the deck tour seen
+	if id=="deck"then return l.deckTour==true or(f.rounds or 0)>=1 end
+	if id=="deckTour"then return(f.rounds or 0)>=1 end
 	if id=="level"then return(f.rounds or 0)>=2 end
 	if id=="menu"then return f.menuSeen==true end
 	if id=="quests"then return f.questsSeen==true end
@@ -132,6 +140,23 @@ function Lessons.finished(f)
 end
 -- The ignore clock: has this pointer shown `shown` s on the same target untouched? (never for a lesson that is done)
 function Lessons.ignored(shown)return(shown or 0)>=Lessons.Ignore end
+-- Beta 44 (ARCH-REVIEW-SIMPLIFY 10): one frame's share of a clock that runs only while the window has focus.
+function Lessons.tick(dt,focused)
+	if focused==false then return 0 end
+	return math.clamp(tonumber(dt)or 0,0,Lessons.MaxDt)
+end
+-- Beta 44 (ARCH-REVIEW-SIMPLIFY 5): what the deck tour's end owes this save, from live latches.
+--   "card"    the tour seen, not graduated, the need bubbles not ended another way: "You're all set!" (with the +5
+--             welcome gift); its showing asks "done:finished" (the server saves `done` and `needs` together)
+--   "silent"  the tour seen and the need bubbles already over (an older build latched `needs`): graduate, no card
+--   nil       still in the course, graduated, or not owed the chain
+function Lessons.allSet(f)
+	if type(f)~="table"or f.on~=true or f.graduated==true then return nil end
+	local l=f.latched or {}
+	-- the deck lesson ignored in three sessions (its `deck` latch) graduates too, without the card
+	if not l.deckTour then return if l.deck then "silent"else nil end
+	return if l.needs then "silent"else "card"
+end
 
 -- ── The controller ─────────────────────────────────────────────────────────────────────────────────────────────────
 -- deps: state(), mask(), teach() -> on, park() -> false without a Pet Park, clock(), pointer (TeachPointer),
@@ -171,6 +196,17 @@ function Lessons:skipAll()
 	return true
 end
 function Lessons:graduated()return self:read().graduated==true end
+-- The window has focus (deps.focused; none: always).
+function Lessons:focused()return self.d.focused==nil or self.d.focused()~=false end
+-- Beta 44: the course is over (the all-set card showed, or the tour's end owed no card): the server saves `done` and
+-- `needs` in one write; this session stops at once.
+function Lessons:finish()
+	if not self:teaching()or self:graduated()then return false end
+	self.live=Teach.with(Teach.with(self.live,"done"),"needs")
+	self:send("done:finished")
+	self:hide()
+	return true
+end
 -- "Later" on the Paint card: the pot is kept, the deck lesson comes next.
 function Lessons:skip(id)self.session.skipped[id]=true end
 -- A card asked for a lesson now ("What's next?" asks for the Menu). True when that lesson is not done (the card then
@@ -201,8 +237,8 @@ function Lessons:step(now,dt)
 		if self.statsBefore==nil then self.statsBefore=statsDone
 		elseif statsDone and not self.statsBefore and self.session.statsVisit==nil then self.session.statsVisit=f.visit end
 	end
-	-- graduation rule 1: every lesson of the course done
-	if f.on and not f.graduated and Lessons.finished(f)then self:send("done:finished")end
+	-- Beta 44 (ARCH-REVIEW-SIMPLIFY 5): no automatic "done:finished" here any more (with the course just the tour it would
+	-- graduate before the card); the all-set card at the tour's end asks for it (Lessons:finish).
 	-- A save that saw its Paint card before this session: Dress up waits on the pet screen (it shows there whenever the
 	-- screen opens) and the deck lesson may come first (brief: "Rejoins mid-lesson").
 	if self.returned==nil and f.on then
@@ -229,14 +265,17 @@ function Lessons:step(now,dt)
 	end
 	local s=self.shown
 	if not s or s.id~=id or s.target~=target or s.words~=words then
-		s={id=id,target=target,words=words,since=now}
+		s={id=id,target=target,words=words,since=now,shownFor=0}
 		self.shown=s
 		if not self.seenSent[id]then self.seenSent[id]=true;self:event("TeachShown",id)end
+	else
+		-- beta 44 (ARCH-REVIEW-SIMPLIFY 10): only time with the window focused counts (never `now - since`)
+		s.shownFor+=Lessons.tick(dt,self:focused())
 	end
 	-- the reset lesson is show-only: saved once its ringed card has been on screen a moment (never asks for the tap)
 	local showOnly=id=="reset"and words=="reset"
-	if showOnly and now-s.since>=Lessons.ResetSeen and not self.session.resetHold then self:latch("reset");self.session.resetHold=true end
-	if Lessons.ignored(now-s.since)and not showOnly then
+	if showOnly and s.shownFor>=Lessons.ResetSeen and not self.session.resetHold then self:latch("reset");self.session.resetHold=true end
+	if Lessons.ignored(s.shownFor)and not showOnly then
 		-- untouched: it fades, and this lesson waits for the next session (the third such session latches it)
 		self.session.parked[id]=true
 		if Teach.Parkable[id]~=nil then self:send("park:"..id)end

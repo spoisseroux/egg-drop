@@ -70,7 +70,9 @@ Onboard.Keys=table.freeze({follow="onboard_follow",needs="onboard_needs",nest="o
 -- Onboarding part 2 (switch `teach`): TeachShown, TeachDone (the first of each).
 -- Teach more: TeachGraduated_<finished|skipped|movedOn> is recorded by the server when its write graduates the save.
 Onboard.Events=table.freeze({StorkShown=true,EggSetDown=true,AllSet=true,OnboardSkipped_Stork=true,LeadStarted=true,LeadParked=true,NestReached=true,
-	GiftShown=true,GiftParked=true,GiftCranked=true,GiftDone=true,PeekShown=true,TeachShown=true,TeachDone=true,TourShown=true,TourDone=true})
+	GiftShown=true,GiftParked=true,GiftCranked=true,GiftDone=true,PeekShown=true,TeachShown=true,TeachDone=true,TourShown=true,TourDone=true,
+	-- beta 44 (ONBOARD-SIMPLIFY-BRIEF): the tour skipped, the deck closed by itself after it, the all-set card at its end
+	TourSkipped=true,TourClosed=true,AllSetTour=true})
 function Onboard.attribute(feature)return Onboard.Attributes[feature]end
 function Onboard.key(feature)return Onboard.Keys[feature]end
 

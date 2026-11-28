@@ -36,6 +36,10 @@ L.SettleTakeoverSeconds = 3 -- stalled this long in Settling: the server finishe
 L.HelloSeconds = 5
 L.IdleSeconds = 300 -- stalled (not paused) this long in Board mode: the round ends (RoundSim.finish, pays 0)
 L.PausedIdleSeconds = 1800 -- paused in Board mode this long: the same (a menu left open)
+-- Beta 44 (ARCH-REVIEW-SIMPLIFY 1): the idle end finishes only a round that has a drop in it. A dealt round nobody
+-- touched (the deck tour holds every drop, a phone backgrounded mid-tour) is the "fresh board" case: it stays unfinished
+-- (RunReturn keeps it), never a paid or counted round.
+function L.idleFinishes(drops) return type(drops) == "number" and drops > 0 end
 L.Reveal = 5 -- Next plus 4 more queue slots ahead of the drops
 L.RevealQueued = 2 -- queued (received, not yet stepped) drops that also open the window
 L.MaxBatchInputs = 16

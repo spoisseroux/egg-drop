@@ -111,7 +111,9 @@ local Table={
    tiny={make="{ball} {where}",merges="{count} merges",chain="{count} in a row"},
    where={left="on the left",right="on the right",center="in the middle",any="anywhere"},
    whereTiny={left="left",right="right",center="middle",any="anywhere"},
-   next="Next, {goal}",done="Done!"},
+   next="Next, {goal}",done="Done!",
+   -- beta 44 note 7: beside the drawn target ball (GoalWords.ball), no colour word
+   ball={make="{where}",makeUp="or bigger, {where}",match="Match two, {where}"}},
   chain={line="Quick merges in a row score more",short="Quick merges score more",tiny="Be quick: more points",
    toast="Chain ×{count}! Quick merges in a row score more"},
   quests={open="Open",button="Quests"},
@@ -241,7 +243,11 @@ local Table={
  -- The Play Den (PLAY-DEN-BUILD-PLAN, step A): the sign over the cave mouth and the prompts' object names.
  den={name="The Play Den",board="Notice board",table="Pocket Deck"},
  -- Things to do (V3-THINGS-TO-DO-PLAN-2026-11-22): the Pocket menu tile, its page and the trail's marker.
- things={title="Things to do",new="New",play="Play",show="Show me",tile={line="Every game in the garden",short="Things"},
+ -- Beta 44 (ONBOARD-SIMPLIFY-BRIEF 4): `open` and the learn rows (customize, dress, quests, book, style).
+ things={title="Things to do",new="New",play="Play",show="Show me",open="Open",tile={line="Every game in the garden",short="Things"},
+  customize={name="Customize your pet",line="Paint and shine"},dress={name="Dress up your pet",line="Try on outfits"},
+  quests={name="Finish quests",line="{done}/{total} today"},book={name="Fill your collection book",line="{percent}% found"},
+  style={name="Change your deck style",line="{owned}/{total} styles"},
   deck={name="Pocket Deck",line="Play a round"},
   den={name="The Play Den",line="Games inside the cave"},
   dash={gather="Race: {count} of 8",live="A race is on",idle="Start a race",prizes="Stars races today: {done} of {total}"},
@@ -350,16 +356,23 @@ local Table={
  teach={dress="Dress up!",paint="Tap Paint!",deck="Play!",menu="Open the Menu!",things="All the games!",throw="Throw it!",go="Go!",
   -- Teach more (qa-2026-11-27-beta42/TEACH-MORE-BRIEF): the first field round's tour (DeckTour, with "{n}/{of}"), its tips,
   -- the round-two quests pointer, the colour reset, the snack, stats and wardrobe lessons and Settings > Skip the tips.
-  tour1="Tick these to win!",tour2="Your balls. Use them well!",level="Tap to change level!",levelSub="Harder pays more ★",
+  tour1="Do these to win!",tour2="Win before they run out!",level="Tap to change level!",levelSub="Harder pays more ★",
   tipNext="This one's next!",tipChain="Chain! Quick merges score more",tipGoal="One down! Tick them all to win",
   quests="Quests pay extra ★",more="One more thing!",reset="Change your mind? It's free!",snack="Snack time!",feed="Feed {pet}!",
   stats="See {pet} grow!",outfits="Outfits!",skipAll="Skip the tips",count="{n}/{of}",
-  skipTitle="No more tips?",skipLine="You can still find everything in the Menu.",skipYes="Skip the tips",skipDone="Tips are off"},
+  skipTitle="No more tips?",skipLine="You can still find everything in the Menu.",skipYes="Skip the tips",skipDone="Tips are off",
+  -- Beta 44 (qa-2026-11-28-beta44/ONBOARD-SIMPLIFY-BRIEF): the pet's deck invite, the six-step deck tour, and the Things
+  -- to do Customize row's ring on the Colour tab.
+  deckInvite="Let's try playing a game!",tourPays="A win pays Stars ★",tourHarder="Harder pays more",
+  tourScore="Your high score. Goals win Stars!",tourChain="Merge fast for a chain!",tourQuests="Tap here for quests ★",
+  colour="Pick a colour!"},
  -- Section 3 (Onboard "allset2"): the celebration card.
  -- gift: the one-time welcome gift's pill under the stamps, its Stars landing one by one up to 5 (shown only once the
  -- server paid it); giftSub replaces `sub` with it. hatch: the button when the Stars cover the cheapest egg (the fun pass).
  onbAllSet={title="You're all set!",pet="Pet",nest="Nest",stars="Stars",sub="{pet} loves it here.",next="What's next?",gift="+{count} ★ Welcome gift!",
-  giftSub="A welcome gift from {pet}.",hatch="Hatch one!"},
+  giftSub="A welcome gift from {pet}.",hatch="Hatch one!",
+  -- beta 44: the card at the deck tour's end (its sub-line)
+  things="More to try in Things to do!"},
  -- v1 track A onboarding: coach cards (CoachCards.lua), each shown once ever (coachMask).
  -- A title of three words or fewer and one short line; the game assumes merge-game players.
  coach={effortPay="Good effort",
