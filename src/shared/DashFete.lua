@@ -151,21 +151,31 @@ function Fete.finish()
 	return parts,ropes
 end
 
--- The waiting pad: trodden earth with the rope ring round it as today (DashLine), and a timber sign on the far edge.
--- Spencer 2026-11-26 (beta 34): "the garden dash sign has the post going up thru the text". The board now hangs
--- between two posts at its ends (each a hair past the board's top), so nothing crosses the words on either face.
-Fete.Pad=table.freeze({high=.06,post=Vector3.new(.3,3,.3),board=Vector3.new(2.4,1.3,.2),out=.4,boardY=2.6,postOver=.15})
+-- The waiting pad: trodden earth with the rope ring round it as today (DashLine). Beta 44 note 20: the timber sign
+-- that stood on its far edge is gone (the start header still carries the title).
+Fete.Pad=table.freeze({high=.06})
 function Fete.pad(r)
 	local P=Fete.Pad
 	local parts={}
 	piece(parts,"WaitPad","Cylinder",Vector3.new(P.high,r*2,r*2),CFrame.new(0,P.high/2,0)*CFrame.Angles(0,0,math.pi/2),"Ground",Fete.Earth)
-	local top=P.boardY+P.board.Y/2+P.postOver
-	local side=P.board.X/2+P.post.X/2
-	for index,x in ipairs({-side,side})do
-		piece(parts,if index==1 then"SignPost"else"SignPost2","Block",Vector3.new(P.post.X,top,P.post.Z),CFrame.new(x,top/2,-r-P.out),"Wood",Fete.Timber)
-	end
-	piece(parts,"Sign","Block",P.board,CFrame.new(0,P.boardY,-r-P.out),"Wood",Fete.Timber,{words={"Front","Back"}})
 	return parts,{}
+end
+
+-- Beta 44 note 20 ("players walk through the start line"): one invisible box per start post in the start frame, from
+-- the ground to the post's top, `width` square (the fete posts' gold cap, the widest part of a post). Only the posts:
+-- the way between them (and onto the line, the lanes and the pad beside it) stays open. Pure: {name, size, at}.
+-- width / height: nil for the fete posts (Fete.Start); the placeholder arch passes its own.
+function Fete.startColliders(postOut,width,height)
+	local S=Fete.Start
+	postOut=postOut or Grid.PostOut/100
+	width=width or S.cap.X
+	height=height or S.foot.Y+S.cap.Y+S.postHeight
+	local out={}
+	for side=-1,1,2 do
+		table.insert(out,table.freeze({name=if side<0 then "StartColliderLeft"else "StartColliderRight",
+			size=Vector3.new(width,height,width),at=CFrame.new(side*postOut,height/2,0)}))
+	end
+	return out
 end
 
 -- The lowest point of a piece (its eight corners) in the frame.

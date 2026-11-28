@@ -11,7 +11,7 @@ return function(server)
 	local function test(name,run)run();table.insert(cases,name)end
 	local function rig(options)
 		options=options or {}
-		local c={now=1000,serial=0,seedAt=options.seed or 77,events={},tags={},finished={},states={},refuse={},level={},prizes=true,day="1",warnings=0}
+		local c={now=1000,serial=0,seedAt=options.seed or 77,events={},tags={},finished={},states={},refuse={},level={},prizes=true,day="1",warnings=0,said={}}
 		c.d=Director.new({now=function()return c.now end,guid=function()c.serial+=1;return "race-"..c.serial end,
 			seed=function()c.seedAt+=1;return c.seedAt end,day=function()return c.day end,prizes=function()return c.prizes end,
 			check=function(id,stage)if c.throw==stage then error("boom")end;local why=c.refuse[id];if why and(why.stage==nil or why.stage==stage)then return false,why.reason end;return true,if stage=="promote"and c.closer and c.closer[id]then"Closer"else nil end,
@@ -19,7 +19,8 @@ return function(server)
 			tag=function(id,race)c.tags[id]=race end,event=function(id,packet)table.insert(c.events,{id=id,packet=packet})end,
 			state=function(id,race,sim)table.insert(c.states,{id=id,race=race,tick=sim.tick})end,
 			finished=function(id,result)assert(DashState.validResult(result));table.insert(c.finished,{id=id,result=result})end,
-			publish=function(roster)c.roster=roster end,warn=function()c.warnings+=1 end})
+			publish=function(roster)c.roster=roster end,warn=function()c.warnings+=1 end,
+			announce=if options.silent then nil else function(packet)table.insert(c.said,table.clone(packet))end})
 		function c.run(seconds,each)
 			for _=1,math.floor(seconds*60+.5)do
 				c.now+=1/60
@@ -250,6 +251,35 @@ return function(server)
 		local c=rig();c.d:join(1,"fun");c.until_("race");c.d:trial(2);c.run(5);c.d.trials[2].race.runners[1].list=nil;c.run(.2)
 		assert(c.d.trials[2]==nil and c.tags[2]==nil and c.d.heat.phase=="race")
 		c.d.options.event=function()error("gone")end;c.d.options.state=function()error("gone")end;c.until_("results");assert(#c.finished==1)
+	end)
+	-- Beta 44 note 22: the server's messages. Pals (or the player) are slowed to a crawl so the winner is known.
+	local function crawl(c,seats)for _,seat in ipairs(seats)do c.d.heat.race.runners[seat].stride=1 end end
+	local function said(c,kind)local out={};for _,p in ipairs(c.said)do if p.kind==kind then table.insert(out,p)end end;return out end
+	test("beta 44 note 22: a race opening says 'soon' once (joins, the line and the countdown say nothing more); a player's win names the player and pet",function()
+		local c=rig();c.d:join(1,"fun")
+		local soon=said(c,"soon");assert(#soon==1 and soon[1].raceId=="race-1"and soon[1].mode=="fun","the gather says soon")
+		c.d:join(2,"fun");c.until_("race");assert(#said(c,"soon")==1 and #said(c,"won")==0,"one per race, nothing at the countdown")
+		crawl(c,{2,3,4});c.until_("results",2000)
+		local won=said(c,"won");assert(#won==1 and won[1].userId==1 and won[1].petId=="pip"and won[1].raceId=="race-1","the winner: "..tostring(won[1]and won[1].userId))
+		assert(c.d.heat.standings[1].seat==1);c.run(10);assert(#said(c,"won")==1,"once")
+		-- The line forms the next race: that one opens with its own soon.
+		c=rig();for id=1,9 do c.d:join(id,"fun")end;assert(#said(c,"soon")==1);c.until_("race");c.until_("results",2000);c.until_("gather",400)
+		assert(#said(c,"soon")==2 and said(c,"soon")[2].raceId~=said(c,"soon")[1].raceId,"the promoted race opens with its own")
+	end)
+	test("beta 44 note 22: no 'won' for a pal, a leaver's pet, an unpaid end or a Time Trial; no announce given: nothing, no warning",function()
+		local c=rig();c.d:join(1,"fun");c.until_("race");crawl(c,{1});c.until_("results",2000)
+		assert(c.d.heat.lineup[c.d.heat.standings[1].seat].pal and #said(c,"won")==0,"a pal won: nothing")
+		-- The leaver's pet races on as a pal and wins: nothing (the one still in is slowed).
+		c=rig();c.d:join(1,"fun");c.d:join(2,"fun");c.until_("race");crawl(c,{2,3,4});c.run(2);c.d:leave(1);c.until_("results",2000)
+		assert(c.d.heat.standings[1].seat==1 and c.d.heat.lineup[1].left and #said(c,"won")==0,"the leaver's pet won: nothing")
+		-- Everyone left: unpaid, nothing.
+		c=rig();c.d:join(1,"fun");c.until_("race");c.d:leave(1);c.run(60);assert(#said(c,"won")==0)
+		-- A Time Trial never says soon or won.
+		c=rig();c.d:trial(1);c.run(60,pilot(c,1));assert(#c.said==0 and #c.finished==1 and c.finished[1].result.kind=="trial")
+		-- A host without announce (and one whose announce throws) changes nothing in the race.
+		c=rig({silent=true});c.d:join(1,"fun");c.until_("race");crawl(c,{2,3,4});c.until_("results",2000);assert(c.warnings==0 and #c.finished==1)
+		c=rig();c.d.options.announce=function()error("gone")end;c.d:join(1,"fun");c.until_("race");crawl(c,{2,3,4});c.until_("results",2000)
+		assert(#c.finished==1 and c.finished[1].result.place==1 and c.warnings==2)
 	end)
 	test("prizes are frozen when the race ends",function()
 		local c=rig();c.d:join(1,"fun");c.until_("race");c.prizes=false;c.until_("results");assert(c.finished[1].result.prize==false)

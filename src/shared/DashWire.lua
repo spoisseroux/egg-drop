@@ -21,6 +21,10 @@
 --     {kind="aborted", r, reason}                              unpaid; the pet is free again
 --     {kind="cup", cups={ids}, us}                             these pars were beaten for the first time
 --   DashState    S->C  unreliable, the buffer below; a race goes to everyone, a trial only to its runner
+--   DashAnnounce S->C  to everyone (beta 44 note 22), each client posts it as a chat system message:
+--     {kind="soon"}                                            a race is gathering (at most once a Host.SoonGap)
+--     {kind="won", userId, name, petId, pieces?}               a player's pet won a race: name is their DisplayName,
+--                      pieces the pet's NameCatalog ids (nil: unnamed, "<name>'s pet won"); never a trial or a pal
 -- The roster is a JSON attribute (RosterAttribute) beside the garden Snapshot, so late joiners see it.
 local Wire={}
 Wire.Version=1
@@ -28,7 +32,7 @@ Wire.MaxString=40
 Wire.MaxSeq=2147483647
 Wire.RosterAttribute="Dash"
 Wire.MarksAttribute="DashMarks"
-Wire.Remotes=table.freeze({request="DashRequest",input="DashInput",event="DashEvent",state="DashState"})
+Wire.Remotes=table.freeze({request="DashRequest",input="DashInput",event="DashEvent",state="DashState",announce="DashAnnounce"})
 Wire.RequestKinds=table.freeze({join=true,leave=true,mode=true,trial=true,ping=true})
 Wire.Modes=table.freeze({fun=true,stats=true})
 Wire.InputKinds=table.freeze({jump=true,dashDown=true,dashUp=true,stones=true})

@@ -6782,7 +6782,7 @@ do
    clientUI.coach.options.bubbles=function()return Onboard.on("needs")end
   end)
   if not okNeeds then warn("[Onboard] not mounted: "..tostring(needsProblem))end
-  -- Twice a second while on: the race's station follows the live gate, and a race joined clears the New dot.
+  -- Twice a second while on: the race's marker stays away (beta 44 note 20), and a race joined clears the New dot.
   local running=0
   local function sync()
    running+=1
@@ -6795,8 +6795,8 @@ do
    task.spawn(function()
     while mine==running and Things.on()do
      local good,why=pcall(function()
-      local dash=dashNow()
-      clientUI.attract:extra("Dash",if dash then dashGate()else nil,dash~=nil and(dash.raced or Coach.has(clientUI.coach.mask,"dashSeen")))
+      -- Beta 44 note 20: no floating marker over the pad any more (Things to do's Show me still walks you there).
+      clientUI.attract:extra("Dash",nil)
       if clientUI.dash and clientUI.dash.seat then things.seen("dash")end
      end)
      if not good then warn("[Things] "..tostring(why));return end

@@ -8,7 +8,7 @@
 --   * held() is true from the countdown to the end of the results: menus, prompts and notices wait for it. Any other
 --     screen that opens anyway takes the camera and controls back until it closes.
 -- deps: remotes, roomView, playerGui, audio, ambient (AmbientAudio: the race song; optional), state() -> nursery
--- snapshot, reduced(), closeMenus(), modalOpen() (any other screen), canRoam().
+-- snapshot, reduced(), closeMenus(), modalOpen() (any other screen), canRoam(), chat(text) (specs only: DashAnnounce.chat).
 local Players=game:GetService("Players")
 local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local HttpService=game:GetService("HttpService")
@@ -131,7 +131,16 @@ function Client:open()
 		if remote.Name==Wire.Remotes.event then bound[remote.Name]=true;on(remote.OnClientEvent,event)
 		elseif remote.Name==Wire.Remotes.state then bound[remote.Name]=true;on(remote.OnClientEvent,state)
 		elseif remote.Name==Wire.Remotes.request then self.requestRemote=remote
-		elseif remote.Name==Wire.Remotes.input then self.inputRemote=remote end
+		elseif remote.Name==Wire.Remotes.input then self.inputRemote=remote
+		elseif remote.Name==Wire.Remotes.announce then
+			-- Server messages (beta 44 note 22): never through `guarded`, a bad one can never end a race here.
+			bound[remote.Name]=true
+			require(script.Parent.DashAnnounce).translator()
+			on(remote.OnClientEvent,function(packet)
+				local ok,problem=pcall(self.announced,self,packet)
+				if not ok then warn("[Dash] message: "..tostring(problem))end
+			end)
+		end
 	end
 	for _,name in pairs(Wire.Remotes)do
 		local remote=d.remotes:FindFirstChild(name)
@@ -356,6 +365,14 @@ function Client:notify(key)
 	local text=UICopy.get(key)
 	if text==key then text=UICopy.get("dash.reason.other")end
 	if self.owner then require(script.Parent.NotificationRail).enqueue(self.owner,key,{text=text,icon="•",duration=4})end
+end
+-- A server message (DashAnnounce): in chat for everyone; "starts soon" is for players not already in or in line.
+-- Answers where it went ("chat", "rail") or nil.
+function Client:announced(packet)
+	if type(packet)~="table"or(packet.kind=="soon"and self:engaged())then return nil end
+	local Announce=require(script.Parent.DashAnnounce)
+	return Announce.post(packet,{owner=self.owner,rail=require(script.Parent.NotificationRail),translator=Announce.translator(),
+		chat=self.d.chat})
 end
 local function first(dash)
 	if type(dash)~="table"then return true end

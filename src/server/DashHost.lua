@@ -23,6 +23,8 @@ local Mount=require(script.Parent.DashMount)
 local Ring=require(Shared.DashRing)
 local StatState=require(script.Parent.StatState)
 local Anchor=require(Shared.DashAnchor)
+local NameCatalog=require(Shared.NameCatalog)
+local NameState=require(script.Parent.NameState)
 
 local Host={};Host.__index=Host
 Host.JoinReach=12
@@ -38,6 +40,9 @@ Host.SettleSeconds=5
 Host.RetryBase=5 -- a batch the save refused is tried again after 5, 10, 20, 40, 60, 60... s
 Host.RetryMax=60
 Host.MaxErrors=3
+-- Beta 44 note 22: "a Garden Dash starts soon" goes to the whole server at most once a SoonGap seconds, however often
+-- a race opens and empties again; a winner goes once per race.
+Host.SoonGap=60
 
 -- d: remotes, shared (the GardenState folder), room (workspace), garden, boards, players, nursery, economy,
 -- canProgress(board), gardenInput(board), publishNursery(board), publishState(board), dayOf(now), and optionally den() ->
@@ -61,6 +66,7 @@ function Host.mount(d)
 		event=function(userId,packet)self:fire(userId,packet)end,
 		state=function(userId,raceId,race)self:state(userId,raceId,race)end,
 		finished=function(userId,result)self:finished(userId,result)end,
+		announce=function(packet)self:announce(packet)end,
 		publish=function(roster)d.shared:SetAttribute(Wire.RosterAttribute,HttpService:JSONEncode(roster))end})
 	local beat;beat=(d.heartbeat or RunService.Heartbeat):Connect(function()
 		local ok,problem=pcall(self.step,self)
@@ -106,6 +112,36 @@ function Host:state(userId,raceId,race)
 	if player then self.stateRemote:FireClient(player,packed)end
 end
 
+-- Server messages (beta 44 note 22) ------------------------------------------------------------------------------
+-- The winner's packet: their DisplayName (Roblox filters it) and the pet's saved name pieces, authored NameCatalog
+-- ids only (never typed text), kept only when every piece is known; else nil and the words say "pet".
+function Host.wonPacket(player,state,petId)
+	local name=player and player.DisplayName
+	if type(name)~="string"or name==""then return nil end
+	local ids=type(state)=="table"and type(petId)=="string"and NameState.petName(state,petId)or nil
+	local pieces=if ids and NameCatalog.display(ids,nil)then table.clone(ids)else nil
+	return{kind="won",userId=player.UserId,name=name,petId=petId,pieces=pieces}
+end
+-- Every message the director asks for goes to everyone here, once.
+function Host:announce(packet)
+	local remote=self.announceRemote
+	if not remote or type(packet)~="table"then return end
+	if packet.kind=="soon"then
+		local now=self.clock()
+		if now-(self.soonAt or-math.huge)<Host.SoonGap then return end
+		self.soonAt=now
+		remote:FireAllClients({kind="soon"})
+	elseif packet.kind=="won"then
+		if packet.raceId==nil or packet.raceId==self.wonRace then return end
+		local board=self:board(packet.userId)
+		if not board or board.closing then return end
+		local out=Host.wonPacket(board.player,board.nursery and board.nursery.state,packet.petId)
+		if not out then return end
+		self.wonRace=packet.raceId
+		remote:FireAllClients(out)
+	end
+end
+
 -- On and off -------------------------------------------------------------------------------------------------
 function Host:open()
 	self.isOpen=true
@@ -120,6 +156,7 @@ function Host:open()
 		local request,input=make("RemoteEvent",Wire.Remotes.request),make("RemoteEvent",Wire.Remotes.input)
 		self.eventRemote=make("RemoteEvent",Wire.Remotes.event)
 		self.stateRemote=make("UnreliableRemoteEvent",Wire.Remotes.state)
+		self.announceRemote=make("RemoteEvent",Wire.Remotes.announce)
 		request.OnServerEvent:Connect(function(player,packet)self:request(player,packet)end)
 		input.OnServerEvent:Connect(function(player,packet)self:input(player,packet)end)
 	end

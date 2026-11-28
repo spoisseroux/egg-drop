@@ -234,7 +234,10 @@ local Table={
    -- The Play Den (PLAY-DEN-BUILD-PLAN): the meadow's hop found no race gathering; the den closed while you waited there.
    Missed="That race has started",Closed="The Play Den closed"},
   -- The Play Den: the meadow pad's prompt while the den is open (it only hops into a race that is gathering).
-  join="Join race"},
+  join="Join race",
+  -- Beta 44 note 22: the server's messages in chat, to everyone. {player} is a Roblox display name, {pet} a pet's name.
+  say={soon="A Garden Dash starts soon! Join at the starting line.",won="{player}'s {pet} won the Garden Dash!",
+   wonPet="{player}'s pet won the Garden Dash!"}},
  -- The Play Den (PLAY-DEN-BUILD-PLAN, step A): the sign over the cave mouth and the prompts' object names.
  den={name="The Play Den",board="Notice board",table="Pocket Deck"},
  -- Things to do (V3-THINGS-TO-DO-PLAN-2026-11-22): the Pocket menu tile, its page and the trail's marker.

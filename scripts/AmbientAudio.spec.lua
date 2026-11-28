@@ -318,6 +318,71 @@ return function(client, parent)
 		assert(audio.ducks[Ambient.RaceDuck] == nil, "destroy lets the world music go")
 	end)
 
+	test("beta 44 note 25: with music2 on and the deck id in, racers hear the Pocket Deck song (whole clip from 0 at the lead-in, deck volume); the world and the deck pair held; off, 0 or a failed load: the placeholder", function()
+		local Tracks = require(client.MusicTracks)
+		local R = Ambient.Race
+		-- The choice, pure.
+		assert(Tracks.Ids.deck == 130088304023754 and near(Tracks.Lengths.deck, 121.9, .01))
+		local song = Ambient.raceSong(true)
+		assert(song.kind == "deck" and song.id == Tracks.Ids.deck and song.volume == Ambient.DeckMusicVolume)
+		for _, case in ipairs({ { false }, { nil }, { true, { deck = 0 } }, { true, { deck = 0 / 0 } }, { true, nil, true } }) do
+			local other = Ambient.raceSong(case[1], case[2], case[3])
+			assert(other.kind == "placeholder" and other.id == Ambient.RaceSongId and other.volume == R.volume)
+		end
+		-- Where in the deck song: 0 at the lead-in, the whole clip round and round.
+		local L = Tracks.Lengths.deck
+		assert(near(Ambient.deckRacePosition(-R.lead), 0) and near(Ambient.deckRacePosition(0), R.lead) and near(Ambient.deckRacePosition(-10), 0))
+		assert(near(Ambient.deckRacePosition(L - R.lead + 1), 1) and near(Ambient.deckRacePosition(200, 100), (200 + R.lead) % 100))
+		-- One instance: the deck song for a race with music2 on, the placeholder once it is off.
+		local audio = { master = 1, deviceActive = true, ducks = {}, music = true }
+		function audio:isMusicEnabled() return self.music end
+		function audio:duck() end
+		function audio:refreshLoops() end
+		function audio:petSpeechBusy() return false end
+		local folder = Instance.new("Folder");folder.Parent = parent or workspace
+		local clock, on, fetch, warned = 100, true, Enum.AssetFetchStatus.Success, 0
+		local preload, shared = Ambient.preload, Ambient.shared
+		Ambient.preload = function(list, callback) for _, voice in ipairs(list) do callback(voice.SoundId, fetch) end end
+		local a = Ambient.new(audio, { auto = false, world = folder, quiet = function() return false end, listener = function() return Vector3.zero end,
+			daylight = function() return 1 end, now = function() return clock end, warn = function() warned += 1 end,
+			music2 = { on = function() return on end, hourOn = function() return false end, weight = function() return 0 end } })
+		local function run(seconds) for _ = 1, math.floor(seconds * 30 + .5) do clock += 1 / 30; a:step(1 / 30) end end
+		local ok, err = pcall(function()
+			run(.2)
+			assert(a:setRace("play", clock + 6))
+			local voice = a.raceVoice
+			assert(voice and voice.SoundId == "rbxassetid://" .. Tracks.Ids.deck and voice.Looped and voice.SoundGroup == a.deckGroup, "the deck song")
+			assert(a.raceLoop == "whole" and voice.PlaybackRegionsEnabled ~= true, "the whole clip, no regions")
+			run(2.8);assert(not voice.IsPlaying, "silent before the lead-in")
+			run(.4);assert(voice.IsPlaying and voice.TimePosition < .4, "from 0 at the lead-in: " .. tostring(voice.TimePosition))
+			run(.3);assert(near(voice.Volume, Ambient.DeckMusicVolume), "the deck volume " .. voice.Volume)
+			assert(audio.ducks[Ambient.RaceDuck] == 0, "the garden music held out")
+			assert(a.deck2 and a.deck2.ready and not a.deck2.main.IsPlaying, "the deck's own song is not also playing")
+			if a.deckVoice then assert(not a.deckVoice.IsPlaying, "nor today's deck loop") end
+			-- Re-timed by a big lead change: one jump, to the deck song's place.
+			a:setRace("play", a.race.go - 2);run(1 / 30);assert(near(voice.TimePosition, Ambient.deckRacePosition(clock - a.race.go), .05))
+			assert(a:setRace("line"));run(.5);assert(near(voice.Volume, Ambient.DeckMusicVolume * R.line) and voice.IsPlaying)
+			assert(a:setRace("card"));run(.2);assert(not voice.IsPlaying)
+			assert(a:setRace("off"));run(1.2);assert(a.race == nil and audio.ducks[Ambient.RaceDuck] == nil, "the world music back, the duck gone")
+			-- music2 off: the next race is today's placeholder, and the deck voice is gone.
+			on = false;run(.1)
+			assert(a:setRace("play", clock + 4))
+			local placeholder = a.raceVoice
+			assert(placeholder ~= voice and placeholder.SoundId == "rbxassetid://" .. Ambient.RaceSongId and a.raceLoop == "region" and voice.Parent == nil)
+			a:setRace("off");run(1.5)
+			-- A deck song that will not load: said once, and the race carries on with the placeholder.
+			on, fetch = true, Enum.AssetFetchStatus.Failure
+			local before = warned
+			a:setRace("play", clock + 4);run(.1)
+			assert(a.raceDeckFailed and a.raceVoice.SoundId == "rbxassetid://" .. Ambient.RaceSongId and warned > before, "the placeholder after a failed load")
+			a:setRace("off");run(1.5)
+			assert(a:setRace("play", clock + 4) and a.raceVoice.SoundId == "rbxassetid://" .. Ambient.RaceSongId, "for the session")
+			a:setRace("off");run(1.5)
+		end)
+		Ambient.preload = preload
+		a:destroy();folder:Destroy();Ambient.shared = shared;assert(ok, err)
+	end)
+
 	test("LOOK-R3 3: an added voice falls back once when its asset fails to load, never when it loads or is gone; starts at its share", function()
 		local audio = { master = 1, deviceActive = true, ducks = {}, music = true }
 		function audio:isMusicEnabled() return self.music end

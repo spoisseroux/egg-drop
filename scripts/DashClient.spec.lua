@@ -667,6 +667,14 @@ return function(client,offline)
 		room=make();room.focusing=true;room.focusTransition={destroyed=false,cancel=function()canceled=true end};room._useRoomCamera=function(self)self.focusing=false end
 		assert(room:enterDash()and canceled and not room.focusing);room:leaveDash()
 	end)
+	test("beta 44 note 22: server messages: 'starts soon' skipped while in a race or in line, the winner always shows",function()
+		local engaged,got=true,{}
+		local fake={d={chat=function(text)table.insert(got,text);return true end},engaged=function()return engaged end}
+		assert(Client.announced(fake,{kind="soon"})==nil and #got==0)
+		assert(Client.announced(fake,{kind="won",name="Sky"})=="chat"and #got==1)
+		engaged=false;assert(Client.announced(fake,{kind="soon"})=="chat"and #got==2)
+		assert(Client.announced(fake,nil)==nil)
+	end)
 	Dash.inject(nil);Instance.new=plain
 	return{passed=#cases,cases=cases}
 end

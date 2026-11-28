@@ -15,6 +15,9 @@
 --   levels(userId) -> {speed,energy,jump} from the save; pet(userId) -> petId
 --   tag(userId, raceId|nil), event(userId, packet), state(userId|nil for everyone, raceId, race),
 --   finished(userId, result) (DashState.validResult shape), publish(roster), warn(text)
+--   announce(packet) optional (beta 44 note 22): {kind="soon", raceId, mode} when a race opens (gather), and
+--                            {kind="won", raceId, userId, petId} when a player's pet wins one. Never a trial, never a pal
+--                            (or a pet whose owner left), never a race that ended unpaid. The host rate-limits and words it.
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Sim=require(Shared.DashSim)
 local Stats=require(Shared.DashStats)
@@ -89,7 +92,12 @@ function Director:gather(userId,mode,now,promoted,closer,anchor)
 	if mode=="stats"then heat.band=Stats.band(self:levels(userId))end
 	self.heat=heat
 	self:seat(heat,userId,now,promoted,closer,anchor)
+	self:announce({kind="soon",raceId=heat.id,mode=heat.mode})
 	return heat
+end
+-- The server's message to everyone; nothing when the host gave no announce.
+function Director:announce(packet)
+	if self.options.announce then self:call("announce",packet)end
 end
 function Director:fits(heat,userId)
 	return heat.mode~="stats"or Stats.band(self:levels(userId))==heat.band
@@ -347,6 +355,12 @@ function Director:finishHeat(now)
 	while #self.history>Director.History do table.remove(self.history,1)end
 	local prize=self:call("prizes")==true
 	for _,record in ipairs(heat.seats)do self:result(heat,record,seats,places[record.seat],prize)end
+	-- The winner, if a player's pet: a pal, or a pet whose owner left (raced on as a pal), says nothing.
+	local first=seats[1]
+	local place=first and heat.lineup[first.seat]
+	if place and place.userId and not place.pal and find(heat.seats,place.userId)then
+		self:announce({kind="won",raceId=heat.id,userId=place.userId,petId=place.petId})
+	end
 end
 function Director:finishTrial(userId,trial)
 	self.trials[userId]=nil

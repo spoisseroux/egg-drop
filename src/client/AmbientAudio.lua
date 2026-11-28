@@ -105,6 +105,24 @@ Ambient.RaceSongId = 100659120200214
 Ambient.Race = table.freeze({ lead = 3, loopEnd = 35, volume = .105, line = .35, lineFade = .4, cardFade = .15, leaveFade = .4,
 	inFade = .05, out = .4, back = 1.0, resync = .05 })
 Ambient.RaceDuck = "dashRace"
+-- Beta 44 note 25 ("use the new pocket deck song for the garden dash too, only for those participating"): with Alive
+-- music2 on and MusicTracks.Ids.deck uploaded, the race plays the Pocket Deck song instead of the placeholder: the
+-- whole clip (121.9 s) looped, from 0 at the lead-in (Race.lead s before GO), at DeckMusicVolume. The same states,
+-- fades and world-music hold as the placeholder; it is still only DashClient's own race. Off, id 0, or a clip that
+-- will not load (said once; the race carries on with the placeholder where it has reached): today's placeholder.
+-- Pure: {kind = "deck" | "placeholder", id, volume}.
+function Ambient.raceSong(on, ids, failed)
+	ids = ids or MusicTracks.Ids
+	if on == true and not failed and MusicTracks.uploaded(ids.deck) then
+		return { kind = "deck", id = ids.deck, volume = Ambient.DeckMusicVolume }
+	end
+	return { kind = "placeholder", id = Ambient.RaceSongId, volume = Ambient.Race.volume }
+end
+-- Where in the deck song a moment `elapsed` s after GO falls: 0 at the lead-in, then round the whole clip. Pure.
+function Ambient.deckRacePosition(elapsed, length)
+	length = if type(length) == "number" and length > 0 then length else MusicTracks.Lengths.deck
+	return math.max(0, Ambient.Race.lead + elapsed) % length
+end
 -- A4 waterfall emitters. Positions come from WorldV7Data.beams.falls by name.
 Ambient.Falls = {
 	-- QA v775 note 6: the falls carried across the whole garden (tumble min 18 / max 150 was
@@ -764,8 +782,30 @@ function Ambient.racePosition(elapsed)
 end
 -- The voice, made on the first setRace. Sound.LoopRegion loops 3..35 after a lead-in that plays once (raceLoop
 -- "region"); where the engine refuses it, the plain loop of 3..35 from GO with no lead-in (raceLoop "section").
-function Ambient:makeRaceVoice()
-	if self.raceVoice then return self.raceVoice end
+-- song: Ambient.raceSong (nil: the placeholder). A voice of another kind is replaced (only ever at a new race).
+function Ambient:makeRaceVoice(song)
+	song = song or Ambient.raceSong(false)
+	if self.raceVoice and self.raceSongKind == song.kind then return self.raceVoice end
+	if self.raceVoice then self.raceVoice:Destroy(); self.raceVoice = nil end
+	self.raceSongKind, self.raceVolume = song.kind, song.volume
+	if song.kind == "deck" then
+		-- The whole clip, plain Looped: no regions.
+		local deck = sound("race_song_deck", song.id, self.deckGroup, SoundService, true)
+		self.raceLoop, self.raceVoice = "whole", deck
+		task.spawn(function()
+			local fine = true
+			local ok = pcall(Ambient.preload, { deck }, function(_, status)
+				if status ~= Enum.AssetFetchStatus.Success then fine = false end
+			end)
+			if self.destroyed or self.raceVoice ~= deck or (ok and fine) then return end
+			-- Never a silent race: the placeholder for the session, from where this race has reached.
+			self.warn("Egg Drop could not load the deck song for the race; the race song plays")
+			self.raceDeckFailed = true
+			self:makeRaceVoice(Ambient.raceSong(false))
+			if self.race then self.race.seek = true end
+		end)
+		return deck
+	end
 	local R = Ambient.Race
 	local voice = sound("race_song", Ambient.RaceSongId, self.deckGroup, SoundService, true)
 	local ok = pcall(function()
@@ -787,15 +827,24 @@ end
 --   "card"     the results card opens: out in cardFade s; the world music stays held out under the card
 --   "off"      the race is put away (Done, Race again, left, aborted): out in `fade` s, the world music back over `back`
 -- Answers whether it took the state.
+function Ambient:raceSongNow()
+	local of, on = self.music2Of, false
+	if of then
+		local ok, value = pcall(of.on)
+		on = ok and value == true
+	end
+	return Ambient.raceSong(on, MusicTracks.Ids, self.raceDeckFailed or self.deck2Failed)
+end
 function Ambient:setRace(state, go, fade)
 	if self.destroyed then return false end
 	local R = Ambient.Race
 	local race = self.race
 	if state == "play" then
 		if type(go) ~= "number" or go ~= go then return false end
-		local voice = self:makeRaceVoice()
 		if not race or race.state == "off" then
-			-- A new race (or one still fading out): from silence, at the new race's place in the song.
+			-- A new race (or one still fading out): from silence, at the new race's place in the song, the song chosen
+			-- now (the deck song or the placeholder, beta 44 note 25) and kept to the end of this race.
+			local voice = self:makeRaceVoice(self:raceSongNow())
 			if voice.IsPlaying then voice:Stop() end
 			race = { gain = 0, go = go }
 			self.race = race
@@ -822,13 +871,14 @@ function Ambient:stepRace(dt, master, active, music)
 		if race.gain < race.target then race.gain = math.min(race.target, race.gain + race.rate * dt)
 		elseif race.gain > race.target then race.gain = math.max(race.target, race.gain - race.rate * dt) end
 		elapsed = self.now() - race.go
-		local from = if self.raceLoop == "region" then -R.lead else 0
+		local from = if self.raceLoop == "section" then 0 else -R.lead
 		local wanted = race.gain > 0 and music and master > 0 and active and elapsed >= from
-		voice.Volume = R.volume * race.gain
+		voice.Volume = (self.raceVolume or R.volume) * race.gain
 		if wanted then
 			-- Started (or back from the music toggle, a lost focus, a mute) at the place the race has reached.
 			if not voice.IsPlaying or race.seek then
-				voice.TimePosition = Ambient.racePosition(elapsed)
+				voice.TimePosition = if self.raceLoop == "whole" then Ambient.deckRacePosition(elapsed, Ambient.length(voice))
+					else Ambient.racePosition(elapsed)
 				if not voice.IsPlaying then voice:Play() end
 				race.seek = nil
 			end

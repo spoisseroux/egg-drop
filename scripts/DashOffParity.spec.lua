@@ -60,11 +60,14 @@ return function(server)
 			for _=1,20 do now+=.5;garden:step(.5,{[1]=input})end
 			assert(garden.racers==nil and snapshot.actors["1"]and snapshot.actors["1"].dash==nil and not string.find(Http:JSONEncode(snapshot),"dash",1,true))
 		end)
-		test("the gate: placeholder props only, under 60, anchored and out of everybody's way; remove leaves nothing",function()
-			local room=Instance.new("Folder");local model=Mount.build(room);local parts=0
+		test("the gate: placeholder props only, under 60, anchored and out of everybody's way (but the two start posts' invisible colliders, beta 44 note 20); remove leaves nothing",function()
+			local room=Instance.new("Folder");local model=Mount.build(room);local parts,solid=0,0
 			for _,node in ipairs(model:GetDescendants())do
-				if node.ClassName=="Part"then parts+=1;assert(node.Anchored==true and node.CanCollide==false and node.CanQuery==false and node.CanTouch==false)end
+				if node.ClassName=="Part"and node:GetAttribute("StartCollider")then
+					solid+=1;assert(node.Anchored==true and node.CanCollide==true and node.Transparency==1 and node.CanTouch==false)
+				elseif node.ClassName=="Part"then parts+=1;assert(node.Anchored==true and node.CanCollide==false and node.CanQuery==false and node.CanTouch==false)end
 			end
+			assert(solid==2,"two start post colliders")
 			-- 33 more are the client's (DashClient.spec): 60 in all at most.
 			assert(parts>=15 and parts<=27 and model:GetAttribute("Start")and model:GetAttribute("Finish"),parts)
 			local start,gate=model:GetAttribute("Start").Position,Mount.gate()
