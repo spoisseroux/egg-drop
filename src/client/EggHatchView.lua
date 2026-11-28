@@ -1404,7 +1404,8 @@ function View:paintEggPane()
  local a=View.hatchAction(id,self.state,statPet)
  if gift then a={text=UICopy.get("onbGift.shop.hatch"),enabled=self.giftLatch==nil,need=nil}end
  local need=if self.statusText then self.statusText else a.need
- if gift and not self.statusText then need=UICopy.get("onbGift.shop.from",{pet=self.giftPet and self.giftPet()or ""})end
+ -- Beta 43 note: the gift line above Hatch free! sat under the pointer's ring; the pane's footer already says "A gift
+ -- from {pet}!", so the gift has no line here (a status, e.g. Busy, still shows).
  self.needLine.Text=need or "";self.needLine.Visible=need~=nil
  Kit.paint(self.needLine,"TextColor3",if a.need and not self.statusText and not gift then "dangerText"else "soft")
  local limit=self.buttonY-(if need then 22 else 6)
