@@ -625,5 +625,88 @@ return function(server)
 		assert(Lead.firstRefusal(seen,"keepout")and not Lead.firstRefusal(seen,"keepout"),"once per reason")
 		assert(Lead.firstRefusal(seen,"blocked")and not Lead.firstRefusal(nil,"x"),"another reason logs; no table: never")
 	end)
+
+	-- Beta (44) #16: "its pathfinding still sounds weird and unnatural running to the egg to tuck it in".
+	local function bends(points)
+		local worst=0
+		for i=2,#points-1 do
+			local u=Vector2.new(points[i].X-points[i-1].X,points[i].Z-points[i-1].Z)
+			local w=Vector2.new(points[i+1].X-points[i].X,points[i+1].Z-points[i].Z)
+			if u.Magnitude>1e-3 and w.Magnitude>1e-3 then worst=math.max(worst,math.acos(math.clamp(u.Unit:Dot(w.Unit),-1,1)))end
+		end
+		return worst
+	end
+	test("beta 44 #16: a detour is an arc of 2-3 points round the obstacle, never one V corner; every leg still clear",function()
+		local stump={id="stump",x=0,z=20,r=3,kind="solid"}
+		local straight={v(0,0),v(0,12),v(0,28),v(0,40)}
+		local out=Lead.around(straight,{stump})
+		assert(out and out[1]==straight[1]and out[#out]==straight[#straight])
+		local off=0
+		for i,p in ipairs(out)do
+			if math.abs(p.X)>.01 then off+=1 end
+			if i>1 then
+				assert(Lead.blocker(out[i-1],p,{stump},Lead.Body,i==2)==nil,"leg "..i.." clear")
+				assert(Lead.flat(out[i-1],p)<=Lead.Route.step,"no leg over the step")
+			end
+		end
+		assert(off>=2 and off<=3,"2-3 arc points: "..off)
+		assert(bends(out)<=math.rad(60),"no V: the sharpest bend is "..math.deg(bends(out)))
+		-- the single point it was: its corner is sharper
+		local onePoint={straight[1],straight[2],v(stump.r+Lead.Body+Lead.Detour,20),straight[3],straight[4]}
+		assert(bends(out)<bends(onePoint),"gentler than the single point")
+		-- and the walk keeps its speed round it: Activity.through has no corner it stops at
+		local path=Activity.through(out[1],table.move(out,2,#out,1,{}),Vector3.zero,Lead.Run/Activity.ThroughPace,0)
+		assert(path,"a smooth walk fits")
+		-- the server takes it
+		local ctx={pet=v(0,0),nest=v(0,42),ground=function()return 4 end,clear=function()return true end,keepOut={stump}}
+		assert(Lead.clean(out,ctx),"the arc passes Lead.clean")
+		-- an arc the dry check refuses falls back to the single point (and then the other side), as before
+		local bush={id="bush 1",x=0,z=20,r=1.5,kind="plant"}
+		local base=bush.r+Lead.Body+Lead.Detour
+		local single=Lead.around({v(0,0),v(0,10),v(0,30),v(0,40)},{bush},function(a,b)
+			for _,p in ipairs({a,b})do if math.abs(p.X)>.01 and math.abs(math.abs(p.X)-base)>.01 then return false end end
+			return true
+		end)
+		assert(single,"the single point when no arc fits")
+		local offs=0;for _,p in ipairs(single)do if math.abs(p.X)>.01 then offs+=1 end end
+		assert(offs==1,"one point: "..offs)
+		-- the arc's own rule: a leg too short for an entry or an exit beside the circle has no arc
+		assert(Lead.arcRound(v(0,18),v(0,22),stump,Vector3.new(1,0,0),5,{stump})==nil)
+		assert(Lead.ArcTurn>math.rad(25)and Lead.ArcTurn<=math.rad(50))
+	end)
+	test("beta 44 #16: hysteresis: a closing speed hovering at Closing never flips trot / wait / run every tick",function()
+		local goal=v(0,200)
+		-- a trot with the owner's closing hovering just under Closing (a shuffle in a follow): it keeps trotting
+		local pace={phase="pace"}
+		local flips=0
+		for i=1,40 do
+			local closing=if i%2==0 then Lead.Closing+.3 else Lead.Closing-.6
+			local next=Lead.decide(pace,{now=i*.1,pet=v(0,23+i*.5),owner=v(0,i*.5),goal=goal,moving=true,closing=closing})
+			if next then flips+=1 end
+		end
+		assert(flips==0,"the trot flipped "..flips.." times")
+		-- clearly stopped: it waits
+		assert(Lead.decide(pace,{now=5,pet=v(0,23),owner=v(0,0),goal=goal,moving=true,closing=0})=="wait")
+		-- just started waiting: following does not send it off again until the dwell is up
+		local wait={phase="pace"}
+		Lead.decide(wait,{now=10,pet=v(0,23),owner=v(0,0),goal=goal,moving=true,closing=0})
+		wait.phase="wait"
+		assert(Lead.decide(wait,{now=10.1,pet=v(0,23),owner=v(0,0),goal=goal,closing=Lead.Closing+1})==nil,"too soon")
+		assert(Lead.decide(wait,{now=10.1+Lead.Switch.dwell,pet=v(0,23),owner=v(0,0),goal=goal,closing=Lead.Closing+1})=="run","after the dwell")
+		-- the owner close or past is never held back by the dwell
+		local w2={phase="run"};Lead.decide(w2,{now=1,pet=v(0,5),owner=v(0,0),goal=goal,moving=true});w2.phase="wait"
+		assert(Lead.decide(w2,{now=1.05,pet=v(0,22),owner=v(0,9),goal=goal})=="run","within Resume: at once")
+		assert(Lead.Switch.dwell>0 and Lead.Switch.dwell<=.6 and Lead.Switch.band>0 and Lead.Switch.band<Lead.Closing)
+	end)
+	test("beta 44 #16: a refused re-plan keeps the run or trot under way instead of the straight planner",function()
+		local now=10
+		local running={action="leadRun",path={{duration=2}},endTime=now+2}
+		assert(Garden.leadKeepsPath(running,now),"under way: kept")
+		assert(not Garden.leadKeepsPath(running,now+1.8),"about to end: a new plan")
+		assert(not Garden.leadKeepsPath({action="leadWait",path={{duration=2}},endTime=now+2},now),"a wait is not a run")
+		assert(not Garden.leadKeepsPath({action="leadPace",path={},endTime=now+2},now),"no path")
+		assert(Garden.leadKeepsPath({action="leadPace",path={{duration=1}},endTime=now+1},now))
+		assert(not Garden.leadKeepsPath(nil,now))
+	end)
 	return{passed=#cases,cases=cases}
 end

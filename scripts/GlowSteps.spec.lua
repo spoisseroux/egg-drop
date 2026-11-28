@@ -115,6 +115,28 @@ return function(client)
 		r.trail:destroy()
 	end)
 
+	test("beta 44 #17: the glow paws go round a keep-out and point along the way (toes ahead, never across it)",function()
+		local Lead=require(game:GetService("ReplicatedStorage").Shared.PetLead)
+		local r=rig(true)
+		local bush={id="bush",x=V(30,0).X,z=V(30,0).Z,r=1.5,kind="plant"}
+		r.trail.d.keepOut=function()return{bush}end
+		assert(r.trail:start(far)and r.trail.glowCount>3)
+		local points=r.trail.points
+		for i=2,#points do assert(Lead.blocker(points[i-1],points[i],{bush},Lead.Body,i==2,i==#points)==nil,"leg "..i)end
+		-- each paw's toes (its -Z, less TopFaceYaw: the LookVector) along the way ahead: within 50 degrees of the next paw
+		for i=1,r.trail.glowCount-1 do
+			local a,b=r.trail.steps.route[i],r.trail.steps.route[i+1]
+			local frame=a.part.CFrame*CFrame.Angles(0,-Glow.TopFaceYaw,0)
+			local toes=frame.LookVector
+			local toward=Vector3.new(b.at.X-a.at.X,0,b.at.Z-a.at.Z)
+			if toward.Magnitude>1 then
+				local flatToes=Vector3.new(toes.X,0,toes.Z).Unit
+				assert(flatToes:Dot(toward.Unit)>math.cos(math.rad(50)),"paw "..i.." faces off the way")
+			end
+		end
+		r.trail:destroy()
+	end)
+
 	test("ThingsTrail guide: outlives Seconds, hides for a menu or a trip out and comes back; arrival ends it",function()
 		local r=rig(true)
 		assert(r.trail:start({position=far.position,name=far.name,guide=true})and r.trail.guide)

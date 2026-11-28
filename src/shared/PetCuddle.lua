@@ -205,24 +205,75 @@ function C.spotAt(u,v)
  if across>.26 then return "back"end
  return "belly"
 end
+-- Beta (44) #15 (petting head jitter): the spot only changes once the hand has stayed on a new one for `dwell` s, or
+-- has gone `border` (box fraction) past the old one's edge, so rubbing back and forth over a border never flips the pose.
+C.SpotSettle=table.freeze({dwell=.1,border=.04})
+local function spotNear(spot,u,v,b)
+ if C.spotAt(u,v)==spot then return true end
+ for _,d in ipairs({{b,0},{-b,0},{0,b},{0,-b}})do
+  if C.spotAt(math.clamp(u+d[1],0,1),math.clamp(v+d[2],0,1))==spot then return true end
+ end
+ return false
+end
+-- Pure: one frame of the settled spot. state keeps {spot, pending, pendingAge} between frames; candidate: this frame's
+-- C.spotAt (or the held fallback); u, v: the hand in the box (nil off the box). Returns the settled spot and whether it
+-- changed this frame. The first spot is taken at once.
+function C.settleSpot(state,candidate,u,v,dt)
+ dt=math.max(0,tonumber(dt)or 0)
+ if candidate==nil then state.pending,state.pendingAge=nil,0;return state.spot,false end
+ if state.spot==nil or candidate==state.spot then
+  local changed=state.spot~=candidate
+  state.spot,state.pending,state.pendingAge=candidate,nil,0
+  return candidate,changed
+ end
+ local deep=type(u)=="number"and type(v)=="number"and not spotNear(state.spot,math.clamp(u,0,1),math.clamp(v,0,1),C.SpotSettle.border)
+ if state.pending==candidate then state.pendingAge=(state.pendingAge or 0)+dt else state.pending,state.pendingAge=candidate,dt end
+ if deep or state.pendingAge>=C.SpotSettle.dwell-1e-9 then
+  state.spot,state.pending,state.pendingAge=candidate,nil,0
+  return candidate,true
+ end
+ return state.spot,false
+end
+-- Pure: screen right's side in the pet's own X (+1 or -1), with a dead band so a camera near side-on never flips it.
+C.SideDeadband=.2
+function C.sideSign(prev,x)
+ x=tonumber(x)or 0
+ if x>C.SideDeadband then return 1 end
+ if x< -C.SideDeadband then return -1 end
+ if prev==1 or prev==-1 then return prev end
+ return if x<0 then -1 else 1
+end
+-- Pure: the spot pose's head pitch, roll, eye and stretch eased toward this frame's target (PoseEase s to ~95%), so a
+-- spot change glides instead of snapping. state keeps the shown values; target: {headPitch, headRoll, eye, stretch}.
+C.PoseEase=.15
+function C.easePose(state,target,dt)
+ dt=math.clamp(tonumber(dt)or 0,0,.1)
+ for _,k in ipairs({"headPitch","headRoll","eye","stretch"})do
+  local goal=tonumber(target[k])or(if k=="eye"then 1 else 0)
+  state[k]=if state[k]==nil then goal else C.ease(state[k],goal,dt,C.PoseEase)
+ end
+ return state
+end
 -- Pure: where to draw a spot's sparkles in the box (u, v), the left one for paired spots.
 C.SpotCentre=table.freeze({head=Vector2.new(.5,.22),cheeks=Vector2.new(.3,.44),chin=Vector2.new(.5,.5),belly=Vector2.new(.5,.7),
  back=Vector2.new(.18,.68),ears=Vector2.new(.22,.08),tail=Vector2.new(.7,.92)})
 -- Pure: the pet's answer to a spot, `age` seconds into rubbing it. side: the hand across the pet (-1..1).
 -- {headPitch, headRoll, eye (multiplier), stretch, ear, sway, hop}. Ticklish never means upset. Reduced Motion keeps
--- the eyes and the lean, drops the nod, wiggle, stretch and twitch.
-function C.spotPose(spot,age,side,reduced)
+-- the eyes and the lean, drops the nod, wiggle, stretch and twitch. clock (beta 44 #15): the rub's running time, never
+-- reset on a spot change, drives the nod and the wiggle so they carry on instead of restarting; nil uses age.
+function C.spotPose(spot,age,side,reduced,clock)
  age=math.max(0,tonumber(age)or 0);side=math.clamp(tonumber(side)or 0,-1,1)
+ clock=tonumber(clock)or age
  local p={headPitch=0,headRoll=0,eye=1,stretch=0,ear=0,sway=0,hop=0}
  local still=reduced==true
  if spot=="head"then
-  p.eye=.15;if not still then p.headPitch=math.sin(age*2.2)*.06 end
+  p.eye=.15;if not still then p.headPitch=math.sin(clock*2.2)*.06 end
  elseif spot=="cheeks"then
   p.eye=.5;p.headRoll=side*(if still then .08 else .18);if not still then p.stretch=-.05 end
  elseif spot=="chin"then
   p.eye=.45;p.headPitch=-.18
  elseif spot=="belly"then
-  p.eye=.35;if not still then p.sway=math.sin(age*18)*.08*math.min(1,age/.15)end
+  p.eye=.35;if not still then p.sway=math.sin(clock*18)*.08*math.min(1,age/.15)end
  elseif spot=="back"then
   p.eye=.4;p.headPitch=-.06;if not still then p.stretch=.08*math.sin(math.min(age/1.2,1)*math.pi*.5)end
  elseif spot=="ears"or spot=="tail"then

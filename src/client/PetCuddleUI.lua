@@ -237,6 +237,8 @@ function Cuddle:begin()
  self.hinted=false;self.hintUntil=nil;self.lovedUntil=nil;self.spot=nil;self.spotAge=0;self.burstAge=nil;self.heartClock=0
  self.leanW,self.lookW,self.spotW,self.blush,self.shownFill=0,0,0,0,0
  self.handAim={dx=0,dy=0}
+ -- beta (44) #15: the settled spot, the rub's running clock, the eased spot pose and the steady side
+ self.spotState={};self.rubClock=0;self.poseEase={};self.sideSign=nil
  self.padAt=nil;self.stickAt=Vector2.zero;self.lastHand=nil;self.velocity=Vector2.zero
  self.mouseAt=nil
  local ok,at=pcall(function()return UserInputService:GetMouseLocation()-GuiService:GetGuiInset()-self.focus.root.AbsolutePosition end)
@@ -544,7 +546,11 @@ function Cuddle:step(dt,camera,pet,boxAt,boxSize)
  local u,v
  if at and boxAt and boxSize.X>0 and boxSize.Y>0 then u,v=(at.X-boxAt.X)/boxSize.X,(at.Y-boxAt.Y)/boxSize.Y end
  local over=u~=nil and u>=-.1 and u<=1.1 and v>=-.1 and v<=1.1
- local spot=if over then C.spotAt(math.clamp(u,0,1),math.clamp(v,0,1))elseif held then "head"else nil
+ local rawSpot=if over then C.spotAt(math.clamp(u,0,1),math.clamp(v,0,1))elseif held then "head"else nil
+ -- beta (44) #15: the spot settles (C.settleSpot: a short dwell or a step past the border) so a rub along a border
+ -- never flips the pose frame to frame; off the pet it keeps the last one
+ self.spotState=self.spotState or {}
+ local spot=if rawSpot then(C.settleSpot(self.spotState,rawSpot,if over then u else nil,if over then v else nil,dt))else nil
  local favourite=C.favourite(pet and(pet.petId or pet.id)or(focus.bondInfo and focus.bondInfo.name))
  local onFavourite=rubbing and spot==favourite
  local events=C.step(self.state,dt,rubbing,onFavourite)
@@ -614,7 +620,7 @@ function Cuddle:step(dt,camera,pet,boxAt,boxSize)
    self.lastSqueak=os.clock();audio:play(Cuddle.Squeak.cue,Cuddle.Squeak.speed,Cuddle.Squeak.gain)
   end
  end
- if rubbing then self.spotAge+=dt end
+ if rubbing then self.spotAge+=dt;self.rubClock=(self.rubClock or 0)+dt end
  -- The pet.
  if not pet or pet.destroyed then return end
  local near=over or(u~=nil and u>=-.6 and u<=1.6 and v>=-.6 and v<=1.6)
@@ -622,10 +628,12 @@ function Cuddle:step(dt,camera,pet,boxAt,boxSize)
  self.leanW=C.ease(self.leanW,if contact and not reduced then 1 else 0,dt,C.Lean.ease)
  self.spotW=C.ease(self.spotW,if rubbing then 1 else 0,dt,.25)
  -- Screen right in the pet's own X (it faces the camera): +1 or -1.
- local sideSign=1
+ -- beta (44) #15: with a dead band (C.sideSign), so a near side-on camera never flips it frame to frame
+ local sideSign=self.sideSign or 1
  if camera then
   local localRight=CFrame.Angles(0,pet.yaw or 0,0):VectorToObjectSpace(camera.CFrame.RightVector)
-  sideSign=if localRight.X<0 then -1 else 1
+  sideSign=C.sideSign(self.sideSign,localRight.X)
+  self.sideSign=sideSign
  end
  -- Beta (42) D17: eased toward the hand (PetCuddle.easeHand), over the pet's resting box (PetFocusUI.restBounds), so
  -- the lean no longer moves the box it is measured in and nothing snaps frame to frame.
@@ -633,8 +641,11 @@ function Cuddle:step(dt,camera,pet,boxAt,boxSize)
  -- beta (40): the eyes stay inside the rig's ellipse (its eyeLook, else PetCuddle's), never into the head mesh
  local yaw,pitch,ex,ey=C.look(Vector3.new(dx*sideSign,-dy,1.4),self.lookW,pet.definition and pet.definition.eyeLook)
  local leanPitch,leanRoll=C.lean(math.clamp(dx,-1,1)*sideSign,self.leanW)
- local sp=C.spotPose(self.spot,self.spotAge,math.clamp(dx,-1,1)*sideSign,reduced)
+ local sp=C.spotPose(self.spot,self.spotAge,math.clamp(dx,-1,1)*sideSign,reduced,self.rubClock)
  local w=self.spotW
+ -- beta (44) #15: the head pitch, roll, eye and stretch glide (~.15 s, C.easePose) toward the spot's pose
+ self.poseEase=self.poseEase or {}
+ local eased=C.easePose(self.poseEase,{headPitch=sp.headPitch*w,headRoll=sp.headRoll*w,eye=1+(sp.eye-1)*w,stretch=sp.stretch*w},dt)
  local hop,sway=0,0
  if self.burstAge then
   self.burstAge+=dt
@@ -643,10 +654,10 @@ function Cuddle:step(dt,camera,pet,boxAt,boxSize)
  end
  self.blush=C.ease(self.blush,math.clamp((s.fill-C.Stages[1])/(C.Stages[2]-C.Stages[1]),0,1)*.7,dt,.3)
  local p=self.pose
- p.headYaw,p.headPitch,p.headRoll=yaw,pitch+sp.headPitch*w,sp.headRoll*w
+ p.headYaw,p.headPitch,p.headRoll=yaw,pitch+eased.headPitch,eased.headRoll
  p.eyeX,p.eyeY=ex,ey
- p.eye=1+(sp.eye-1)*w
- p.stretch,p.ear,p.sway,p.hop=sp.stretch*w,sp.ear*w,sp.sway*w+sway,sp.hop*w+hop
+ p.eye=eased.eye
+ p.stretch,p.ear,p.sway,p.hop=eased.stretch,sp.ear*w,sp.sway*w+sway,sp.hop*w+hop
  p.pitch,p.roll,p.blush=leanPitch,leanRoll,self.blush
  pet.cuddle=p;pet.poseDirty=true
 end
