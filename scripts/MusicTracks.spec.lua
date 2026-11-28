@@ -30,12 +30,14 @@ return function(client, parent)
 		assert(Alive.resolve("music2", nil, nil, true) == true, "missing = on")
 	end)
 
-	test("ids: all 0 until uploaded, so music2 is today's music; a pair needs every id; lite needs the deck", function()
+	test("ids: a pair needs every id (0 = not uploaded = today's music); lite needs the deck", function()
 		for _, key in ipairs({ "garden_day", "garden_night", "deck", "deck_lite" }) do
-			assert(Tracks.Ids[key] == 0, key .. " ships as 0 until uploaded")
+			assert(type(Tracks.Ids[key]) == "number" and Tracks.Ids[key] >= 0, key .. " is an id or 0")
 		end
-		local none = Tracks.active(true, Tracks.Ids)
+		local none = Tracks.active(true, { garden_day = 0, garden_night = 0, deck = 0, deck_lite = 0 })
 		assert(not none.garden and not none.deck and not none.lite, "ids 0: nothing")
+		local half = Tracks.active(true, { garden_day = 1, garden_night = 0, deck = 0, deck_lite = 0 })
+		assert(not half.garden, "garden needs both day and night")
 		local all = { garden_day = 1, garden_night = 2, deck = 3, deck_lite = 4 }
 		local off = Tracks.active(false, all)
 		assert(not off.garden and not off.deck and not off.lite, "switch off: nothing")
@@ -154,6 +156,8 @@ return function(client, parent)
 			daylight = function() return 1 end, now = function() return 0 end,
 			music2 = { on = function() return on end, hourOn = function() return hour end, weight = function() return weight end } })
 		a.deckLite = function() return lite end
+		-- the shipped ids may be real now (garden v4 uploaded): this case starts from all 0 and restores them after
+		Tracks.Ids.garden_day, Tracks.Ids.garden_night, Tracks.Ids.deck, Tracks.Ids.deck_lite = 0, 0, 0, 0
 		local ok, err = pcall(function()
 			Ambient.preload = function(list, callback) for _, voice in ipairs(list) do callback(voice.SoundId, Enum.AssetFetchStatus.Success) end end
 			a:setRound(true)

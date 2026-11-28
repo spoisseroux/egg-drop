@@ -10,11 +10,11 @@ local Tracks={}
 Tracks.Feature="music2"
 
 -- Upload ids (assets/audio/music/*-v2.ogg, MUSIC-BRIEF 6). 0 = not uploaded: that pair stays today's track.
---   garden_day    garden-day-v2         131.28 s (5,789,538 frames)
---   garden_night  garden-night-v2       the same frame count, so the pair can cross at any moment
+--   garden_day    garden-day-v4         131.28 s (5,789,538 frames)
+--   garden_night  garden-night-v4       the same frame count, so the pair can cross at any moment
 --   deck          pocket-deck-v2        65.64 s (2,894,769 frames)
 --   deck_lite     pocket-deck-lite-v2   32.82 s (16 bars: half the deck, so it follows the deck's grid modulo)
-Tracks.Ids={garden_day=0,garden_night=0,deck=0,deck_lite=0}
+Tracks.Ids={garden_day=125877989254797,garden_night=88487379039156,deck=0,deck_lite=0}
 
 -- The lengths the brief renders (s); the runtime reads each Sound's own TimeLength.
 Tracks.Lengths=table.freeze({garden=5789538/44100,deck=2894769/44100,deck_lite=16*60/117*4})
