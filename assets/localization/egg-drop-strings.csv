@@ -224,6 +224,9 @@ ui.deck.chain.line,Quick merges in a row score more,,"Pocket Deck round screen: 
 ui.deck.chain.short,Quick merges score more,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
 ui.deck.chain.tiny,Be quick: more points,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
 ui.deck.chain.toast,Chain ×{count}! Quick merges in a row score more,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. Chain ×3! Quick merges in a row score more"
+ui.deck.feel.best,New best!,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
+ui.deck.feel.toGo.many,{count} goals to go,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. 3 goals to go"
+ui.deck.feel.toGo.one,1 goal to go,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
 ui.deck.goal.chain,Make {count} quick merges in a row,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. Make 3 quick merges in a row"
 ui.deck.goal.done,Done!,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; also ui.onb3.strip.short.done"
 ui.deck.goal.make,Make {ball} {where},,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button; e.g. Make a green ball on the left"
@@ -244,6 +247,7 @@ ui.deck.goal.where.right,on the right,,"Pocket Deck round screen: goal instructi
 ui.deck.goal.whereTiny.center,middle,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
 ui.deck.goal.whereTiny.left,left,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
 ui.deck.goal.whereTiny.right,right,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
+ui.deck.level.hint,Level,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
 ui.deck.praise.bubbly,Bubbly!,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
 ui.deck.praise.fizzy,Fizzy!,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
 ui.deck.praise.sky,Sky high!,,"Pocket Deck round screen: goal instructions ({ball} is a coloured ball), the chain card, the Quests button"
@@ -726,14 +730,16 @@ ui.onbAllSet.next,What's next?,,Menu text
 ui.onbAllSet.pet,Pet,,Menu text
 ui.onbAllSet.stars,Stars,,"Menu text; also ui.r3.help.dash.d.title, ui.report.category.stars, ui.store.starsRow"
 ui.onbAllSet.sub,{pet} loves it here.,,Menu text; e.g. Bear loves it here.
+ui.onbGift.atMachine,Tap the machine!,,Menu text
+ui.onbGift.atMachineSub,Your free egg is inside,,Menu text
 ui.onbGift.bring,Bring {pet} out first.,,Menu text; e.g. Bring Bear out first.
 ui.onbGift.busy,Try again in a moment.,,Menu text
 ui.onbGift.card.deeper,Deeper {name}!,,Menu text; e.g. Deeper Pet Park!
-ui.onbGift.card.free,Free,,"Menu text; also ui.paint.free, ui.r4.hue.free"
-ui.onbGift.card.from,A gift from {pet}!,,Menu text; e.g. A gift from Bear!
+ui.onbGift.card.free,Free,,"Menu text; also ui.onbGift.shop.price, ui.paint.free, ui.r4.hue.free"
+ui.onbGift.card.from,A gift from {pet}!,,Menu text; e.g. A gift from Bear!; also ui.onbGift.shop.from
 ui.onbGift.card.keep,Keep it,,Menu text
 ui.onbGift.card.paint,Paint {pet}!,,Menu text; e.g. Paint Bear!
-ui.onbGift.card.play,Play!,,Menu text
+ui.onbGift.card.play,Play!,,Menu text; also ui.teach.deck
 ui.onbGift.card.pot,{name} paint pot,,Menu text; e.g. Pet Park paint pot
 ui.onbGift.card.potOdds,Each colour: 1 in 4,,Menu text
 ui.onbGift.card.snack,A snack for the racer!,,Menu text
@@ -755,13 +761,13 @@ ui.onbGift.room,Make room in the pouch first.,,Menu text
 ui.onbGift.row.line,A free egg at the egg machine,,Menu text
 ui.onbGift.row.lineSnack,A free Snack Egg at the machine,,Menu text
 ui.onbGift.row.name,Gift waiting,,Menu text
+ui.onbGift.shop.free,FREE,,Menu text; also ui.v2.adopt.freeStatus
+ui.onbGift.shop.hatch,Hatch free!,,Menu text
 ui.onbGift.snack,A snack for me?,,Menu text
 ui.onbGift.snackSub,A free Snack Egg,,Menu text
-ui.onbGift.throw,Throw it!,,Menu text
+ui.onbGift.throw,Throw it!,,Menu text; also ui.teach.throw
 ui.onbGift.toy,A toy for me?,,Menu text
 ui.onbGift.toySub,A free Toy Egg,,Menu text
-ui.onbGift.turn,Turn it!,,Menu text
-ui.onbGift.turnSub,Tap to turn the crank,,Menu text
 ui.onbGift.waiting,Gift waiting!,,Menu text
 ui.onbGift.waitingSub,At the egg machine,,Menu text
 ui.onbGift.wipe,{pet} is {colour}!,,Menu text; e.g. Bear is {colour}!
@@ -771,9 +777,11 @@ ui.onbLead.follow,This way!,,Menu text
 ui.onbLead.followSub,A new egg is waiting,,Menu text
 ui.onbLead.pet,Pet me!,,Menu text
 ui.onbLead.thisWay,Come on!,,Menu text
-ui.onbLead.toast,Sweet dreams! Come back tomorrow to hatch it.,,Menu text
+ui.onbLead.toast,Sweet dreams! It hatches in {hours} h.,,Menu text; e.g. Sweet dreams! It hatches in 7 h.
+ui.onbLead.toastMin,Sweet dreams! It hatches in {minutes} min.,,Menu text; e.g. Sweet dreams! It hatches in 40 min.
 ui.onbLead.tuck,Tuck it in!,,Menu text
-ui.onbLead.tuckSub,It hatches tomorrow,,Menu text
+ui.onbLead.tuckSub,It hatches in {hours} h,,Menu text; e.g. It hatches in 7 h
+ui.onbLead.tuckSubMin,It hatches in {minutes} min,,Menu text; e.g. It hatches in 40 min
 ui.onboarding.crack.pad,Press A!,,First-round coaching
 ui.onboarding.spend.give,Give to {pet},,First-round coaching; e.g. Give to Bear; also ui.r4.customize.toys.give
 ui.onboarding.spend.line,Choose a Toy Egg when you're ready.,,First-round coaching
@@ -1248,6 +1256,11 @@ ui.style.effects.title,Effects,,Deck style screen
 ui.style.effects.trail,Drop trail,,Deck style screen
 ui.style.promise.backgrounds,"Backgrounds are earned, not bought.",,Deck style screen
 ui.style.promise.faceplates,Fixed prices. No random plates.,,Deck style screen
+ui.teach.dress,Dress up!,,Menu text
+ui.teach.go,Go!,,Menu text
+ui.teach.menu,Open the Menu!,,Menu text
+ui.teach.paint,Tap Paint!,,Menu text
+ui.teach.things,All the games!,,Menu text
 ui.things.dash.gather,Race: {count} of 8,,Things to do page; e.g. Race: 3 of 8
 ui.things.dash.idle,Start a race,,Things to do page
 ui.things.dash.live,A race is on,,Things to do page
@@ -1280,7 +1293,6 @@ ui.v2.adopt.done,{pet} came home with you!,,Menu text; e.g. Bear came home with 
 ui.v2.adopt.failed,Couldn't adopt right now. No Stars were spent.,,Menu text
 ui.v2.adopt.free,Take home free,,Menu text
 ui.v2.adopt.freeLine,{need} stamps: yours for free,,Menu text; e.g. {need} stamps: yours for free
-ui.v2.adopt.freeStatus,FREE,,Menu text
 ui.v2.adopt.line,"Free at {need} stamps ({stamps}/{need}), or adopt now",,"Menu text; e.g. Free at {need} stamps ({stamps}/{need}), or adopt now"
 ui.v2.adopt.retry,Still saving… try again in a moment.,,Menu text
 ui.v2.adopt.saving,Adopting…,,Menu text
