@@ -29,10 +29,10 @@ Alive.PlaceId=107705084891479 -- Pocket Pals Beta
 -- ONBOARDING-V3-BRIEF section 4 (beta 37 notes): `pet2` is the cuter petting screen (PetCuddle, PetCuddleUI: the mitten,
 -- the Happy heart, the lean, the glass plates, the spots). Missing = on. Off = the petting screen exactly as before.
 Alive.Features=table.freeze({"springs","menus","close","wind","life","scene","snack","windbed","asmr","wobble","balls","crunch","air",
- "fruit","keepout","aerohatch","deckjuice","pet2","paint"})
+ "fruit","keepout","aerohatch","deckjuice","pet2","paint","deckfeel"})
 local FlagNames=table.freeze({springs="AliveSprings",menus="AliveMenus",close="AliveClose",wind="AliveWind",life="AliveLife",
  scene="AliveScene",snack="AliveSnack",windbed="AliveWindbed",asmr="AliveAsmr",wobble="AliveWobble",balls="AliveBalls",
- crunch="AliveCrunch",air="AliveAir",fruit="AliveFruit",keepout="AliveKeepOut",aerohatch="AliveAeroHatch",deckjuice="AliveDeckJuice",pet2="AlivePet2",paint="AlivePaint"})
+ crunch="AliveCrunch",air="AliveAir",fruit="AliveFruit",keepout="AliveKeepOut",aerohatch="AliveAeroHatch",deckjuice="AliveDeckJuice",pet2="AlivePet2",paint="AlivePaint",deckfeel="AliveDeckFeel"})
 -- What a missing or malformed config value means, where it is not on.
 Alive.Defaults=table.freeze({windbed=false})
 

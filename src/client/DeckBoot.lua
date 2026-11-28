@@ -175,4 +175,59 @@ function Boot:wait()
  return self.skipped
 end
 
+-- DECK-FEEL-BRIEF 1 (Alive deckfeel): the quick power-on of every open after the session's first. The dark screen
+-- opens from its centre behind a 2 px cyan scanline on each edge (Quad Out over `seconds`), onto the wordmark frame;
+-- deck_boot plays as it starts (at .4). Yields; returns false when `owns()` goes false (the covers come off either way).
+Boot.ScanColor=Color3.fromRGB(118,246,176)
+function Boot:scanParts()
+ if self.scan then return self.scan end
+ local host=self.host
+ local function part(name,color,z)
+  local f=Instance.new("Frame");f.Name=name;f.BorderSizePixel=0;f.BackgroundColor3=color;f.ZIndex=z;f.Visible=false;f.Active=false;f.Parent=host
+  return f
+ end
+ self.scan={top=part("ScanTop",Color3.new(0,0,0),host.ZIndex+3),bottom=part("ScanBottom",Color3.new(0,0,0),host.ZIndex+3),
+  lineTop=part("ScanLineTop",Boot.ScanColor,host.ZIndex+4),lineBottom=part("ScanLineBottom",Boot.ScanColor,host.ZIndex+4)}
+ self.scan.bottom.AnchorPoint=Vector2.new(0,1);self.scan.lineBottom.AnchorPoint=Vector2.new(0,1)
+ return self.scan
+end
+function Boot:mark(index)
+ if self.playing then self:finish(false)end
+ self.fadeEpoch=(self.fadeEpoch or 0)+1;self.held=false
+ self.host.BackgroundColor3=Color3.new(0,0,0);self.host.BackgroundTransparency=0
+ self.fixed.ImageTransparency=0;self.ink.ImageTransparency=0
+ self:show(index);self.host.Visible=true
+end
+function Boot:scanOpen(seconds,owns,frame,cueVolume)
+ local s=self:scanParts()
+ self:mark(frame or Boot.Reduced.frame)
+ if self.audio and self.audio.play then self.audio:play("deck_boot",1,cueVolume or .4)end
+ local started=self.clock()
+ local ok=true
+ for _,f in pairs(s)do f.Visible=true end
+ while true do
+  if owns and not owns()then ok=false;break end
+  local u=math.clamp((self.clock()-started)/math.max(seconds,1e-3),0,1)
+  local k=1-(1-u)*(1-u)
+  local half=.5*(1-k)
+  s.top.Position,s.top.Size=UDim2.fromScale(0,0),UDim2.fromScale(1,half)
+  s.bottom.Position,s.bottom.Size=UDim2.fromScale(0,1),UDim2.fromScale(1,half)
+  s.lineTop.Position,s.lineTop.Size=UDim2.new(0,0,half,-1),UDim2.new(1,0,0,2)
+  s.lineBottom.Position,s.lineBottom.Size=UDim2.new(0,0,1-half,1),UDim2.new(1,0,0,2)
+  if u>=1 then break end
+  RunService.Heartbeat:Wait()
+ end
+ for _,f in pairs(s)do f.Visible=false end
+ return ok
+end
+-- Holds whatever shows for `seconds` (yields); false when `owns()` goes false first.
+function Boot:holdFor(seconds,owns)
+ local started=self.clock()
+ while self.clock()-started<seconds do
+  if owns and not owns()then return false end
+  RunService.Heartbeat:Wait()
+ end
+ return not owns or owns()
+end
+
 return Boot

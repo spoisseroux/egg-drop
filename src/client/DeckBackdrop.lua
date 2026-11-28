@@ -283,11 +283,14 @@ function Backdrop.boardCell(width)
 end
 function Backdrop.board(parent)
  local root=roundedRoot(parent,"BoardPattern");root.Size=UDim2.fromScale(1,1);root.ClipsDescendants=true;root.Visible=false
- local self=setmetatable({root=root,pieces={},stats={created=1,writes=0,visible=0}},Board)
+ local self=setmetatable({root=root,pieces={},stats={created=1,writes=0,visible=0},period=0},Board)
+ -- DECK-FEEL-BRIEF 4: the motifs ride one slide so the pattern can drift (Board:setDrift, Alive deckfeel); at rest
+ -- (offset 0) it is the pattern exactly as before. Not counted in the stats (the motifs' budget is unchanged).
+ local slide=frame(root,"Slide");slide.Size=UDim2.fromScale(1,1);slide.ZIndex=root.ZIndex;self.slide=slide
  -- The arc fade hides the lower half of a ring so Creek reads as ripples.
  local fade=NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(.54,1),NumberSequenceKeypoint.new(1,1)})
  for index=1,Backdrop.BoardColumns*Backdrop.BoardRows do
-  local shape=frame(root,"Motif");shape.Visible=false;shape.ZIndex=root.ZIndex
+  local shape=frame(slide,"Motif");shape.Visible=false;shape.ZIndex=root.ZIndex
   local corner=Instance.new("UICorner");corner.Parent=shape
   local stroke=Instance.new("UIStroke");stroke.Enabled=false;stroke.ApplyStrokeMode=Enum.ApplyStrokeMode.Border;stroke.Parent=shape
   local gradient=Instance.new("UIGradient");gradient.Rotation=90;gradient.Transparency=fade;gradient.Enabled=false;gradient.Parent=stroke
@@ -303,8 +306,22 @@ end
 function Board:setZIndex(z)
  if self.destroyed or self.z==z then return end;self.z=z
  assign(self,self.root,"ZIndex",z,"layerWrites")
+ if self.slide then self.slide.ZIndex=z end
  for _,p in ipairs(self.pieces)do assign(self,p.shape,"ZIndex",z,"layerWrites")end
 end
+-- DECK-FEEL-BRIEF 4: the pattern's downward drift, `px` into its two-row period (DeckFeel.patternOffset); nil = rest.
+function Board:setDrift(px)
+ if self.destroyed or not self.slide then return end
+ local y=if px and self.period>0 then math.floor(px%self.period)-self.period else 0
+ if self.driftY~=y then
+  -- Drifting needs the extra rows below the well (laid out once when it starts or stops).
+  local relayout=(self.driftY==nil or self.driftY==0)~=(y==0)
+  self.driftY=y;self.slide.Position=UDim2.fromOffset(0,y)
+  if relayout then self.size=nil;self:layout()end
+ end
+end
+function Board:periodPx()return self.period end
+function Board:cellPx()return self.stats.cell or 0 end
 function Board:configure(id,theme)
  if self.destroyed then return false end
  local tone=Backdrop.boardTone(theme)
@@ -348,11 +365,13 @@ function Board:layout()
  local size=self.root.AbsoluteSize
  if self.size==size then return end;self.size=size
  local cell=Backdrop.boardCell(size.X);self.stats.cell=cell
+ -- Two rows repeat the pattern (seeds, lanterns and moons alternate by row; creek rows are .85 of a cell apart).
+ self.period=math.floor((if self.id=="creek"then cell*.85 else cell)*2+.5)
  local thickness=math.max(1,math.floor(cell*.06+.5))
  local shown=0
  for _,p in ipairs(self.pieces)do
   local x,y,w,h=Board.place(self.id,p.col,p.row,cell)
-  local visible=size.X>0 and x<size.X and y<size.Y and x+w>0
+  local visible=size.X>0 and x<size.X and y<size.Y+(if self.driftY and self.driftY~=0 then self.period else 0)and x+w>0
   if visible then
    assign(self,p.shape,"Position",UDim2.fromOffset(math.floor(x+.5),math.floor(y+.5)),"geometryWrites")
    assign(self,p.shape,"Size",UDim2.fromOffset(math.floor(w+.5),math.floor(h+.5)),"geometryWrites")

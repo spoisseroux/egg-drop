@@ -1659,12 +1659,27 @@ function Kit.hudLabel(label,color)
   local ax=label.TextXAlignment
   local lx=label.Position.X.Offset-label.AnchorPoint.X*lw
   local x=if ax==Enum.TextXAlignment.Right then lx+lw-w+4 elseif ax==Enum.TextXAlignment.Center then lx+math.floor((lw-w)/2)else lx-4
+  -- DECK-FEEL-BRIEF 7 (Alive deckfeel; DeckFeelScreen sets the attributes): a roomier pill, 10 px (8 compact) each
+  -- side, 24 tall (or the card's FeelPillH), radius 8 (6), with a 2 px darker lip along its foot.
+  local pill=label:GetAttribute("FeelPill")
+  if pill then
+   local pad=if pill=="compact"then 8 else 10
+   h=label:GetAttribute("FeelPillH")or(if pill=="compact"then 20 else 24)
+   w=if text==""then 0 else math.ceil(Kit.measure(text,label:GetAttribute("KitRole")or "Label",label.TextSize).X)+2*pad
+   x=if ax==Enum.TextXAlignment.Right then lx+lw-w+pad elseif ax==Enum.TextXAlignment.Center then lx+math.floor((lw-w)/2)else lx-pad
+   local corner=tab:FindFirstChildOfClass("UICorner");if corner then corner.CornerRadius=UDim.new(0,if pill=="compact"then 6 else 8)end
+   local lip=tab:FindFirstChild("FeelLip")or node("UIGradient",tab,{Name="FeelLip",Rotation=90})
+   local k=math.clamp((h-2)/math.max(1,h),.5,.99)
+   lip.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.new(1,1,1)),ColorSequenceKeypoint.new(k,Color3.new(1,1,1)),
+    ColorSequenceKeypoint.new(math.min(.999,k+.001),Color3.new(.68,.68,.68)),ColorSequenceKeypoint.new(1,Color3.new(.68,.68,.68))})
+  end
   local y=label.Position.Y.Offset-label.AnchorPoint.Y*lh+math.floor((lh-h)/2)
   tab.Position=UDim2.new(label.Position.X.Scale,x,label.Position.Y.Scale,y)
   tab.Size=UDim2.fromOffset(w,h)
   tab.Visible=label.Visible and w>0
  end
  for _,property in ipairs({"Text","Position","Size","Visible","TextSize","AbsoluteSize"})do label:GetPropertyChangedSignal(property):Connect(place)end
+ label:GetAttributeChangedSignal("FeelPill"):Connect(place);label:GetAttributeChangedSignal("FeelPillH"):Connect(place)
  -- The tab follows its label only (a card that hides or shows its children by hand never
  -- leaves a visible label without its tab).
  tab:GetPropertyChangedSignal("Visible"):Connect(function()if tab.Visible~=(label.Visible and label.Text~="")then place()end end)

@@ -157,7 +157,10 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # The onboarding fun pass section 2 (Onboard "gifts"): the gift chain's client controller.
           "GiftChain",
           # Onboarding part 2 (qa-2026-11-27-beta40): the shop's gift mode and latch, the five lessons and the pointer.
-          "GiftShop", "TeachLessons"]
+          "GiftShop", "TeachLessons",
+          # DECK-FEEL-BRIEF (beta 40 notes 9-17, switch deckfeel): the open, holds, body press, life, stepper, polish,
+          # results; the stale-balls gate (DeckFresh, always on).
+          "DeckFeel"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -240,7 +243,9 @@ def client_modules():
                     # The gift chain: its controller; GIFT-ART-BRIEF: the wrapped egg's drawing and the machine's ribbon.
                     "GiftChain.lua", "GiftEggArt.lua", "GiftRibbon.lua",
                     # Onboarding part 2: the shop's gift mode, the lessons and their pointer.
-                    "GiftShop.lua", "TeachLessons.lua", "TeachPointer.lua"):
+                    "GiftShop.lua", "TeachLessons.lua", "TeachPointer.lua",
+                    # DECK-FEEL-BRIEF: the feel pass's pure rules, the body press and the fresh reopen gate.
+                    "DeckFeel.lua", "DeckPressLean.lua", "DeckFresh.lua", "DeckHandoff.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

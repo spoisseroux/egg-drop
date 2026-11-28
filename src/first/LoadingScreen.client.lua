@@ -294,8 +294,42 @@ playerGui:SetAttribute("LoadingTotal", total)
 playerGui:SetAttribute("LoadingSeconds", math.floor((os.clock() - started) * 10) / 10)
 playerGui:SetAttribute("LoadingSkipped", skipped)
 
--- 3) Fade away (the pals and the checker with it; a pal fade-in still pending is skipped).
+-- 3) DECK-FEEL-BRIEF 1 (Alive deckfeel, read from its workspace attribute: nothing here can require Shared): when the
+-- client's first presentation is the Pocket Deck, keep the sky up until the deck's content is ready, then cross-fade
+-- the sky to the deck's shade colour (.30 s, Sine InOut) while the pals, title and bar fade (.20 s), and hand straight
+-- to the handheld's rise (DeckHandoff's PlayerGui attributes). The garden never shows in between; no frame is fully
+-- transparent. Reduced Motion, the switch off, a garden start or a client that never says: the fade below, as before.
 leaving = true
+local HandoffWait = 12
+local handoff = workspace:GetAttribute("Alive_deckfeel") == true and not GuiService.ReducedMotionEnabled
+if handoff then
+	local asked = os.clock()
+	while playerGui:GetAttribute("DeckFirstRoute") == nil and os.clock() - asked < HandoffWait do task.wait(0.05) end
+	handoff = playerGui:GetAttribute("DeckFirstRoute") == "Board" and playerGui:GetAttribute("DeckFeelHandoff") == true
+end
+if handoff then
+	local asked = os.clock()
+	while playerGui:GetAttribute("DeckContentReady") ~= true and os.clock() - asked < HandoffWait do task.wait(0.05) end
+	local shade = playerGui:GetAttribute("DeckShadeColor")
+	if typeof(shade) ~= "Color3" then shade = Color3.fromHex("#2B2F3A") end
+	local cover = node("Frame", gui, { Name = "ShadeHandoff", Size = UDim2.fromScale(1, 1), BackgroundColor3 = shade,
+		BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 50 })
+	local palFade = TweenInfo.new(0.20)
+	for _, item in ipairs(column:GetDescendants()) do
+		if item:IsA("Frame") then TweenService:Create(item, palFade, { BackgroundTransparency = 1 }):Play() end
+		if item:IsA("TextLabel") then TweenService:Create(item, palFade, { TextTransparency = 1 }):Play() end
+		if item:IsA("ImageLabel") then TweenService:Create(item, palFade, { ImageTransparency = 1 }):Play() end
+		if item:IsA("UIStroke") then TweenService:Create(item, palFade, { Transparency = 1 }):Play() end
+	end
+	skip.Visible = false
+	TweenService:Create(cover, TweenInfo.new(0.30, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { BackgroundTransparency = 0 }):Play()
+	task.wait(0.32)
+	playerGui:SetAttribute("LoadingHandedOff", true)
+	hopConnection:Disconnect()
+	if checkerTween then checkerTween:Cancel() end
+	gui:Destroy()
+	return
+end
 task.wait(0.15)
 local fade = TweenInfo.new(if GuiService.ReducedMotionEnabled then 0.01 else 0.45)
 for _, item in ipairs(gui:GetDescendants()) do

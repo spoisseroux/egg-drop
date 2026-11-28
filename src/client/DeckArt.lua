@@ -628,6 +628,10 @@ function Art.boardPattern(host)
  end
  return pattern.root
 end
+-- DECK-FEEL-BRIEF 4: the pattern object itself (its drift), or nil.
+function Art.boardPatternObject(host)
+ local pattern=boardPatterns[host];return if pattern and not pattern.destroyed then pattern else nil
+end
 -- Global ZIndex depth of the board pattern (it must stay below the gel layer).
 function Art.setBoardPatternDepth(host,z)
  local pattern=boardPatterns[host];if pattern and not pattern.destroyed then pattern:setZIndex(z)end

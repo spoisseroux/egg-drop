@@ -1493,6 +1493,12 @@ function Room:driveModes(initial)
                         and not self.boardContentReady(self.endedRoomSerial)do task.wait()end
                     if self.destroyed or self.switchEpoch~=epoch then return end
                 end
+				-- DECK-FEEL-BRIEF 1 (init.client sets it under Alive deckfeel): the first open after loading hands the
+				-- loading screen's sky straight to the shade before the handheld rises (bounded wait).
+				if first and destination=="Board" and self.beforeFirstReveal then
+					pcall(self.beforeFirstReveal)
+					if self.destroyed or self.switchEpoch~=epoch then return end
+				end
 				-- A replicated destination can change while the curtain is moving.
 				if self.target==destination then
 					local changed=self.mode~=destination

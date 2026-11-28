@@ -133,5 +133,7 @@ return table.freeze({PetTrail=true,FirstHelloBonus=true,RoundTwoNudge=true,ToyPi
  AlivePet2=true,
  -- AlivePaint (PAINT-SHINE-DRESS-PLAN): Dress up, the renames and the paint pots; beta and Studio only.
  AlivePaint=true,
+ -- AliveDeckFeel (DECK-FEEL-BRIEF, beta 40 notes 9-17): the Pocket Deck feel pass (DeckFeel); beta and Studio only.
+ AliveDeckFeel=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
  PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,PlayerScale=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true,TierPets=true,ParkTopLawn=true,ThisWeek=true})

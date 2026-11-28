@@ -118,6 +118,10 @@ local Table={
   -- Deck juice P2 (AERO-JUICE-BRIEF 2, AeroJuice): the one praise word over the well on a chain of 5 and up (5, 6, 7,
   -- 8 and up). Original words; never a clock, a near miss or an upsell.
   praise={bubbly="Bubbly!",fizzy="Fizzy!",sparkly="Sparkly!",sky="Sky high!"},
+  -- DECK-FEEL-BRIEF 6 (Alive deckfeel): the hint row while the Difficulty card is the control (▲▼ on keys and pads).
+  level={hint="Level"},
+  -- DECK-FEEL-BRIEF 8: the so-close line names what was reached, never what was lost; the new best's stamp.
+  feel={toGo={one="1 goal to go",many="{count} goals to go"},best="New best!"},
  },
  results={
   inPlace={noStars="No Stars this round",total="Total  ★ {count}",metrics="Score {score} · Best {best} · Chain ×{chain}",replay="Replay",hatch="Hatch eggs"},

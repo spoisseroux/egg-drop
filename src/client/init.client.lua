@@ -243,6 +243,11 @@ clientUI.syncLcdMask=function()
  Art.tintLcdCorners(clientUI.lcdMask,if deck and deck.visible and deck.lcd then deck.lcd.BackgroundColor3 else bezel.BackgroundColor3)
 end
 local lcd = JellyLCD.new(overlay)
+-- DECK-FEEL-BRIEF 5 (always on, a bug fix): the LCD remembers the serial it last drew and never shows an older one.
+clientUI.DeckFresh=require(script.DeckFresh);clientUI.fresh=clientUI.DeckFresh.new()
+clientUI.freshHide=function()
+ if lcd and lcd.label.Visible and not clientUI.DeckFresh.keep(clientUI.fresh,board:GetAttribute("ResetId"))then lcd.label.Visible=false end
+end
 -- The chosen deck background, drawn in the board well at 6% (UI-SPEC-REDESIGN-MENUS 5).
 Art.boardPattern(overlay)
 local lcdStep = 1 / 30
@@ -619,6 +624,25 @@ clientUI.refreshInsets()
 clientUI.deck=DeckScreen.new({parent=clientUI.deckHost,overlayParent=clientUI.deviceRoot,viewRoot=backdrop,audio=audio})
 clientUI.deck.lcd:GetPropertyChangedSignal("BackgroundColor3"):Connect(clientUI.syncLcdMask)
 clientUI.deckResults=require(script.DeckResults).new(clientUI.deck.resultsContent,{audio=audio,reduce=reduceEffects})
+-- DECK-FEEL-BRIEF (Alive deckfeel): the well's side of the feel pass (DeckFeelBoard) and the results' win bounce.
+clientUI.DeckFeel=require(script.DeckFeel)
+clientUI.feelBoard=require(script.DeckFeelBoard).new({overlay=overlay,deck=clientUI.deck,danger=function()return clientUI.danger end,
+ zones=fieldZones,pattern=function()return Art.boardPatternObject(overlay)end,reduced=reduceEffects})
+clientUI.deckResults.feelBounce=function()clientUI.deck.feel:kick(0,require(script.DeckFeel).Results.bounce)end
+-- DECK-FEEL-BRIEF 6 (deckfeel): the Difficulty card is the control while the round is untouched (no drop yet, the heat
+-- not frozen, not over, not a guided round). nil while the switch is off.
+function clientUI.feelStepper(drops,over)
+ if not clientUI.DeckFeel.switch()or board:GetAttribute("Mode")~="Board"then return nil end
+ local live=clientUI.DeckFeel.stepperLive(drops,(drops or 0)>0,over,board:GetAttribute("HeatGuided")==true)
+  and clientUI.attr("FieldPhase")~="Welcome"
+ local pick=clientUI.stepperPick
+ local key=if pick and os.clock()-pick.at<2 and pick.key~=board:GetAttribute("Heat")then pick.key else board:GetAttribute("Heat")
+ return{live=live,key=key}
+end
+function clientUI.feelLevelHint(drops,over)
+ local stepper=clientUI.feelStepper(drops,over)
+ return stepper~=nil and stepper.live and clientUI.inputKind()~="Touch"
+end
 -- Part 2b: difficulty picker, a full-LCD layer above the board.
 clientUI.heatCallbacks,clientUI.questCallbacks={}, {}
 clientUI.heatPicker=require(script.DifficultyPicker).new(clientUI.deck:addOverlay("DeckDifficulty",32),clientUI.heatCallbacks)
@@ -2136,6 +2160,12 @@ roomView.transition.deckBoot=clientUI.deck.boot
 roomView.transition.deckVisible=function() return clientUI.deck.visible==true end
 -- QA v735 D2: the handheld has settled after its rise; lay it out at rest once.
 roomView.transition.onSettled=function() if layout then layout();updateHud() end end
+-- DECK-FEEL-BRIEF 5 (deckfeel): at the end of the close's Sink, under the opaque shade, the well forgets its balls, so a
+-- reopen always draws fresh. 1 step 4: the panels stagger up as the LCD content fades in.
+roomView.transition.onSunk=function()
+ if clientUI.DeckFeel.switch()then clientUI.DeckFresh.forget(clientUI.fresh);clientUI.freshHide()end
+end
+roomView.transition.onLit=function()clientUI.deck.feel:stagger()end
 for _,name in ipairs({"RoundOver","ReducedEffects","Mode"}) do
 	board:GetAttributeChangedSignal(name):Connect(function() roomView.transition:refresh() end)
 end
@@ -2465,6 +2495,20 @@ function clientUI.resultsHeatName()
  local key=if choice then choice.key else confirmed
  return(Config.Heat[key]or Config.Heat[Config.DefaultHeat]).name
 end
+-- DECK-FEEL-BRIEF 6: a tap on the Difficulty card cycles Easy, Medium, Hard, Easy; Up / Down step and stop at the ends.
+-- The server takes a level until the round's first drop (it freezes the heat then); no "recommended" nudging here.
+function clientUI.feelStepLevel(delta,wrap)
+ local stepper=clientUI.feelStepper(clientUI.attr("Drops")or 0,clientUI.roundOver())
+ if not stepper or not stepper.live or roomView.busy or clientUI.deckOverlayOpen()then return false end
+ local key=stepper.key or Config.DefaultHeat
+ local nextKey=clientUI.DeckFeel.stepLevel(Config.HeatOrder,key,delta,wrap)
+ if nextKey==key then return true end
+ clientUI.stepperPick={key=nextKey,at=os.clock()}
+ request:FireServer("heat",nextKey);clientUI.accepted("tab");audio:play("aim",1.1,.35)
+ if updateHud then task.defer(updateHud)end
+ return true
+end
+clientUI.deck:on("stepper",function(delta)clientUI.feelStepLevel(delta or 1,true)end)
 function clientUI.cycleResultsHeat(delta,wrap)
  if not recap.visible or not recap.data or recap.data.pending then return false end
  local choice=clientUI.resultsHeat;local key=if choice and choice.sequence==board:GetAttribute("RunSequence")and os.clock()-choice.at<2 then choice.key else board:GetAttribute("NextHeat")or Config.DefaultHeat
@@ -2687,7 +2731,7 @@ updateHud = function()
   -- QA v735 D4: the area bands follow the lines; the current goal's area is lit.
   item.band.Visible=item.node.Visible
   item.band.BackgroundTransparency=if clientUI.fieldCopy.zone==(if item.side==-1 then "left"else "right")then .84 else .94
-  item.tag.TextTransparency=if clientUI.fieldCopy.zone==(if item.side==-1 then "left"else "right")then 0 else .45
+  item.tag.TextTransparency=clientUI.feelBoard:zoneTag(if clientUI.fieldCopy.zone==(if item.side==-1 then "left"else "right")then 0 else .45,os.clock())
  end
  clientUI.centerZone.Visible=nurseryActive and owned>0 and clientUI.fieldCopy.zone=="center"
  if clientUI.centerZone.Visible then
@@ -2813,7 +2857,8 @@ updateHud = function()
 		message=if not fieldActive then status.Text else nil,statusLabel=if blocked then status.Text else nil,daily=clientUI.dailyRows(),
 		next={nextTier(),clientUI.attr("PreviewTier1")or 1,clientUI.attr("PreviewTier2")or 1},
 		eggsLeft=remaining,budget=budget,difficulty=clientUI.heatInfo(board:GetAttribute("Heat")).name,multiplier=select(2,clientUI.heatInfo(board:GetAttribute("Heat"))),
-		winPays=board:GetAttribute("WinPays")or "…",input=clientUI.inputKind()})
+		winPays=board:GetAttribute("WinPays")or "…",input=clientUI.inputKind(),
+		stepper=clientUI.feelStepper(drops,over),levelHint=clientUI.feelLevelHint(drops,over)})
 	if clientUI.refreshDeckOverlays then clientUI.refreshDeckOverlays(over,sheetOpen,fieldActive,drops)end
 	if clientUI.pocketMenu.visible and clientUI.pocketShouldClose()then clientUI.closePocketMenu(true)end
 	clientUI.refreshBack()
@@ -3075,6 +3120,10 @@ local function dropEgg()
   and intent:readyAhead(os.clock())
 	if (canPlay() or ahead) and not drag then
   if clientUI.welcomeInput then clientUI.welcomeInput()end
+  do -- DECK-FEEL-BRIEF 4: the lane the ball falls through lightens.
+   local scale=viewport.AbsoluteSize.X/(Config.Width+.8)
+   clientUI.feelBoard:drop(project(Config.flightPoint(aim,.8)).X,2*Config.Tiers[nextTier()].radius*scale,os.clock())
+  end
   if clientUI.clientSim then
    -- B3: the mirror plays the drop (sound, jolt) the frame it draws the ball; without one, here.
    local taken,why=clientUI.clientSim.drop(aim)
@@ -3229,6 +3278,8 @@ local function handleControl(name, state, input)
 	elseif state == Enum.UserInputState.End then
 		heldAim[key] = nil
 	end
+	-- DECK-FEEL-BRIEF 2: A comes up when Space / ButtonA does (whatever else is open by then).
+	if name == "EggDropDrop" and state ~= Enum.UserInputState.Begin then clientUI.deck:hold("A",false) end
 	local gamepad = isGamepad(input.UserInputType)
 	if not canAim() or isPickerOpen() or roomView.busy or GuiService.MenuIsOpen
 		or UserInputService:GetFocusedTextBox() or (gamepad and GuiService.SelectedObject) then
@@ -3236,13 +3287,13 @@ local function handleControl(name, state, input)
 	end
 	if state == Enum.UserInputState.Begin then
 		if name == "EggDropDrop" then
-			clientUI.deck:flash("A")
+			clientUI.deck:hold("A",true)
 			dropEgg()
 		elseif name == "EggDropCustomize" then
 			if clientUI.openPocketMenu()then clientUI.accepted("confirm")end
 		else
 			startAim(key, if name == "EggDropLeft" then -1 else 1)
-			clientUI.deck:flash(if name == "EggDropLeft" then "Left" else "Right")
+			if not clientUI.DeckFeel.switch() then clientUI.deck:flash(if name == "EggDropLeft" then "Left" else "Right") end
 		end
 	end
 	return Enum.ContextActionResult.Sink
@@ -3384,7 +3435,7 @@ end)
 recap:on("picker",function()
 	if recap.data and recap.data.pending then return end
 	if recap.inPlace then clientUI.cycleResultsHeat(1,true);return end
- clientUI.keepHeatAfter=nil;clientUI.heatStarted=false;requestRetry()
+ clientUI.keepHeatAfter=nil;clientUI.heatStarted=false;clientUI.feelPickerAsked=true;requestRetry()
 end)
 recap:on("heatShift",function(delta)clientUI.cycleResultsHeat(delta)end)
 -- The results quest cell is progress only (QA Q5): no route to the quest log here.
@@ -3991,6 +4042,7 @@ function clientUI.refreshDeckOverlays(over,sheetOpen,fieldActive,drops)
  if log.visible then log:update(nurseryState and nurseryState.quests,nurseryState and nurseryState.nectar or 0)end
  local want=fieldActive and drops==0 and not over and not sheetOpen and not modal.Visible and not roomView.busy
   and board:GetAttribute("HeatGuided")~=true and not clientUI.heatStarted
+  and(not clientUI.DeckFeel.switch()or clientUI.DeckFeel.pickerWanted((board:GetAttribute("BestScore")or 0)==0,clientUI.feelPickerAsked==true))
  if want then
   local ok,pays=pcall(function()return HttpService:JSONDecode(board:GetAttribute("HeatPays")or "{}")end)
   picker:show({selected=clientUI.pickedHeat or board:GetAttribute("NextHeat"),pays=if ok then pays else nil,
@@ -4002,6 +4054,7 @@ function clientUI.refreshDeckOverlays(over,sheetOpen,fieldActive,drops)
 end
 clientUI.heatCallbacks.select=function(key)clientUI.pickedHeat=key;audio:play("aim",1.1,.35)end
 clientUI.heatCallbacks.start=function(key)
+ clientUI.feelPickerAsked=nil
  if board:GetAttribute("Heat")~=key or board:GetAttribute("NextHeat")~=key then request:FireServer("heat",key)end
  clientUI.pickedHeat=nil;clientUI.heatStarted=true;clientUI.heatPicker:hide()
  clientUI.accepted("confirm");if updateHud then task.defer(updateHud)end
@@ -4250,11 +4303,23 @@ ContextActionService:BindActionAtPriority("EggDropPickerBack", function(_, state
 end, false, priority, Enum.KeyCode.ButtonB, Enum.KeyCode.Backspace)
 ContextActionService:BindActionAtPriority("EggDropCustomize", handleControl, false, priority,
 	Enum.KeyCode.M, Enum.KeyCode.ButtonY)
+ContextActionService:BindActionAtPriority("EggDropLevel", function(_, state, input)
+	if not canAim() or isPickerOpen() or roomView.busy or GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox() or clientUI.deckOverlayOpen() then return Enum.ContextActionResult.Pass end
+	local stepper=clientUI.feelStepper(clientUI.attr("Drops")or 0,clientUI.roundOver())
+	if not stepper or not stepper.live then return Enum.ContextActionResult.Pass end
+	local up=input.KeyCode==Enum.KeyCode.Up or input.KeyCode==Enum.KeyCode.DPadUp
+	if state==Enum.UserInputState.Begin then
+		clientUI.deck:flash(if up then "Up" else "Down")
+		clientUI.feelStepLevel(if up then 1 else -1,false)
+	end
+	return Enum.ContextActionResult.Sink
+end, false, priority, Enum.KeyCode.Up, Enum.KeyCode.Down, Enum.KeyCode.DPadUp, Enum.KeyCode.DPadDown)
 
 rail.InputBegan:Connect(function(input)
 	if not drag and canPlay() and isPointer(input) then
 		table.clear(heldAim)
 		drag = input
+		clientUI.feelBoard:dragBegin(input.Position.X)
 		aimFromScreen(input.Position.X)
 		audio:play("aim")
 	end
@@ -4263,6 +4328,7 @@ UserInputService.InputChanged:Connect(function(input)
 	if drag and (input == drag or (drag.UserInputType == Enum.UserInputType.MouseButton1
 		and input.UserInputType == Enum.UserInputType.MouseMovement)) then
 		aimFromScreen(input.Position.X)
+		clientUI.feelBoard:dragMove(input.Position.X,os.clock())
 	end
 end)
 UserInputService.InputEnded:Connect(function(input)
@@ -4277,8 +4343,12 @@ UserInputService.InputEnded:Connect(function(input)
 	if drag and (input == drag or (drag.UserInputType == Enum.UserInputType.MouseButton1
 		and input.UserInputType == Enum.UserInputType.MouseButton1)) then
 		drag = nil
+		clientUI.feelBoard:dragEnd()
 		if input.UserInputState == Enum.UserInputState.End and canPlay() then
 			aimFromScreen(input.Position.X)
+			-- DECK-FEEL-BRIEF 2: the release that drops shows A pressed (90 ms), with a light tick on touch.
+			clientUI.deck:tap("A")
+			if input.UserInputType==Enum.UserInputType.Touch then clientUI.deck.feel:touchTick()end
 			dropEgg()
 		end
 	end
@@ -4560,6 +4630,7 @@ function clientUI.playImpacts(batch,serial)
   contact=Vector2.new(contactSource.Position.X,contactSource.Position.Y)-normal*radius
   rendererPresentation.setFieldOwner(true,serial,reduceEffects())
   rendererPresentation.fx:emit("impact",project(contact),radius*viewport.AbsoluteSize.X/(Config.Width+.8),contactSource.Color,contactSource:GetAttribute("Tier"),1,serial,now,normal)
+  clientUI.feelBoard:land(project(contact),now)
   if not aeroLanded then audio:play(if normal.Y<.78 then "bank"else "land",math.clamp(.82+strongest/100,.9,1.2),math.clamp(strongest/70,.24,.55))end
   lastPlop=now
  end
@@ -4611,6 +4682,7 @@ function clientUI.playMerge(position,tier,chain,first,second,id,cleared,serial)
  clientUI.aero:merge({point=project(position),radius=Config.Tiers[tier].radius*viewport.AbsoluteSize.X/(Config.Width+.8),tier=tier,id=id,cleared=cleared,
   x=position.X,y=position.Y,worldRadius=Config.Tiers[tier].radius,list=clientUI.faceList,now=now,popStyle=rendererPresentation.fx.popStyle})
  clientUI.aero:playCombo({chain=chain,tier=tier,cleared=cleared,now=now})
+ clientUI.feelBoard:merge(clientUI.JellyPalette.byTier[tier].light or clientUI.JellyPalette.byTier[tier].body,chain,now)
  -- G1: the kick is sized for a 420 px board and shrinks with a smaller (phone) one.
  rendererPresentation.jolt.scale=viewport.AbsoluteSize.Y/420
  rendererPresentation.jolt:emit(serial,id,tier,chain,cleared,now)
@@ -4729,6 +4801,7 @@ board:GetAttributeChangedSignal("Mode"):Connect(function()
 	if closeMenu then closeMenu() end
 	if mode == "Room" then
   rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduceEffects())
+  clientUI.freshHide()
 		if hatchQueue[1] then
 			table.remove(hatchQueue, 1)
 		end
@@ -4743,6 +4816,7 @@ board:GetAttributeChangedSignal("Mode"):Connect(function()
 	-- insets and top-bar keep-out (deferred, so an inset switch made for the round has
 	-- landed), and again once the frame after has settled. Nothing is kept from the last open.
 	if mode=="Board"then
+		clientUI.feelBoard:arrive()
 		task.defer(function()if board:GetAttribute("Mode")=="Board"then layout();updateHud()end end)
 		task.delay(.25,function()
 			-- Only if the screen or the keep-out moved after the first pass (a late safe-area inset).
@@ -4757,6 +4831,7 @@ board:GetAttributeChangedSignal("ResetId"):Connect(function()
  if clientUI.mirror then clientUI.mirror:reattach()end
  rendererPresentation.fx:observeDrop(board:GetAttribute("ResetId"),clientUI.attr("Drops")or 0)
  rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduceEffects())
+ clientUI.feelBoard:newRound()
 	recap.feedback:cancel()
 	clearPlayInputs()
 	reveal:cancel()
@@ -4844,7 +4919,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	Art.updateBackdrop(backing,now,gui.Enabled and bleed.Enabled and backdrop.Visible and backing.Visible and not modalShade.Visible and not GuiService.MenuIsOpen,reduced,gui.Enabled and bleed.Enabled and not GuiService.MenuIsOpen)
 	if not backdrop.Visible then
   rendererPresentation.setFieldOwner(false,board:GetAttribute("ResetId"),reduced)
-		rendererPresentation.visible=false;lcdElapsed=lcdStep
+		rendererPresentation.visible=false;lcdElapsed=lcdStep;clientUI.freshHide()
 		return
 	end
 	local pressure = clientUI.attr("OverflowPressure") or 0
@@ -4859,12 +4934,15 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 	end
 	local presented=rendererPresentation.canPresent(board:GetAttribute("ResetId"))
  rendererPresentation.setFieldOwner(presented,board:GetAttribute("ResetId"),reduced)
+ local lean,parallax=clientUI.deck.feel:stepLean(now) -- DECK-FEEL-BRIEF 3 (nil while deckfeel is off)
+ rendererPresentation.jolt:setLean(if lean then lean+parallax else nil)
  if audio.deviceActive==false then rendererPresentation.jolt:reset()else rendererPresentation.jolt:update(now)end
  -- QA 2026-11-13 Q1: the whole deck follows a merge jolt (visual only), and the
  -- board notes (settling, first-drop hint) step with the board.
  do
   local jolt=rendererPresentation.jolt
-  clientUI.deck:setShake(if jolt.active and jolt.active.kind=="merge"then jolt.offset else nil,reduced)
+  local merging=jolt.active and jolt.active.kind=="merge"
+  clientUI.deck:setShake(if merging then jolt.offset else lean,reduced,if merging then nil else parallax)
   local phase=clientUI.attr("FieldPhase")
   local hintState=clientUI.hintState or {};clientUI.hintState=hintState -- reused, no table per frame
   hintState.presented,hintState.settling=presented,phase=="Settling"and not clientUI.roundOver()
@@ -4874,10 +4952,17 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
  end
  -- The danger cues only play on a presented board, never under a menu, modal or hidden deck.
  clientUI.danger:update(pressure, graceLeft, now, reduced, presented, clientUI.roundOver())
- if not presented then rendererPresentation.visible=false;lcdElapsed=lcdStep;return end
+ if not presented then rendererPresentation.visible=false;lcdElapsed=lcdStep;clientUI.freshHide();clientUI.feelBoard:stepWedge(0,false,now);return end
  rendererPresentation.fx:update(now)
  clientUI.aero:step(now,clientUI.faceList)
+ do -- DECK-FEEL-BRIEF 2 and 4: the d-pad wedge follows aim; the well's calm 15 Hz life; the stepper's one pop.
+  local held=0;for _,value in pairs(heldAim)do held+=value end
+  clientUI.feelBoard:stepWedge(held,canAim()and not isPickerOpen()and not clientUI.roundOver(),now)
+  clientUI.feelBoard:step(now,{presented=true,pressure=pressure,drops=clientUI.attr("Drops")})
+  if clientUI.feelBoard:stepperPop(now)then clientUI.deck.feel:popStepper()end
+ end
 	if not rendererPresentation.visible then
+		clientUI.feelBoard:presented(now,clientUI.attr("Drops"))
 		-- Resume at the current authoritative locations, never interpolate an old
 		-- frozen pile through a newly uncovered board.
 		for source,view in pairs(eggViews)do view.gel.position=source.Position;view.gel.age=math.max(view.gel.age or 0,1.5)end
@@ -4923,6 +5008,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 			lcdElapsed %= lcdStep
 			lcd:beginFrame()
 			clientUI.aero:frame(lcd,now)
+			if clientUI.DeckFeel.switch()and not reduced then lcd.guidePhase=clientUI.DeckFeel.aimPhase(now)end
 			for index = #pixelMerges, 1, -1 do
 				if now - pixelMerges[index].start >= JellyLCD.mergeLength(pixelMerges[index].hold) then
 					local born = viewsById[pixelMerges[index].id]
@@ -4937,7 +5023,12 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 			local center = pixelPoint(Config.launchPosition())
 			lcd:drawGuide(aim)
 			local held=clientUI.heldFace;held.tier=tier;held.expr,held.dx=clientUI.ballFaces.preview(0,now,faceMood);held.star=clientUI.attr("NextPowerUp")==true;held.mark=nil
-			lcd:draw(center, radius*clientUI.aero:held(now), radius*clientUI.aero:held(now), 0, color, 0, nil, held)
+			-- DECK-FEEL-BRIEF 1 step 5 and 4 (deckfeel; 0, 1, 1, 0, false while off): the drop in, the breath, the blink.
+			local feelDy,feelSx,feelSy,feelBreath,feelBlink=clientUI.feelBoard:held(now)
+			if feelBlink and held.expr=="idle"then held.expr="blink"end
+			if feelDy~=0 then center=center+Vector2.new(0,feelDy*JellyLCD.Width/math.max(1,viewport.AbsoluteSize.X))end
+			local heldRadius=radius*clientUI.aero:held(now)+feelBreath
+			lcd:draw(center, heldRadius*feelSx, heldRadius*feelSy, 0, color, 0, nil, held)
 		end
 	elseif lcd then
 		lcd.label.Visible = false
@@ -4955,7 +5046,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 					inMerge = true
 				end
 			end
-			if not inMerge then
+			if not inMerge and clientUI.feelBoard:ballShown(now,position.Y,2*Config.Tiers[1].radius) then
 				local radius = source.Size.X / 2 * JellyLCD.Width / (Config.Width + 0.8)
 				local face=view.face;face.expr,face.dx=clientUI.ballFaces:get(view.id,now)
 				face.star=source:GetAttribute("PowerUp")==true;face.mark=source:GetAttribute("ItemMark")
@@ -4981,6 +5072,7 @@ rendererConnection=RunService.RenderStepped:Connect(function(dt)
 		end
 		if lcd:finishFrame() then
 			lcd.label.Visible = true
+			clientUI.DeckFresh.drew(clientUI.fresh,board:GetAttribute("ResetId"))
 		else
 			lcd:destroy()
 			lcd = nil
@@ -6677,6 +6769,8 @@ do
 end
 layout()
 updateHud()
+-- DECK-FEEL-BRIEF 1 (deckfeel): the first open after loading hands the loading screen's sky straight to the shade.
+pcall(require(script.DeckHandoff).install,roomView,player:FindFirstChild("PlayerGui"),board:GetAttribute("Mode"),clientUI.DeckFeel.switch())
 roomView:startPresentation(board:GetAttribute("Mode"))
 -- Launch candidate: warm the Deck style art and the 3D preview folders in the background,
 -- once the garden has loaded (StylePreload waits for it; small batches, low priority).
