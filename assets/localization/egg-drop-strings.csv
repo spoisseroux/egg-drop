@@ -284,6 +284,10 @@ ui.hatch.display.material,Material for your pet,,Hatch eggs screen
 ui.hatch.display.owned,Already owned,,Hatch eggs screen
 ui.hatch.display.refund,Already owned · {count} Stars back,,Hatch eggs screen; e.g. Already owned · 3 Stars back
 ui.hatch.display.wait,A little surprise,,Hatch eggs screen
+ui.hatch.egg.deck.description,Hatches one of today's plates or ball themes for your Pocket Deck. Tap a pick to see it.,,Hatch eggs screen
+ui.hatch.egg.deck.line,New picks every day,,"Hatch eggs screen; also ui.rack.closet.promise, ui.rack.deck.line, ui.rack.line"
+ui.hatch.egg.deck.name,Deck Egg,,Hatch eggs screen; also ui.rack.deck.title
+ui.hatch.egg.deck.per,1 deck pick per egg,,Hatch eggs screen
 ui.hatch.egg.feature.description,Something pointy is growing in here. Hatches one feature item to grow on any pet.,,Hatch eggs screen
 ui.hatch.egg.feature.line,"Horns, claws or wings",,Hatch eggs screen
 ui.hatch.egg.feature.per,1 item per egg,,"Hatch eggs screen; also ui.hatch.egg.look.per, ui.paint.egg.lookPer"
@@ -307,6 +311,10 @@ ui.hatch.egg.stat.per,1 snack per egg,,Hatch eggs screen
 ui.hatch.egg.toy.description,Something is rattling around in here. Hatches one toy your pet can carry and play with.,,Hatch eggs screen
 ui.hatch.egg.toy.line,A toy to carry and chase,,Hatch eggs screen
 ui.hatch.egg.toy.per,1 toy per egg,,Hatch eggs screen
+ui.hatch.egg.toycolour.description,Hatches a new colour for a toy you own. Tap a pick to see it.,,Hatch eggs screen
+ui.hatch.egg.toycolour.line,New colours every day,,Hatch eggs screen; also ui.rack.toy.line
+ui.hatch.egg.toycolour.name,Toy Colour Egg,,Hatch eggs screen; also ui.rack.toy.title
+ui.hatch.egg.toycolour.per,1 colour per egg,,Hatch eggs screen
 ui.hatch.footer.desktop,Give one a shake. The odds are on the label.,,Hatch eggs screen
 ui.hatch.footer.phone,The odds are on the label,,Hatch eggs screen
 ui.hatch.look.allCharms,All egg charms found,,Hatch eggs screen
@@ -431,7 +439,7 @@ ui.hatch.stat.reason.ClockRollback,"One moment, then try again.",,Hatch eggs scr
 ui.hatch.stat.reason.ExpiredDay,A new day just started. Tap again.,,Hatch eggs screen
 ui.hatch.stat.reason.NeedStars,You need more Stars.,,Hatch eggs screen; also ui.paint.reason.NeedStars
 ui.hatch.stat.reason.NoFreeEgg,No free egg to open.,,Hatch eggs screen
-ui.hatch.stat.reason.PetNotOut,Bring your pet out first.,,Hatch eggs screen
+ui.hatch.stat.reason.PetNotOut,Bring your pet out first.,,Hatch eggs screen; also ui.rack.refuse.pet
 ui.hatch.stat.reason.PouchFull,Your pouch is full. Feed a snack first.,,Hatch eggs screen
 ui.hatch.stat.reason.Retrying,Still saving… your egg will show here.,,Hatch eggs screen; also ui.hatch.stat.reason.Timeout
 ui.hatch.stat.reason.SoldOut,Today's nest is empty. Back tomorrow.,,Hatch eggs screen
@@ -993,7 +1001,7 @@ ui.r3.help.style.a.title,Faceplates,,Menu text; also catalog.BookCatalog.Pages.f
 ui.r3.help.style.b.line,"Earned by playing, never bought. Pick the one behind your deck.",,Menu text
 ui.r3.help.style.b.title,Backgrounds,,Menu text
 ui.r3.help.style.c.line,"New looks for the balls. Same sizes, same rules. Only cuter.",,Menu text
-ui.r3.help.style.c.title,Balls,,Menu text; also catalog.BookCatalog.Pages.balls.name
+ui.r3.help.style.c.title,Balls,,"Menu text; also ui.rack.deck.ball, catalog.BookCatalog.Pages.balls.name"
 ui.r3.hub.hatchLine,Eggs and their odds,,Menu text
 ui.r3.hub.questsLine,Quests and the daily stamp,,Menu text
 ui.r3.quests.claimed,Nice one! +{reward} Stars,,Menu text; e.g. Nice one! +5 Stars
@@ -1022,7 +1030,7 @@ ui.r4.customize.finish.kept,Kept: {finish},,Menu text; e.g. Kept: {finish}
 ui.r4.customize.finish.look,Look: {look},,Menu text; e.g. Look: {look}
 ui.r4.customize.finish.mix,{jelly} {sheen},,Menu text; e.g. {jelly} {sheen}
 ui.r4.customize.finish.noJars,No {item} jars,,Menu text; e.g. No Squeaky Bone jars
-ui.r4.customize.finish.original,Original,,Menu text; also ui.r4.customize.finish.sheen.zero
+ui.r4.customize.finish.original,Original,,"Menu text; also ui.r4.customize.finish.sheen.zero, ui.rack.toy.original"
 ui.r4.customize.finish.pill.max,Max,,Menu text
 ui.r4.customize.finish.pill.none,×0,,Menu text
 ui.r4.customize.finish.pill.use,Use,,Menu text
@@ -1075,14 +1083,26 @@ ui.rack.closet.fromEgg,From the Outfit Egg,,Menu text
 ui.rack.closet.go,Hatch one,,Menu text
 ui.rack.closet.hub,"Hats, shirts and more from the Outfit Egg",,Menu text
 ui.rack.closet.more,More colours in the egg,,Menu text
-ui.rack.closet.promise,New picks every day,,Menu text; also ui.rack.line
 ui.rack.closet.reason,This comes from the Outfit Egg,,Menu text
+ui.rack.deck.description,Yours to keep. Change it any time in Deck style.,,Menu text
+ui.rack.deck.fromEgg,From the Deck Egg,,Menu text
+ui.rack.deck.full,Your shelf is full.,,Menu text
+ui.rack.deck.fullButton,Shelf full,,Menu text
+ui.rack.deck.help,Dress up your Pocket Deck. New plates come from the Deck Egg.,,Menu text
+ui.rack.deck.label,Today's picks,,"Menu text; also ui.rack.label, ui.rack.title"
+ui.rack.deck.more,More at the Deck Egg,,Menu text
+ui.rack.deck.plate,Plate,,Menu text
+ui.rack.deck.promise,Plates you own stay yours.,,Menu text
+ui.rack.deck.reason,Plates and balls come from the Deck Egg now.,,Menu text
+ui.rack.deck.rest,You have today's picks! New picks tomorrow.,,Menu text; also ui.rack.rest
+ui.rack.deck.restButton,New picks tomorrow,,Menu text; also ui.rack.restButton
+ui.rack.deck.use,Use it!,,Menu text; also ui.rack.toy.use
+ui.rack.deck.worn,{item} in use!,,Menu text; e.g. Squeaky Bone in use!; also ui.rack.toy.worn
 ui.rack.full,Closet full,,Menu text
 ui.rack.gift.cute,So cute!,,Menu text
 ui.rack.gift.description,It's on! More picks come from the Outfit Egg.,,Menu text
 ui.rack.gift.note,New picks every day!,,Menu text
 ui.rack.gift.per,A gift: 100%,,Menu text
-ui.rack.label,Today's picks,,Menu text; also ui.rack.title
 ui.rack.look.noPity,Every egg has a chance at a charm.,,Menu text
 ui.rack.look.noPityShort,Charms: a chance every egg,,Menu text
 ui.rack.notReady,Not ready,,Menu text
@@ -1095,8 +1115,8 @@ ui.rack.rarity.epic,Epic,,Menu text
 ui.rack.rarity.legendary,Sparkle,,Menu text
 ui.rack.rarity.rare,Rare,,Menu text
 ui.rack.rarity.uncommon,Uncommon,,Menu text
-ui.rack.rest,You have today's picks! New picks tomorrow.,,Menu text
-ui.rack.restButton,New picks tomorrow,,Menu text
+ui.rack.refuse.broken,Your picks need a moment. Try again later.,,Menu text
+ui.rack.refuse.skin,That colour is not yours yet.,,Menu text
 ui.rack.reveal.description,Yours to keep. Wear it any time in Dress up.,,Menu text
 ui.rack.reveal.detail,{rarity} · {percent},,Menu text; e.g. {rarity} · {percent}
 ui.rack.reveal.wear,Wear it!,,Menu text
@@ -1108,6 +1128,15 @@ ui.rack.sticker.legendary,Sparkle!,,Menu text
 ui.rack.sticker.rare,Rare!,,Menu text
 ui.rack.sticker.uncommon,Uncommon!,,Menu text
 ui.rack.teach.odds,Tap to see today's picks!,,Menu text
+ui.rack.toy.description,Yours to keep. Change toy colours any time in Customize.,,Menu text
+ui.rack.toy.label,Today's toy colours,,Menu text
+ui.rack.toy.locked,Get this toy from the Toy Egg,,Menu text
+ui.rack.toy.lockedTag,Get toy,,Menu text
+ui.rack.toy.more,More colours come from the Toy Colour Egg.,,Menu text
+ui.rack.toy.rest,You have today's colours! New colours tomorrow.,,Menu text
+ui.rack.toy.restButton,New colours tomorrow,,Menu text
+ui.rack.wings.name,Angel Wings,,Menu text; also catalog.WearableCatalog.EggBaseById.angelwings.name
+ui.rack.wings.note,Your own wings rest while these are on,,Menu text
 ui.rack.yours,Yours,,Menu text
 ui.report.about,What's it about?,,Bug report sheet
 ui.report.category.menus,Menus,,Bug report sheet
