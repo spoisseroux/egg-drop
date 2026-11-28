@@ -321,15 +321,23 @@ local Table={
   snack="A snack for me?",snackSub="A free Snack Egg",pull="You can hatch one!",pullSub="Turn the crank",
   park="Let's go play!",parkSub="The Pet Park is open",dash="Race time!",dashSub="Try the Garden Dash",
   nest="It's hatching!",nestSub="Come and see",waiting="Gift waiting!",waitingSub="At the egg machine",
-  turn="Turn it!",turnSub="Tap to turn the crank",nudge="For you!",throw="Throw it!",
+  -- Onboarding part 2 (ONBOARDING-P2-BRIEF 1): at the machine the bubble says tap it (the shop opens on the free egg);
+  -- "Turn it!" is gone with the chip. freeEgg is the machine's prompt too while a gift waits.
+  atMachine="Tap the machine!",atMachineSub="Your free egg is inside",nudge="For you!",throw="Throw it!",
   fetch="{pet} learned Fetch!",fetchSub="Throw the ball any time",
   freeEgg="Free egg!",wipe="{pet} is {colour}!",
   card={title="A gift for you!",from="A gift from {pet}!",paint="Paint {pet}!",play="Play!",later="Later",keep="Keep it",
    pot="{name} paint pot",potOdds="Each colour: 1 in 4",toyOdds="Each toy you don't have: 1 in {count}",deeper="Deeper {name}!",
    free="Free",snack="A snack for the racer!"},
   row={name="Gift waiting",line="A free egg at the egg machine",lineSnack="A free Snack Egg at the machine"},
+  -- The Hatch eggs screen in gift mode (ONBOARDING-P2-BRIEF 1, step 4): the tile's sticker, the pane's price, its button
+  -- and its promise line.
+  shop={free="FREE",price="Free",hatch="Hatch free!",from="A gift from {pet}!"},
   busy="Try again in a moment.",room="Make room in the pouch first.",bring="Bring {pet} out first.",
  },
+ -- Onboarding part 2 (ONBOARDING-P2-BRIEF 2, Onboard "teach"): the pointer's labels on the real buttons, a few words
+ -- each. Keyboard and gamepad add their key or glyph after the words (TeachPointer).
+ teach={dress="Dress up!",paint="Tap Paint!",deck="Play!",menu="Open the Menu!",things="All the games!",throw="Throw it!",go="Go!"},
  -- Section 3 (Onboard "allset2"): the celebration card.
  -- gift: the one-time welcome gift's pill under the stamps, its Stars landing one by one up to 5 (shown only once the
  -- server paid it); giftSub replaces `sub` with it. hatch: the button when the Stars cover the cheapest egg (the fun pass).

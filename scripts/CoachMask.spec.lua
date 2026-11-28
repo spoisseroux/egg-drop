@@ -181,9 +181,9 @@ return function(server)
 		-- Onboarding v3: 15 to 26, station tips on their own bits (never hatch/style/companions/park), within 31 bits.
 		local v3={"tipHatch","tipStyle","tipCompanions","tipPark","tipNest","needHi","needToy","needDeck","needNest","needPark","nestIntro","weekDone"}
 		for i,id in ipairs(v3)do assert(Coach.Bits[id]==14+i and Coach.Order[15+i]==id and Coach.validId(id),id)end
-		assert(#Coach.Order==28 and Coach.Bits.nestHelp==27 and Coach.Bits.weekDone<=30 and Coach.bit("weekDone")<=Coach.Max)
+		assert(#Coach.Order==29 and Coach.Bits.nestHelp==27 and Coach.Bits.menuSeen==28 and Coach.Order[29]=="menuSeen"and Coach.Bits.weekDone<=30 and Coach.bit("weekDone")<=Coach.Max)
 		assert(Coach.Bits.hatch==2 and Coach.Bits.style==3 and Coach.Bits.companions==4 and Coach.Bits.park==7,"the station bits are untouched")
-		local all=0;for _,id in ipairs(Coach.Order)do all=Coach.with(all,id)end;assert(all==2^28-1 and Coach.valid({coachMask=all}))
+		local all=0;for _,id in ipairs(Coach.Order)do all=Coach.with(all,id)end;assert(all==2^29-1 and Coach.valid({coachMask=all}))
 		local kept=Coach.merge(Coach.bit("dashSeen"),Coach.bit("fillLine"));assert(Coach.valid({coachMask=kept})and Coach.sanitize(kept)==kept)
 		local h,db=fixture()
 		local quests=Coach.bit("questDone")
@@ -197,6 +197,33 @@ return function(server)
 		-- The card waits for a pet, like every other one-time card, and shows once.
 		assert(Coach.wants("petArrived",{mask=0,seen={},totalWins=0,owned=2}))
 		assert(not Coach.wants("petArrived",{mask=1024,seen={},totalWins=0,owned=2}))
+	end)
+
+	-- Onboarding part 2 (ARCH-REVIEW-P2 1, lesson C): menuSeen is bit 28, gated by Onboard "teach" (off on live), saved
+	-- OR-only like every bit, and kept by a build that does not know it.
+	test("menuSeen is bit 28: gated by teach, saved OR-only, kept by an older build",function()
+		assert(Coach.Bits.menuSeen==28 and Coach.bit("menuSeen")==2^28 and Coach.validId("menuSeen")and Coach.Order[29]=="menuSeen")
+		assert(Coach.Gated.menuSeen=="teach"and Coach.GateOwner.teach=="Onboard","refused while the teach switch is off")
+		local Onboard=require(Shared.Onboard)
+		assert(table.find(Onboard.Features,"teach")==#Onboard.Features and Onboard.attribute("teach")=="Onboard_teach"and Onboard.key("teach")=="onboard_teach",
+			"appended, nothing renumbered")
+		assert(Onboard.Events.TeachShown and Onboard.Events.TeachDone)
+		assert(Onboard.inject({flags={OnboardingV3=true},place=Onboard.PlaceId,studio=true,teach=false}))
+		assert(not Coach.allows("menuSeen"),"teach off: refused")
+		assert(Onboard.inject({flags={OnboardingV3=true},place=Onboard.PlaceId,studio=true}))
+		assert(Coach.allows("menuSeen"),"teach on (beta, Studio): allowed")
+		assert(Onboard.inject({flags={OnboardingV3=false},place=1,studio=false}))
+		assert(not Coach.allows("menuSeen"),"the build ceiling (live): refused")
+		Onboard.inject(nil)
+		-- Bits 29 and 30 are the last two (plan a second mask field before spending them); unknown bits survive a load.
+		local mask=Coach.with(Coach.bit("nestHelp"),"menuSeen")
+		assert(Coach.sanitize(mask)==mask and Coach.has(mask,"menuSeen")and Coach.has(mask,"nestHelp"))
+		local later=Coach.merge(mask,2^30);assert(Coach.sanitize(later)==later and Coach.valid({coachMask=later}))
+		local h=fixture()
+		assert(H.coachMark(h,Coach.bit("menuSeen")))
+		assert(Coach.has(H.public(h).coachMask,"menuSeen"))
+		local ok,reason=H.coachMark(h,Coach.bit("menuSeen"))
+		assert(ok and reason=="AlreadySaved","OR-only: a second mark changes nothing")
 	end)
 
 	return{passed=#cases,cases=cases}

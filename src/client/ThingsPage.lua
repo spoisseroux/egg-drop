@@ -94,6 +94,8 @@ function Page.new(body,options)
 	local ctx=options.things.context()
 	self.fresh=ctx.new==true -- the New chip stays for this visit, though seeing the row clears it
 	self:build(ctx)
+	-- Onboarding part 2 (lesson C, ARCH-REVIEW-P2 1): any opening of the page is seen("page") (coach bit menuSeen).
+	if options.things.seen then pcall(options.things.seen,"page")end
 	self.connection=RunService.Heartbeat:Connect(function(dt)
 		self.elapsed+=dt
 		if self.elapsed<Page.Refresh then return end

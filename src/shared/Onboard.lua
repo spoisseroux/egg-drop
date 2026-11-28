@@ -38,6 +38,11 @@
 --                           save (Paint after the tuck, Toy, Snack after a Dash finish; GiftEggs), the paid-pull, park
 --                           and nest invites (GiftChain). Replaces ONBOARDING-V3-BRIEF section 6 (`invites`). Off is
 --                           beta (38): no `public.gifts`, no lead, no chip; a save owed it keeps its field.
+-- Onboarding part 2 (artifacts/qa-2026-11-27-beta40/ONBOARDING-P2-BRIEF.md section 2, Spencer's beta 40 note 8):
+--   Onboard.on("teach")     five small lessons on the real buttons (TeachLessons, TeachPointer): Dress up in three lit
+--                           taps after the Paint gift, the Pocket Deck, the Menu (coach bit menuSeen), the Pet Park's
+--                           Throw and the Garden Dash's Go. Each is done only by its saved fact. Off is beta (40) with
+--                           the free eggs through the shop (`gifts`) and the camera fix.
 -- ConfigService keys `onboard_follow`, `onboard_needs`, `onboard_nest` (server OnboardConfig): off until the config has
 -- loaded once, then missing or malformed = on. The server publishes `Onboard_<feature>` as its own value AND Things.on()
 -- and republishes when Things changes, so the attribute alone is the truth for clients; on() checks Things too, so a
@@ -49,17 +54,18 @@ local Flags=require(script.Parent.FeatureFlags)
 local Things=require(script.Parent.Things)
 local Onboard={}
 Onboard.PlaceId=107705084891479 -- Pocket Pals Beta
-Onboard.Features=table.freeze({"follow","needs","nest","corner","landmark","capsule","opener","crack","nestfirst","egg3d","stork","safecard","guide","deck2","trail2","lead","allset2","gifts"})
+Onboard.Features=table.freeze({"follow","needs","nest","corner","landmark","capsule","opener","crack","nestfirst","egg3d","stork","safecard","guide","deck2","trail2","lead","allset2","gifts","teach"})
 Onboard.Attributes=table.freeze({follow="Onboard_follow",needs="Onboard_needs",nest="Onboard_nest",corner="Onboard_corner",landmark="Onboard_landmark",capsule="Onboard_capsule",opener="Onboard_opener",crack="Onboard_crack",nestfirst="Onboard_nestfirst",
-	egg3d="Onboard_egg3d",stork="Onboard_stork",safecard="Onboard_safecard",guide="Onboard_guide",deck2="Onboard_deck2",trail2="Onboard_trail2",lead="Onboard_lead",allset2="Onboard_allset2",gifts="Onboard_gifts"})
+	egg3d="Onboard_egg3d",stork="Onboard_stork",safecard="Onboard_safecard",guide="Onboard_guide",deck2="Onboard_deck2",trail2="Onboard_trail2",lead="Onboard_lead",allset2="Onboard_allset2",gifts="Onboard_gifts",teach="Onboard_teach"})
 Onboard.Keys=table.freeze({follow="onboard_follow",needs="onboard_needs",nest="onboard_nest",corner="onboard_corner",landmark="onboard_landmark",capsule="onboard_capsule",opener="onboard_opener",crack="onboard_crack",nestfirst="onboard_nestfirst",
-	egg3d="onboard_egg3d",stork="onboard_stork",safecard="onboard_safecard",guide="onboard_guide",deck2="onboard_deck2",trail2="onboard_trail2",lead="onboard_lead",allset2="onboard_allset2",gifts="onboard_gifts"})
+	egg3d="onboard_egg3d",stork="onboard_stork",safecard="onboard_safecard",guide="onboard_guide",deck2="onboard_deck2",trail2="onboard_trail2",lead="onboard_lead",allset2="onboard_allset2",gifts="onboard_gifts",teach="onboard_teach"})
 -- Onboarding v2's one-time events the client reports (the server records each name once, FirstSession:record, and only
 -- for a save that owns a pet). EggTapped, BearMet, FirstPet and NestTucked are already recorded where they happen.
 -- Onboarding v3 brief (switch `lead`): LeadStarted, LeadParked, NestReached.
 -- The gift chain (switch `gifts`): GiftShown, GiftParked, GiftCranked, GiftDone, PeekShown (the first of each).
+-- Onboarding part 2 (switch `teach`): TeachShown, TeachDone (the first of each).
 Onboard.Events=table.freeze({StorkShown=true,EggSetDown=true,AllSet=true,OnboardSkipped_Stork=true,LeadStarted=true,LeadParked=true,NestReached=true,
-	GiftShown=true,GiftParked=true,GiftCranked=true,GiftDone=true,PeekShown=true})
+	GiftShown=true,GiftParked=true,GiftCranked=true,GiftDone=true,PeekShown=true,TeachShown=true,TeachDone=true})
 function Onboard.attribute(feature)return Onboard.Attributes[feature]end
 function Onboard.key(feature)return Onboard.Keys[feature]end
 
@@ -90,7 +96,7 @@ function Onboard.resolve(configValue,override,ceiling)
 end
 -- Server only (OnboardConfig): the resolved values every server check reads. Off until they are set.
 local switches={follow=false,needs=false,nest=false,corner=false,landmark=false,capsule=false,opener=false,crack=false,nestfirst=false,
-	egg3d=false,stork=false,safecard=false,guide=false,deck2=false,trail2=false,lead=false,allset2=false,gifts=false}
+	egg3d=false,stork=false,safecard=false,guide=false,deck2=false,trail2=false,lead=false,allset2=false,gifts=false,teach=false}
 function Onboard.setSwitch(feature,value)
 	if not RunService:IsServer()or switches[feature]==nil then return false end
 	switches[feature]=value==true

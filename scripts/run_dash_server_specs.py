@@ -86,7 +86,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # Snack's gift buy, the guard, a malformed field, the request order) and the live and base builds loading them.
          "GiftEggs", "GiftEggCrossVersion",
          # GIFT-ART-BRIEF (beta 40): the chip, ribbon, card, paint wipe and nest Peek's pure rules.
-         "GiftArt"]
+         "GiftArt",
+         # Onboarding part 2 (qa-2026-11-27-beta40, ARCH-REVIEW-P2 1): the coach mask with lesson C's menuSeen bit.
+         "CoachMask"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
@@ -153,7 +155,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # Onboarding v3 brief section 3: the all-set card's welcome gift (its clock, roll-up, cues and words).
           "AllSetGift",
           # The onboarding fun pass section 2 (Onboard "gifts"): the gift chain's client controller.
-          "GiftChain"]
+          "GiftChain",
+          # Onboarding part 2 (qa-2026-11-27-beta40): the shop's gift mode and latch, the five lessons and the pointer.
+          "GiftShop", "TeachLessons"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -234,7 +238,9 @@ def client_modules():
                     # Onboarding v3 brief: the lead's client half, its trail adapter and the all-set card.
                     "NestLead.lua", "LeadTrail.lua", "AllSetCard.lua",
                     # The gift chain: its controller; GIFT-ART-BRIEF: the wrapped egg's drawing and the machine's ribbon.
-                    "GiftChain.lua", "GiftEggArt.lua", "GiftRibbon.lua"):
+                    "GiftChain.lua", "GiftEggArt.lua", "GiftRibbon.lua",
+                    # Onboarding part 2: the shop's gift mode, the lessons and their pointer.
+                    "GiftShop.lua", "TeachLessons.lua", "TeachPointer.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

@@ -62,6 +62,59 @@ local SaveNotice=require(script.Parent.SaveNotice)
 local View = {}
 View.shellOf=shellOf
 View.__index = View
+-- ── Gift mode (ONBOARDING-P2-BRIEF section 1, ARCH-REVIEW-P2 2; Onboard "gifts") ─────────────────────────────
+-- The gift chain's free egg comes out of this screen: the gift's tile is selected and lit (a pink ring, a FREE sticker
+-- in place of its price), the other tiles sit dimmed but still select and buy, and the pane's button reads "Hatch free!".
+-- That press is the gift branch, first in actPrimary: it never sends a buy and never opens a buy page (onOpen*). It
+-- calls onGift(kind, done) (the chain's shopCrank, the same ask the chip sent) and stays latched until done.
+-- view.giftSource() -> the kind the chain offers now (GiftChain:shopGift) is asked on every update; the snapshot must
+-- still say it is ready and not given.
+-- The rules are GiftShop's (pure, spec-checked); this draws them.
+local GiftShop=require(script.Parent.GiftShop)
+View.GiftTile=GiftShop.Tile
+View.GiftPink=Color3.fromHex("#FF6FA8")
+View.GiftDim=.4   -- the other tiles at 60%: a veil of the panel over them (never blocking a tap)
+function View.giftMode(kind,state)return GiftShop.mode(kind,state,liveOrder)end
+-- Is the selected tile the gift's?
+function View:giftSelected()
+ return GiftShop.route({gift=self.gift,lastHatch=self.state.lastHatch,selected=self.selected})=="gift"
+end
+-- Every update: gift mode from the chain's offer and the snapshot. While latched (the ask is out) the mode holds on the
+-- snapshot alone (the chain is cranking then); the switch going off (no `gifts`) drops the mode and the latch.
+function View:refreshGift()
+ local latch=self.giftLatch
+ if latch and not GiftShop.held({at=self.giftLatchAt},self.state,os.clock())then self.giftLatch=nil;latch=nil end
+ local asked=latch
+ if not asked and self.giftSource then local ok,kind=pcall(self.giftSource);if ok then asked=kind end end
+ local mode=View.giftMode(asked,self.state)
+ local was=self.gift
+ self.gift=mode
+ -- First seen on this open: the gift's tile is selected (and scrolled into view by the selection's own path).
+ if mode and self.giftOpenSerial~=self.openSerial and not self.state.lastHatch then
+  self.giftOpenSerial=self.openSerial
+  local tile=View.GiftTile[mode]
+  if self.selected~=tile and not self.pending then self.selected=tile;self.refocusRecipeId=tile end
+ end
+ return was~=mode
+end
+-- The gift press: latched until the chain's done (never a second ask, never a paid buy while it is out).
+function View:hatchGift()
+ local kind=self.gift
+ if not kind or self.giftLatch or not self.onGift then return false end
+ self.giftLatch=kind;self.giftLatchAt=os.clock()
+ local finished=false
+ local function done()
+  if finished then return end
+  finished=true
+  if self.giftLatch==kind then self.giftLatch=nil end
+  if not self.destroyed and self.shade.Visible then self:update(self.state)end
+ end
+ self:refreshFooter()
+ local ok,sent=pcall(self.onGift,kind,done)
+ if not ok or sent~=true then done();return false end
+ if self.onAccepted then self.onAccepted("confirm")end
+ return true
+end
 
 local function frame(parent, name, color, position, size, z)
 	return Art.frame(parent, name, color, position, size, z or 23)
@@ -216,7 +269,12 @@ end
 
 -- The one primary action: Hatch (or open a saved receipt) from the list, Play again on a result.
 function View:actPrimary()
-		if not self.shade.Visible or self.pending or not self.action.Interactable then return end
+		if not self.shade.Visible or self.pending then return end
+		-- Gift mode (ARCH-REVIEW-P2 2): first, latched, and never a send or an onOpen* (a paid buy).
+		local route=GiftShop.route({latch=self.giftLatch,gift=self.gift,lastHatch=self.state.lastHatch,selected=self.selected})
+		if route=="latched"then return end
+		if route=="gift"then self:hatchGift();return end
+		if not self.action.Interactable then return end
 		local current = self.state
 		if self.selected=="stat"and not current.lastHatch then
 			local a=StatOdds.action(current,self.statPet and self.statPet())
@@ -639,6 +697,7 @@ function View:refreshFooter()
 		self.meetButton.Text = if self.pending then "Saving…" elseif self.shade.AbsoluteSize.Y<200 or self.card.Size.X.Offset<400 then "Meet" else "Meet " .. (if pet then pet.name else "friend")
 	else
 		local planned = View.hatchAction(self.selected, state, self.statPet and self.statPet())
+		if self:giftSelected() then planned = {text=UICopy.get("onbGift.shop.hatch"), enabled=self.giftLatch==nil} end
 		textValue, canAct = planned.text, planned.enabled
 		shortTap = type(planned.need)=="string" and planned.need~=""
 	end
@@ -812,6 +871,21 @@ end
 -- while it is not sold) has no button of its own, so it still opens from any egg.
 local ownField={hue="pendingHueResult",look="pendingHueResult",toy="pendingToyResult",feature="pendingFeatureResult",material="pendingMaterialResult"}
 local fieldKind={pendingHueResult="look",pendingToyResult="toy",pendingFeatureResult="feature",pendingMaterialResult="material"}
+-- Pure: the gift's own odds (GiftEggs.odds): each colour 1 in 4 for the Paint gift, each toy left for the Toy gift; the
+-- Snack gift is the Stat Egg's own pool (its normal rows).
+function View.giftOdds(kind,state)
+ if kind=="snack"then return View.oddsRows("stat",state,nil)end
+ local Gifts=require(ReplicatedStorage.Shared.GiftEggs)
+ local rows={}
+ for _,r in ipairs(Gifts.odds(kind,state))do
+  local name=r.id
+  if kind=="paint"then local hue=HueCatalog.ById[r.id];name=hue and hue.name or r.id
+  else local toy=ToyCatalog.ById[r.id];name=toy and toy.name or r.id end
+  table.insert(rows,{id=r.id,name=name,value=OddsText.precise(r.percent)})
+ end
+ local per=UICopy.get(if kind=="paint"then "onbGift.card.potOdds"else "onbGift.card.toyOdds",{count=#rows})
+ return {rows=rows,per=per,restricted=false,empty=if #rows==0 then UICopy.get("onbGift.card.free")else nil}
+end
 function View.ownPending(id,state)
  if not state then return nil end
  local field=ownField[id]
@@ -1147,6 +1221,7 @@ function View:renderBody()
   Kit.paint(stroke,"Color",function()return Kit.color("ink")end) -- Toy Shell: the outline is always ink
   n.Interactable,n.Selectable=not self.pending,not self.pending;n:SetAttribute("Selected",selected)
   n:SetAttribute("AccessibleLabel",recipe.name..", "..line.Text..", "..recipe.cost.." Stars")
+  self:paintGiftTile(n,id,w,h)
   y+=h+rowGap
  end
  y+=if phone then 0 else 8
@@ -1157,6 +1232,7 @@ function View:renderBody()
  -- list ends with the eggs, the note and Get Stars; nothing here reads daily state.
  if self.store then
   self.getStars.Parent=left;Art.type(self.getStars,"Action",phone)
+  self.getStars.TextTransparency=if self.gift then 1-View.GiftDim*1.5 else 0
   local sh=math.max(44,Art.actionHeight(self.getStars,w));self.getStars.Position,self.getStars.Size=UDim2.fromOffset(3,y),UDim2.fromOffset(w,sh);y+=sh+tail
  end
  -- QA v2 R1.9: the list always scrolls (wheel, drag, pad focus) once it outgrows its
@@ -1170,6 +1246,42 @@ function View:renderBody()
  self.shelfEffects:setEggs({self.eggArt})
  self:restoreBodyFocus(previous,action,owner)
  if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(left)then self:queueSelectedRecipe()end
+end
+-- Gift mode on one tile: the gift's tile wears a 3 px pink ring and a FREE sticker (with a small bow) in place of its
+-- "★ 12"; every other tile sits under a 60% veil that never takes a tap. Off: nothing extra, the price as before.
+function View:paintGiftTile(n,id,w,h)
+ local giftTile=self.gift and View.GiftTile[self.gift]or nil
+ local mine=giftTile==id
+ local cost=n:FindFirstChild("Cost")
+ local ring=n:FindFirstChild("GiftRing")
+ local sticker=n:FindFirstChild("GiftFree")
+ local veil=n:FindFirstChild("GiftVeil")
+ n:SetAttribute("Gift",mine or nil)
+ if cost then cost.Visible=not mine end
+ if mine then
+  if not ring then
+   ring=Kit.frame(n,"GiftRing",nil,UDim2.new(),UDim2.fromScale(1,1),999);ring.BackgroundTransparency=1;ring.Active=false;ring.ZIndex=n.ZIndex+6
+   Kit.node("UICorner",ring,{CornerRadius=UDim.new(0,12)})
+   Kit.node("UIStroke",ring,{Color=View.GiftPink,Thickness=3,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+  end
+  if not sticker then
+   local chip=Kit.chip(n,UICopy.get("onbGift.shop.free"),"sticker",24)
+   chip.root.Name="GiftFree";chip.set(UICopy.get("onbGift.shop.free"),"sticker",View.GiftPink)
+   chip.root.AnchorPoint=Vector2.new(1,.5)
+   sticker=chip.root
+   pcall(function()require(script.Parent.GiftEggArt).bow(sticker,20,UDim2.new(1,-4,0,-8),sticker.ZIndex+4)end)
+  end
+  sticker.Position=UDim2.new(0,w-14,0,h/2);sticker.Size=UDim2.fromOffset(60,24)
+ else
+  if ring then ring:Destroy()end
+  if sticker then sticker:Destroy()end
+ end
+ local dim=giftTile~=nil and not mine
+ if dim and not veil then
+  veil=Kit.frame(n,"GiftVeil",nil,UDim2.new(),UDim2.fromScale(1,1),999);veil.Active=false;veil.ZIndex=n.ZIndex+8
+  Kit.node("UICorner",veil,{CornerRadius=UDim.new(0,12)})
+  veil.BackgroundTransparency=1-View.GiftDim;Kit.paint(veil,"BackgroundColor3","panel")
+ elseif not dim and veil then veil:Destroy()end
 end
 -- Paint, Shine, Dress: a small section heading in the egg list.
 function View:paintHeading(left,name,text,y,w,phone)
@@ -1263,18 +1375,25 @@ function View:paintEggPane()
  local promise=self.shopRoot and self.shopRoot:FindFirstChild("Promise",true)
  local statPet=self.statPet and self.statPet()
  if promise then promise.Text=if id=="stat"then(StatOdds.rows(self.state,statPet).note or UICopy.get("hatch.promise"))elseif id=="look"then View.lookOdds(self.state).note elseif id=="material"and(self.state.materialPoolVersion or MaterialCatalog.PoolVersion)==4 then require(script.Parent.MaterialDisclosure).promise(self.state)else UICopy.get("hatch.promise")end
- self.eggPrice.set("★ "..recipe.cost,"sticker") -- T6: the pane's one sticker
+ self.eggPrice.set("★ "..recipe.cost,"sticker",Kit.Color.stars) -- T6: the pane's one sticker
+ local gift=self:giftSelected()
+ if gift then
+  self.eggPrice.set(UICopy.get("onbGift.shop.price"),"sticker",View.GiftPink)
+  if promise then promise.Text=UICopy.get("onbGift.shop.from",{pet=self.giftPet and self.giftPet()or ""})end
+ end
  self.eggDescription.Text=copy.description or ""
  if id=="look"then local shapes=View.lookOdds(self.state).shapes;if shapes then self.eggDescription.Text..=" "..shapes end end
  if id=="stat"then self.eggDescription.Text..=" "..StatOdds.stockLine(self.state)end
- local odds=View.oddsRows(id,self.state,statPet)
+ local odds=if gift then View.giftOdds(self.gift,self.state)else View.oddsRows(id,self.state,statPet)
  self.oddsPer.Text=string.upper(odds.per)
  self.oddsLabel.Text=string.upper(if odds.restricted then UICopy.get("hatch.next.label")else "Odds")
  for _,child in ipairs(self.oddsHolder:GetChildren())do child:Destroy()end
  local a=View.hatchAction(id,self.state,statPet)
+ if gift then a={text=UICopy.get("onbGift.shop.hatch"),enabled=self.giftLatch==nil,need=nil}end
  local need=if self.statusText then self.statusText else a.need
+ if gift and not self.statusText then need=UICopy.get("onbGift.shop.from",{pet=self.giftPet and self.giftPet()or ""})end
  self.needLine.Text=need or "";self.needLine.Visible=need~=nil
- Kit.paint(self.needLine,"TextColor3",if a.need and not self.statusText then "dangerText"else "soft")
+ Kit.paint(self.needLine,"TextColor3",if a.need and not self.statusText and not gift then "dangerText"else "soft")
  local limit=self.buttonY-(if need then 22 else 6)
  local rows=odds.rows
  if odds.empty then rows={{id="empty",name=odds.empty,value=""}}end
@@ -1297,8 +1416,16 @@ function View:paintEggPane()
  end
  self.oddsHolder.Size=UDim2.fromOffset(self.oddsW,perCol*pitch)
  self.needLine.Position=UDim2.fromOffset(self.oddsX,self.buttonY-20)
- local text=if self.pending then "Saving…"else a.text
+ local text=if self.pending or self.giftLatch then "Saving…"else a.text
  Kit.setText(self.hatchButton,text)
+ -- the gift's button: gift pink, ringed (the ring is the pane's own, under the pointer)
+ local giftRing=self.hatchButton:FindFirstChild("GiftButtonRing")
+ if gift and not giftRing then
+  giftRing=Kit.frame(self.hatchButton,"GiftButtonRing",nil,UDim2.fromOffset(-4,-4),UDim2.new(1,8,1,8),999);giftRing.BackgroundTransparency=1;giftRing.Active=false
+  giftRing.ZIndex=self.hatchButton.ZIndex+6;Kit.node("UICorner",giftRing,{CornerRadius=UDim.new(0,14)})
+  Kit.node("UIStroke",giftRing,{Color=View.GiftPink,Thickness=3,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
+ elseif not gift and giftRing then giftRing:Destroy()end
+ self.hatchButton:SetAttribute("Gift",gift or nil)
  Kit.setEnabled(self.hatchButton,self.action.Interactable and not self.actionShort)
  Kit.setTappable(self.hatchButton,self.actionShort==true)
  Kit.setGlyphVisible(self.hatchButton,not phone or not Kit.lastInputTouch())
@@ -1306,6 +1433,7 @@ function View:paintEggPane()
  if self.shopHeader.wallet then self.shopHeader.wallet.set(self.state.nectar or 0)end
  if self.stampChip then self.stampChip:set(self.state)end
  self.shopPanel:SetAttribute("SelectedEgg",id);self.shopPanel:SetAttribute("OddsRows",#odds.rows);self.shopPanel:SetAttribute("OddsRestricted",odds.restricted==true)
+ self.shopPanel:SetAttribute("GiftMode",self.gift)
 end
 function View:sync3D()
  local egg=self.egg3D;if not egg then return end
@@ -1412,6 +1540,7 @@ function View:update(state)
 		return
 	end
 	self.pending = self.ackIntent ~= nil or self.state.status == "Busy"
+	self:refreshGift()
 	self.note.Text = self.errorMessage or self.state.message or "Earn Stars. Choose an egg for your pet."
 	self:layout()
 	if self.shade.Visible then
@@ -1548,6 +1677,7 @@ function View:open(state)
 	end
 	self.errorMessage = nil
 	local fresh = not self.shade.Visible
+	if fresh then self.openSerial = (self.openSerial or 0) + 1 end
 	self.shade.Visible = true
 	-- Beta 14 D1: the napping egg row's clock, once a second while the screen is up (text only, no relayout).
 	if fresh and self.nest then

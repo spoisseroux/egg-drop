@@ -987,5 +987,42 @@ return function(client)
 		assert(r.machine.gap==nil);r.advance(Machine.ReturnSeconds+.05)
 		assert(r.camera.CameraType=="Custom"and not r.machine:cameraHeld(),"given back")
 	end)
+	-- Beta (40) note 4 (ARCH-REVIEW-P2 3): "it just got stuck on the looking at the egg machine". Any shot whose owner is
+	-- not open gives the camera back; a gift card owner holds it while open and its close returns it.
+	test("camera: an owner-less shot returns the camera; the gift card owns its shot while open; a hatch screen up holds it",function()
+		assert(Machine.ownerOpen(nil)==false and Machine.ownerOpen({isOpen=function()return true end})==true)
+		assert(Machine.ownerOpen({})==true and Machine.ownerOpen({},true)==false,"the cinematic owns its return; a deferred owner that cannot say is not open")
+		assert(Machine.watchReturns({})and not Machine.watchReturns({open=true})and not Machine.watchReturns({seenOpen=true}))
+		assert(not Machine.watchReturns({screen=true})and not Machine.watchReturns({gap=true}))
+		-- owner-less (the gift card before this fix): back StatWatch s after the start, never left Scriptable
+		local r=capsuleRig()
+		r.at=r.now
+		assert(r.machine:bought("giftPaintBuy","g-1"))
+		assert(r.machine:deliver("Hue",function()end,nil))
+		assert(r.camera.CameraType~="Custom","the shot has the camera")
+		r.advance(Machine.Shots.first.start+Machine.StatWatch-.1)
+		assert(r.camera.CameraType~="Custom","not before the watch")
+		r.advance(.2+Machine.ReturnSeconds+.05)
+		assert(r.camera.CameraType=="Custom"and r.machine.shot==nil,"an owner-less shot returns the camera")
+		-- the gift card as owner: held while it is up, past the watch; its close (revealClosed "gift") gives it back
+		local g=capsuleRig()
+		local up=false
+		assert(g.machine:bought("giftPaintBuy","g-2"))
+		assert(g.machine:deliver("Hue",function()up=true end,{isOpen=function()return up end}))
+		g.advance(Machine.Shots.first.start+.1)
+		assert(up,"the card opened once the egg was in the cup")
+		g.advance(Machine.StatWatch+2)
+		assert(g.camera.CameraType~="Custom","held while the card is up")
+		up=false;g.advance(1)
+		assert(g.camera.CameraType~="Custom","seen open: the card's own close returns it")
+		g.machine:revealClosed("gift");g.advance(Machine.ReturnSeconds+.05)
+		assert(g.camera.CameraType=="Custom"and g.machine.shot==nil,"given back on the card's close")
+		-- a card that never opens: the watch returns it
+		local n=capsuleRig()
+		assert(n.machine:bought("giftPaintBuy","g-3"))
+		assert(n.machine:deliver("Hue",nil,{isOpen=function()return false end}))
+		n.advance(Machine.Shots.first.start+Machine.StatWatch+Machine.ReturnSeconds+.2)
+		assert(n.camera.CameraType=="Custom","a card that never opened never keeps the camera")
+	end)
 	return{passed=#cases,cases=cases}
 end
