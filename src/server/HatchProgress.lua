@@ -41,6 +41,10 @@ local FirstHello=require(ReplicatedStorage.Shared.FirstHello)
 local WelcomeGift=require(ReplicatedStorage.Shared.WelcomeGift)
 -- The gift chain (ONBOARDING-FUN-PASS section 2, Onboard "gifts"): the optional `gifts` field and its free eggs.
 local GiftEggs=require(ReplicatedStorage.Shared.GiftEggs)
+-- The daily rack (ROTATION-BRIEF, ARCH-REVIEW-ROTATION): the Outfit Egg (optional `rack` field), the Outfit gift and the
+-- Paint Egg's daily splash / no-pity switches. Off (DailyRack.on false): nothing read, written or published.
+local DailyRack=require(ReplicatedStorage.Shared.DailyRack)
+local RackState=require(script.Parent.RackState)
 local BoardConfig=require(ReplicatedStorage.Shared.BoardConfig)
 local HeatPayout=require(ReplicatedStorage.Shared.HeatPayout)
 local StampCard=require(ReplicatedStorage.Shared.StampCard)
@@ -591,6 +595,12 @@ function Hatching.public(handle)
 	for key,value in pairs(PaintPots.public(state))do public[key]=value end
 	-- The gift chain (Onboard "gifts"): only while the switch is on (off: no key, the snapshot as before).
 	if Onboard.on("gifts") then public.gifts = Hatching.giftsPublic(handle, { nest = Onboard.on("nest") }) end
+	-- The daily rack (DailyRack "rack"): today's Outfit Egg per owned pet (off: no key, the snapshot as before).
+	if DailyRack.on("rack") then public.rack = Hatching.rackPublic(handle) end
+	-- The Paint Egg's daily splash and no pity (their switches; off: no keys). The client shows LookEggCatalog.odds with
+	-- `lookDay` and sends it back beside the lookBuy quote; `lookNoPity` hides the "charm in N" line.
+	if DailyRack.on("lookdaily") then public.lookDay = DailyRack.today(handle.adapter.now()) end
+	if DailyRack.on("looknopity") then public.lookNoPity = true end
 	-- The welcome gift's state (Onboard "allset2"), so the client can ask again while the save is still owed.
 	if Onboard.on("allset2") then public.welcomeGift = WelcomeGift.sanitize(state.welcomeGift) end
 	return public
@@ -804,8 +814,18 @@ function Hatching.hueCommand(handle,action,value,revision)
 				-- Customization Egg: a stale pool version is closed; the switch, policy, price and
 				-- bound pool are checked against this handle (NotReady, PolicyChanged, PoolChanged).
 				if quote.poolVersion~=LookEgg.PoolVersion then return false,"LegacyPurchaseClosed"end
+				-- The daily splash (DailyRack "lookdaily", ARCH-REVIEW-ROTATION 7): the day the client showed rides beside the
+				-- quote (`lookDay`) and must be today, else PoolChanged with no charge; the roll uses that day's table. No pity
+				-- ("looknopity"): never a guaranteed charm (misses still count, capped at MissesLimit). PoolVersion stays 1.
+				local options={}
+				if DailyRack.on("lookdaily")then
+					local day=DailyRack.dayArg(type(value)=="table"and value.lookDay or nil)
+					if day==nil or day~=DailyRack.today(handle.adapter.now())then return false,"PoolChanged"end
+					options.day=day
+				end
+				options.noPity=DailyRack.on("looknopity")
 				local allowed,why=HueState.purchaseEligibility(handle.state,quote,lookContext(handle));if not allowed then return false,why end
-				candidate.itemId=if quote.selectionMode=="fixed"then quote.fixedItemId else LookEgg.roll(handle.adapter.random(),quote.missingCharms,quote.charmMisses)
+				candidate.itemId=if quote.selectionMode=="fixed"then quote.fixedItemId else LookEgg.roll(handle.adapter.random(),quote.missingCharms,quote.charmMisses,options)
 			else
 				local allowed,why=HueState.purchaseEligibility(handle.state);if not allowed then return false,why end
 				candidate.itemId=if isRestricted(handle)then HueCatalog.fixedNext(handle.state.hueInventory)else HueCatalog.roll(handle.adapter.random())
@@ -1188,20 +1208,32 @@ function Hatching.giftEgg(handle, kind, ctx)
 	local candidate
 	if resuming then candidate = handle.pending.candidate
 	else
+		-- The Outfit gift (DailyRack "rack"): only while the rack is on; the order (Outfit first) is frozen with it.
+		local rack = DailyRack.on("rack")
+		if kind == "outfit" and not rack then return false, "NotReady" end
 		local fixed = isRestricted(handle)
 		candidate = table.freeze({ kind = kind, op = handle.adapter.guid(), day = dayOf(handle.adapter.now()), nest = ctx.nest ~= false,
-			mask = Coach.mask(ctx.mask), fixed = fixed, unit = if fixed then nil else handle.adapter.random() })
+			mask = Coach.mask(ctx.mask), fixed = fixed, unit = if fixed then nil else handle.adapter.random(),
+			rack = rack, pet = if rack then (ctx.petId or statPet(handle) or "pip") else nil })
 	end
 	local found -- the record the authoritative snapshot already holds (a stale copy here, another server's grant)
 	local ok, reason = transact(handle, signature, handle.state.revision, function(state, c)
 		if Guard.other(state, nil) then return false, "RevealPending" end
-		local due, why = GiftEggs.due(state, c.kind, dayOf(handle.adapter.now()), { nest = c.nest, mask = c.mask })
+		local due, why = GiftEggs.due(state, c.kind, dayOf(handle.adapter.now()), { nest = c.nest, mask = c.mask, rack = c.rack, petId = c.pet })
 		if not due then
 			if why == "AlreadyGranted" then found = GiftEggs.record(state, c.kind) end
 			return false, why
 		end
 		local item = GiftEggs.draw(state, c)
-		if not item then return false, "InvalidRoll" end
+		if not item then return false, if c.kind == "outfit" then "AllOwned" else "InvalidRoll" end
+		if c.kind == "outfit" then
+			-- The hat goes on the pet that is out, worn in the same write; ownership and the 128 cap are checked again.
+			local granted, refusal = Wearables.grant(state, c.pet, item, true)
+			if not granted then return false, refusal end
+			GiftEggs.with(state, c.kind, { op = c.op, item = item, day = c.day, rev = state.revision + 1, seq = state.operationSeq + 1,
+				pet = c.pet, rounds = GiftEggs.facts(state).rounds })
+			return true
+		end
 		if c.kind == "paint" then
 			if type(state.hueInventory) ~= "table" then return false, "InvalidData" end
 			local before = state.hueInventory[item] or 0
@@ -1214,7 +1246,9 @@ function Hatching.giftEgg(handle, kind, ctx)
 			if type(state.toyUnlocks) ~= "table" then return false, "InvalidData" end
 			local unlocks = table.clone(state.toyUnlocks); unlocks[item] = true; state.toyUnlocks = unlocks
 		end
-		GiftEggs.with(state, c.kind, { op = c.op, item = item, day = c.day, rev = state.revision + 1, seq = state.operationSeq + 1 })
+		-- With the rack on, the Paint and Toy records keep the rounds they were given at (the next gift counts from them).
+		GiftEggs.with(state, c.kind, { op = c.op, item = item, day = c.day, rev = state.revision + 1, seq = state.operationSeq + 1,
+			rounds = if c.rack then GiftEggs.facts(state).rounds else nil })
 		return true
 	end, candidate, candidate.op, nil, "gift:" .. kind .. ":" .. candidate.op)
 	if ok then return true, reason, GiftEggs.publicRecord(kind, GiftEggs.record(handle.state, kind)) end
@@ -1257,8 +1291,10 @@ function Hatching.giftReady(handle, ctx)
 	local state = handle.state
 	if type(state) ~= "table" then return nil end
 	local today = dayOf(handle.adapter.now())
-	for _, kind in ipairs(GiftEggs.Kinds) do
-		local due = GiftEggs.due(state, kind, today, { nest = ctx.nest, mask = ctx.mask })
+	local rack = DailyRack.on("rack")
+	local outPet = ctx.petId or statPet(handle) or "pip"
+	for _, kind in ipairs(GiftEggs.kinds(rack)) do
+		local due = GiftEggs.due(state, kind, today, { nest = ctx.nest, mask = ctx.mask, rack = rack, petId = outPet })
 		if due and kind == "snack" then
 			local petId = ctx.petId or statPet(handle) or "pip"
 			due = StatEggCatalog.Enabled == true and #StatEggs.pouch(state) < StatEggCatalog.PouchSize
@@ -1274,11 +1310,70 @@ function Hatching.giftsPublic(handle, ctx)
 	local state = handle.state
 	local view = GiftEggs.read(state)
 	local granted = {}
-	for _, kind in ipairs(GiftEggs.Kinds) do granted[kind] = GiftEggs.granted(state, kind) end
-	local unseenKind, unseen = GiftEggs.unseen(state)
-	return { owed = view.owed, granted = granted, fetch = view.fetch, ready = if view.owed then Hatching.giftReady(handle, ctx) else nil,
+	local rack = DailyRack.on("rack")
+	for _, kind in ipairs(GiftEggs.kinds(rack)) do granted[kind] = GiftEggs.granted(state, kind) end
+	local unseenKind, unseen = GiftEggs.unseen(state, rack)
+	local public = { owed = view.owed, granted = granted, fetch = view.fetch, ready = if view.owed then Hatching.giftReady(handle, ctx) else nil,
 		unseen = if unseenKind then GiftEggs.publicRecord(unseenKind, unseen) else nil,
 		snack = GiftEggs.publicRecord("snack", GiftEggs.record(state, "snack")) }
+	-- The rack on: the Outfit gift's hat for the pet that is out ("A gift: Pom Beanie, 100%"), nil once given or none left.
+	if rack and not granted.outfit then
+		public.outfit = GiftEggs.outfitItem(state, ctx.petId or statPet(handle) or "pip")
+	end
+	return public
+end
+
+-- The Outfit Egg (DailyRack "rack"; ROTATION-BRIEF 5, ARCH-REVIEW-ROTATION 1-3). Paid (DailyRack.Price Stars) and
+-- repeatable, so idempotent by the client's request id: signature `rack:<id>`, the id saved in `rack.ops` with the
+-- write. request = {requestId, petId, day, price, mode, poolKey, equip?}: what the player saw. Before the first attempt
+-- the day is compared with the server's (DayChanged), the price (PriceChanged), the policy (PolicyChanged: restricted
+-- players see `fixed`) and, through the clone check, the pool (PoolChanged): each answers with no charge and the host
+-- publishes a fresh snapshot. A retry after a store error resumes the frozen candidate (its day and unit), so it can
+-- never roll again or charge twice. Inside UpdateAsync: RackState.apply's rules (Guard.other, a broken field, the op
+-- already saved, ownership, the bound pool, RackDone, ClosetFull at 128, Stars). -> ok, reason, record (RackState.publicLast).
+-- AlreadySaved (a replay) answers true with the saved record when it was the last one.
+function Hatching.rackEgg(handle, egg, request)
+	if egg ~= "outfit" or type(request) ~= "table" then return false, "InvalidRack" end
+	local op, petId, price, mode, poolKey = request.requestId, request.petId, request.price, request.mode, request.poolKey
+	local day = DailyRack.dayArg(request.day)
+	if not RackState.opaque(op) or type(petId) ~= "string" or #petId < 1 or #petId > 32 or day == nil
+		or type(price) ~= "number" or (mode ~= "random" and mode ~= "fixed") or type(poolKey) ~= "string" or #poolKey > 32 then
+		return false, "InvalidRack"
+	end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local signature = "rack:" .. op
+	local resuming = handle.pending and handle.pending.signature == signature
+	local candidate
+	if resuming then candidate = handle.pending.candidate
+	else
+		local saved = RackState.find(handle.state, op)
+		if saved then return true, "AlreadySaved", RackState.publicLast(if type(saved) == "table" then saved else nil) end
+		if handle.pending then return false, "Pending" end
+		if not DailyRack.on("rack") then return false, "NotReady" end
+		if day ~= DailyRack.today(handle.adapter.now()) then return false, "DayChanged" end
+		if price ~= DailyRack.Price then return false, "PriceChanged" end
+		local current = RackState.selectionMode(handle.restricted)
+		if mode ~= current then return false, "PolicyChanged" end
+		candidate = table.freeze({ op = op, egg = egg, petId = petId, day = day, price = price, mode = mode, poolKey = poolKey,
+			equip = request.equip == true, unit = if mode == "random" then handle.adapter.random() else nil })
+	end
+	local digest = "rack:" .. egg .. ":" .. candidate.petId .. ":" .. candidate.day .. ":" .. candidate.price .. ":" .. candidate.mode .. ":" .. candidate.poolKey
+	local ok, reason = transact(handle, signature, handle.state.revision, RackState.apply, candidate, candidate.op, nil, digest)
+	if ok then return true, reason, RackState.publicLast(RackState.read(handle.state).last) end
+	if reason == "AlreadySaved" then
+		local saved = RackState.find(handle.state, candidate.op)
+		return true, reason, RackState.publicLast(if type(saved) == "table" then saved else nil)
+	end
+	return false, reason
+end
+-- What the owner's client sees (only while DailyRack "rack" is on): RackState.public for every owned pet, `outfit`
+-- the pet that is out.
+function Hatching.rackPublic(handle)
+	local state = handle.state
+	if type(state) ~= "table" then return nil end
+	local pets = {}
+	for _, pet in ipairs(Pets.active) do table.insert(pets, pet.id) end
+	return RackState.public(state, DailyRack.today(handle.adapter.now()), isRestricted(handle), statPet(handle) or "pip", pets)
 end
 
 -- Earned pets (overnight 2026-11-14, slice E; SYSTEMS-SCOPE 1.3). Grants `petId` once its

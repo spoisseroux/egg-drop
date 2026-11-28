@@ -16,6 +16,12 @@
 --          joins the weekly shelf. Append-only, and a gate may only be loosened.
 --   weekly true on the "This week" rows (ThisWeek.Rows, appended below): listed only in the week ThisWeek
 --          picks it while that switch is on (always under math.huge, so a saved one renders). Never on the shelf.
+--   egg    true on the Outfit Egg rows (DailyRack, artifacts/qa-2026-11-28-rotation/ROTATION-BRIEF.md 1, architect review 6):
+--          never listed for sale (listed only under math.huge, so a saved one renders and equips), never priced, never
+--          gated, weekly or `from`. Only the Outfit Egg grants one. Each carries
+--   rarity "common" | "uncommon" | "rare" | "epic" | "legendary" (egg rows only: rack weight, pill colour), and
+--   finish optional animated finish on a legendary row ("rainbow" | "shimmer" | "sparkle"; WearableFinish draws it,
+--          a still `color` everywhere else); finishHexes the two hexes a shimmer eases between.
 -- Rows are append-only. Never rename or reuse an id: saves hold them.
 local Shared=script.Parent
 local Daily=require(Shared.DailyContracts)
@@ -56,8 +62,59 @@ Variants.Rows={
 for _,row in ipairs(ThisWeek.Rows)do
  table.insert(Variants.Rows,{id=row.id,base=row.base,name=row.name,color=row.color,price=row.price,weekly=true})
 end
+-- The Outfit Egg (DailyRack; ROTATION-BRIEF 1 "Colours tonight"): four new colours on each of the 16 own-coloured bases
+-- (one common, one uncommon, one rare, one epic), a colour an existing row of that base already uses skipped, then the
+-- five legendary finish rows (the sparkle pick, in its daily order). [PLACEHOLDER] hexes and picks until Fable plays them.
+-- Cap check (architect review 5): 23 bases + 24 shipped + 8 weekly + 64 + 5 = 124 <= WearableCatalog.OwnedLimit (128).
+Variants.EggColours=table.freeze({
+ cherry={"Cherry","#E9574C"},sky={"Sky","#5CBEF5"},mint={"Mint","#7FE0CF"},butter={"Butter","#FFD86B"},
+ grape={"Grape","#9B7BE8"},bubblegum={"Bubblegum","#FF86C8"},tangerine={"Tangerine","#F08A3C"},
+ midnight={"Midnight","#2F2C7C"},snow={"Snow","#F4F6FB"},gold={"Gold","#F0B429"},rosegold={"Rose Gold","#F2A0A8"},
+})
+Variants.EggRarities=table.freeze({"common","uncommon","rare","epic"})
+do
+ -- {base, display name, common, uncommon, rare, epic, piece?}
+ local bases={
+  {"beanie","Pom Beanie","sky","tangerine","midnight","gold"},
+  {"sunhat","Sun Hat","mint","grape","midnight","gold"},
+  {"flowercrown","Flower Crown","sky","bubblegum","midnight","rosegold"}, -- Gold is the gated Golden Flower Crown
+  {"partyhat","Party Hat","cherry","tangerine","midnight","gold"},
+  {"tee","Stripy Tee","butter","bubblegum","snow","gold"}, -- dark base: Snow
+  {"hoodie","Star Hoodie","cherry","bubblegum","snow","gold"}, -- Midnight is the gated Starbloom Hoodie
+  {"beads","Pearl Beads","sky","bubblegum","midnight","gold"},
+  -- [PLACEHOLDER] Fable: the bell is already gold and Rose Gold is the shipped Rose Bell Collar, so its epic is Snow.
+  {"bellcollar","Bell Collar","sky","grape","midnight","snow","Neck_BellCollar_Bell"},
+  {"ring","Little Hoops","sky","bubblegum","midnight","rosegold"},
+  {"starstud","Star Studs","mint","grape","midnight","rosegold"},
+  {"sparkle","Sparkle Eyes","sky","bubblegum","midnight","gold"},
+  {"blush","Blush Stickers","cherry","grape","midnight","gold"},
+  {"bowtail","Bow Tail","sky","tangerine","midnight","gold"},
+  {"acorn","Acorn Pendant","cherry","grape","midnight","gold"},
+  {"bands","Friendship Bands","cherry","grape","midnight","gold"},
+  {"specs","Round Specs","cherry","bubblegum","midnight","rosegold"},
+ }
+ for _,b in ipairs(bases)do
+  for index,rarity in ipairs(Variants.EggRarities)do
+   local key=b[index+2];local colour=Variants.EggColours[key]
+   table.insert(Variants.Rows,{id=b[1].."_"..key,base=b[1],name=colour[1].." "..b[2],color=colour[2],piece=b[7],egg=true,rarity=rarity})
+  end
+ end
+ -- The sparkle picks (legendary, a flat 1%): `color` is the still mid colour (Reduced Motion, previews, older builds).
+ for _,row in ipairs({
+  {id="beanie_rainbow",base="beanie",name="Rainbow Pom Beanie",color="#F7A8D8",finish="rainbow"},
+  {id="bowtail_rainbow",base="bowtail",name="Rainbow Bow Tail",color="#F7A8D8",finish="rainbow"},
+  {id="hoodie_aurora",base="hoodie",name="Aurora Star Hoodie",color="#92AEF8",finish="shimmer",finishHexes={"#6FD0F0","#B58CFF"}},
+  {id="partyhat_aurora",base="partyhat",name="Aurora Party Hat",color="#92AEF8",finish="shimmer",finishHexes={"#6FD0F0","#B58CFF"}},
+  {id="flowercrown_stardust",base="flowercrown",name="Stardust Flower Crown",color="#F4F6FB",finish="sparkle"},
+ })do
+  row.egg=true;row.rarity="legendary"
+  table.insert(Variants.Rows,row)
+ end
+end
 
 local function hex(value)return type(value)=="string"and string.match(value,"^#%x%x%x%x%x%x$")~=nil end
+Variants.Rarity=table.freeze({common=true,uncommon=true,rare=true,epic=true,legendary=true})
+Variants.Finishes=table.freeze({rainbow=true,shimmer=true,sparkle=true})
 -- Pure row check (the spec feeds it bad rows): nil when the list is fine, else the reason.
 function Variants.problem(rows)
  local seen={}
@@ -75,6 +132,16 @@ function Variants.problem(rows)
   if row.gate~=nil and not Gate.valid(row.gate)then return "gate "..row.id end
   -- A weekly row is sold at its own stated price, ungated and with no `from` (ThisWeek decides its weeks).
   if row.weekly~=nil and not(row.weekly==true and row.price~=nil and row.gate==nil and row.from==nil)then return "weekly "..row.id end
+  -- An Outfit Egg row is never sold (architect review 6): no price, `from`, gate or weekly; a rarity always, a finish
+  -- only on a legendary row and every legendary row has one. Rarity and finish are egg-row fields only.
+  if row.egg~=nil then
+   if not(row.egg==true and row.price==nil and row.from==nil and row.gate==nil and row.weekly==nil)then return "egg "..row.id end
+   if not Variants.Rarity[row.rarity]then return "rarity "..row.id end
+   if(row.rarity=="legendary")~=(row.finish~=nil)then return "finish "..row.id end
+   if row.finish~=nil and not Variants.Finishes[row.finish]then return "finish "..row.id end
+   if row.finishHexes~=nil and not(row.finish=="shimmer"and type(row.finishHexes)=="table"and #row.finishHexes==2
+    and hex(row.finishHexes[1])and hex(row.finishHexes[2]))then return "finishHexes "..row.id end
+  elseif row.rarity~=nil or row.finish~=nil or row.finishHexes~=nil then return "egg fields "..row.id end
  end
  -- A variant never shadows another variant's base (no variant of a variant).
  for _,row in ipairs(rows)do if seen[row.base]then return "variant base "..row.id end end
@@ -83,7 +150,11 @@ end
 do
  local problem=Variants.problem(Variants.Rows)
  assert(problem==nil,"WearableVariants: bad row ("..tostring(problem)..")")
- for _,row in ipairs(Variants.Rows)do if row.gate then table.freeze(row.gate)end;table.freeze(row)end
+ for _,row in ipairs(Variants.Rows)do
+  if row.gate then table.freeze(row.gate)end
+  if row.finishHexes then table.freeze(row.finishHexes)end
+  table.freeze(row)
+ end
  table.freeze(Variants.Rows)
 end
 local byId={};for _,row in ipairs(Variants.Rows)do byId[row.id]=row end
@@ -95,6 +166,8 @@ function Variants.week(now)
 end
 -- math.huge is "every row ever": rendering, saved items and the Book read it, gated or not.
 function Variants.released(row,week)
+ -- An Outfit Egg row is never on sale: listed only in "every row ever" (render, equip, the Book's lookups).
+ if row.egg==true then return week==math.huge end
  if row.weekly==true then return ThisWeek.listed(row.id,week)end
  if row.gate~=nil and week~=math.huge and not Gate.listed(row.gate)then return false end
  return row.from==nil or(type(week)=="number"and row.from<=week)

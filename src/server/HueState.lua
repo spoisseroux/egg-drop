@@ -54,6 +54,9 @@ function State.isAction(action)return wire[action]~=nil or retired[action]==true
 function State.quote(action,value,revision)
  -- v250 hueBuy has no catalogVersion; its exact saved proof is still replayable.
  if retired[action]or(action=="hueBuy"and type(value)=="table"and value.catalogVersion==nil)then return Legacy.quote(action,value,revision)end
+ -- The Paint Egg's daily splash (DailyRack "lookdaily", ARCH-REVIEW-ROTATION 7): the day the client showed rides beside
+ -- the quote as `lookDay`, never in it (no new quote key; HatchProgress.hueCommand reads it as its own argument).
+ if action=="lookBuy"and type(value)=="table"and value.lookDay~=nil then value=table.clone(value);value.lookDay=nil end
  local keys=wire[action]
  if not keys or not exact(value,keys)or not integer(revision)or not opaque(value.id)
   or not string.match(value.id,"^"..tostring(revision)..":[%w%-_]+$")or value.catalogVersion~=Hue.CatalogVersion then return nil end

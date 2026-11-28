@@ -92,7 +92,10 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # Teach more (qa-2026-11-27-beta42, ARCH-REVIEW-TEACH): the lessons remembered (teachMask), and older builds keeping it.
          "TeachMarks", "TeachMarksCrossVersion",
          # Onboarding shorter (qa-2026-11-28-beta44, ARCH-REVIEW-SIMPLIFY Q1 and 1): the deck tour's untouched round.
-         "TourRound"]
+         "TourRound",
+         # The daily rack (qa-2026-11-28-rotation, ARCH-REVIEW-ROTATION): the Outfit Egg's pure rules, its save path and
+         # the Outfit gift, the Paint Egg's daily splash and no pity, and the live and base builds loading a rack save.
+         "DailyRack", "RackEgg", "RackCrossVersion"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.

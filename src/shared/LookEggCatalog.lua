@@ -10,7 +10,14 @@
 --  * Stored bounds are frozen constants (MissesLimit, FoundLimit, SheenLimit, JellyLimit, Prices,
 --    PoolVersions). Tunable values (PityAt, RestrictedCharmEvery, SheenStops, JellyStops, Tables,
 --    Price) are never used to validate a save, so retuning them can never reject an old save.
---  * Retuning Tables or PityAt is a new PoolVersion (append it to PoolVersions).
+--  * Retuning Tables or PityAt is a new PoolVersion (append it to PoolVersions). Two exceptions (ARCH-REVIEW-ROTATION
+--    7, beta and Studio only): the daily splash (Catalog.tables(day), switch DailyRack "lookdaily") and no pity
+--    (switch "looknopity") stay PoolVersion 1 with no new quote key. The day is a separate lookBuy request argument
+--    (`lookDay`, stripped before the quote: HueState.quote) that HatchProgress checks is today (PoolChanged otherwise)
+--    and rolls with. A saved quote is never checked against Tables or PityAt, so no save shape changes.
+--    BEFORE LIVE (review 8, Spencer decides): how to keep the promise to players partway to a guaranteed charm (e.g.
+--    grandfather them through a tolerant top-level `lookPityHold`); remove the "charm in N" (pityLeft) copy while
+--    no-pity is on; review the odds text; restricted players keep RestrictedCharmEvery (fixed, not random).
 --  * Prices only grows: a stored receipt keeps the price it was charged.
 -- EnablePurchases=true (slice 4): on sale, but only while every finish template is NativeVerified
 -- (Catalog.available); otherwise the whole egg is "Not ready" (plan R7).
@@ -98,30 +105,70 @@ function Catalog.validMissing(list)
 end
 function Catalog.validMisses(n)return integer(n,Catalog.MissesLimit)end
 
--- Odds rows in published order: {id, percent}. Charm rows only for missing shapes.
-function Catalog.odds(missing)
+-- The daily splash (ROTATION-BRIEF "Paint Egg daily odds shift", switch DailyRack "lookdaily"): the four pots always
+-- total their Tables share (68%); day `day` the pot Hue.RollOrder[(day mod 4) + 1] takes Splash of it and the other
+-- three share the rest equally (23 / 15 / 15 / 15). Shine and charm rows never move. `day` nil: Tables exactly.
+Catalog.Splash=23 -- [PLACEHOLDER] percent; the rest of the pots' share splits evenly (15 each)
+local daily={}
+function Catalog.splashOf(day)
+	if type(day)~="number"or day~=day or day%1~=0 then return nil end
+	return Hue.RollOrder[day%#Hue.RollOrder+1]
+end
+function Catalog.tables(day)
+	local splash=Catalog.splashOf(day)
+	if not splash then return Catalog.Tables end
+	local found=daily[splash]
+	if found then return found end
+	found={}
+	for m,row in pairs(Catalog.Tables)do
+		local pots=0
+		for _,id in ipairs(Catalog.HueItems)do pots+=row[id]end
+		local rest=(pots-Catalog.Splash)/(#Catalog.HueItems-1)
+		assert(rest%1==0 and rest>=0,"LookEggCatalog: the splash leaves whole percents")
+		local shifted=table.clone(row)
+		for _,id in ipairs(Catalog.HueItems)do shifted[id]=if id==splash then Catalog.Splash else rest end
+		found[m]=table.freeze(shifted)
+	end
+	found=table.freeze(found)
+	daily[splash]=found
+	return found
+end
+for _,splash in ipairs(Hue.RollOrder)do
+	for m,row in pairs(Catalog.tables(table.find(Hue.RollOrder,splash)-1))do
+		local total=row.charm*m
+		for _,id in ipairs(Catalog.JarOrder)do total+=row[id]end
+		assert(total==100,"LookEggCatalog: daily table "..splash.." "..m.." sums to "..total)
+	end
+end
+
+-- Odds rows in published order: {id, percent}. Charm rows only for missing shapes. `day` (optional, the lookdaily
+-- switch on): that day's splash table.
+function Catalog.odds(missing,day)
 	if not Catalog.validMissing(missing)then return nil end
-	local row=Catalog.Tables[#missing];local result={}
+	local row=Catalog.tables(day)[#missing];local result={}
 	for _,id in ipairs(Catalog.JarOrder)do table.insert(result,{id=id,percent=row[id]})end
 	for _,shape in ipairs(missing)do table.insert(result,{id=itemOfShape[shape],percent=row.charm})end
 	return result
 end
--- True when the next random egg is a guaranteed charm (pity).
-function Catalog.pityDue(missing,misses)
+-- True when the next random egg is a guaranteed charm (pity). `noPity` (switch DailyRack "looknopity"): never.
+function Catalog.pityDue(missing,misses,noPity)
+	if noPity==true then return false end
 	return type(missing)=="table"and #missing>0 and type(misses)=="number"and misses>=Catalog.PityAt-1
 end
--- Eggs until a charm is guaranteed (1 = the next egg), or nil when every egg charm is owned.
-function Catalog.pityLeft(missing,misses)
-	if type(missing)~="table"or #missing==0 then return nil end
+-- Eggs until a charm is guaranteed (1 = the next egg), or nil when every egg charm is owned (or with `noPity`).
+function Catalog.pityLeft(missing,misses,noPity)
+	if noPity==true or type(missing)~="table"or #missing==0 then return nil end
 	return math.max(1,Catalog.PityAt-(if Catalog.validMisses(misses)then misses else 0))
 end
--- Server roll: `unit` in [0,1). Uses only the values bound into the quote.
-function Catalog.roll(unit,missing,misses)
+-- Server roll: `unit` in [0,1). Uses only the values bound into the quote, plus `options` = {day, noPity} the request
+-- bound outside it (the two DailyRack Paint switches; nil = today's egg exactly). Misses still stop at MissesLimit.
+function Catalog.roll(unit,missing,misses,options)
 	if type(unit)~="number"or unit~=unit or unit<0 or unit>=1 or not Catalog.validMissing(missing)or not Catalog.validMisses(misses)then return nil end
-	if Catalog.pityDue(missing,misses)then
+	options=if type(options)=="table"then options else {}
+	if Catalog.pityDue(missing,misses,options.noPity)then
 		return itemOfShape[missing[math.min(#missing,math.floor(unit*#missing)+1)]]
 	end
-	local rows=Catalog.odds(missing);local target,cumulative=unit*100,0
+	local rows=Catalog.odds(missing,options.day);local target,cumulative=unit*100,0
 	for _,row in ipairs(rows)do
 		cumulative+=row.percent
 		if target<cumulative then return row.id end
