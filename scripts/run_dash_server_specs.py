@@ -203,7 +203,10 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # Rotation slice 2, lane D: Deck style as a closet under rack_deck (DeckCloset's pure rules).
           "DeckCloset",
           # Rotation slice 2, lane E (ROTATION-2-BRIEF 3): Angel Wings' look, halo, finish, preview pose and closet cards.
-          "AngelWings"]
+          "AngelWings",
+          # Rotation slice 2, lane B: the Toy Colour Egg and Deck Egg tiles, requests, answers, rows, sheet cards, reveals,
+          # Angel Wings on the sparkle pick, every copy key the lanes use, and no clock word.
+          "RackShop2"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]

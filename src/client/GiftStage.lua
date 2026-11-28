@@ -44,8 +44,19 @@ function Stage.result(record,options)
 		return {id=id,itemId=record.item,wearableId=record.item,wearPet=record.pet or options.petId,
 			wearAppearance=options.wearAppearance,rarity=record.rarity or options.rarity or "common"},"hue"
 	end
+	-- Rotation slice 2 (ROTATION-2-BRIEF 1, 2): a Toy Colour Egg pick is the Toy Egg's reveal of its toy in that colour
+	-- (HatchDisplayItem draws result.toySkin); a Deck Egg pick plays on the Customization shell with its 2D art (the
+	-- plate on the handheld, or the five balls: options.resultBuilder, RackArt). Keys "Use it!" and "Later".
+	if record.kind=="rackToy"and type(record.toy)=="string"then
+		return {id=id,toyId=record.toy,toySkin=record.item,rarity=record.rarity or "common"},"toy"
+	end
+	if record.kind=="rackDeck"then
+		return {id=id,itemId=record.item,deckItem=record.item,deckKind=record.deckKind,rarity=record.rarity or "common"},"hue"
+	end
 	return nil
 end
+Stage.Picks=table.freeze({rack={description="rack.reveal.description",primary="rack.reveal.wear"},
+	rackToy={description="rack.toy.description",primary="rack.toy.use"},rackDeck={description="rack.deck.description",primary="rack.deck.use"}})
 -- Pure: the stage's words. -> {sticker, name, detail, primary, secondary (nil: one key), description?}
 function Stage.words(record,options)
 	local text=options.text
@@ -56,13 +67,14 @@ function Stage.words(record,options)
 		w.description=text("rack.gift.description")
 		w.primary=text("rack.gift.cute")
 		w.secondary=nil
-	elseif record.kind=="rack"then
+	elseif Stage.Picks[record.kind]then
 		local rarity=if type(record.rarity)=="string"then record.rarity else "common"
+		local keys=Stage.Picks[record.kind]
 		w.sticker=text("rack.sticker."..rarity)
 		w.name=options.itemName or record.item
 		w.detail=options.detail or text("rack.rarity."..rarity)
-		w.description=text("rack.reveal.description")
-		w.primary=text("rack.reveal.wear")
+		w.description=text(keys.description)
+		w.primary=text(keys.primary)
 		w.secondary=text("rack.reveal.later")
 	elseif record.kind=="paint"then
 		local name=options.itemName or record.item
@@ -177,6 +189,9 @@ function Stage.show(playerGui,record,options)
 				entry.viewport.Parent=parent
 				return entry.viewport
 			end
+		elseif type(options.resultBuilder)=="function"then
+			-- a Deck Egg pick: its flat art (RackArt), given by RackShop.mount
+			builder=options.resultBuilder
 		end
 		reveal=ItemReveal.new(art,{audio=options.audio,reduceEffects=options.reduceEffects or reduced,recipeId=recipe,resultBuilder=builder,owns=owns})
 		reveal.options.stage={parent=host,owns=owns,zIndex=20,

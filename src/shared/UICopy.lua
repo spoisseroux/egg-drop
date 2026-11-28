@@ -75,6 +75,9 @@ local Table={
    stat={name="Stat Egg",line="A snack that speeds up training",description="Hatches one Stat Snack. Feed it to your pet: the next XP it earns in that stat counts extra.",per="1 snack per egg"},
    -- The daily rack (ROTATION-BRIEF 3, switch daily_rack): today's outfit picks.
    outfit={name="Outfit Egg",line="Today's picks: hats, tees and more",description="Hatches one of today's outfit picks for your pet. Tap a pick to see it on.",per="1 outfit per egg"},
+   -- Rotation slice 2 (ROTATION-2-BRIEF 1 and 2, switches rack_toys / rack_deck): the Toy Colour Egg and the Deck Egg.
+   toycolour={name="Toy Colour Egg",line="New colours every day",description="Hatches a new colour for a toy you own. Tap a pick to see it.",per="1 colour per egg"},
+   deck={name="Deck Egg",line="New picks every day",description="Hatches one of today's plates or ball themes for your Pocket Deck. Tap a pick to see it.",per="1 deck pick per egg"},
   },
   -- v2 Stat Eggs (V2-SCOPE 5, V2-PET-AND-SNACKS 2): the odds card, the button and the reveal.
   stat={
@@ -374,7 +377,21 @@ local Table={
    promise="New picks every day",reason="This comes from the Outfit Egg",
    -- the Book's Wardrobe page and the Companions hub line under daily_rack (their readers pick it while the rack is on)
    book="Hats and bits to wear, from the Outfit Egg. Looks only.",hub="Hats, shirts and more from the Outfit Egg"},
-  look={noPity="Every egg has a chance at a charm.",noPityShort="Charms: a chance every egg"}},
+  look={noPity="Every egg has a chance at a charm.",noPityShort="Charms: a chance every egg"},
+  -- Rotation slice 2 (ROTATION-2-BRIEF 5; lanes A, C, D, E): the Toy Colour Egg, the Deck Egg and Angel Wings. Never a
+  -- clock: "New colours every day", "They come back".
+  toy={title="Toy Colour Egg",label="Today's toy colours",line="New colours every day",locked="Get this toy from the Toy Egg",
+   lockedTag="Get toy",rest="You have today's colours! New colours tomorrow.",restButton="New colours tomorrow",
+   more="More colours come from the Toy Colour Egg.",original="Original",use="Use it!",worn="{item} in use!",
+   description="Yours to keep. Change toy colours any time in Customize."},
+  deck={title="Deck Egg",label="Today's picks",line="New picks every day",rest="You have today's picks! New picks tomorrow.",
+   restButton="New picks tomorrow",more="More at the Deck Egg",promise="Plates you own stay yours.",use="Use it!",
+   full="Your shelf is full.",fullButton="Shelf full",fromEgg="From the Deck Egg",reason="Plates and balls come from the Deck Egg now.",
+   help="Dress up your Pocket Deck. New plates come from the Deck Egg.",worn="{item} in use!",
+   description="Yours to keep. Change it any time in Deck style.",plate="Plate",ball="Balls"},
+  wings={name="Angel Wings",tab="Back",note="Your own wings rest while these are on"},
+  -- the refusals slice 2 adds (RackShop.outcome): every one a kind line, nothing charged
+  refuse={broken="Your picks need a moment. Try again later.",pet="Bring your pet out first.",skin="That colour is not yours yet."}},
  -- Onboarding part 2 (ONBOARDING-P2-BRIEF 2, Onboard "teach"): the pointer's labels on the real buttons, a few words
  -- each. Keyboard and gamepad add their key or glyph after the words (TeachPointer).
  teach={dress="Dress up!",paint="Tap Paint!",deck="Play!",menu="Open the Menu!",things="All the games!",throw="Throw it!",go="Go!",

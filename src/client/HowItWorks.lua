@@ -83,6 +83,12 @@ function How.inputKind()
  return if UserInputService.TouchEnabled then "Touch"else "Keyboard"
 end
 How.InputLine=table.freeze({Touch="lineTouch",Gamepad="linePad",Keyboard="line"})
+-- The Deck style closet on (DeckCloset: rack and rack_deck)? How.closetOverride (a boolean) wins, for specs.
+function How.deckCloset()
+ if type(How.closetOverride)=="boolean"then return How.closetOverride end
+ local ok,on=pcall(function()return require(script.Parent.DeckCloset).on()end)
+ return ok and on==true
+end
 -- The cards of a set: {{key, icon, art, title, line}}. input (default How.inputKind())
 -- picks the line of a card that names a key or a tap.
 function How.cards(id,input)
@@ -94,6 +100,8 @@ function How.cards(id,input)
   local line=UICopy.get("r3.help."..id.."."..card.key.."."..lineKey)
   -- The daily rack (beta 45): the Wardrobe card says clothes come from the Outfit Egg, not Stars
   if id=="companions"and card.key=="b"and require(game:GetService("ReplicatedStorage").Shared.DailyRack).on("rack")then line=UICopy.get("rack.closet.book")end
+  -- Rotation slice 2 (lane D): Deck style as a closet (rack_deck): the Faceplates card says new plates come from the Deck Egg
+  if id=="style"and card.key=="a"and How.deckCloset()then line=UICopy.get("rack.deck.help")end
   table.insert(out,{key=card.key,icon=card.icon,art=card.art,
    title=UICopy.get("r3.help."..id.."."..card.key..".title"),line=line})
  end

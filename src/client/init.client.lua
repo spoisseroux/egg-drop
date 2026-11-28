@@ -1098,6 +1098,10 @@ nurseryView.appearanceFor=function(petId)
   local worn=(state.petWearables or {})[petId]
   a.wearables=if worn and type(worn.equipped)=="table"then table.clone(worn.equipped)else {}
   a.appearanceGeneration=state.revision or a.appearanceGeneration
+  -- Toy colours (ROTATION-2-BRIEF 1, lane C): the owner's toys in their colours, open wears on top (ToyPanel:shownSkins)
+  local panel=clientUI.hueView and clientUI.hueView.toyPanel
+  local okSkins,skins=pcall(function()return if panel then panel:shownSkins(state)else require(script.ToySkinLook).wornMap(state)end)
+  if okSkins then a.toySkins=skins end
  end
  return a
 end
@@ -1338,6 +1342,9 @@ do
  clientUI.insetProbe:GetPropertyChangedSignal("AbsoluteSize"):Connect(syncInsets)
  local wearableResultConnection=remotes:WaitForChild("WearableResult").OnClientEvent:Connect(function(message)
   clientUI.wardrobe:result(message)
+  -- Toy colours (lane C): a toySkinWear answer settles the toy panel's one wear in flight
+  local toyPanel=clientUI.hueView and clientUI.hueView.toyPanel
+  if toyPanel then pcall(toyPanel.result,toyPanel,message)end
   nurseryRequest:FireServer("snapshot")
  end)
  ContextActionService:BindActionAtPriority("EggDropWardrobe",function(_,state,input)
@@ -3408,6 +3415,15 @@ picker.onBuy=function(order)
 	nurseryRequest:FireServer("faceplateBuy",{id=order.id,plateId=order.plateId,price=order.price},nurseryState and nurseryState.revision or 0)
 end
 picker.onBallEquipped=function(id)clientUI.ballThemeOverride={id=id,at=os.clock()};task.defer(updateHud)end
+-- Rotation slice 2, lane D: the Deck style closet's "More at the Deck Egg" (a plate or ball theme the Deck Egg deals):
+-- close Deck style (and the machine hub), then Hatch eggs picked on the Deck Egg (the one-shot egg pick visitEggs reads).
+picker.onDeckEgg=function(kind,id)
+	picker:close("forced")
+	if clientUI.hub and clientUI.hub:isOpen()then clientUI.hub:close("eggs")end
+	clientUI.eggPick={id="deck",at=os.clock()}
+	task.defer(function()if not visitEggs()then clientUI.eggPick=nil end end)
+	return true
+end
 picker.onBallBought=function(id)
 	local theme=clientUI.BallThemes.ById[id]
 	clientUI.shopToaster=clientUI.shopToaster or require(script.DeckKit).toaster(picker.shade)
@@ -3760,6 +3776,10 @@ do
   if not clientUI.hueView.options.firstToyReady(result)then return false end
   if clientUI.toyIntent.status=="Retrying"then clientUI.toyIntent:retry()else clientUI.toyIntent:ack(result.id)end
   return true
+ end
+ -- Toy colours (ROTATION-2-BRIEF 1, lane C): a swatch tap wears that colour (one write; WearableResult answers it)
+ clientUI.hueView.toyPanel.options.wearSkin=function(o)
+  nurseryRequest:FireServer("toySkinWear",{id=o.id,toyId=o.toyId,skinId=o.skinId},nurseryState and nurseryState.revision or 0)
  end
  local spendButton=Kit.button(clientUI.coach.host,"FirstSpendHatch",{variant="quiet",text=Copy.get("onboarding.spend.hatch"),size=Vector2.new(172,48),textSize=16})
  spendButton.Visible=false;spendButton.AnchorPoint=Vector2.new(.5,0);spendButton.ZIndex=42
@@ -6703,13 +6723,38 @@ do
     local rack=require(script.RackShop).mount({view=nurseryView,state=function()return nurseryState end,
      id=function()return HttpService:GenerateGUID(false)end,clock=os.clock,result=remotes:WaitForChild("WearableResult"),
      send=function(request)nurseryRequest:FireServer("rackEgg",request,nurseryState and nurseryState.revision or 0)end,
-     arm=function(id)pcall(clientUI.eggPressed,"lookBuy",{id=id})end,
+     -- every rack egg cranks the machine (its own buy action: the Toy Colour Egg drops the Toy shell, the others Hue)
+     arm=function(id,action)pcall(clientUI.eggPressed,action or "lookBuy",{id=id})end,
      snapshot=function()nurseryRequest:FireServer("snapshot")end,
      refuse=function()local m=clientUI.eggMachine;if m then pcall(m.refuse,m)end end,
-     deliver=function(open)
+     deliver=function(open,shell)
       local m=clientUI.eggMachine
       local Stage=require(script.GiftStage)
-      return m~=nil and select(2,pcall(m.deliver,m,"Hue",open,{isOpen=Stage.isOpen}))==true
+      return m~=nil and select(2,pcall(m.deliver,m,shell or "Hue",open,{isOpen=Stage.isOpen}))==true
+     end,
+     -- slice 2: the pet that is out (the toy and deck eggs bind it), the Toy Colour reveal's "Use it!" (toySkinWear,
+     -- through the toy panel's one-at-a-time queue when it is there) and the Deck reveal's (the existing equip paths)
+     petId=function()local shown=roomView.shownPet;return shown and shown.id or board:GetAttribute("CompanionId")end,
+     wearToy=function(toyId,skinId)
+      local panel=clientUI.hueView and clientUI.hueView.toyPanel
+      local queued=panel and panel.skinQueue and select(2,pcall(function()
+       return panel.skinQueue:tap(toyId,skinId,require(script.ToySkinLook).wornMap(nurseryState))
+      end))
+      if queued~=true then
+       nurseryRequest:FireServer("toySkinWear",{id=HttpService:GenerateGUID(false),toyId=toyId,skinId=skinId},nurseryState and nurseryState.revision or 0)
+      end
+     end,
+     useDeck=function(kind,id)
+      if kind=="plate"then
+       if clientUI.appearanceIntent then clientUI.appearanceIntent:choose("theme",id)end
+      elseif kind=="ball"then
+       nurseryRequest:FireServer("ballThemeEquip",{id=HttpService:GenerateGUID(false),themeId=id},nurseryState and nurseryState.revision or 0)
+       if picker.onBallEquipped then picker.onBallEquipped(id)end
+      end
+     end,
+     deckArt=function(parent,r,position,size,z)
+      local Art=require(script.RackArt)
+      return if r.deckKind=="ball"then Art.balls(parent,r.deckItem,position,size,z)else Art.plate(parent,r.deckItem,position,size,z)
      end,
      show=function(record,options)return require(script.GiftStage).show(playerGui,record,options)end,
      closed=function()local m=clientUI.eggMachine;if m then pcall(m.revealClosed,m,"gift")end end,

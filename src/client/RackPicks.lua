@@ -6,6 +6,10 @@
 -- draw in a ViewportFrame; Reduced Motion: none). No clock anywhere: "New picks every day", "They come back".
 -- open(host, model, options) -> sheet {root, button, close()}. options = {petId, phone, appearance() -> the pet's look,
 -- reduced(), onClose()}. B / Esc / Backspace and the button close it.
+-- Slice 2 (ROTATION-2-BRIEF 1, 2): the Toy Colour Egg's cards are the toy in that colour (a still viewport through the
+-- cache, RackArt.toyEntry; a locked one dimmed with "Get this toy from the Toy Egg"); the Deck Egg's are a plate's
+-- texture on the handheld (RackArt.plate) or a ball theme's five balls (RackArt.balls), flat, no viewport, each card
+-- trimmed in its accent.
 local Players=game:GetService("Players")
 local RunService=game:GetService("RunService")
 local GuiService=game:GetService("GuiService")
@@ -69,11 +73,28 @@ function Picks.open(host,model,options)
 		well.ClipsDescendants=true
 		local swatch=Kit.frame(well,"Swatch",nil,UDim2.fromScale(.5,.5),UDim2.fromOffset(wellH*.4,wellH*.4),999)
 		swatch.AnchorPoint=Vector2.new(.5,.5);swatch.BackgroundTransparency=0;swatch.BackgroundColor3=hex(card.color or card.pillColor)
+		frame:SetAttribute("Kind",card.kind)
+		-- the Deck Egg's cards: flat art over the swatch, the card trimmed in the plate's (or balls') accent
+		if card.kind=="plate"or card.kind=="ball"then
+			local Art=require(script.Parent.RackArt)
+			local ok=pcall(function()
+				if card.kind=="plate"then Art.plate(well,card.plate,UDim2.fromScale(.1,.06),UDim2.fromScale(.8,.88),well.ZIndex+2)
+				else Art.balls(well,card.ball,UDim2.fromScale(.04,.1),UDim2.fromScale(.92,.8),well.ZIndex+2)end
+			end)
+			if ok then swatch.Visible=false end
+			local trim=Instance.new("UIStroke");trim.Name="Trim";trim.Thickness=2;trim.Color=hex(card.accent or card.color,Color3.new(1,1,1))
+			trim.ApplyStrokeMode=Enum.ApplyStrokeMode.Border;trim.Parent=frame
+		end
+		if card.locked then frame:SetAttribute("Locked",true);well.BackgroundTransparency=math.max(well.BackgroundTransparency,.35)end
 		local y=wellH+10
 		Kit.text(frame,"Body",card.name,"text",{Name="Name",Position=UDim2.fromOffset(10,y),Size=UDim2.fromOffset(cw-20,18),
 			TextSize=if phone then 13 else 15,TextTruncate=Enum.TextTruncate.AtEnd})
 		y+=22
-		if card.pill then
+		if card.locked then
+			-- a toy the player does not own yet: no pill, no odds, one kind line where they sit
+			Kit.text(frame,"Small",card.value or "","soft",{Name="Value",Position=UDim2.fromOffset(10,y-2),Size=UDim2.fromOffset(cw-20,if phone then 26 else 30),
+				TextSize=if phone then 11 else 12,TextWrapped=true})
+		elseif card.pill then
 			local size=if phone then 11 else 12
 			local pw=math.ceil(Kit.measure(card.pill,"Small",size).X)+14
 			local pill=Kit.frame(frame,"Pill",nil,UDim2.fromOffset(10,y),UDim2.fromOffset(pw,if phone then 18 else 20),999)
@@ -81,10 +102,12 @@ function Picks.open(host,model,options)
 			local word=Kit.text(pill,"Small",card.pill,"text",{Name="Word",Size=UDim2.fromScale(1,1),TextSize=size,TextXAlignment=Enum.TextXAlignment.Center})
 			Kit.paint(word,"TextColor3",function()return Color3.new(1,1,1)end)
 		end
-		local value=(if card.owned then "✓ " else "")..(card.value or "")
-		local v=Kit.text(frame,"Counter",value,if card.owned then "soft"else "text",{Name="Value",Position=UDim2.fromOffset(cw/2,y),Size=UDim2.fromOffset(cw/2-10,20),
-			TextSize=if phone then 13 else 15,TextXAlignment=Enum.TextXAlignment.Right})
-		v.AutoLocalize=card.owned==true
+		if not card.locked then
+			local value=(if card.owned then "✓ " else "")..(card.value or "")
+			local v=Kit.text(frame,"Counter",value,if card.owned then "soft"else "text",{Name="Value",Position=UDim2.fromOffset(cw/2,y),Size=UDim2.fromOffset(cw/2-10,20),
+				TextSize=if phone then 13 else 15,TextXAlignment=Enum.TextXAlignment.Right})
+			v.AutoLocalize=card.owned==true
+		end
 		local sparks=nil
 		if card.sparkle then sparks=require(script.Parent.UISparks).new(well,well.ZIndex+8)end
 		table.insert(self.cards,{card=card,frame=frame,well=well,swatch=swatch,sparks=sparks,y=4+r*(ch+gap)})
@@ -117,7 +140,12 @@ function Picks.open(host,model,options)
 		for _,entry in ipairs(self.cards)do
 			local look=entry.look
 			if look==nil then look=lookFor(entry.card,petId,baseLook())or false;entry.look=look end
-			if look then
+			if entry.card.kind=="toy"and entry.card.toy then
+				-- the toy in that colour, still (no pet): RackArt.toyEntry, cached like a pet preview
+				local card=entry.card
+				table.insert(wanted,{holder=entry.well,key="toy:"..tostring(card.toy)..":"..tostring(card.skin),visible=Cache.visible(entry.y,self.cardH,at,window),
+					build=function()return require(script.Parent.RackArt).toyEntry(card.toy,card.skin)end})
+			elseif look then
 				table.insert(wanted,{holder=entry.well,key=Cache.key(petId,entry.card.id,nil),visible=Cache.visible(entry.y,self.cardH,at,window),
 					build=function()return Cache.buildPet(pet,look,.95)end})
 			end

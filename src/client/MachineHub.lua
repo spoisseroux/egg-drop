@@ -103,6 +103,14 @@ Hub.ShelfNames=table.freeze({
 -- Pure: the shelf line for a tile, longest wording first ("This week: Mint Pom Beanie,
 -- Party Hat", then "20% off this week"); nil when the tile has nothing on this week's
 -- shelf, the tile is locked, or the shelf is off. No countdown (no FOMO).
+-- Pure: the Deck style closet in this snapshot (`rack.deck.closet`, the server's word); ctx.deckCloset (a boolean) wins.
+function Hub.deckCloset(ctx)
+ ctx=ctx or {}
+ if type(ctx.deckCloset)=="boolean"then return ctx.deckCloset end
+ local state=type(ctx.state)=="table"and ctx.state or {}
+ local rack=type(state.rack)=="table"and state.rack or nil
+ return rack~=nil and type(rack.deck)=="table"and rack.deck.closet==true
+end
 function Hub.shelfLines(id,ctx)
  ctx=ctx or {}
  local kinds=Hub.ShelfKinds[id]
@@ -113,6 +121,15 @@ function Hub.shelfLines(id,ctx)
  if closet then
   local kept={}
   for _,kind in ipairs(kinds)do if kind~="wearable"then table.insert(kept,kind)end end
+  if #kept==0 then return nil end
+  kinds=kept
+ end
+ -- Rotation slice 2 (ROTATION-2-BRIEF 2, ARCH-REVIEW-ROTATION-2 7): Deck style is a closet while rack.deck.closet (plates
+ -- and balls come from the Deck Egg), so the shelf's plate and ball deals are not shown (the server refuses them too).
+ -- ctx.deckCloset overrides the snapshot for specs.
+ if Hub.deckCloset(ctx)then
+  local kept={}
+  for _,kind in ipairs(kinds)do if kind~="faceplate"and kind~="ball"then table.insert(kept,kind)end end
   if #kept==0 then return nil end
   kinds=kept
  end
