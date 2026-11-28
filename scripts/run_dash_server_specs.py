@@ -158,6 +158,8 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           "GiftChain",
           # Onboarding part 2 (qa-2026-11-27-beta40): the shop's gift mode and latch, the five lessons and the pointer.
           "GiftShop", "TeachLessons",
+          # Beta 42 note 5: the free egg's reveal on the regular full-screen hatch stage.
+          "GiftStage",
           # DECK-FEEL-BRIEF (beta 40 notes 9-17, switch deckfeel): the open, holds, body press, life, stepper, polish,
           # results; the stale-balls gate (DeckFresh, always on).
           "DeckFeel"]
@@ -244,6 +246,8 @@ def client_modules():
                     "GiftChain.lua", "GiftEggArt.lua", "GiftRibbon.lua",
                     # Onboarding part 2: the shop's gift mode, the lessons and their pointer.
                     "GiftShop.lua", "TeachLessons.lua", "TeachPointer.lua",
+                    # Beta 42: the gift's full-screen stage (its pure parts; the stage is required only when it shows).
+                    "GiftStage.lua",
                     # DECK-FEEL-BRIEF: the feel pass's pure rules, the body press and the fresh reopen gate.
                     "DeckFeel.lua", "DeckPressLean.lua", "DeckFresh.lua", "DeckHandoff.lua",
                     # Beta 41 code review: the jolt's rebase and the screen's holds (DeckFeel spec).

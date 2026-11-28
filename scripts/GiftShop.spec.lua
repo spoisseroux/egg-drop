@@ -56,5 +56,37 @@ return function(client)
 		assert(press()=="normal"and buys==1,"after the answer the paid egg is the paid egg again")
 	end)
 
+	-- Beta 42 note 4: "when we click paint egg, it should move the hand to point us to click hatch egg then".
+	test("beta 42: the first tap on the gift's tile only picks it; the pointer goes to Hatch free!, whose press is the ask",function()
+		assert(Shop.route({gift="paint",selected="look",tile=true})=="pick","the first tap on its tile: picked, no ask")
+		assert(Shop.route({gift="paint",selected="look",tile=true,picked=true})=="gift","a second tap on it: the ask")
+		assert(Shop.route({gift="paint",selected="look"})=="gift","Hatch free! (the pane's button) asks at once")
+		assert(Shop.route({gift="paint",selected="toy",tile=true})=="normal","another tile: today's tap")
+		assert(Shop.route({latch="paint",gift="paint",selected="look",tile=true})=="latched")
+		assert(Shop.aim({gift="paint",selected="look"})=="tile","opened on the gift: the tile")
+		assert(Shop.aim({gift="paint",selected="look",picked=true})=="hatch","picked: Hatch free!")
+		assert(Shop.aim({gift="paint",selected="toy",picked=true})=="tile","browsed away: back to the tile")
+		assert(Shop.aim({gift="paint",selected="look",picked=true,latch="paint"})==nil,"the ask is out: no pointer")
+		assert(Shop.aim({gift="paint",selected="look",lastHatch={}})==nil and Shop.aim({selected="look"})==nil)
+		-- a simulated screen (EggHatchView:pickGift, then actPrimary): tap, tap; tap, Hatch free!; reopen clears
+		local view={gift="paint",selected="look",picked=nil,serial=1,pickSerial=1}
+		local asks,bounces=0,0
+		local function refresh()if view.pickSerial~=view.serial then view.pickSerial=view.serial;view.picked=nil end end
+		local function tapTile(id)
+			refresh()
+			if Shop.route({gift=view.gift,selected=id,tile=true,picked=view.picked,latch=view.latch})=="pick"then
+				view.picked=true;view.selected=id;bounces+=1;return "pick"
+			end
+			if view.selected~=id then view.selected=id;return "select"end
+			if Shop.route({gift=view.gift,selected=view.selected,latch=view.latch})=="gift"then asks+=1;view.latch="paint"end
+			return "press"
+		end
+		assert(tapTile("look")=="pick"and asks==0 and bounces==1 and Shop.aim({gift="paint",selected=view.selected,picked=view.picked})=="hatch")
+		assert(tapTile("look")=="press"and asks==1,"the second tap hatches")
+		view.latch=nil;view.serial=2 -- closed and opened again
+		refresh();assert(view.picked==nil and Shop.aim({gift="paint",selected="look",picked=view.picked})=="tile","reopen: the tile again")
+		assert(tapTile("toy")=="select"and tapTile("look")=="pick","from another tile: the tap on the gift picks it")
+	end)
+
 	return {passed=#cases,cases=cases}
 end

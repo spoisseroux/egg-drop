@@ -2,7 +2,7 @@
 -- "teach"): each lesson is done only by its saved fact, whoever caused it; never by a timer; one pointer at a time, the
 -- first lesson whose button is on screen; "Later" skips Dress up to the deck; "What's next?" asks for the Menu; ignored
 -- 12 s: it fades and waits for the next session; a rejoin lets the deck come first; veterans and unowed saves: nothing.
--- The pointer's pulse, dip, label words and spot. Fake deps and a fake clock only.
+-- The pointer's ring shape, tip, beat, glide, label words and spot. Fake deps and a fake clock only.
 -- Offline: scripts/run_dash_server_specs.py. Studio: require(PlayerScripts.Client.ZZSpecs.TeachLessons)(PlayerScripts.Client).
 return function(client)
 	local Lessons=require(client.TeachLessons)
@@ -105,9 +105,47 @@ return function(client)
 		local v=rig(snapshot({totalWins=50}));v.targets.dress={node="DressUp",words="dress"};v.run(1);assert(v.at==nil,"veterans")
 	end)
 
-	test("the pointer: pulse 1.0 to 1.12 every 1.2 s, a 6 px dip, still under Reduced Motion; words with keys; the label's spot",function()
-		assert(math.abs(Pointer.pulse(0)-1)<1e-9 and math.abs(Pointer.pulse(.6)-1.12)<1e-9 and math.abs(Pointer.pulse(1.2)-1)<1e-9)
-		assert(Pointer.pulse(.6,true)==1 and Pointer.dip(.6,true)==0 and math.abs(Pointer.dip(.6)-6)<1e-9)
+	test("the pointer (beta 42 notes 1 and 4): a true circle or a concentric ring, the tip and side, the beat, the glide; words with keys; the label's spot",function()
+		local function near(a,b)return math.abs(a-b)<1e-6 end
+		-- the ring: round or square-ish targets a circle (max + 12); wide tiles 6 px out, corner = theirs + 6 (none: 14)
+		local c=Pointer.shape(56,48)
+		assert(c.circle and c.w==68 and c.h==68,"the Menu button: a circle")
+		assert(Pointer.shape(70,52).circle and not Pointer.shape(70,51).circle,"w/h 1.35 is the line")
+		local r=Pointer.shape(600,100,12)
+		assert(not r.circle and r.w==612 and r.h==112 and r.corner==18,"a wide tile: concentric")
+		assert(Pointer.shape(600,100).corner==14,"no UICorner: 14")
+		assert(Pointer.shape(600,100,12,12).w==624 and Pointer.shape(600,100,12,12).corner==24,"the breath grows the pad, never a scale")
+		assert(near(Pointer.cornerPx(.5,0,600,100,1),50)and near(Pointer.cornerPx(0,12,600,100,.5),6),"scale radii resolve against min(w, h)")
+		assert(Pointer.pad(0)==6 and near(Pointer.pad(.6),12)and near(Pointer.pad(1.2),6)and Pointer.pad(.6,true)==6)
+		-- the tip: round centre + .2s, wide (x + .68w, y + .6h), from below-right; near the bottom from above-left, mirrored
+		local x,y,rot,side=Pointer.tip({x=100,y=100,w=60,h=60},{w=800,h=600})
+		assert(near(x,142)and near(y,142)and rot==150 and side=="belowRight")
+		x,y,rot=Pointer.tip({x=100,y=200,w=600,h=100},{w=1280,h=720})
+		assert(near(x,508)and near(y,260)and rot==150,"a tile: clear of its title and the FREE badge")
+		x,y,rot,side=Pointer.tip({x=700,y=530,w=60,h=60},{w=800,h=600})
+		assert(near(x,718)and near(y,548)and rot==-30 and side=="aboveLeft","the Menu button at the bottom: from above-left")
+		local ax,ay=Pointer.axis(150);assert(ax>0 and ay>0,"below-right: the hand lies down-right of the tip")
+		ax,ay=Pointer.axis(-30);assert(ax<0 and ay<0)
+		-- the beat: hover 10 back with a bob, dip to touch, press x .92 with the flash, lift past 10 (3 px), rest; the ripple at .70
+		local b=Pointer.beat(0);assert(near(b.back,10)and b.scale==1 and not b.flash and b.ripple==nil)
+		assert(Pointer.beat(.1375).back>10 and Pointer.beat(.4125).back<10,"the bob")
+		b=Pointer.beat(.70);assert(b.back==0 and b.scale==.92 and b.flash and b.ripple==0,"the press and the tap ripple")
+		assert(not Pointer.beat(.79).flash and Pointer.beat(.79).scale==.92)
+		local peak=0;for i=0,40 do peak=math.max(peak,Pointer.beat(.8+.2*i/40).back)end
+		assert(peak>12.5 and peak<13.5,"the lift overshoots about 3 px")
+		assert(near(Pointer.beat(1.1).back,10)and near(Pointer.beat(1.2+.70).ripple,0),"rest, then the next beat")
+		b=Pointer.beat(.70,true);assert(b.back==10 and b.scale==1 and b.ripple==nil,"Reduced Motion: no press, no ripple")
+		local d,alpha=Pointer.ripple(0);assert(d==28 and near(alpha,.1));d,alpha=Pointer.ripple(1);assert(d==76 and alpha==1)
+		-- the glide: .38 s on an arc lifted toward screen-up, x1.08 mid-flight; the rings swap (.12 out, pop at .26)
+		local gx,gy,gs,_,done=Pointer.glide(0,100,500,700,300)
+		assert(gx==100 and gy==500 and gs==1 and not done)
+		gx,gy,gs,_,done=Pointer.glide(.38,100,500,700,300)
+		assert(near(gx,700)and near(gy,300)and near(gs,1)and done)
+		local mx,my,ms,me=Pointer.glide(.1,100,500,700,300)
+		assert(my<500+(300-500)*me-1 and ms>1 and mx>100,"lifted, and larger mid-flight")
+		local old,new,pad=Pointer.ringSwap(0);assert(old==1 and new==0)
+		old,new=Pointer.ringSwap(.2);assert(old==0 and new==0,"one ring at a time")
+		old,new,pad=Pointer.ringSwap(.26);assert(new==0 and pad==20);old,new,pad=Pointer.ringSwap(.44);assert(new==1 and pad==6)
 		assert(Pointer.words("Open the Menu!","Keyboard","M","Y")=="Open the Menu!  [M]")
 		assert(Pointer.words("Open the Menu!","Gamepad","M","Y")=="Open the Menu!  (Y)")
 		assert(Pointer.words("Open the Menu!","Touch","M","Y")=="Open the Menu!","touch: the words only")
@@ -117,6 +155,8 @@ return function(client)
 		assert(side2=="below"and y2>=54,"no room on top: under it")
 		local x3=Pointer.labelSpot({x=780,y=300,w=40,h=44},{w=800,h=600},120)
 		assert(x3<=800-120-4,"kept on the screen")
+		local _,y4=Pointer.labelSpot({x=100,y=300,w=60,h=44},{w=800,h=600},120,nil,48)
+		assert(y4==y-48,"the hand from above: the label 48 px higher")
 		assert(Lessons.Keys.menu.key=="M"and Lessons.Keys.menu.glyph=="Y"and Lessons.Keys.throw.key=="F"and Lessons.Keys.throw.glyph=="R2"and Lessons.Keys.dress.glyph=="R1")
 	end)
 
