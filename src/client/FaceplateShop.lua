@@ -24,6 +24,8 @@ local HintLegend=require(script.Parent.HintLegend)
 -- Levels matter: gated plates (S2) and the Effects tab (S3, EffectsShop, only while juice is on).
 local Levels=require(Shared.Levels)
 local Locked=require(script.Parent.LockedItem)
+-- Rotation slice 2, lane D: Deck style as a closet under the rack_deck switch (DeckCloset; off = today's shop).
+local Closet=require(script.Parent.DeckCloset)
 local Shop={}
 Shop.__index=Shop
 Shop.Size=Vector2.new(848,608)
@@ -65,7 +67,9 @@ local function finishName(theme)
 end
 
 -- Pure: what the pane says and offers for one plate.
--- ctx = { equipped = id, wallet = n, facts = AppearanceCatalog facts (with .faceplates), levels }
+-- ctx = { equipped = id, wallet = n, facts = AppearanceCatalog facts (with .faceplates), levels, closet = bool }
+-- closet (DeckCloset): an unowned plate the Deck Egg deals says "From the Deck Egg" (kind "egg"), and nothing sells
+-- at a weekly-shelf price.
 function Shop.status(id,ctx)
  local theme=Themes.ById[id]
  if not theme then return {kind="invalid",text="",button=nil}end
@@ -79,9 +83,11 @@ function Shop.status(id,ctx)
   local gate=Locked.info(theme,ctx.levels)
   if gate and not gate.met then return {kind="locked",text=gate.line,button=Locked.trainText(gate),price=base,gate=gate,enabled=true}end
   if theme.gate and not Locked.on()then return {kind="invalid",text="",button=nil}end -- not for sale, not listed
+  local egg=Closet.status("plate",id,false,ctx.closet)
+  if egg then return egg end
   local wallet=ctx.wallet or 0
-  -- Slice C: a plate on this week's shelf sells at the shelf price (`full` = the struck price).
-  local price,full=Deal.quote("faceplate",id,base,weekOf(ctx))
+  -- Slice C: a plate on this week's shelf sells at the shelf price (`full` = the struck price). Never in the closet.
+  local price,full=Deal.quote("faceplate",id,base,Closet.week(ctx.closet,weekOf(ctx)))
   if wallet>=price then return {kind="buy",text=if full then UICopy.get("shelf.status")else "You have enough Stars",button="★ Buy "..price,price=price,full=full,enabled=true}end
   return {kind="short",text=require(script.Parent.ShopPriceState).need(price,wallet),button="★ Buy "..price,price=price,full=full,enabled=false}
  end
@@ -94,6 +100,7 @@ function Shop.tileStatus(id,ctx)
  local s=Shop.status(id,ctx)
  if s.kind=="equipped"then return "EQUIPPED","accent"end
  if s.kind=="owned"then return (if Themes.isBookOnly(id)then "From the book"else "✓ Owned"),"soft"end
+ if s.kind=="egg"then return Closet.tileStatus()end
  if s.kind=="buy"then return Deal.priceText(s.price,s.full),"stars"end
  if s.kind=="short"or s.gate then return Deal.priceText(s.price,s.full),"dim"end
  local short=({firstWin="Win 1",rankI="Win 3",rankII="Win 10",book="Book"})[Themes.ById[id]and Themes.ById[id].rule or ""]or "Locked"
@@ -199,8 +206,10 @@ end
 -- callbacks: equip(id), buy(order), bought(id), back(), tab(index) (a tab request:
 -- the owner answers with setTab), rebuilt(), and for Backgrounds: use(id),
 -- retry(slot). Levels matter: train(route) ({stat, petId}), the way to a locked item's training.
+-- Rotation slice 2: deckEgg(kind, id) ("plate" | "ball"), the closet's way to the Deck Egg tile, and hasDeckEgg()
+-- (optional: false keeps that button disabled while nobody answers it).
 function Shop.new(host,callbacks)
- local self=setmetatable({host=host,callbacks=callbacks or {},index=1,tab=1,ctx={equipped=Themes.Default,wallet=0,facts={}},
+ local self=setmetatable({host=host,callbacks=callbacks or {},index=1,tab=1,ctx={equipped=Themes.Default,wallet=0,facts={},closet=Closet.on()},
   visible=false,pending=nil,confirmUntil=0,columns=Shop.Columns},Shop)
  local root=Kit.frame(host,"FaceplateShop","panel",UDim2.fromScale(.5,.5),UDim2.fromOffset(848,608),30)
  root.AnchorPoint=Vector2.new(.5,.5);root.Active=true;root.Visible=false;root.ClipsDescendants=true;self.rootStroke=Kit.stroke(root)
@@ -249,7 +258,8 @@ function Shop:buildChrome(parent,view,tabsW)
   for index,set in ipairs(Shop.Hints)do
    if index>#self.tabSet then break end
    local row=Kit.frame(parent,"Hints"..index,nil,UDim2.fromOffset(24,Shop.Regular.hints),UDim2.fromOffset(800,24))
-   local promise=txt(row,"Small",set.promise,"dim",500,0,300,24,{Name="Promise",TextXAlignment=Enum.TextXAlignment.Right})
+   -- The closet: "Fixed prices. No random plates." would not be true; "Plates you own stay yours." instead.
+   local promise=txt(row,"Small",if index==1 then Closet.promise(self.ctx.closet,set.promise)else set.promise,"dim",500,0,300,24,{Name="Promise",TextXAlignment=Enum.TextXAlignment.Right})
    local legend=HintLegend.attach(row,800,"style",set.pairs)
    local function sync()promise.Visible=row:GetAttribute("HintLegend")~=true end
    row:GetAttributeChangedSignal("HintLegend"):Connect(sync);sync()
@@ -262,6 +272,7 @@ function Shop:build(view)
  if self.content then Peek.hide(self.content);self.backgrounds:releasePreview();self.content:Destroy()end
  -- Levels matter S3: the fourth tab comes and goes with the part.
  self.levelsKey=Levels.key();self.tabSet=Shop.tabList()
+ self.closetKey=self.ctx.closet==true
  if #self.tabSet>#Shop.Tabs then self.effects=self.effects or require(script.Parent.EffectsShop).new(self,{send=self.callbacks.effectSend})
  elseif self.effects then self.effects:release();self.effects=nil end
  if self.tab>#self.tabSet then self.tab=1 end
@@ -522,7 +533,10 @@ function Shop:setContext(ctx)
  if ctx.retry~=nil then self.ctx.retry=ctx.retry end
  -- Levels matter: the pets' levels (the owner snapshot's); a flipped switch lists the tabs and cards again.
  self.ctx.levels=if Locked.on()then ctx.levels or Locked.levels()else nil
- if self.levelsKey~=Levels.key()then
+ -- The closet (rack_deck): read again with every context; a flip redraws the footer and every card, both tabs.
+ self.ctx.closet=Closet.resolve(ctx.closet)
+ if self.balls.ctx.closet~=self.ctx.closet then self.balls:setContext({closet=self.ctx.closet})end
+ if self.levelsKey~=Levels.key()or self.closetKey~=self.ctx.closet then
   self:build(self.view);self:relayout();return
  end
  -- A book-only plate just granted (or a fresh save's facts) changes the grid: rebuild it.
@@ -589,7 +603,7 @@ function Shop:paintPane()
   Kit.setText(self.action,"Retry");Kit.setEnabled(self.action,true)
  elseif status.button then
   Kit.setText(self.action,if pending then "Buying…"elseif confirming then "Confirm ★ "..status.price else status.button)
-  Kit.setEnabled(self.action,status.enabled==true and not pending and(status.gate==nil or self.callbacks.train~=nil))
+  Kit.setEnabled(self.action,status.enabled==true and not pending and(status.gate==nil or self.callbacks.train~=nil)and(status.kind~="egg"or self:canDeckEgg()))
   Kit.setTappable(self.action,status.kind=="short"and not self.pending)
  end
  self.root:SetAttribute("FocusedPlate",id);self.root:SetAttribute("PaneState",if retry then "retry"else status.kind)
@@ -699,6 +713,11 @@ function Shop:act(fromPane)
  if self.ctx.retry==true and self.ctx.chosen==id then
   if self.callbacks.retry then self.callbacks.retry("theme")end;return true
  end
+ if status.kind=="egg"then
+  -- The closet: "More at the Deck Egg" opens Hatch eggs on the Deck Egg (init.client's onDeckEgg).
+  if not self:canDeckEgg()then return false end
+  return self.callbacks.deckEgg("plate",id)~=false
+ end
  if status.kind=="owned"then
   if self.callbacks.equip then self.callbacks.equip(id)end
   require(script.Parent.UIClick).play("equip");return true -- QA v775 note 10
@@ -724,11 +743,16 @@ function Shop:act(fromPane)
  return false
 end
 
+-- The closet's button has somewhere to go.
+function Shop:canDeckEgg()
+ local callbacks=self.callbacks
+ return callbacks.deckEgg~=nil and(callbacks.hasDeckEgg==nil or callbacks.hasDeckEgg()==true)
+end
 -- "N Stars short. One more round?" (then "N Stars short") when the server says
 -- NeedStars and the shortfall is known; the plain reason when it is not.
 function Shop.shortText(plateId,ctx)
  local price=Themes.price(plateId)
- if price then price=Deal.quote("faceplate",plateId,price,weekOf(ctx))end
+ if price then price=Deal.quote("faceplate",plateId,price,Closet.week(ctx and ctx.closet,weekOf(ctx)))end
  return UICopy.starsShort(if price then price-((ctx and ctx.wallet)or 0)else nil)
 end
 -- Server reply to a purchase.
@@ -739,7 +763,7 @@ function Shop:result(message)
  local plateId=self.pending.plateId;self.pending=nil
  if message.status~="Saved"then
   local reason=({NeedStars="shop.reason.needStars",Busy="shop.reason.busy",Throttled="shop.reason.throttled",NeedsLevel="shop.reason.needsLevel",ShelfChanged="shop.reason.priceChanged",PriceChanged="shop.reason.priceChanged"})[message.reason]
-  self.errorId,self.errorText,self.errorFit=plateId,UICopy.get(reason or "shop.failed.bought"),nil
+  self.errorId,self.errorText,self.errorFit=plateId,Closet.reason(message.reason)or UICopy.get(reason or "shop.failed.bought"),nil
   -- A stale card: read the save again, so the chip shows.
   if message.reason=="NeedsLevel"then self.balls:send("snapshot")end
   if message.reason=="NeedStars"then self.errorFit=Shop.shortText(plateId,self.ctx);self.errorText=self.errorFit[1]end

@@ -116,6 +116,16 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
   rebuilt=function(shop)self:syncTabs(shop)end,
   ballBought=function(id)if self.onBallBought then self.onBallBought(id)end end,
   ballEquipped=function(id)if self.onBallEquipped then self.onBallEquipped(id)end end,
+  -- Rotation slice 2 (lane D): Deck style as a closet under rack_deck. "More at the Deck Egg" on an unowned plate or
+  -- ball theme calls `onDeckEgg(kind, id)` (kind "plate" | "ball"), set by init.client: close Deck style, then Hatch
+  -- eggs on the Deck Egg tile. Until it is set the button stays disabled.
+  deckEgg=function(kind,id)
+   if not self.shade.Visible or not self.onDeckEgg then return false end
+   local accepted=self.onDeckEgg(kind,id)
+   if accepted~=false and self.onAccepted then self.onAccepted("confirm")end
+   return accepted~=false
+  end,
+  hasDeckEgg=function()return self.onDeckEgg~=nil end,
  })
  self:syncTabs(self.shop)
  self:showTab("Shell");return self
