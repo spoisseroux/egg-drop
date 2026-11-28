@@ -65,7 +65,10 @@ end
 -- The Outfit Egg (DailyRack; ROTATION-BRIEF 1 "Colours tonight"): four new colours on each of the 16 own-coloured bases
 -- (one common, one uncommon, one rare, one epic), a colour an existing row of that base already uses skipped, then the
 -- five legendary finish rows (the sparkle pick, in its daily order). [PLACEHOLDER] hexes and picks until Fable plays them.
--- Cap check (architect review 5): 23 bases + 24 shipped + 8 weekly + 64 + 5 = 124 <= WearableCatalog.OwnedLimit (128).
+-- Cap check (ARCH-REVIEW-ROTATION 5, corrected by ARCH-REVIEW-ROTATION-2 4): 23 bases + 24 shipped + 8 weekly + 64 + 5
+-- sparkle rows + Angel Wings (WearableCatalog.EggBases) = 125 <= WearableCatalog.OwnedLimit (128), the write cap. Each new
+-- This week row adds one (about 3 weeks of headroom). Loads accept up to WearableCatalog.LoadLimit (256) from this build
+-- on, so a later build can raise the write cap; older builds still refuse a 129th on load (two releases to raise it).
 Variants.EggColours=table.freeze({
  cherry={"Cherry","#E9574C"},sky={"Sky","#5CBEF5"},mint={"Mint","#7FE0CF"},butter={"Butter","#FFD86B"},
  grape={"Grape","#9B7BE8"},bubblegum={"Bubblegum","#FF86C8"},tangerine={"Tangerine","#F08A3C"},

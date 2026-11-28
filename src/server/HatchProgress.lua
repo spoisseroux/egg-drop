@@ -1332,8 +1332,11 @@ end
 -- never roll again or charge twice. Inside UpdateAsync: RackState.apply's rules (Guard.other, a broken field, the op
 -- already saved, ownership, the bound pool, RackDone, ClosetFull at 128, Stars). -> ok, reason, record (RackState.publicLast).
 -- AlreadySaved (a replay) answers true with the saved record when it was the last one.
+-- Slice 2 (ROTATION-2-BRIEF, ARCH-REVIEW-ROTATION-2 5): `egg` is "outfit", "toycolour" or "deck" (RackState.Eggs), each
+-- with its own price and switch (rack, rack_toys, rack_deck), the same request shape and one shared write; `petId` is
+-- the pet that is out for the toy and deck eggs (saved in `last.pet`). The outfit candidate freezes rack_wings.
 function Hatching.rackEgg(handle, egg, request)
-	if egg ~= "outfit" or type(request) ~= "table" then return false, "InvalidRack" end
+	if type(egg) ~= "string" or RackState.Eggs[egg] == nil or type(request) ~= "table" then return false, "InvalidRack" end
 	local op, petId, price, mode, poolKey = request.requestId, request.petId, request.price, request.mode, request.poolKey
 	local day = DailyRack.dayArg(request.day)
 	if not RackState.opaque(op) or type(petId) ~= "string" or #petId < 1 or #petId > 32 or day == nil
@@ -1349,13 +1352,14 @@ function Hatching.rackEgg(handle, egg, request)
 		local saved = RackState.find(handle.state, op)
 		if saved then return true, "AlreadySaved", RackState.publicLast(if type(saved) == "table" then saved else nil) end
 		if handle.pending then return false, "Pending" end
-		if not DailyRack.on("rack") then return false, "NotReady" end
+		if not DailyRack.on(RackState.switch(egg)) then return false, "NotReady" end
 		if day ~= DailyRack.today(handle.adapter.now()) then return false, "DayChanged" end
-		if price ~= DailyRack.Price then return false, "PriceChanged" end
+		if price ~= RackState.price(egg) then return false, "PriceChanged" end
 		local current = RackState.selectionMode(handle.restricted)
 		if mode ~= current then return false, "PolicyChanged" end
 		candidate = table.freeze({ op = op, egg = egg, petId = petId, day = day, price = price, mode = mode, poolKey = poolKey,
-			equip = request.equip == true, unit = if mode == "random" then handle.adapter.random() else nil })
+			equip = request.equip == true, unit = if mode == "random" then handle.adapter.random() else nil,
+			wings = if egg == "outfit" and DailyRack.on("wings") then true else nil })
 	end
 	local digest = "rack:" .. egg .. ":" .. candidate.petId .. ":" .. candidate.day .. ":" .. candidate.price .. ":" .. candidate.mode .. ":" .. candidate.poolKey
 	local ok, reason = transact(handle, signature, handle.state.revision, RackState.apply, candidate, candidate.op, nil, digest)
@@ -1366,8 +1370,32 @@ function Hatching.rackEgg(handle, egg, request)
 	end
 	return false, reason
 end
+-- toySkinWear (DailyRack "toys"; ROTATION-2-BRIEF 1): wear an owned colour on an unlocked toy, or skinId "none" for the
+-- original colour. One write, idempotent by the client's operation id (signature `toyskin:<id>`, digest binds toy and
+-- skin); an unchanged choice is NoChange (a success, no write). RackState.applyToyWear's refusals: RackBroken (a
+-- malformed rack or rack.toy, never written over), LockedToy, NotOwned, InvalidSkin. Off: NotReady (rack.toy untouched).
+function Hatching.toySkinWear(handle, operationId, toyId, skinId)
+	if type(operationId) ~= "string" or #operationId < 1 or #operationId > 80 or type(toyId) ~= "string" or #toyId > 32
+		or type(skinId) ~= "string" or #skinId > 32 then return false, "InvalidSkin" end
+	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
+	local signature = "toyskin:" .. operationId
+	local resuming = handle.pending and handle.pending.signature == signature
+	if not resuming then
+		if not DailyRack.on("toys") then return false, "NotReady" end
+		local _, why = RackState.toyWearResult(handle.state, { toyId = toyId, skinId = skinId })
+		if why == "NoChange" then return true, why end
+		if why then return false, why end
+	end
+	local candidate = resuming and handle.pending.candidate or table.freeze({ toyId = toyId, skinId = skinId, operationId = operationId })
+	if candidate.toyId ~= toyId or candidate.skinId ~= skinId then return false, "OperationConflict" end
+	local digest = "toyskin:" .. candidate.toyId .. ":" .. candidate.skinId
+	local ok, reason = transact(handle, signature, handle.state.revision, RackState.applyToyWear, candidate, signature, nil, digest)
+	if not ok and reason == "NoChange" then return true, reason end
+	return ok, reason
+end
+
 -- What the owner's client sees (only while DailyRack "rack" is on): RackState.public for every owned pet, `outfit`
--- the pet that is out.
+-- the pet that is out, and the toy and deck eggs while their switches are on.
 function Hatching.rackPublic(handle)
 	local state = handle.state
 	if type(state) ~= "table" then return nil end
@@ -1550,7 +1578,9 @@ function Hatching.buyFaceplate(handle, operationId, plateId, price)
 	local signature = "faceplate:" .. operationId
 	if Faceplates.owns(handle.state, plateId) and not (handle.pending and handle.pending.signature == signature) then return true, "AlreadyOwned" end
 	local candidate = handle.pending and handle.pending.signature == signature and handle.pending.candidate
-		or table.freeze({ plateId = plateId, price = price, operationId = operationId, week = shelfWeek(handle.adapter.now()) })
+		or table.freeze({ plateId = plateId, price = price, operationId = operationId, week = shelfWeek(handle.adapter.now()),
+			-- Deck style as a closet (DailyRack "deck", ARCH-REVIEW-ROTATION-2 7): frozen when asked (FaceplateState.check).
+			closet = if DailyRack.on("deck") then true else nil })
 	if candidate.plateId ~= plateId or candidate.price ~= price then return false, "OperationConflict" end
 	-- The digest binds the id to its plate and price, so a reused id for another plate (or
 	-- at another price) is refused as OperationConflict instead of matching lastOperation as "Saved".
@@ -1615,7 +1645,9 @@ function Hatching.buyBallTheme(handle, operationId, themeId, price, equip)
 	if BallThemes.owns(handle.state, themeId) and not resuming then return true, "AlreadyOwned" end
 	local candidate = resuming and handle.pending.candidate
 		or table.freeze({ themeId = themeId, price = price, operationId = operationId, equip = equip == true,
-			week = shelfWeek(handle.adapter.now()) })
+			week = shelfWeek(handle.adapter.now()),
+			-- Deck style as a closet (DailyRack "deck"): frozen when asked (BallThemeState.check).
+			closet = if DailyRack.on("deck") then true else nil })
 	if candidate.themeId ~= themeId or candidate.price ~= price then return false, "OperationConflict" end
 	local digest = "ball:" .. candidate.themeId .. ":" .. tostring(candidate.price)
 	local ok, reason = transact(handle, signature, handle.state.revision, shelfApply(handle, BallThemes.applyBuy), candidate, signature, nil, digest)
