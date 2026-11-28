@@ -228,6 +228,26 @@ return function(server)
 		assert(Skins.read({owned={["Bad"]=true}}).broken and Skins.read({owned={a="yes"}}).broken and Skins.read("x").broken)
 	end)
 
+	test("beta 46 Studio check: a player with any toy always has it dealt (a locked pick gives its place), never an empty egg",function()
+		for _,toy in ipairs(Skins.Toys)do
+			for day=DAY0,DAY0+30 do
+				local unlocks={[toy]=true}
+				local picks=Skins.picks(day,unlocks)
+				local found=false
+				for _,r in ipairs(picks)do if r.toy==toy then found=true;assert(r.id==Skins.colours(toy)[(day//2)%4+1].id,"the cycle's colour")end end
+				assert(found and #picks==3,toy.." dealt on "..day)
+				local v=Skins.view(day,unlocks,{},"random")
+				assert(not v.rest and v.total>0,"something to roll")
+				for _,item in ipairs(v.items)do if item.toy==toy then assert(Skins.rarityOf(day,item.id)==item.rarity)end end
+			end
+		end
+		-- every toy owned: the shared schedule, unchanged
+		for day=DAY0,DAY0+10 do
+			local a,b=Skins.picks(day),Skins.picks(day,ALLTOYS)
+			for i=1,3 do assert(a[i].id==b[i].id)end
+		end
+	end)
+
 	test("the Toy Colour Egg's deal: 3 toys a day, every toy each 2-day cycle, a toy back in 3 days, a colour in 9",function()
 		local lastToy,lastSkin,gapToy,gapSkin={},{},0,0
 		for c=DAY0//2,DAY0//2+60 do

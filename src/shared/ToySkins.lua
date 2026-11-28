@@ -89,8 +89,12 @@ function Skins.known(id)return type(id)=="string"and byId[id]~=nil end
 local function idShape(id)return type(id)=="string"and #id>=1 and #id<=Skins.IdLimit and string.match(id,"^[a-z][a-z0-9_]*$")~=nil end
 Skins.idShape=idShape
 
--- Today's 3 picks: rows {id, toy, part, rarity, weight, name, hex} in deal order.
-function Skins.picks(day)
+-- Today's 3 picks: rows {id, toy, part, rarity, weight, name, hex} in deal order. `unlocks` (optional, the save's
+-- toyUnlocks): Studio check (beta 46) found a one-toy player's three picks all locked, so the egg rested on its first
+-- day ("You have today's colours!") with nothing to roll. With unlocks, a locked pick gives its place to a toy the
+-- player owns that is not dealt today (the cycle's order after today's), in that toy's colour for the cycle; locked
+-- picks stay only when every owned toy is already dealt. Without unlocks: the shared schedule (specs, rarityOf).
+function Skins.picks(day,unlocks)
 	if not Rack.wholeDay(day)then return {}end
 	local cycle=day//Skins.Period
 	local k=day-cycle*Skins.Period
@@ -107,6 +111,23 @@ function Skins.picks(day)
 		local list=cycleOrder[toy]
 		local row=list[cycle%#list+1]
 		table.insert(out,{id=row.id,toy=row.toy,part=row.part,rarity=row.rarity,weight=Rack.Weights[row.rarity],name=row.name,hex=row.hex})
+	end
+	if unlocks~=nil then
+		local dealt={};for _,row in ipairs(out)do dealt[row.toy]=true end
+		local spare={}
+		for j=1,n do
+			local toy=sorted[(k*Skins.PerDay+math.min(Skins.PerDay,n)+j-1)%n+1]
+			if not dealt[toy]and Toys.owns(unlocks,toy)then dealt[toy]=true;table.insert(spare,toy)end
+		end
+		for index,row in ipairs(out)do
+			if #spare==0 then break end
+			if not Toys.owns(unlocks,row.toy)then
+				local toy=table.remove(spare,1)
+				local list=cycleOrder[toy]
+				local swap=list[cycle%#list+1]
+				out[index]={id=swap.id,toy=swap.toy,part=swap.part,rarity=swap.rarity,weight=Rack.Weights[swap.rarity],name=swap.name,hex=swap.hex}
+			end
+		end
 	end
 	return out
 end
@@ -156,7 +177,7 @@ Skins.poolKey=poolKey
 function Skins.view(day,unlocks,owned,mode)
 	mode=if mode=="fixed"then "fixed"else "random"
 	local have=type(owned)=="table"and owned or {}
-	local picks=Skins.picks(day)
+	local picks=Skins.picks(day,unlocks)
 	local W,unowned=0,{}
 	local open={}
 	for index,row in ipairs(picks)do
@@ -184,8 +205,14 @@ function Skins.view(day,unlocks,owned,mode)
 	return {day=day,mode=mode,rest=W==0,next=if mode=="fixed"then nextId else nil,total=total,poolKey=poolKey(unowned),items=items}
 end
 -- The rarity of a skin on `day`'s egg (nil when it is not dealt that day).
+-- Any toy's colour for this cycle can be dealt (a locked pick swapped for an owned toy, Skins.picks), so a skin
+-- is on `day`'s egg when it is its toy's colour for the cycle.
 function Skins.rarityOf(day,id)
-	for _,row in ipairs(Skins.picks(day))do if row.id==id then return row.rarity end end
-	return nil
+	if not Rack.wholeDay(day)then return nil end
+	local row=byId[id]
+	if not row then return nil end
+	local list=cycleOrder[row.toy]
+	local current=list and list[(day//Skins.Period)%#list+1]
+	return if current and current.id==id then row.rarity else nil
 end
 return table.freeze(Skins)
