@@ -549,7 +549,14 @@ function Rack.mount(deps)
 				if deps.toast then deps.toast(Copy.get(K.worn,{item=name}))end
 			end
 		end
-		local function open()if not deps.show(r,options)and deps.fallback then deps.fallback(r,options)end end
+		-- Code review (rotation 2, B1): a reveal that cannot open still closes (the machine's revealClosed) and names
+		-- what was granted, so a paid egg never ends in nothing.
+		local function open()
+			if deps.show(r,options)then return end
+			if deps.fallback then deps.fallback(r,options);return end
+			if deps.toast then pcall(deps.toast,Copy.get(K.worn,{item=name}))end
+			if options.closed then pcall(options.closed)end
+		end
 		if not(deps.deliver and deps.deliver(open,K.shell))then open()end
 	end
 	local function handle(o)

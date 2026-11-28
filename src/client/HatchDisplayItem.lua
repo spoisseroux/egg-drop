@@ -184,7 +184,8 @@ function Item.create(world,gui,result,builder,height,reduced)
  local self={graphic=graphic,scale=scale,mode="NativeItemArt"}
  function self:pose(sample)
   self.scale.Scale=sample.heroScale
-  gui.Rotation=if result.itemId then math.deg(sample.toyYaw)*15/18 else 0
+  -- Code review (rotation 2, B3): the Deck Egg's flat plate or ball art stays still (only toys swing)
+  gui.Rotation=if result.itemId and not result.deckItem then math.deg(sample.toyYaw)*15/18 else 0
  end
  function self:destroy()if self.graphic then self.graphic:Destroy();self.graphic=nil end end
  return self

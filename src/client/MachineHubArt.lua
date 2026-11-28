@@ -77,6 +77,13 @@ local function weekOf(ctx)
 end
 -- Pure: this week's first shelf slot of one kind ({kind, id, ...}) or nil.
 function Art.shelfSlot(ctx,kind)
+ -- Code review (rotation 2, B2): under the Deck style closet (rack.deck.closet) no plate or ball deal is pictured
+ if kind=="faceplate"or kind=="ball"then
+  local state=type(ctx)=="table"and type(ctx.state)=="table"and ctx.state or {}
+  local rack=type(state.rack)=="table"and state.rack or nil
+  local closet=if type(ctx)=="table"and type(ctx.deckCloset)=="boolean"then ctx.deckCloset else(rack~=nil and type(rack.deck)=="table"and rack.deck.closet==true)
+  if closet then return nil end
+ end
  local week=weekOf(ctx)
  if not week then return nil end
  for _,slot in ipairs(Deal.slots(week))do
