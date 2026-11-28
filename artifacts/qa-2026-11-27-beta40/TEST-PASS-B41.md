@@ -1,6 +1,6 @@
 # Test pass: beta (41), 2026-11-27
 
-Build: beta (41) on **Pocket Pals Beta**. Live is not touched.
+Build: beta (42), v144 (beta 41 plus two fixes), on **Pocket Pals Beta**. Live is not touched.
 What was done: `BRIEF-B41.md`. Your notes: `FEEDBACK.md`.
 
 `/freshsave`, rejoin, play from the start (`/freshsave restore` brings your save back).
@@ -45,9 +45,7 @@ Switches: `/onboard teach|gifts|lead off`, `/alive deckfeel off` (and `on`, `cle
 
 ## Known
 
-- In the shop, the pointer's "Hatch free!" label sits over the Toy Egg tile.
-- The "New best!" stamp covers the score line.
-- The full boot sheet showed again on a later open.
+- Fixed in beta (42): the shop pointer no longer has a label over the Toy Egg tile; New best! sits between the Star and the count. The short POCKET DECK wordmark on each open is by design (the full boot sheet plays once a session).
 - Not seen on a phone or gamepad. Park and Dash lessons, the Snack gift and the menu lesson weren't reached by hand.
 
 ## Results
