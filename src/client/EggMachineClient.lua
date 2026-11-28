@@ -117,6 +117,22 @@ Machine.ShotCap=.2       -- the reveal starts at the latest this long after its 
 -- Code review B35: a Stat Egg shot whose reveal never opened (a Saved answer without a receipt, a reveal that threw)
 -- gives the camera back this long after its schedule's start, so nothing is left Scriptable at Shot B.
 Machine.StatWatch=3
+-- Pure (beta 40 note 4): is a shot's owner open? None (an owner-less shot): no. One with isOpen: its answer. Any other
+-- owner (the item cinematic) owns its return through the hatch screen's close: counted open, never watched here; a
+-- deferred reveal's owner (the Stat Egg's) that cannot say is not open (code review B35, as before).
+function Machine.ownerOpen(owner,deferred)
+	if owner==nil then return false end
+	if type(owner)=="table"and type(owner.isOpen)=="function"then
+		local ok,value=pcall(owner.isOpen,owner)
+		return ok and value==true
+	end
+	return deferred~=true
+end
+-- Pure: does the watch give the camera back? Only when the owner is not open and never was, no hatch screen is up and
+-- no Hatch another gap is waiting.
+function Machine.watchReturns(w)
+	return w.open~=true and w.seenOpen~=true and w.screen~=true and w.gap~=true
+end
 Machine.PocketRange=24   -- farther than this from the machine: the pocket version
 Machine.ReturnSeconds=.30
 -- The two shots in the machine's frame (+Z the front, +X the cup's side, up from the ground): camera at, looks at.
@@ -1085,11 +1101,17 @@ function Machine:shotStep()
 		if p>=1 then self:giveBack(shot)end
 	end
 	-- Code review B35: the Stat Egg's reveal owns the return (revealClosed "stat"); if it never opened, nobody would.
-	if cam and not cam.returning and Machine.Unclaimed[shot.kind]==true and t>=s.start+Machine.StatWatch then
-		local owner=shot.cinematic
-		local open=false
-		if owner and type(owner.isOpen)=="function"then local ok,value=pcall(owner.isOpen,owner);open=ok and value==true end
-		if not open and not shot.statSeenOpen then self:returnCamera(false)
+	-- Beta (40) note 4 (ARCH-REVIEW-P2 section 3): generalised to any shot. A shot whose owner is not open (none at all,
+	-- or one that says isOpen false), with no hatch screen up and no Hatch another gap, gives the camera back StatWatch s
+	-- after its start; once its owner was seen open, the owner's own close returns it. Machine.watchReturns is the rule.
+	if cam and not cam.returning and t>=s.start+Machine.StatWatch then
+		local open=Machine.ownerOpen(shot.cinematic,Machine.Unclaimed[shot.kind]==true)
+		local screen=false
+		if self.d.screens then
+			local ok,list=pcall(self.d.screens)
+			if ok and type(list)=="table"then for _,gui in ipairs(list)do if typeof(gui)=="Instance"and gui.Parent and gui.Visible then screen=true end end end
+		end
+		if Machine.watchReturns({open=open,seenOpen=shot.statSeenOpen==true,screen=screen,gap=self.gap~=nil})then self:returnCamera(false)
 		elseif open then shot.statSeenOpen=true end
 	end
 	-- The model unbound, or the corner / capsule off, mid-shot: the camera goes back at once.

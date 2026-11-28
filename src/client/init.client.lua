@@ -1658,6 +1658,8 @@ openNursery = function()
 	if roomView.busy or board:GetAttribute("Mode") ~= "Room" then return end
 	-- Onboarding v2: Hatch eggs waits while the stork plays the starter receipt (never a second hatch).
 	if clientUI.storyBusy() or (clientUI.firstHatchStory and clientUI.firstHatchStory:ownsReceipt()) then return end
+	-- Onboarding part 2 (Onboard "gifts"): a gift given whose card never closed comes out of the machine again instead.
+	if clientUI.giftOpenHook and clientUI.giftOpenHook() then return end
 	picker:close()
 	journal:close()
     if clientUI.hueView then clientUI.hueView:close("forced")end
@@ -5787,6 +5789,9 @@ do
   end
   function things.seen(id)
    if id=="dash"and Things.on()and not Coach.has(clientUI.coach.mask,"dashSeen")then clientUI.coach:mark("dashSeen")end
+   -- Onboarding part 2 (lesson C, ARCH-REVIEW-P2 1): any opening of the page sets menuSeen (refused while `teach` is off).
+   if id=="page"and Things.on()and not Coach.has(clientUI.coach.mask,"menuSeen")
+    and require(ReplicatedStorage.Shared.Onboard).on("teach")then clientUI.coach:mark("menuSeen")end
   end
   function things.help(id)return How.open(id)end
   function things.show(id)
@@ -6027,7 +6032,9 @@ do
       require(script.AllSetCard).show(player:WaitForChild("PlayerGui"),{copy=Copy.get,pet=petName(),petId=shown and shown.id or "pip",
        play=function(name,speed,gain)return audio:play(name,speed,gain)end,haptic=function(name)require(script.Haptics).play(name)end,
        reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
-       cheer=function()request:FireServer("petLead",{kind="cheer"})end,next=function()clientUI.openThings()end,
+       cheer=function()request:FireServer("petLead",{kind="cheer"})end,
+       -- Onboarding part 2 (lesson C): with `teach` on, "What's next?" only closes the card; the Menu button is lit
+       next=function()if clientUI.teach and clientUI.teach:ask("menu")then return end;clientUI.openThings()end,
        -- the fun pass: "Hatch one!" when the Stars cover the cheapest egg; it lays the paw prints to the egg machine
        canHatch=function()
         local cost=require(script.EggHatchView).cheapestCost()
@@ -6154,20 +6161,18 @@ do
     -- GIFT-ART-BRIEF 1: the ribbon is a real ribbon on the machine's dial (EggMachineClient:giftRibbon, GiftRibbon); a
     -- tap on its "Free egg!" tag starts the gift like the chip.
     local ribbonOptions={gui=function()return playerGui end,text=Copy.get("onbGift.freeEgg"),onTap=function()if chain then chain:resume()end end}
+    -- Onboarding part 2: no chip over the pet; the bubble rides an un-animated anchor at the pet's ground point.
     local giftBubble=require(script.GiftBubble).new({parent=playerGui,adornee=petPart,reduced=reducedNow,
+     origin=function()local pet=roomView.pet;local o=pet and not pet.destroyed and pet.model and pet.model.Parent and pet.origin;return if typeof(o)=="Vector3"then o else nil end,
      text=function(key)return Copy.get(key,{pet=petName()})end,
      onTap=function()if chain then chain:tap()end end,onClose=function()if chain then chain:close()end end,
-     onChip=function()if chain then chain:resume()end end,
-     -- the chip hides under any menu, card or the Deck
+     -- the bubble hides under any menu, card or the Deck
      hidden=function()
       return board:GetAttribute("Mode")~="Room"or clientUI.anyModalOpen()==true or Reveal.isOpen()
      end,
-     distance=function()
-      local part,from=petPart(),rootPosition()
-      return if part and from then(part.Position-from).Magnitude else nil
-     end,
-     play=function(name,speed,volume)return audio:play(name,speed,volume)end,haptic=haptic,
      ribbon=function(on)local m=machine();if m and m.giftRibbon then m:giftRibbon(on,ribbonOptions)end end})
+    local OnboardSwitch=require(ReplicatedStorage.Shared.Onboard)
+    local function teachOn()return OnboardSwitch.on("teach")end
     -- GIFT-ART-BRIEF 3: the paint wipe on the pet after "Paint {pet}!"
     local wipe=require(script.GiftPaintWipe).new({pet=function()return roomView.pet end,
      play=function(name,speed,volume)return audio:play(name,speed,volume)end,haptic=haptic,
@@ -6180,6 +6185,7 @@ do
      reduced=reducedNow,budget=function()local ok,level=pcall(function()return require(script.AliveBudget).level()end);return ok and level or 0 end,
      camera=function()return workspace.CurrentCamera end,gui=function()return playerGui end,
      text=function(key,vars)return Copy.get(key,vars)end})
+    clientUI.giftWipe=wipe -- part 2's lesson A plays it after the paint, on the pet screen
     local function petScreen()
      local part,camera=petPart(),workspace.CurrentCamera
      if not(part and camera)then return nil end
@@ -6190,7 +6196,10 @@ do
     local pressAction={paint="giftPaintBuy",toy="giftToyBuy"}
     local function petId()local shown=roomView.shownPet;return shown and shown.id or "pip"end
     -- the card, opened by the machine once the egg is in the cup (the standing rule), or at once with the corner off
+    local presented={} -- the gift cards shown this session, by record (AlreadyGranted never shows a second: GiftChain.showCard)
     local function present(record)
+     presented[Chain.recordKey(record)]=true
+     local acted,lessonA=false,nil
      local open=function()
       local pool=#ToyCatalog.remaining(nurseryState and nurseryState.toyUnlocks)+1
       local id=petId()
@@ -6203,8 +6212,12 @@ do
        itemName=if record.kind=="paint"then(hue and hue.name or record.item)else(ToyCatalog.ById[record.item]and ToyCatalog.ById[record.item].name or record.item),
        poolSize=pool,play=function(name,speed,volume)return audio:play(name,speed,volume)end,haptic=haptic,reduced=reducedNow,petScreen=petScreen,
        act=function(r)
+        acted=true
         if r.kind=="paint"then
          pcall(wipe.prepare,wipe) -- the colours before the paint, so the sweep has where it starts from
+         -- Onboarding part 2 (lesson A, Onboard "teach"): "Paint {pet}!" opens the pet screen and lights Dress up, then
+         -- Paint; the pot is used there. Off (or the screen cannot open: the fallback below): today's one tap.
+         if clientUI.teach and teachOn()then lessonA={pot=r.item,hue=hue,deeper=deeper};return end
          clientUI.hueIntent:use(petId(),"main",r.item,nil)
         else
          clientUI.toyIntent:equip(petId(),r.item,nil)
@@ -6212,19 +6225,44 @@ do
         end
        end,
        landed=function(r)
-        if r.kind=="paint"then pcall(wipe.start,wipe,{pot=hue and hue.color or nil,colour=hue and hue.name or r.item,pet=petName(),duplicate=deeper})end
+        if r.kind=="paint"and not lessonA then pcall(wipe.start,wipe,{pot=hue and hue.color or nil,colour=hue and hue.name or r.item,pet=petName(),duplicate=deeper})end
        end,
        seen=function(r)
         local id=HttpService:GenerateGUID(false)
         seenWaiting[id]={kind=r.kind,tries=0}
         nurseryRequest:FireServer("giftSeen",{kind=r.kind,id=id})
        end,
-       closed=function()if chain then chain:revealed()end end})
+       closed=function()
+        if chain then chain:revealed()end
+        local m=clientUI.eggMachine
+        -- "Later" on the Paint card: the pot is kept and the deck lesson comes next (part 2)
+        if record.kind=="paint"and not acted and clientUI.teach then clientUI.teach:skip("dress")end
+        local lesson=lessonA;lessonA=nil
+        if lesson then
+         -- Beta (40) note 4 (ARCH-REVIEW-P2 3): the machine gives the camera back at once, then one Heartbeat, then the pet
+         -- screen takes it (else it would record the shot's Scriptable camera and restore that on exit).
+         if m then pcall(m.returnCamera,m,true)end
+         task.defer(function()
+          RunService.Heartbeat:Wait()
+          if not(clientUI.teach and clientUI.teach:startDress(lesson))then
+           -- the fallback (the pet not out, a race seat, the Dress up door off): today's one-tap paint
+           clientUI.hueIntent:use(petId(),"main",lesson.pot,nil)
+           pcall(wipe.start,wipe,{pot=lesson.hue and lesson.hue.color or nil,colour=lesson.hue and lesson.hue.name or lesson.pot,pet=petName(),duplicate=lesson.deeper})
+          end
+         end)
+        elseif m then
+         -- the card is the gift shot's owner: its close gives the camera back (ARCH-REVIEW-P2 3)
+         pcall(m.revealClosed,m,"gift")
+        end
+       end})
      end
      local machine=clientUI.eggMachine
-     local took=machine~=nil and select(2,pcall(machine.deliver,machine,drop[record.kind]or "Hue",open,nil))==true
+     -- ARCH-REVIEW-P2 3: the card is the shot's owner, so the machine's watch knows when it is up and never keeps the
+     -- camera for good if it never opens.
+     local took=machine~=nil and select(2,pcall(machine.deliver,machine,drop[record.kind]or "Hue",open,{isOpen=Reveal.isOpen}))==true
      if not took then open()end
     end
+    clientUI.giftPresent=present
     local waiting={}
     local result=remotes:WaitForChild("GiftResult")
     result.OnClientEvent:Connect(function(packet)
@@ -6248,7 +6286,10 @@ do
      end
      waiting[packet.id]=nil
      if packet.status=="Saved"and type(packet.gift)=="table"then
-      present(packet.gift)
+      -- the Hatch eggs screen (gift mode) closes before the egg comes out (its close never ends the gift's shot)
+      if nurseryView:isOpen()then nurseryView:close("gift")end
+      -- ARCH-REVIEW-P2 2: a second ask answered AlreadyGranted never shows the card again
+      if Chain.showCard(packet,presented,Reveal.isOpen())then present(packet.gift)end
       w.done("Saved")
      else
       local machine=clientUI.eggMachine
@@ -6256,6 +6297,7 @@ do
       w.done(packet.status,packet.reason)
      end
     end)
+    local shopDone=nil -- the Hatch eggs screen's done while its gift ask is out
     chain=Chain.new({state=function()return nurseryState end,clock=os.clock,
      gate=function()
       local since=clientUI.coach.roomSince
@@ -6277,6 +6319,16 @@ do
       local from=rootPosition()
       return if typeof(at)=="Vector3"and from~=nil then(at-from).Magnitude else nil
      end,
+     -- Onboarding part 2: at the machine the shop opens on the free egg (the machine's own open crank first)
+     openShop=function()
+      if clientUI.eggCornerTurn and clientUI.eggCornerTurn(visitEggs)then return end
+      if visitEggs()then clientUI.accepted("confirm")end
+     end,
+     revealOpen=function()
+      local snacks=clientUI.snacks
+      return Reveal.isOpen()or(snacks~=nil and snacks.reveal~=nil and snacks.reveal:isOpen()==true)
+     end,
+     teach=teachOn,
      lead=function(target)
       if target=="Eggs"then
        local at=clientUI.eggCornerPlace and clientUI.eggCornerPlace()
@@ -6285,13 +6337,23 @@ do
       elseif target=="Nest"then things.show("nest")
       elseif target=="Dash"then things.show("dash")end
      end,
-     crank=function(kind,done)
+     crank=function(kind,chainDone)
+      -- the shop's latch lets go with the chain's answer (EggHatchView gift mode)
+      local function done(status,reason)
+       chainDone(status,reason)
+       local v=shopDone;shopDone=nil
+       if v then pcall(v,status)end
+      end
       -- the gift's own crank: its first tick unties the ribbon (GIFT-ART-BRIEF 1)
       local m=machine();if m and m.giftCrank then pcall(m.giftCrank,m)end
       if kind=="snack"then
        local snacks=clientUI.snacks
        if not(snacks and snacks.buyGift)then done("Rejected","Unavailable");return end
-       snacks.buyGift(done)
+       snacks.buyGift(function(status,reason)
+        -- the Stat Egg's reveal is the machine's already; the shop closes under it (its close never ends that shot)
+        if status=="Saved"and nurseryView:isOpen()then nurseryView:close("gift")end
+        done(status,reason)
+       end)
        return
       end
       local id=HttpService:GenerateGUID(false)
@@ -6311,7 +6373,8 @@ do
      end,
      inPark=function()return Attract.parkMember(rootPosition())end,
      park=function()return Attract.parkAnchor()~=nil end,
-     throwTip=function()toast("onbGift.throw")end,
+     -- part 2 (lesson D): with `teach` on the Throw button is lit instead of the toast
+     throwTip=function()if not teachOn()then toast("onbGift.throw")end end,
      fetchCard=function()
       toast("onbGift.fetch")
       pcall(function()roomView:cheerPet("cheer")end)
@@ -6319,6 +6382,46 @@ do
      event=function(name)request:FireServer("onboardEvent",name)end,
      mask=function()return clientUI.coach.mask end})
     clientUI.gifts=chain
+    -- The Hatch eggs screen in gift mode (ONBOARDING-P2-BRIEF 1, ARCH-REVIEW-P2 2): the chain's offer, its pet, its press.
+    nurseryView.giftSource=function()return chain:offer()end
+    nurseryView.giftPet=function()return petName()end
+    nurseryView.onGift=function(kind,done)
+     shopDone=done
+     local ok,sent=pcall(chain.shopCrank,chain,kind)
+     if not(ok and sent==true)then shopDone=nil;return false end
+     return true
+    end
+    -- An unseen gift: opening the shop (the prompt, the Menu) replays it out of the machine instead.
+    clientUI.giftOpenHook=function()return chain:replayUnseen()==true end
+    -- The machine's prompt reads "Free egg!" while a gift waits (a client watcher: streaming may rebuild the prompt).
+    local promptRef=nil
+    local function syncPrompt(on)
+     if not(promptRef and promptRef.Parent)then
+      local room=workspace:FindFirstChild("EggDropLounge")
+      promptRef=room and room:FindFirstChild("TurnEggs",true)or nil
+     end
+     local p=promptRef
+     if not(p and p:IsA("ProximityPrompt"))then return end
+     -- only a prompt this set is ever put back (to the server's own words, kept on the prompt)
+     if on then
+      if p:GetAttribute("GiftActionText")==nil then p:SetAttribute("GiftActionText",p.ActionText)end
+      local text=Copy.get("onbGift.freeEgg")
+      if p.ActionText~=text then p.ActionText=text end
+     elseif p:GetAttribute("GiftActionText")~=nil then
+      p.ActionText=p:GetAttribute("GiftActionText");p:SetAttribute("GiftActionText",nil)
+     end
+    end
+    -- The shop's tile wears the pointer while it is in gift mode (TeachPointer; the hand on the FREE tile).
+    local shopPointer=require(script.TeachPointer).new({reduced=reducedNow,input=function()return require(script.HintGlyphs).kindOf(UserInputService:GetLastInputType())end})
+    local function stepShopPointer(dt)
+     local kind=nurseryView:isOpen()and nurseryView.gift or nil
+     local tile=nil
+     if kind and not nurseryView.giftLatch then
+      local column=nurseryView.body and nurseryView.body:FindFirstChild("EggColumn")
+      tile=column and column:FindFirstChild("Recipe_"..require(script.EggHatchView).GiftTile[kind])
+     end
+     if tile then shopPointer:show(tile,Copy.get("onbGift.shop.hatch"));shopPointer:step(dt)else shopPointer:hide()end
+    end
     local nextLook=0
     local beatGifts=RunService.Heartbeat:Connect(function(dt)
      local state=nurseryState
@@ -6326,12 +6429,137 @@ do
       if os.clock()<nextLook then return end
       nextLook=os.clock()+.5
      end
-     local good,why=pcall(function()chain:step(os.clock());giftBubble:step(dt)end)
+     local good,why=pcall(function()
+      chain:step(os.clock());giftBubble:step(dt)
+      syncPrompt(Chain.parked(chain:read(),nil)~=nil)
+      stepShopPointer(dt)
+     end)
      if not good then warn("[Gift] "..tostring(why))end
     end)
-    gui.Destroying:Connect(function()beatGifts:Disconnect();giftBubble:destroy()end)
+    gui.Destroying:Connect(function()beatGifts:Disconnect();giftBubble:destroy();shopPointer:destroy()end)
    end)
    if not okGifts then warn("[Gift] not mounted: "..tostring(giftsProblem))end
+   -- Onboarding part 2 (artifacts/qa-2026-11-27-beta40/ONBOARDING-P2-BRIEF.md section 2, Onboard "teach"): five small
+   -- lessons on the real buttons (TeachLessons, one TeachPointer at a time). Off: nothing drawn, a look each frame.
+   local okTeach,teachProblem=pcall(function()
+    local Lessons=require(script.TeachLessons)
+    local OnboardSwitch=require(ReplicatedStorage.Shared.Onboard)
+    local Glyphs=require(script.HintGlyphs)
+    local Reveal=require(script.GiftReveal)
+    local playerGui=player:WaitForChild("PlayerGui")
+    local reducedNow=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end
+    local pointer=require(script.TeachPointer).new({reduced=reducedNow,input=function()return Glyphs.kindOf(UserInputService:GetLastInputType())end})
+    local function teachOn()return OnboardSwitch.on("teach")end
+    local function live(node)return node~=nil and require(script.TeachPointer).live(node)end
+    -- The garden is free for a garden pointer: nothing up (the prompt gate the gift chain reads), no card or reveal.
+    local function gardenFree()
+     local since=clientUI.coach.roomSince
+     if Needs.blocked(Needs.gate(gate(if since then os.clock()-since else 0,true),Things.on()),true)~=nil then return false end
+     return playerGui:FindFirstChild("EggDropAllSet2")==nil and playerGui:FindFirstChild("EggDropAllSet")==nil and not Reveal.isOpen()
+    end
+    local function anyCard()return Reveal.isOpen()or require(script.ConfirmDialog).isOpen()end
+    local function mainPaint(petId)
+     local row=nurseryState and type(nurseryState.petHues)=="table"and nurseryState.petHues[petId]
+     local main=type(row)=="table"and row.main or nil
+     local n=0
+     if type(main)=="table"then for _,v in pairs(main)do if type(v)=="number"then n+=v end end end
+     return n
+    end
+    local function stockedPot()
+     local inv=nurseryState and nurseryState.hueInventory or {}
+     for _,id in ipairs({"rose","tide","citrus","iris"})do if(inv[id]or 0)>0 then return id end end
+     return nil
+    end
+    local dress=nil -- lesson A started from the Paint card: {pot, hue, deeper, petId, base, wasOpen}
+    local lessons=Lessons.new({state=function()return nurseryState end,mask=function()return clientUI.coach.mask end,
+     teach=teachOn,park=function()return Attract.parkAnchor()~=nil end,pointer=pointer,
+     text=function(key)return Copy.get(key,{pet=petName()})end,
+     event=function(name)request:FireServer("onboardEvent",name)end,
+     target=function(id)
+      if anyCard()then return nil end
+      if id=="dress"then
+       local hueView=clientUI.hueView
+       if hueView and hueView.shade.Visible and clientUI.hueReturn=="focus"then
+        local pot=dress and dress.pot or stockedPot()
+        local key=pot and hueView:teachPot(pot)
+        return if live(key)then key else nil,"paint"
+       end
+       local focus=roomView.focusing==true and roomView.focusUI
+       local button=focus and focus.dressUpButton
+       return if live(button)then button else nil,"dress"
+      elseif id=="deck"then
+       local button=roomView.controls and roomView.controls:FindFirstChild("OpenHandheld")
+       return if gardenFree()and live(button)then button else nil,"deck"
+      elseif id=="menu"then
+       if gameMenu and gameMenu:isOpen()then
+        if gameMenu.pageOn then return nil end
+        local tile=gameMenu.body and gameMenu.body:FindFirstChild("Tile_things",true)
+        return if live(tile)then tile else nil,"things"
+       end
+       local button=roomView.controls and roomView.controls:FindFirstChild("Menu")
+       return if gardenFree()and live(button)then button else nil,"menu"
+      elseif id=="park"then
+       local gui=playerGui:FindFirstChild("EggDropParkThrow")
+       local button=gui and gui.Enabled and gui:FindFirstChild("Throw")
+       return if button and live(button)and not clientUI.anyModalOpen()then button else nil,"throw"
+      elseif id=="dash"then
+       local sheet=playerGui:FindFirstChild("EggDropDashGate")
+       local tile=sheet and sheet:FindFirstChild("Fun",true)
+       return if live(tile)then tile else nil,"go"
+      end
+      return nil
+     end})
+    local api={}
+    function api:ask(id)return teachOn()and lessons:ask(id)end
+    function api:skip(id)lessons:skip(id)end
+    -- Lesson A: "Paint {pet}!" opens the pet screen (the machine gave the camera back a Heartbeat ago). False: the caller
+    -- paints in one tap (the pet not out, a race seat, the Dress up door off, the screen refused).
+    function api:startDress(lesson)
+     if not teachOn()or not(clientUI.DressUp and clientUI.DressUp.on())then return false end
+     if board:GetAttribute("Mode")~="Room"or(clientUI.dash~=nil and clientUI.dash.seat~=nil)then return false end
+     local shown=roomView.shownPet
+     if not shown then return false end
+     local ok,opened=pcall(roomView.focusPet,roomView,true)
+     if not(ok and opened==true)then return false end
+     dress={pot=lesson.pot,hue=lesson.hue,deeper=lesson.deeper,petId=shown.id,base=mainPaint(shown.id)}
+     lessons.session.parked.dress=nil
+     return true
+    end
+    clientUI.teach=api
+    local beatTeach=RunService.Heartbeat:Connect(function(dt)
+     local good,why=pcall(function()
+      if not teachOn()then pointer:hide();dress=nil;return end
+      -- lesson A's end: a pot used on the pet (hueUse saved). The Dress up screen closes back to the pet screen and the
+      -- wipe plays there, close up.
+      if dress then
+       local d=dress
+       if mainPaint(d.petId)>d.base then
+        dress=nil
+        local hueView=clientUI.hueView
+        if hueView and hueView.shade.Visible then pcall(hueView.close,hueView,"teach")end
+        task.delay(.15,function()
+         if not roomView.focusing then pcall(roomView.focusPet,roomView,true)end
+         task.delay(.5,function()
+          local wipe=clientUI.giftWipe
+          if wipe then pcall(wipe.start,wipe,{pot=d.hue and d.hue.color or nil,colour=d.hue and d.hue.name or d.pot,pet=petName(),duplicate=d.deeper})end
+         end)
+        end)
+       else
+        local open=roomView.focusing==true or roomView.focusTransitioning==true or(clientUI.hueView~=nil and clientUI.hueView.shade.Visible)
+        if open then d.wasOpen=true
+        elseif d.wasOpen then
+         -- left both screens without painting: the pot is kept, the deck lesson may come (Dress up stays lit there)
+         dress=nil;lessons:skip("dress")
+        end
+       end
+      end
+      lessons:step(os.clock(),dt)
+     end)
+     if not good then warn("[Teach] "..tostring(why))end
+    end)
+    gui.Destroying:Connect(function()beatTeach:Disconnect();pointer:destroy()end)
+   end)
+   if not okTeach then warn("[Teach] not mounted: "..tostring(teachProblem))end
    -- Code review: the welcome gift never stays owed for good. While the snapshot says owed (welcomeGift = 0) and the
    -- three facts are done, the card's own ask gets WelcomeGift.AskAfter s, then the client asks again every AskEvery s
    -- (the server's loop re-checks everything); a gift this paid shows as a toast once the card is gone.

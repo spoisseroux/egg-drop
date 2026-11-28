@@ -957,8 +957,10 @@ function Room:_useRoomCamera(animate, arriving)
 	self.focusAspect = nil
 	if not self.savedCamera or self.savedCamera.camera ~= camera then
 		self:restoreCamera(true)
+		-- Beta (40) note 4 (ARCH-REVIEW-P2 3): a Scriptable camera here is someone else's shot (the egg machine's), never
+		-- the player's: it is stored as Custom, so leaving this view never leaves the camera stuck (FirstHatchStory's rule).
 		self.savedCamera = {
-			camera = camera, type = camera.CameraType, transform = camera.CFrame,
+			camera = camera, type = if camera.CameraType == Enum.CameraType.Scriptable then Enum.CameraType.Custom else camera.CameraType, transform = camera.CFrame,
 			focus = camera.Focus, fov = camera.FieldOfView,
 		}
 	else
@@ -1198,14 +1200,16 @@ function Room:reframeFocus()
     return true
 end
 
-function Room:focusPet()
+-- `teach` (onboarding part 2, lesson A): the Dress up lesson opens the pet screen at the egg machine, where the
+-- station's own prompt is in reach; only then is the "a prompt wins the E key" rule skipped.
+function Room:focusPet(teach)
 	local camera = workspace.CurrentCamera
 	local character = Players.LocalPlayer.Character
 	local root = character and character:FindFirstChild("HumanoidRootPart")
 	local lounge = workspace:FindFirstChild("EggDropLounge")
 	local floor = lounge and lounge:FindFirstChild("Floor")
 	if self.focusing then return self:reactPet(false) end
- if self:stationInReach()then return false end
+ if teach~=true and self:stationInReach()then return false end
 	if not camera or not self.pet or self.mode ~= "Room" or not root or not floor or self.focusTransitioning then return false end
     local actor=self.garden:get(Players.LocalPlayer.UserId,self.shownPet.id,character)
     local public=actor and GardenActivity.sample(actor,workspace:GetServerTimeNow())

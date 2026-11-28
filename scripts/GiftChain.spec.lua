@@ -2,7 +2,10 @@
 -- snapshot, one at a time, never beside another prompt, step 1 straight after the tuck, then 3 minutes clear of the
 -- last reveal and two a session; ignored: one nudge then parked; "x": parked, not asked again this session; a parked
 -- gift as the chip, the ribbon and the Things row (any of them starts it); veterans get no bubbles; off shows nothing;
--- a refused crank parks again; the first fetch shows the Fetch card once. Fake deps and a fake clock only.
+-- a refused crank parks again; the first fetch shows the Fetch card once. Onboarding part 2 (ONBOARDING-P2-BRIEF 1,
+-- ARCH-REVIEW-P2 2): no chip; at the machine a tap opens the shop on the gift, whose "Hatch free!" is Chain:shopCrank
+-- (the same crank); AlreadyGranted never shows a second card; with `teach` gift steps are exempt from the session count.
+-- Fake deps and a fake clock only.
 -- Offline: scripts/run_dash_server_specs.py. Studio: require(PlayerScripts.Client.ZZSpecs.GiftChain)(PlayerScripts.Client).
 return function(client)
 	local Chain=require(client.GiftChain)
@@ -14,11 +17,12 @@ return function(client)
 		return s
 	end
 	local function rig(state)
-		local r={state=state,now=0,gate=nil,busy=false,near=false,shown=false,head=nil,hops=0,chip=false,ribbon=false,row=nil,
-			leads={},cranks={},replays={},events={},fetches=0,tips=0,refusals={}}
+		local r={state=state,now=0,gate=nil,busy=false,near=false,shown=false,head=nil,hops=0,ribbon=false,row=nil,
+			leads={},cranks={},replays={},events={},fetches=0,tips=0,refusals={},shops={},teach=false}
 		r.chain=Chain.new({state=function()return r.state end,clock=function()return r.now end,gate=function()return r.gate end,
 			busy=function()return r.busy end,near=function()return r.near end,
-			bubble={set=function(v,h)r.shown=v==true;if v then r.head=h end end,hop=function()r.hops+=1 end,chip=function(v)r.chip=v end},
+			bubble={set=function(v,h)r.shown=v==true;if v then r.head=h end end,hop=function()r.hops+=1 end},
+			openShop=function(kind)table.insert(r.shops,kind)end,teach=function()return r.teach end,
 			ribbon=function(v)r.ribbon=v end,row=function(k)r.row=k end,lead=function(t)table.insert(r.leads,t)end,
 			crank=function(kind,done)table.insert(r.cranks,{kind=kind,done=done})end,replay=function(rec)table.insert(r.replays,rec)end,
 			refused=function(why)table.insert(r.refusals,why)end,inPark=function()return r.inPark==true end,
@@ -78,11 +82,15 @@ return function(client)
 		assert(not r.shown,"1.5 s after the tuck")
 		r.run(1)
 		assert(r.shown and r.head=="onbGift.paint"and r.chain:holds()and r.events[1]=="GiftShown")
-		assert(not r.chip,"the bubble is the gift: no chip beside it")
+		assert(not r.ribbon,"the bubble is the gift: no ribbon beside it")
 		r.gate="menu";r.run(.5);assert(not r.shown,"hidden under a menu");r.gate=nil;r.run(.25);assert(r.shown)
 		r.chain:tap();assert(r.leads[1]=="Eggs"and r.chain:holds())
-		r.near=true;r.run(.25);assert(r.shown and r.head=="onbGift.turn","at the machine: Turn it!")
-		r.chain:tap();assert(#r.cranks==1 and r.cranks[1].kind=="paint"and not r.shown)
+		r.near=true;r.run(.25);assert(r.shown and r.head=="onbGift.atMachine","at the machine: Tap the machine!")
+		r.chain:tap();assert(#r.cranks==0 and r.shops[1]=="paint"and not r.shown,"a tap at the machine opens the shop, never cranks")
+		assert(r.chain:offer()=="paint","the shop offers the gift")
+		assert(not r.chain:shopCrank("toy"),"only the gift that is ready")
+		assert(r.chain:shopCrank("paint")and #r.cranks==1 and r.cranks[1].kind=="paint"and not r.shown,"Hatch free! is the same crank")
+		assert(r.chain:offer()==nil and not r.chain:shopCrank("paint")and #r.cranks==1,"latched while it cranks: never a second ask")
 		r.cranks[1].done("Saved")
 		r.state=snapshot({gifts={owed=true,granted={paint=true},unseen={kind="paint",item="rose",id="g"}}})
 		r.run(1);assert(r.chain:holds()and not r.shown,"the card is up")
@@ -95,15 +103,15 @@ return function(client)
 		local r=rig(snapshot({gifts={owed=true,granted={},ready="paint"}}))
 		r.run(3);assert(r.shown)
 		r.run(Chain.NudgeAfter);assert(r.hops==1 and r.shown,"one nudge")
-		r.run(Chain.ParkAfter+.5);assert(not r.shown and r.chip and r.ribbon and r.row=="paint"and not r.chain:holds(),"parked")
+		r.run(Chain.ParkAfter+.5);assert(not r.shown and r.ribbon and r.row=="paint"and not r.chain:holds(),"parked")
 		r.run(60);assert(not r.shown,"not asked again this session")
-		assert(r.chain:resume()and r.leads[#r.leads]=="Eggs"and r.chain:holds(),"the chip / ribbon / row starts it")
-		r.near=true;r.run(.25);r.chain:tap();assert(#r.cranks==1)
+		assert(r.chain:resume()and r.leads[#r.leads]=="Eggs"and r.chain:holds(),"the ribbon / row starts it")
+		r.near=true;r.run(.25);r.chain:tap();assert(#r.cranks==0 and #r.shops==1);assert(r.chain:shopCrank("paint")and #r.cranks==1)
 		r.cranks[1].done("Rejected","Busy");assert(not r.chain:holds()and r.refusals[1]=="Busy","refused: parked again")
-		r.run(.5);assert(r.chip and r.row=="paint","still waiting: it never expires")
+		r.run(.5);assert(r.ribbon and r.row=="paint","still waiting: it never expires")
 		local x=rig(snapshot({gifts={owed=true,granted={},ready="paint"}}))
 		x.run(3);x.chain:close();assert(not x.shown and not x.chain:holds())
-		x.run(.5);assert(x.chip and x.row=="paint");x.run(300);assert(not x.shown)
+		x.run(.5);assert(x.ribbon and x.row=="paint");x.run(300);assert(not x.shown)
 	end)
 
 	test("after step 1: 3 minutes clear of the last reveal and at most two a session; invites lead and close",function()
@@ -121,14 +129,14 @@ return function(client)
 
 	test("veterans: no bubbles, only the chip, ribbon and row; off: nothing at all; an unseen gift replays through the machine",function()
 		local v=rig(snapshot({totalWins=50,gifts={owed=true,granted={},ready="paint"}}))
-		v.run(10);assert(not v.shown and v.chip and v.row=="paint")
-		local o=rig(snapshot({gifts=nil}));o.run(10);assert(not o.shown and not o.chip and o.row==nil and not o.chain:holds())
+		v.run(10);assert(not v.shown and v.ribbon and v.row=="paint")
+		local o=rig(snapshot({gifts=nil}));o.run(10);assert(not o.shown and not o.ribbon and o.row==nil and not o.chain:holds())
 		local u=rig(snapshot({gifts={owed=true,granted={paint=true},unseen={kind="paint",item="tide",id="u"}}}))
 		u.run(2);assert(u.shown and u.head=="onbGift.waiting")
 		u.near=true;u.chain:tap();assert(#u.cranks==0 and u.replays[1].item=="tide","no new ask: the same gift again")
 		-- switch off while a bubble shows: it goes
 		local s=rig(snapshot({gifts={owed=true,granted={},ready="paint"}}))
-		s.run(3);assert(s.shown);s.state=snapshot({gifts=nil});s.run(.25);assert(not s.shown and not s.chain:holds()and not s.chip)
+		s.run(3);assert(s.shown);s.state=snapshot({gifts=nil});s.run(.25);assert(not s.shown and not s.chain:holds()and not s.ribbon)
 	end)
 
 	test("the park: Throw it! there once, and the first fetch shows the Fetch card once",function()
@@ -150,14 +158,14 @@ return function(client)
 		end
 		local r=leading()
 		r.run(Chain.LeadPark-1);assert(r.chain:holds())
-		r.run(1.5);assert(not r.chain:holds()and r.chip and r.row=="paint","no step closer for LeadPark s: parked, the guide resumes")
+		r.run(1.5);assert(not r.chain:holds()and r.ribbon and r.row=="paint","no step closer for LeadPark s: parked, the guide resumes")
 		local w=leading()
 		for _=1,30 do w.dist-=1;w.run(1)end
 		assert(w.chain:holds(),"heading there: still leading after 30 s")
-		w.dist+=Chain.Away+1;w.run(.25);assert(not w.chain:holds()and w.chip,"walking away: parked")
+		w.dist+=Chain.Away+1;w.run(.25);assert(not w.chain:holds()and w.ribbon,"walking away: parked")
 		local m=leading()
-		m.near=true;m.run(.25);assert(m.shown and m.head=="onbGift.turn")
-		m.run(Chain.NudgeAfter+Chain.ParkAfter+.5);assert(not m.chain:holds()and not m.shown and m.chip,"idle at the machine: parked")
+		m.near=true;m.run(.25);assert(m.shown and m.head=="onbGift.atMachine")
+		m.run(Chain.NudgeAfter+Chain.ParkAfter+.5);assert(not m.chain:holds()and not m.shown and m.ribbon,"idle at the machine: parked")
 	end)
 
 	test("code review: the client asks again on a busy save; giftSeen also on Pending and RevealPending, a few times",function()
@@ -165,6 +173,55 @@ return function(client)
 		assert(not Chain.retryAsk("Rejected","NotDue",0)and not Chain.retryAsk("Saved",nil,0)and not Chain.retryAsk("Rejected","Busy",Chain.AskTries))
 		for _,why in ipairs({"Busy","Throttled","Pending","RevealPending","Retrying"})do assert(Chain.retrySeen("Rejected",why,0),why)end
 		assert(not Chain.retrySeen("Rejected","NoGift",0)and not Chain.retrySeen("Saved","Saved",0)and not Chain.retrySeen("Rejected","Pending",Chain.SeenTries))
+	end)
+
+	test("part 2: the shop's latch (a Menu shop builds its step; latched while it cranks or shows; refused: offered again)",function()
+		local f=Chain.facts(snapshot({gifts={owed=true,granted={},ready="paint"}}))
+		assert(Chain.shopGift(f,nil)=="paint"and Chain.shopGift(f,{phase="cranking"})==nil and Chain.shopGift(f,{phase="reveal"})==nil)
+		assert(Chain.shopGift(Chain.facts(snapshot({gifts={owed=true,granted={paint=true},ready="paint"}})),nil)==nil,"given: the paid egg is back")
+		assert(Chain.shopGift(Chain.facts(snapshot({gifts={owed=true,granted={paint=true},ready="toy",unseen={kind="paint",item="rose"}}})),nil)==nil,
+			"an unseen card first: it replays, no Hatch free!")
+		assert(Chain.shopGift(Chain.facts(snapshot({gifts=nil})),nil)==nil,"off: no gift mode")
+		-- a shop opened from the Menu: no step is active; the press builds one, then the same crank
+		local r=rig(snapshot({gifts={owed=true,granted={},ready="paint"}}))
+		r.chain.session.closed.paint=true -- "x" earlier this session
+		assert(r.chain.active==nil and r.chain:shopCrank("paint")and #r.cranks==1 and r.chain:holds())
+		r.cranks[1].done("Rejected","PetNotOut")
+		assert(not r.chain:holds()and r.refusals[1]=="PetNotOut"and r.chain:offer()=="paint","refused: the tile stays lit")
+		-- the Snack gift's reveal (not GiftReveal): once seen open, its close ends the step
+		local s=rig(snapshot({stats={rounds=4,starsSpent=1},gifts={owed=true,granted={paint=true,toy=true},ready="snack"}}))
+		local open=false
+		s.chain.d.revealOpen=function()return open end
+		assert(s.chain:shopCrank("snack")and s.cranks[1].kind=="snack");s.cranks[1].done("Saved")
+		s.run(.5);assert(s.chain:holds(),"before the reveal opens")
+		open=true;s.run(.5);assert(s.chain:holds());open=false;s.run(.5)
+		assert(not s.chain:holds()and s.chain.session.lastReveal~=nil,"the reveal closed: done, the gap starts")
+		-- an unseen gift from the Menu's shop: replayed, never asked again
+		local u=rig(snapshot({gifts={owed=true,granted={paint=true},unseen={kind="paint",item="tide",id="u"}}}))
+		assert(u.chain:replayUnseen()and u.replays[1].item=="tide"and #u.cranks==0)
+		assert(not rig(snapshot({gifts={owed=true,granted={}}})).chain:replayUnseen(),"nothing unseen: the shop opens")
+	end)
+
+	test("part 2: AlreadyGranted never shows a second card",function()
+		local rec={kind="paint",item="rose",id="g1"}
+		assert(Chain.showCard({status="Saved",reason="Saved",gift=rec},{},false),"a fresh grant shows")
+		local presented={[Chain.recordKey(rec)]=true}
+		assert(not Chain.showCard({status="Saved",reason="AlreadyGranted",gift=rec},presented,false),"a second ask: no second card")
+		assert(not Chain.showCard({status="Saved",reason="AlreadyGranted",gift=rec},{},true),"a card is up: no second card")
+		assert(Chain.showCard({status="Saved",reason="AlreadyGranted",gift=rec},{},false),"never shown this session (a rejoin): it shows")
+		assert(not Chain.showCard({status="Rejected",reason="Busy"},{},false)and not Chain.showCard({status="Saved"},{},false))
+		assert(Chain.recordKey({kind="toy",item="ball"})=="toy:ball")
+	end)
+
+	test("part 2 (teach): gift steps never count toward the session; invites three a session, 90 s apart; the Dash invite the same session",function()
+		local session={closed={},count=0,lastReveal=100}
+		assert(Chain.may(session,"toy",101,{},true)and Chain.may(session,"snack",101,{},true),"gift steps exempt")
+		assert(not Chain.may(session,"pull",100+89,{},true)and Chain.may(session,"pull",100+90,{},true),"90 s clear")
+		session.count=2;assert(Chain.may(session,"pull",1e6,{},true),"a third");session.count=3;assert(not Chain.may(session,"pull",1e6,{},true))
+		assert(not Chain.may({closed={},count=0,lastReveal=100},"toy",101,{}),"teach off: as before")
+		local dash=snapshot({stats={rounds=4,starsSpent=1,fetches=1},dash={ribbons={}},gifts={owed=true,granted={paint=true,toy=true}}})
+		assert(Chain.next(Chain.facts(dash,{returned=false}))==nil,"off: a later session")
+		assert(Chain.next(Chain.facts(dash,{returned=false,teach=true}))=="dash","teach: the same session")
 	end)
 
 	return {passed=#cases,cases=cases}

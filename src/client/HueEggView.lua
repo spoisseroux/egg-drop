@@ -1883,6 +1883,23 @@ function View:paintAct(id)
  if self.shade.Visible and not self.destroyed then self:layout()end
  return ok
 end
+-- Onboarding part 2 (ONBOARDING-P2-BRIEF 2, lesson A; Onboard "teach"): the Colour tab on the main colour with the won
+-- pot's swatch selected once per opening. Returns the pane's Paint key (the pointer's target), or nil when this is not
+-- that screen now (closed, another tab, an assignment, the switch off).
+function View:teachPot(pot)
+ if not self.shade.Visible then self.teachPotFor=nil;return nil end
+ if not DressUp.on()or not self:chromeActive()or self.tab~="hue"or self.assignment or self.boundedEating then return nil end
+ if self.teachPotFor~=pot then
+  self.teachPotFor=pot
+  local index=nil
+  for i,sw in ipairs(PaintPanel.Swatches)do if sw.id==pot then index=i end end
+  if index then
+   self.channel="main";self.chromeFocus=self.chromeFocus or {};self.chromeFocus.hue=index
+   pcall(self.layout,self)
+  end
+ end
+ return self.chromeAction
+end
 -- Tap / click on a chrome card: the first tap selects (and previews), the second acts.
 function View:chromeTap(tab,id)
  if not self:chromeActive()or self.tab~=tab then return false end

@@ -1,34 +1,37 @@
--- The gift chain's pieces over the pet (GiftChain; ONBOARDING-FUN-PASS section 2, Onboard "gifts"). Presentation only.
+-- The gift chain's bubble over the pet (GiftChain; ONBOARDING-FUN-PASS section 2, Onboard "gifts"). Presentation only.
 -- The art is Fable's GIFT-ART-BRIEF section 1 (numbers and curves in GiftArt):
 --   bubble  over the pet: a white pill, its icon the 44 px wrapped egg on glass with a 2 px pink stroke (a gift never
 --           reads as a need), the headline over a sub-line (NeedBubble's two-line look) and an "x" at its top right
 --           (parks it). A tap on the pill does the step.
---   chip    over the pet beside it: the wrapped egg on a 36 px glass disc (2 px ink stroke, 52 px hit). It waits, it
---           does not ask: a 3 px bob on a 2.4 s sine; every 6 s the bow wiggles once (+-10 degrees, .3 s) with one
---           glint (AeroUI.sweep). No sound, buzz, badge or number. Parking pops it 0, 1.15, 1.0 in .25 s with cup_shine
---           at .25; within 10 studs it is 1.15, beyond 60 at 60%; hidden under any menu, card or the Deck. A tap: the
---           press, the menu click and the drop buzz, then it starts the gift.
 --   ribbon  the machine draws it (GiftRibbon on the dial); ribbon(on) hands it over (options.ribbon).
--- Reduced Motion: no bob, wiggle or glint.
--- options: {parent, adornee() -> the pet's part, onTap(), onClose(), onChip(), reduced() -> bool, text(key) -> words,
---   hidden() -> true under a menu, card or the Deck, distance() -> studs from the player to the pet, play(name, speed,
---   volume), haptic(name), ribbon(on)}
+-- Onboarding part 2 (ONBOARDING-P2-BRIEF 1): the chip over the pet is gone (a parked gift is the ribbon, the machine's
+-- "Free egg!" prompt and the Things row). Beta (40) note 6: the bubble no longer rides the animated body part. It sits
+-- on its own un-animated anchor (a client-only part), moved every RenderStepped to the pet's ground point: X and Z
+-- exactly (no dead zone), Y eased so the walk's hops never shake it.
+-- Reduced Motion: no hop.
+-- options: {parent, adornee() -> the pet's part (fallback), origin() -> the pet's ground point (Vector3) or nil,
+--   onTap(), onClose(), reduced() -> bool, text(key) -> words, hidden() -> true under a menu, card or the Deck,
+--   ribbon(on)}
+local RunService=game:GetService("RunService")
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local GiftArt=require(Shared:WaitForChild("GiftArt"))
 local Draw=require(script.Parent:WaitForChild("GiftEggArt"))
 local Bubble={};Bubble.__index=Bubble
 Bubble.Ink=GiftArt.color("ink");Bubble.Fill=Color3.fromHex("#FFFFFF")
-Bubble.H=68;Bubble.Chip=GiftArt.Chip.size;Bubble.ChipHit=GiftArt.Chip.hit;Bubble.Lift=2.4
+Bubble.H=68;Bubble.Lift=2.4
 Bubble.Icon=GiftArt.EggSizes.pill
-Bubble.Press=table.freeze({down=.94,top=1.04,seconds=.06,back=.22})
+Bubble.Height=2.6   -- studs from the pet's ground point to the body (the old adornee) before the lift
+Bubble.EaseY=10     -- 1/s: how fast the height follows the ground point (the hops are filtered, a slope is not)
 
 local node=Draw.node
 local function on(signal,fn)if typeof(signal)=="RBXScriptSignal"then return signal:Connect(fn)end;return nil end
 local function round(parent,r)node("UICorner",parent,{CornerRadius=r or UDim.new(.5,0)})end
-local aero=nil
-local function sweep(face)
-	if aero==nil then local ok,m=pcall(require,script.Parent:WaitForChild("AeroUI"));aero=if ok then m else false end
-	if aero then pcall(aero.sweep,face)end
+
+-- Pure: the anchor's next height, easing from `current` toward `target` over dt (exact when there is no current).
+function Bubble.easeY(current,target,dt)
+	if type(current)~="number"then return target end
+	local k=1-math.exp(-Bubble.EaseY*math.max(0,dt or 0))
+	return current+(target-current)*k
 end
 
 function Bubble.new(options)
@@ -50,31 +53,21 @@ function Bubble.new(options)
 	local close=node("TextButton",pill,{Name="Close",Text="×",AnchorPoint=Vector2.new(1,0),Position=UDim2.new(1,4,0,-4),Size=UDim2.fromOffset(28,28),
 		BackgroundColor3=Bubble.Ink,TextColor3=Bubble.Fill,Font=Enum.Font.GothamBold,TextSize=20,AutoButtonColor=true,BorderSizePixel=0,Selectable=true})
 	round(close)
-	self.scale=node("UIScale",pill,{Scale=1})
 	on(pill.Activated,function()if self.shown and options.onTap then options.onTap()end end)
 	on(close.Activated,function()if self.shown and options.onClose then options.onClose()end end)
-	-- the chip: a 52 px hit, the 36 px glass disc, the wrapped egg on it
-	local C=GiftArt.Chip
-	local chip=node("BillboardGui",options.parent,{Name="EggDropGiftChip",Size=UDim2.fromOffset(C.hit+16,C.hit+16),AlwaysOnTop=true,
-		Active=true,LightInfluence=0,ResetOnSpawn=false,Enabled=false,MaxDistance=140})
-	local hit=node("TextButton",chip,{Name="Hit",Text="",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromOffset(C.hit,C.hit),
-		BackgroundTransparency=1,AutoButtonColor=false,BorderSizePixel=0,Selectable=true})
-	local float=node("Frame",hit,{Name="Float",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromOffset(C.size,C.size),
-		BackgroundTransparency=1,BorderSizePixel=0,Active=false})
-	self.chipScale=node("UIScale",float,{Scale=1})
-	local disc=node("Frame",float,{Name="Disc",Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.new(1,1,1),BackgroundTransparency=GiftArt.GlassTransparency,
-		BorderSizePixel=0,ZIndex=2,Active=false})
-	round(disc);node("UIStroke",disc,{Color=Bubble.Ink,Thickness=2})
-	local drawn=Draw.egg(disc,C.egg,nil,3)
-	self.chipFloat,self.chipDisc,self.chipBow=float,disc,drawn.bow
-	on(hit.Activated,function()
-		if not self.chipOn then return end
-		self.pressAt=self.time
-		if options.play then pcall(options.play,"menu",1,.5)end
-		if options.haptic then pcall(options.haptic,"drop")end
-		if options.onChip then options.onChip()end
+	self.gui,self.pill=gui,pill
+	-- The un-animated anchor: a client-only part (never replicated, never hit by a ray), moved every rendered frame.
+	local ok,anchor=pcall(function()
+		local part=Instance.new("Part")
+		part.Name="EggDropGiftBubbleAnchor";part.Anchored=true;part.CanCollide=false;part.CanQuery=false;part.CanTouch=false
+		part.Transparency=1;part.Size=Vector3.new(.2,.2,.2);part.CastShadow=false
+		part.Parent=workspace.CurrentCamera or workspace
+		return part
 	end)
-	self.gui,self.pill,self.chipGui=gui,pill,chip
+	self.anchor=if ok then anchor else nil
+	if RunService:IsClient()then
+		self.render=RunService.RenderStepped:Connect(function(dt)pcall(self.place,self,dt)end)
+	end
 	return self
 end
 function Bubble:reduced()return self.options.reduced~=nil and self.options.reduced()==true end
@@ -86,58 +79,49 @@ function Bubble:set(visible,head,sub)
 	end
 end
 function Bubble:hop()if not self:reduced()then self.hopAt=self.time end end
-function Bubble:chip(value)
-	value=value==true
-	if value and not self.chipOn then
-		self.parkedAt=self.time
-		if self.options.play then pcall(self.options.play,"cup_shine",1,GiftArt.Chip.shine)end
-	end
-	self.chipOn=value
-end
 -- The machine draws the ribbon now (GiftRibbon); this only hands the state over.
 function Bubble:ribbon(value)
 	self.ribbonOn=value==true
 	if self.options.ribbon then pcall(self.options.ribbon,self.ribbonOn)end
 end
--- The press on the chip: .94 in 60 ms, back through 1.04.
-function Bubble:pressScale()
-	if not self.pressAt or self:reduced()then return 1 end
-	local P=Bubble.Press
-	local t=self.time-self.pressAt
-	if t<P.seconds then return 1-(1-P.down)*t/P.seconds end
-	local u=(t-P.seconds)/P.back
-	if u>=1 then self.pressAt=nil;return 1 end
-	-- a damped swing back: through 1 at a third, a little over (toward P.top) after
-	return 1-(1-P.down)*math.cos(u*math.pi*1.5)*(1-u)
+-- The chip is gone (part 2); kept as a no-op so an older caller never errors.
+function Bubble:chip()end
+-- The pet's ground point now: its origin when the pet gives one, else its part.
+function Bubble:ground()
+	local o=self.options.origin and self.options.origin()or nil
+	if typeof(o)=="Vector3"then return o,true end
+	local part=self.options.adornee and self.options.adornee()or nil
+	if part then return part.Position,false end
+	return nil
+end
+-- Every rendered frame: the anchor goes to the pet (X, Z exact; Y eased), so the bubble never jitters with the walk.
+function Bubble:place(dt)
+	local anchor=self.anchor
+	if not anchor then return end
+	local at,ground=self:ground()
+	if not at then self.y=nil;return end
+	local target=at.Y+(if ground then Bubble.Height else 1.5)
+	self.y=Bubble.easeY(self.y,target,dt)
+	anchor.CFrame=CFrame.new(at.X,self.y,at.Z)
 end
 function Bubble:step(dt)
 	self.time+=dt or 0
-	local part=self.options.adornee and self.options.adornee()or nil
+	local at=self:ground()
 	local lift=0
 	if self.hopAt then
 		local t=(self.time-self.hopAt)/.45
 		if t>=1 then self.hopAt=nil else lift=math.sin(t*math.pi)*.6 end
 	end
 	local hidden=self.options.hidden~=nil and self.options.hidden()==true
-	self.gui.Adornee=part
-	self.gui.Enabled=self.shown==true and part~=nil and not hidden
-	self.gui.StudsOffsetWorldSpace=Vector3.new(0,Bubble.Lift+1.5+lift,0)
-	self.chipGui.Adornee=part
-	local chipShown=self.chipOn==true and part~=nil and not self.gui.Enabled and not hidden
-	self.chipGui.Enabled=chipShown
-	self.chipGui.StudsOffsetWorldSpace=Vector3.new(0,Bubble.Lift+1.2,0)
-	if not chipShown then return end
-	local distance=self.options.distance and self.options.distance()or nil
-	local reduced=self:reduced()
-	local s=GiftArt.chip(self.time,if self.parkedAt then self.time-self.parkedAt else nil,distance,reduced)
-	self.chipFloat.Position=UDim2.new(.5,0,.5,s.y)
-	self.chipScale.Scale=s.scale*self:pressScale()
-	self.chipBow.Rotation=s.bow
-	if s.alpha~=self.chipAlpha then self.chipAlpha=s.alpha;Draw.fade(self.chipFloat,s.alpha)end
-	if s.cycle>0 and s.cycle~=self.glintCycle then sweep(self.chipDisc)end
-	self.glintCycle=s.cycle
+	local adornee=if self.anchor then self.anchor else(self.options.adornee and self.options.adornee()or nil)
+	if self.anchor and self.y==nil and at then self:place(0)end
+	self.gui.Adornee=if at then adornee else nil
+	self.gui.Enabled=self.shown==true and at~=nil and adornee~=nil and not hidden
+	self.gui.StudsOffsetWorldSpace=Vector3.new(0,Bubble.Lift+lift,0)
 end
 function Bubble:destroy()
-	self.gui:Destroy();self.chipGui:Destroy()
+	if self.render then self.render:Disconnect();self.render=nil end
+	if self.anchor then self.anchor:Destroy();self.anchor=nil end
+	self.gui:Destroy()
 end
 return Bubble
