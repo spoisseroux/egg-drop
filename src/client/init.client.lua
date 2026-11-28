@@ -5139,6 +5139,13 @@ clientUI.movementLock=require(script.MovementLock).shared()
 clientUI.modalCursor=require(script.ModalCursor).new({isOpen=clientUI.anyModalOpen,input=UserInputService,run=RunService,actions=ContextActionService,parent=player:WaitForChild("PlayerGui"),movement=clientUI.movementLock,
  prompts=game:GetService("ProximityPromptService")}) -- not the top-level local: init.client is at the 200-register limit
 gui.Destroying:Connect(function()clientUI.modalCursor:destroy()end)
+-- MUSIC-BRIEF 4 (Alive music2): the deck's lite music under the results card, a finished round or a menu over the deck.
+-- Asked only while the v2 deck pair with its lite variant plays (AmbientAudio.stepDeck2). No top-level local.
+clientUI.ambient.deckLite=function()
+ if board:GetAttribute("Mode")~="Board"then return false end
+ return require(script.MusicTracks).deckLite({open=true,results=clientUI.deckResults.visible==true,over=clientUI.roundOver()==true,
+  menu=clientUI.anyModalOpen()==true})
+end
 -- Fable R13 (5): the notification rail (the egg ticket with it) is off the screen over any full screen and the capsule
 -- shot, beta only (HudChips.hideRail; NotificationRail holds its notices meanwhile).
 -- Beta 18: and over every hatch reveal wherever it opened (the Stat Egg over the garden was not a modal): any stage on

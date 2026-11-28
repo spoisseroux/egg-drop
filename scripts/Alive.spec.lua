@@ -9,14 +9,14 @@ return function(client,parent)
  for _,f in ipairs(Alive.Features)do saved[f]=workspace:GetAttribute(Alive.attribute(f))end
  local ok,problem=pcall(function()
   test("five features, their attributes and config keys; every flag is in the build",function()
-   assert(table.concat(Alive.Features," ")=="springs menus close wind life scene snack windbed asmr wobble balls crunch air fruit keepout aerohatch deckjuice pet2 paint deckfeel")
+   assert(table.concat(Alive.Features," ")=="springs menus close wind life scene snack windbed asmr wobble balls crunch air fruit keepout aerohatch deckjuice pet2 paint deckfeel music2")
    assert(Alive.attribute("wind")=="Alive_wind"and Alive.key("wind")=="alive_wind")
    assert(Flags.AliveSprings and Flags.AliveMenus and Flags.AliveClose and Flags.AliveWind and Flags.AliveLife and Flags.AliveScene and Flags.AliveSnack)
-   assert(Flags.AliveWindbed and Flags.AliveAsmr and Flags.AliveWobble and Flags.AliveBalls and Flags.AliveCrunch and Flags.AliveAir and Flags.AliveFruit and Flags.AliveKeepOut and Flags.AliveAeroHatch and Flags.AliveDeckJuice and Flags.AlivePet2 and Flags.AliveDeckFeel)
+   assert(Flags.AliveWindbed and Flags.AliveAsmr and Flags.AliveWobble and Flags.AliveBalls and Flags.AliveCrunch and Flags.AliveAir and Flags.AliveFruit and Flags.AliveKeepOut and Flags.AliveAeroHatch and Flags.AliveDeckJuice and Flags.AlivePet2 and Flags.AliveDeckFeel and Flags.AliveMusic2)
    assert(Alive.attribute("life")=="Alive_life"and Alive.key("life")=="alive_life")
   end)
   test("ceiling: flag and (beta place or Studio); never the live place; unknown features are off",function()
-   local on={AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true,AliveScene=true,AliveSnack=true,AliveWindbed=true,AliveAsmr=true,AliveWobble=true,AliveBalls=true,AliveCrunch=true,AliveAir=true,AliveFruit=true,AliveKeepOut=true,AliveAeroHatch=true,AliveDeckJuice=true,AlivePet2=true,AlivePaint=true,AliveDeckFeel=true}
+   local on={AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true,AliveScene=true,AliveSnack=true,AliveWindbed=true,AliveAsmr=true,AliveWobble=true,AliveBalls=true,AliveCrunch=true,AliveAir=true,AliveFruit=true,AliveKeepOut=true,AliveAeroHatch=true,AliveDeckJuice=true,AlivePet2=true,AlivePaint=true,AliveDeckFeel=true,AliveMusic2=true}
    for _,f in ipairs(Alive.Features)do
     assert(Alive.ceiling(f,on,107705084891479,false),f.." on the beta")
     assert(Alive.ceiling(f,on,96451847774961,true),f.." in Studio")

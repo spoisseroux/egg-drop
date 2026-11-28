@@ -4,6 +4,7 @@ local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local DisplayAssets=require(script.Parent.HatchDisplayAssets)
+local MusicTracks=require(script.Parent.MusicTracks)
 
 local Audio = {}
 Audio.__index = Audio
@@ -336,6 +337,14 @@ function Audio:refreshLoops()
 	self.music.group.Volume = master * duck
 	self.purr.group.Volume = master
 	local music = self.music
+	-- MUSIC-BRIEF 3 (Alive music2): once the day and night pair has loaded, it plays in today's loop's place.
+	local two = self.garden2
+	if two and two.ready then
+		music.voice.Volume, music.paused = 0, false
+		if music.voice.IsPlaying then music.voice:Stop() end
+		self:playGarden2(master > 0 and self.musicEnabled, self.deviceActive)
+		return
+	end
 	if master > 0 and self.musicEnabled and self.deviceActive and music.ready then
 		music.voice.Volume = Audio.MusicVolume
 		-- QA Q2.6: back in focus, the world music carries on from where it paused.
@@ -349,6 +358,116 @@ function Audio:refreshLoops()
 		music.voice.Volume = 0
 		music.paused = false
 		music.voice:Stop()
+	end
+end
+
+-- MUSIC-BRIEF 3 (Alive music2; AmbientAudio drives it, MusicTracks holds the rules): the garden's day and night
+-- voices, both in the world music's own group, so the master, every duck (deck round, race, hill zone, hatch, boot,
+-- display), the music toggle and focus reach both exactly as they reach today's loop. Started together at the same
+-- second, paused and resumed together, the night voice running whenever the garden hour runs; the crossfade is
+-- equal power on the night weight w (stepGarden2). spec = {day = id, night = id}; nil puts today's loop back.
+function Audio:setGarden2(spec)
+	if self.destroyed or not self.music then return false end
+	local two = self.garden2
+	if two then
+		self.garden2 = nil
+		for _, voice in ipairs({ two.day, two.night }) do voice:Stop(); voice:Destroy() end
+	end
+	if spec then
+		local function voice(name, id)
+			local made = Instance.new("Sound")
+			made.Name, made.SoundId = "EggDrop_" .. name, "rbxassetid://" .. id
+			made.Looped, made.Volume, made.SoundGroup, made.Parent = true, 0, self.music.group, SoundService
+			return made
+		end
+		two = { day = voice("GardenDay", spec.day), night = voice("GardenNight", spec.night), ready = false, w = 0,
+			hour = false, check = 0, paused = false }
+		self.garden2 = two
+		task.spawn(function()
+			local fine = true
+			local ok = pcall(function()
+				ContentProvider:PreloadAsync({ two.day, two.night }, function(_, status)
+					if status ~= Enum.AssetFetchStatus.Success then fine = false end
+				end)
+			end)
+			if self.destroyed or self.garden2 ~= two then return end
+			if ok and fine and two.day.IsLoaded and two.night.IsLoaded then
+				two.ready = true
+				self:refreshLoops()
+			else
+				-- Never silent: a pair that will not load gives the garden back to today's loop for the session.
+				warn("Egg Drop could not load the v2 garden music; today's loop plays")
+				self.garden2Failed = true
+				self:setGarden2(nil)
+			end
+		end)
+	end
+	self:refreshLoops()
+	return true
+end
+function Audio:levelGarden2()
+	local two = self.garden2
+	local day, night = MusicTracks.gains(two.w, MusicTracks.Exponent)
+	two.day.Volume = Audio.MusicVolume * day
+	two.night.Volume = Audio.MusicVolume * MusicTracks.NightLevel * night
+	return day, night
+end
+-- refreshLoops' half for the pair: `enabled` = some master and the music toggle on; `active` = the window in focus.
+function Audio:playGarden2(enabled, active)
+	local two = self.garden2
+	local day, night = two.day, two.night
+	if enabled and active then
+		self:levelGarden2()
+		if two.paused then
+			-- Back in focus: both carry on from where they paused, in the same frame.
+			two.paused = false
+			day:Resume()
+			if night.IsPaused == true then night:Resume() end
+			two.check = 0
+		elseif not day.IsPlaying then
+			-- Start together, at the same second (joining at night takes w from the clock at once).
+			day.TimePosition, night.TimePosition = 0, 0
+			day:Play()
+			if two.hour then night:Play() end
+			two.check = 0
+		end
+	elseif enabled then
+		-- Window unfocused: pause both (keeps the second) instead of Stop (rewinds).
+		day.Volume, night.Volume = 0, 0
+		if day.IsPlaying then
+			day:Pause()
+			if night.IsPlaying then night:Pause() end
+			two.paused = true
+		end
+	else
+		day.Volume, night.Volume, two.paused = 0, 0, false
+		day:Stop(); night:Stop()
+	end
+end
+-- Every frame from AmbientAudio: w = the night weight (MusicTracks.nightWeight), hour = the garden hour runs. The
+-- night voice runs only while the hour does; it joins at the day voice's second. Every CheckEvery seconds (and at
+-- once after a start or resume) the quieter voice is re-aligned to the louder past MusicTracks.Drift.
+function Audio:stepGarden2(dt, w, hour)
+	local two = self.garden2
+	if self.destroyed or not two then return end
+	-- Kept while it loads too, so the first start already has the hour's weight and night voice (joining at night).
+	two.w = if type(w) == "number" and w == w then math.clamp(w, 0, 1) else 0
+	two.hour = hour == true
+	if not two.ready then return end
+	local day, night = two.day, two.night
+	if not day.IsPlaying then return end
+	local dayGain, nightGain = self:levelGarden2()
+	if two.hour and not night.IsPlaying then
+		night.TimePosition = day.TimePosition
+		night:Play()
+		two.check = 0
+	elseif not two.hour and night.IsPlaying then
+		night:Stop()
+	end
+	two.check -= dt or 0
+	if two.check <= 0 then
+		two.check = MusicTracks.CheckEvery
+		if night.IsPlaying then MusicTracks.sync(day, night, dayGain, nightGain) end
 	end
 end
 
@@ -686,6 +805,10 @@ function Audio:destroy()
 	self.uiTokens,self.uiRing=nil,nil
 	self:cancelBoot()
 	for _, connection in ipairs(self.connections or {}) do connection:Disconnect() end
+	if self.garden2 then
+		for _, voice in ipairs({ self.garden2.day, self.garden2.night }) do voice:Stop(); voice:Destroy() end
+		self.garden2 = nil
+	end
 	for _, loop in ipairs({self.music, self.purr}) do
 		if loop.tween then loop.tween:Cancel() end
 		loop.voice:Stop(); loop.voice:Destroy(); loop.group:Destroy()
