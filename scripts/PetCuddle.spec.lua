@@ -131,9 +131,41 @@ return function(server)
 		local _,up,_,eyUp=C.look(Vector3.new(0,1,2),1)
 		assert(up<0 and eyUp>0,"up: the head pitches up (negative), the eyes go up")
 		local y2,p2,ex2,ey2=C.look(Vector3.new(50,50,.1),1)
-		assert(near(y2,C.Look.yaw)and near(p2,-C.Look.pitch)and near(ex2,C.Look.eye)and near(ey2,C.Look.eye),"clamped")
+		assert(near(y2,C.Look.yaw)and near(p2,-C.Look.pitch),"the head clamped")
+		local E=C.Look.eye
+		assert(ex2>0 and ey2>0 and(ex2/E.aside)^2+(ey2/E.up)^2<=1+1e-6,"a diagonal stays on the ellipse")
 		local y3=C.look(Vector3.new(1,0,2),.5);assert(near(y3,yaw*.5),"weighted")
 		local a,b,c,d=C.look(nil,1);assert(a==0 and b==0 and c==0 and d==0)
+	end)
+	-- Beta (40), Spencer: "the eyes still clip into the head mesh when looking at extremes".
+	test("beta 40: the eyes stay inside an ellipse (.02 aside, .012 up, .008 down); a diagonal never reaches the old .05",function()
+		local E=C.Look.eye
+		assert(near(E.aside,.02)and near(E.up,.012)and near(E.down,.008))
+		-- straight extremes: each axis at its own limit
+		local _,_,ex,ey=C.look(Vector3.new(50,0,.1),1);assert(near(ex,E.aside)and near(ey,0),"aside")
+		_,_,ex,ey=C.look(Vector3.new(-50,0,.1),1);assert(near(ex,-E.aside),"the other side")
+		_,_,ex,ey=C.look(Vector3.new(0,50,.1),1);assert(near(ex,0)and near(ey,E.up),"up")
+		_,_,ex,ey=C.look(Vector3.new(0,-50,.1),1);assert(near(ey,-E.down),"down: less than up (the muzzle)")
+		-- every direction at full stretch, and part way: inside, never past .02 (the old square's corner was .05)
+		for i=0,71 do
+			local a=i/72*math.pi*2
+			for _,reach in ipairs({.3,1,50})do
+				local _,_,x,y=C.look(Vector3.new(math.cos(a)*reach,math.sin(a)*reach,1),1)
+				local r=(x/E.aside)^2+(y/(if y>=0 then E.up else E.down))^2
+				assert(r<=1+1e-6,string.format("inside at %d deg x %.1f: %.4f",i*5,reach,r))
+				assert(math.sqrt(x*x+y*y)<=E.aside+1e-9,"never past .02")
+			end
+		end
+		-- a small look is unchanged (the ellipse only trims the extremes)
+		local _,_,sx,sy=C.look(Vector3.new(.05,.02,1),1)
+		local nx=math.atan2(.05,1)/C.Look.yaw;local ny=math.atan2(.02,math.sqrt(.05^2+1))/C.Look.pitch
+		assert(near(sx,nx*E.aside)and near(sy,ny*E.up),"small looks as before")
+		-- a rig's own ellipse
+		local own={aside=.03,up=.02,down=.01}
+		_,_,ex,ey=C.look(Vector3.new(50,0,.1),1,own);assert(near(ex,.03))
+		_,_,ex,ey=C.look(Vector3.new(0,-50,.1),1,own);assert(near(ey,-.01))
+		local x,y=C.eyeShift(1,1,nil);assert((x/E.aside)^2+(y/E.up)^2<=1+1e-6 and x>0 and y>0,"eyeShift alone")
+		x,y=C.eyeShift(0,0);assert(x==0 and y==0)
 	end)
 
 	test("the mitten: 48 px as the cursor, 56 px 28 px above a finger; tilt 12 degrees, squash .92",function()

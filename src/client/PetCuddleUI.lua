@@ -598,7 +598,8 @@ function Cuddle:step(dt,camera,pet,boxAt,boxSize)
  end
  local dx,dy=0,0
  if u then dx,dy=math.clamp((u-.5)*2,-1.5,1.5),math.clamp((v-.3)*2,-1.5,1.5)end
- local yaw,pitch,ex,ey=C.look(Vector3.new(dx*sideSign,-dy,1.4),self.lookW)
+ -- beta (40): the eyes stay inside the rig's ellipse (its eyeLook, else PetCuddle's), never into the head mesh
+ local yaw,pitch,ex,ey=C.look(Vector3.new(dx*sideSign,-dy,1.4),self.lookW,pet.definition and pet.definition.eyeLook)
  local leanPitch,leanRoll=C.lean(math.clamp(dx,-1,1)*sideSign,self.leanW)
  local sp=C.spotPose(self.spot,self.spotAge,math.clamp(dx,-1,1)*sideSign,reduced)
  local w=self.spotW

@@ -1075,9 +1075,8 @@ end
 -- Pure: the rail data for the ticket (activate is added by paintTicket).
 function Client.ticketData(view,left,narrow)
 	local text,kind=Client.ticketText(left,narrow)
-	-- The First Hatch (Onboard "nestfirst"): the very first egg says "Hatches tomorrow", not a countdown (a gift that
-	-- waits, never one that runs out), when it is ready on a later day; the same day it counts down; ready reads ready.
-	if kind~="ready"and type(view)=="table"and view.n==0 and Client.laterDay(left)and Client.firstTomorrow()then text=UICopy.get("onb3.nest.tomorrow")end
+	-- Beta (40), Spencer: "Hatches in X h / X min" always. The first egg's "Hatches tomorrow" (the First Hatch) is gone:
+	-- every egg counts down; ready reads ready.
 	local ready=kind=="ready"
 	return{text=text,kind="info",image=Client.Assets.chip,label=Client.how(view),tone=if ready then "gold"else "plain",
 		priority=if ready then Client.TicketPriority.ready else Client.TicketPriority.clock,active=true}

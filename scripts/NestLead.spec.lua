@@ -58,7 +58,9 @@ return function(client)
 			pet=function()if r.petAt then return r.petAt,r.model end;return nil end,
 			root=function()return r.root end,nest=function()return r.nestAt end,trail=trail,targetName=function()return "Nest"end,
 			beckon=function()r.beckons+=1 end,hop=function()r.hops+=1 end,chirp=function()r.chirps+=1 end,
-			event=function(name)table.insert(r.events,name)end,celebrate=function()r.celebrations+=1 end,toast=function(key)table.insert(r.toasts,key)end}
+			event=function(name)table.insert(r.events,name)end,celebrate=function()r.celebrations+=1 end,
+			toast=function(key,vars)table.insert(r.toasts,key);r.toastVars=vars end,hatchLeft=function()return r.hatchLeft end,
+			keepOut=function()return r.keepOut end,segmentOk=function(a,b)if r.dry then return r.dry(a,b)end;return true end}
 		r.needs=Needs.new({bubble=r.bubble,state=function()return r.state end,owned=function()return r.owned end,mask=function()return r.mask end,
 			mark=function(id)table.insert(r.marked,id);r.mask=Coach.with(r.mask,id)end,finishIntro=function()r.mask=Coach.with(r.mask,"gardenIntro")end,
 			follow=function()return true end,needs=function()return true end,returning=function()return r.returning end,
@@ -72,7 +74,8 @@ return function(client)
 			pulseDeck=function(on)r.pulse=on end,allSet=function()r.allSets=(r.allSets or 0)+1 end,firstPet=function()end,
 			petShown=function()return r.petAt~=nil end,
 			lead=function()return r.leadOn end,allSet2=function()return r.allSet2 end,nestOn=function()return true end,
-			copy=function(key)return "C:"..key end,leadDeps=leadDeps})
+			copy=function(key,vars)r.copyVars=r.copyVars or {};r.copyVars[key]=vars;return "C:"..key end,leadDeps=leadDeps})
+		r.hatchLeft=7*3600-30
 		r.t=0
 		function r.run(seconds,dt)
 			dt=dt or .25
@@ -164,13 +167,17 @@ return function(client)
 		local r=rig()
 		r.toNest()
 		r.root=r.nestAt+Vector3.new(0,0,-Lead.Reach+.5);r.run(.5)
-		assert(r.bubble.icon=="moon"and r.bubble.words=="C:onbLead.tuck"and r.bubble.sub=="C:onbLead.tuckSub","Tuck the egg in! / It hatches tomorrow")
+		assert(r.bubble.icon=="moon"and r.bubble.words=="C:onbLead.tuck"and r.bubble.sub=="C:onbLead.tuckSub","Tuck the egg in! / It hatches in 7 h")
+		assert(r.copyVars["onbLead.tuckSub"]and r.copyVars["onbLead.tuckSub"].hours==7,"beta 40: the nest's own countdown, never tomorrow")
+		r.hatchLeft=20*60;r.run(.25)
+		assert(r.bubble.sub=="C:onbLead.tuckSubMin"and r.copyVars["onbLead.tuckSubMin"].minutes==20,"under an hour: minutes")
+		r.hatchLeft=7*3600-30;r.run(.25)
 		assert(r.needs.bubbleOn=="nest","on the nest")
 		assert(has(r.events,"NestReached"))
 		assert(not table.find(r.marked,"needNest"),"never done by being there: the tuck closes it")
 		r.run(60);assert(r.bubble.icon=="moon","still asking")
 		r.state.nest={n=0,at=1,tucked=true};r.run(.5)
-		assert(has(r.sent,"cheer")and r.celebrations==1 and r.toasts[1]==Lead.ToastCopy,"the jump-spin, the hearts and buzz, the toast")
+		assert(has(r.sent,"cheer")and r.celebrations==1 and r.toasts[1]==Lead.ToastCopy and r.toastVars.hours==7,"the jump-spin, the hearts and buzz, the toast (Sweet dreams! It hatches in 7 h.)")
 		r.run(10);assert(r.celebrations==1 and count(r.sent,"cheer")==1,"once")
 	end)
 	test("a nudge holds the pet's prints (leadHold) through the server's run back, or Restart.wait if it never came; reaching the nest ends the trail",function()
@@ -432,6 +439,29 @@ return function(client)
 		assert(b.subline.Visible==false,"one line")
 		b:chip(true);assert(b.chipOn==true)
 		b:destroy()
+	end)
+	-- Beta (40), Spencer: "the pet runs thru meshes when showing you to something".
+	test("beta 40: the route it sends goes round the bushes the navmesh cannot see (every leg checked); none to go round, as before",function()
+		local r=rig()
+		-- a bush on the straight way from the pet (2, 0) to the nest (0, 60), a reed clump further on
+		local bush={id="bush 1",x=1,z=24,r=1.6,kind="plant"};local reeds={id="reeds 1",x=.5,z=44,r=.8,kind="plant"}
+		r.keepOut={bush,reeds}
+		r.toNest()
+		assert(has(r.sent,"start")and r.lastRoute,"sent")
+		for i=2,#r.lastRoute do
+			assert(Lead.blocker(r.lastRoute[i-1],r.lastRoute[i],r.keepOut,Lead.Body,i==2)==nil,"leg "..i.." clear of every keep-out")
+			assert(Lead.flat(r.lastRoute[i-1],r.lastRoute[i])<=Lead.Route.step)
+		end
+		assert(r.lastRoute[1]==r.petAt and r.lastRoute[#r.lastRoute]==r.nestAt,"from the pet to the nest")
+		assert(Lead.clean(r.lastRoute,{pet=r.petAt,nest=r.nestAt,ground=function()return 4 end,clear=function()return true end,keepOut=r.keepOut}),
+			"the server takes it")
+		-- no keep-outs: today's fitted route
+		local plain=rig();plain.toNest()
+		assert(#plain.lastRoute<#r.lastRoute,"the detour added points")
+		-- a detour that cannot stay dry: sent as it was (the server decides)
+		local wet=rig();wet.keepOut={bush};wet.dry=function()return false end
+		wet.toNest()
+		assert(wet.lastRoute and #wet.lastRoute==#plain.lastRoute,"no dry detour: today's route")
 	end)
 	return{passed=#cases,cases=cases}
 end

@@ -9,18 +9,27 @@
 -- Studio QA (2026-11-23): the Bear shuttles between idle spots ~3 studs apart in its first minute, and the bubble jumped
 -- ~60 px with it, so taps missed. Now:
 --  * the hit area is HitSize px (over the 96 px asked for), a clear button round the 72 px bubble (the icon is unchanged);
---  * the bubble hangs on its own local anchor that follows the Bear on a spring (Bubble.follow): a move under Dead studs
---    is ignored, a bigger one is chased smoothly until it is within Settle, a jump over Snap studs (a teleport) snaps;
+--  * the bubble hangs on its own local anchor that follows the Bear (beta 40: BubbleFollow, below; it was a spring
+--    with a 2-stud dead zone);
 --  * a small key cap shows the keyboard or gamepad key (options.keyHint) that does the same as a tap.
 -- Beta (37) note 2 ("tuck the egg in ui thing doesnt constantly follow the pet, it like waits and then catches up"):
--- that was the Dead zone and the spring above. The guide's worded bubble (Onboard "guide") is now pinned: the billboard
--- hangs on the pet's own part (the engine places it every rendered frame, so it never trails even a frame behind the
--- walk), its hop and the arrow's bounce on top. The icon-only bubble (guide off) keeps the spring, as before.
+-- that was the Dead zone and the spring above. The guide's worded bubble was pinned to the pet's own part then (beta 40
+-- replaced that: the part is the animated Body, see below).
+-- Beta (40) note 1 ("the onboarding label above the pet ... its all jittery"): the pet's part is its animated Body (the
+-- waddle's roll and sway, the lean, the bob, the boop squash), so the pinned words shook with every step, and the icon
+-- bubble's dead zone and spring still read stop-and-go. Every bubble (words or icon) now hangs on its own anchor, placed
+-- every rendered frame (BubbleFollow.bind, after the camera) over the pet's un-animated origin (options.origin) plus its
+-- measured top and Lift: X and Z exactly, the height lightly smoothed, no dead zone, a teleport snaps. The parked chip
+-- has its own anchor the same way. The hop and the arrow's bounce ride on top as before.
 -- The bubble is gamepad-selectable. Fades in and out, pops in with a small hop and hops on the idle hint; Reduced Motion:
--- fades only, and the anchor follows at once (still ignoring small moves).
--- options: {parent = PlayerGui, adornee() -> the pet's part or nil, onTap(), reduced() -> bool, keyHint() -> text or nil,
---   world = where the anchor part lives (default workspace)}
+-- fades only, and the anchor follows exactly (no smoothing).
+-- options: {parent = PlayerGui, adornee() -> the pet's part or nil, origin(part) -> the pet's un-animated origin
+--   (Vector3) when `part` is the pet's, else nil (the part itself is the place: the nest's anchor), onTap(),
+--   reduced() -> bool, keyHint() -> text or nil, world = where the anchor parts live (default workspace),
+--   chipAdornee() and onChip() for the parked chip}
+local Follow=require(script.Parent.BubbleFollow)
 local Bubble={};Bubble.__index=Bubble
+Bubble.Follow=Follow -- the shared follow (GiftBubble may hang on it too)
 Bubble.Glyph=table.freeze({hand="👋",ball="🎾",deck="🎮",moon="🌙",paws="🐾",egg="🥚"})
 Bubble.IconIds=table.freeze({hand=125214220825448,ball=107242483076374,deck=83400081676425,moon=127648287993869,
  paws=80004221456977,egg=116751717038768}) -- flat icons (beta 17 U7), uploaded 2026-11-25; a glyph if one is missing
@@ -29,10 +38,7 @@ Bubble.HitSize=108    -- px, the tap target round it
 Bubble.Lift=2.2       -- studs over the top of the pet
 Bubble.Fade=.2
 Bubble.HopTime=.45;Bubble.HopHeight=.6
-Bubble.Dead=2         -- studs: the Bear moving less than this leaves the bubble where it is
-Bubble.Settle=.15     -- studs: a chase ends this close
-Bubble.Rate=3.5       -- the spring: about 1 - e^(-Rate dt) of the way each frame
-Bubble.Snap=30        -- studs: further than this is a teleport, the bubble snaps
+Bubble.Snap=Follow.Snap -- studs: further than this is a teleport, the bubble snaps
 Bubble.Press=table.freeze({low=.88,down=.06,rate=8,wobble=18}) -- beta 14 B3b: the squash a taken tap gives
 Bubble.Ink=Color3.fromHex("#24304F")
 Bubble.Fill=Color3.fromHex("#FFFDF6") -- U7: flat cream-white, no shading
@@ -56,27 +62,9 @@ function Bubble.wordWidth(text,measure,sub)
 	return math.ceil(62+w+16)
 end
 
--- Pure: where the bubble hangs now. state = {at, chasing} (kept by the caller), target = over the Bear now.
-function Bubble.follow(state,target,dt,reduced)
-	if typeof(target)~="Vector3"then return state.at end
-	local at=state.at
-	if typeof(at)~="Vector3"then state.at,state.chasing=target,false;return target end
-	local gap=(target-at).Magnitude
-	if gap>=Bubble.Snap then state.at,state.chasing=target,false;return target end
-	if not state.chasing then
-		if gap<Bubble.Dead then return at end
-		state.chasing=true
-	end
-	if reduced then state.at,state.chasing=target,false;return target end
-	local step=1-math.exp(-Bubble.Rate*math.max(0,dt or 0))
-	at=at:Lerp(target,step)
-	if(target-at).Magnitude<=Bubble.Settle then at,state.chasing=target,false end
-	state.at=at
-	return at
-end
-
--- Pure (beta 37 note 2): does the bubble hang on the pet itself (words shown) rather than on the sprung anchor?
-function Bubble.pinned(words)return type(words)=="string"and words~=""end
+-- Pure: where the bubble hangs now. state = {at} (kept by the caller), target = over the pet now (BubbleFollow.toward:
+-- X and Z exactly, the height lightly smoothed, a teleport snaps; beta 40: no dead zone, no spring).
+Bubble.follow=Follow.toward
 -- Pure (beta 14 B3b): does a screen tap at `tap` land on a bubble drawn round `centre` (both Vector2, px)?
 function Bubble.hits(tap,centre)
 	if typeof(tap)~="Vector2"or typeof(centre)~="Vector2"then return false end
@@ -95,10 +83,14 @@ end
 
 function Bubble.new(options)
 	options=options or {}
-	local self=setmetatable({options=options,alpha=1,target=1,hopAt=nil,time=0,spot={}},Bubble)
-	local anchor=Instance.new("Part")
-	anchor.Name="EggDropNeedAnchor";anchor.Size=Vector3.new(.2,.2,.2);anchor.Transparency=1
-	anchor.Anchored,anchor.CanCollide,anchor.CanQuery,anchor.CanTouch,anchor.CastShadow,anchor.Massless=true,false,false,false,false,true
+	local self=setmetatable({options=options,alpha=1,target=1,hopAt=nil,time=0,spot=Follow.new(),chipSpot=Follow.new()},Bubble)
+	local function anchorPart(name)
+		local part=Instance.new("Part")
+		part.Name=name;part.Size=Vector3.new(.2,.2,.2);part.Transparency=1
+		part.Anchored,part.CanCollide,part.CanQuery,part.CanTouch,part.CastShadow,part.Massless=true,false,false,false,false,true
+		return part
+	end
+	local anchor=anchorPart("EggDropNeedAnchor")
 	local gui=Instance.new("BillboardGui")
 	gui.Name="EggDropNeedBubble";gui.Adornee=anchor;gui.Size=UDim2.fromOffset(Bubble.HitSize,Bubble.HitSize)
 	gui.AlwaysOnTop=true;gui.Active=true;gui.LightInfluence=0;gui.ResetOnSpawn=false;gui.Enabled=false;gui.MaxDistance=140
@@ -209,10 +201,16 @@ function Bubble.new(options)
 	chipHit.Name="Hit";chipHit.Text="";chipHit.AutoButtonColor=false;chipHit.BackgroundTransparency=1;chipHit.Size=UDim2.fromScale(1,1)
 	chipHit.Selectable=true;chipHit.ZIndex=10;chipHit.Parent=chip
 	on(chipHit.Activated,function()if self.chipOn and options.onChip then options.onChip()end end)
+	-- beta 40: the chip hangs on its own anchor over the pet's origin too (never its animated Body)
+	local chipAnchor=anchorPart("EggDropLeadChipAnchor")
+	chip.Adornee=chipAnchor
 	chip.Parent=options.parent
-	self.chipGui,self.chipScale=chip,chipScale
+	self.chipGui,self.chipScale,self.chipAnchor=chip,chipScale,chipAnchor
 	local squash=Instance.new("UIScale");squash.Name="PressScale";squash.Scale=1;squash.Parent=art
 	anchor.Parent=options.world or workspace
+	chipAnchor.Parent=options.world or workspace
+	-- every rendered frame, after the camera (and the pets' RenderStepped pose); offline, step() places them itself
+	self.unbind=Follow.bind("EggDropNeedBubble",function(dt)self:place(dt)end)
 	gui.Parent=options.parent
 	self.anchor,self.gui,self.button,self.art,self.tail,self.edge,self.tailEdge,self.lip,self.icon,self.image,self.key=
 		anchor,gui,button,art,tail,edge,tailEdge,lip,icon,image,key
@@ -312,34 +310,52 @@ function Bubble:paint()
 	if self.subline then self.subline.TextTransparency=a+(1-a)*Bubble.SubAlpha end
 	for _,dot in ipairs(self.eggBadge:GetChildren())do if dot:IsA("Frame")then dot.BackgroundTransparency=a end end
 end
+-- Where a bubble over `part` hangs: the pet's un-animated origin (options.origin) and the part's top over it, measured
+-- once a part (else the part itself: the nest's anchor). `memo` keeps the measure. -> base Vector3 or nil, height.
+function Bubble:over(part,memo)
+	if part==nil then memo.part,memo.top,memo.origin=nil,nil,nil;return nil,0 end
+	local origin=nil
+	if self.options.origin then
+		local ok,at=pcall(self.options.origin,part)
+		if ok and typeof(at)=="Vector3"then origin=at end
+	end
+	-- re-measured when the part changes, or it switches between origin and part (a pet stowed, the nest's anchor)
+	if memo.part~=part or memo.origin~=(origin~=nil)then
+		memo.part,memo.origin=part,origin~=nil
+		memo.top=Follow.top(part,origin,1.5)
+	end
+	return origin or part.Position,(memo.top or 1.5)+Bubble.Lift
+end
+-- Every rendered frame (BubbleFollow.bind): the anchors over the pet. A finger on the bubble holds it still.
+function Bubble:place(dt)
+	if not self.anchor then return end
+	local reduced=self:reduced()
+	self.measure=self.measure or {}
+	local base,height=self:over(self.options.adornee and self.options.adornee()or nil,self.measure)
+	if base and not self.holding then
+		local at=Follow.step(self.spot,base,height,dt,reduced)
+		if at then self.anchor.CFrame=CFrame.new(at)end
+	end
+	if self.chipAnchor and self.chipOn then
+		self.chipMeasure=self.chipMeasure or {}
+		local chipPart=if self.options.chipAdornee then self.options.chipAdornee()else(self.options.adornee and self.options.adornee()or nil)
+		local chipBase,chipHeight=self:over(chipPart,self.chipMeasure)
+		if chipBase then
+			local at=Follow.step(self.chipSpot,chipBase,chipHeight,dt,reduced)
+			if at then self.chipAnchor.CFrame=CFrame.new(at)end
+		end
+	end
+end
 function Bubble:step(dt)
 	dt=dt or 0
 	self.time+=dt
 	local adornee=self.options.adornee and self.options.adornee()or nil
-	if self.part~=adornee then
-		self.part,self.top=adornee,nil
-		if adornee then
-			local model=adornee:FindFirstAncestorWhichIsA("Model")
-			local ok,size=pcall(function()return if model then model:GetExtentsSize()else adornee.Size end)
-			self.top=if ok and typeof(size)=="Vector3"then size.Y*.5 else 1.5
-		end
-	end
 	local reduced=self:reduced()
 	-- A finger on the bubble holds it still, for a second at most (a lost InputEnded never pins it).
 	if self.holding and(not self.shown or os.clock()-self.holding.at>1)then self.holding=nil end
-	local rise=0
-	if adornee and Bubble.pinned(self.wordText)then
-		-- pinned: on the pet's part, over its head (a finger on it never holds it back from the pet)
-		if self.gui.Adornee~=adornee then self.gui.Adornee=adornee end
-		self.spot.at,self.spot.chasing=nil,false
-		rise=(self.top or 1.5)+Bubble.Lift
-	else
-		if self.gui.Adornee~=self.anchor then self.gui.Adornee=self.anchor end
-		if adornee and not self.holding then
-			local at=Bubble.follow(self.spot,adornee.Position+Vector3.new(0,(self.top or 1.5)+Bubble.Lift,0),dt,reduced)
-			self.anchor.CFrame=CFrame.new(at)
-		end
-	end
+	if self.gui.Adornee~=self.anchor then self.gui.Adornee=self.anchor end
+	-- offline (no render step): placed here
+	if not self.unbind then self:place(dt)end
 	local fade=if reduced then 1 else dt/Bubble.Fade
 	if self.alpha<self.target then self.alpha=math.min(self.target,self.alpha+fade)
 	elseif self.alpha>self.target then self.alpha=math.max(self.target,self.alpha-fade)end
@@ -352,7 +368,8 @@ function Bubble:step(dt)
 		local t=(self.time-self.hopAt)/Bubble.HopTime
 		if t>=1 or reduced then self.hopAt=nil else lift=math.sin(t*math.pi)*Bubble.HopHeight end
 	end
-	self.gui.StudsOffsetWorldSpace=Vector3.new(0,rise+lift,0)
+	-- the anchor carries the height (Bubble:place); the hop rides on top
+	self.gui.StudsOffsetWorldSpace=Vector3.new(0,lift,0)
 	if self.arrow.Visible then
 		local bounce=if reduced then 0 else Bubble.ArrowPx*(.5-.5*math.cos(self.time*Bubble.ArrowHz*math.pi*2))
 		self.arrow.Position=UDim2.new(.5,0,1,8+bounce)
@@ -370,21 +387,25 @@ function Bubble:step(dt)
 		local showChip=self.chipOn==true and chipAt~=nil
 		self.chipGui.Enabled=showChip
 		if showChip then
-			if self.chipGui.Adornee~=chipAt then self.chipGui.Adornee=chipAt end
-			-- beside the bubble when both hang on the pet, else where the bubble would be
-			local beside=self.gui.Enabled and self.gui.Adornee==chipAt
+			if self.chipGui.Adornee~=self.chipAnchor then self.chipGui.Adornee=self.chipAnchor end
+			-- beside the bubble when both hang over the pet, else where the bubble would be (the anchor carries the height)
+			local beside=self.gui.Enabled and self.measure~=nil and self.measure.part==chipAt
 			local px=if beside then self.gui.Size.X.Offset*.5+Bubble.ChipHit*.5 else 0
 			self.chipGui.SizeOffset=Vector2.new(-px/Bubble.ChipHit,0)
-			self.chipGui.StudsOffsetWorldSpace=Vector3.new(0,(self.top or 1.5)+Bubble.Lift,0)
+			self.chipGui.StudsOffsetWorldSpace=Vector3.zero
 			self.chipScale.Scale=if reduced then 1 else 1+.075*(1-math.cos(self.time*math.pi*2/1.2))
-		end
+		else self.chipSpot.at=nil end
 	end
-	-- Out of sight: the next showing starts over the Bear, not where it was.
+	-- Out of sight: the next showing starts over the pet exactly, not where it was.
 	if not self.gui.Enabled then self.spot.at=nil end
 end
 function Bubble:destroy()
 	if self.worldTap then self.worldTap:Disconnect();self.worldTap=nil end
+	if self.unbind then self.unbind();self.unbind=nil end
+	if not self.anchor then return end
 	self.gui:Destroy();self.anchor:Destroy()
 	if self.chipGui then self.chipGui:Destroy()end
+	if self.chipAnchor then self.chipAnchor:Destroy()end
+	self.anchor,self.chipAnchor=nil,nil
 end
 return Bubble

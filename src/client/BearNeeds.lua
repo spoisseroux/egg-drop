@@ -132,13 +132,14 @@ function Needs.trulyDone(f,nestRequired)
 	if not Needs.closed("needHi",f)or not Needs.closed("needDeck",f)then return false end
 	return nestRequired==false or Needs.closed("needNest",f)
 end
--- Pure: the v3 brief's words for a need (UICopy keys: headline, sub-line or nil) and its icon. view: NestLead's view
--- for the nest prompt.
+-- Pure: the v3 brief's words for a need (UICopy keys: headline, sub-line or nil), its icon and the sub-line's vars (the
+-- tuck's countdown, beta 40; nil for the rest). view: NestLead's view for the nest prompt.
 function Needs.leadWords(id,view)
 	local P=Lead.Prompts
 	if id=="needNest"then
-		if type(view)=="table"and view.head then return view.head,view.sub,view.icon end
-		return P.tuck.head,P.tuck.sub,P.tuck.icon
+		if type(view)=="table"and view.head then return view.head,view.sub,view.icon,view.subVars end
+		local sub,vars=Lead.hatchWords("sub",nil)
+		return P.tuck.head,sub,P.tuck.icon,vars
 	end
 	local entry=P[id]
 	if entry then return entry.head,entry.sub,entry.icon end
@@ -457,9 +458,9 @@ function Needs:step(now,dt)
 		local words,sub=nil,nil
 		local icon=V2.GuideIcon[id]or Needs.icon(id,f)
 		if self.lead then
-			local head,second,leadIcon=Needs.leadWords(id,view)
-			local function say(key)if not key then return nil end;if d.copy then return d.copy(key)end;return key end
-			words,sub,icon=say(head),say(second),leadIcon or icon
+			local head,second,leadIcon,vars=Needs.leadWords(id,view)
+			local function say(key,with)if not key then return nil end;if d.copy then return d.copy(key,with)end;return key end
+			words,sub,icon=say(head),say(second,vars),leadIcon or icon
 		elseif d.words then words=d.words(id)end
 		if not self.shown or self.shownIcon~=icon or self.shownWords~=words or self.shownSub~=sub then d.bubble:set(icon,true,words,sub)end
 		self.shownWords,self.shownSub,self.shownIcon=words,sub,icon

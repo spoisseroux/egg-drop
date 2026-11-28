@@ -27,8 +27,12 @@ C.Brush=table.freeze({gain=.25,full=900})
 -- The body leans up to 12 degrees toward the hand on contact, eased in .2 s; `forward` is how much of the lean goes
 -- toward the camera (the hand is always in front of the pet).
 C.Lean=table.freeze({max=math.rad(12),ease=.2,forward=.35})
--- The eyes and head follow the hovering hand: head up to 20 / 12 degrees (yaw / pitch), eyes up to .035 studs a side.
-C.Look=table.freeze({yaw=math.rad(20),pitch=math.rad(12),eye=.035,ease=.12})
+-- The eyes and head follow the hovering hand: head up to 20 / 12 degrees (yaw / pitch). Beta (40) ("the eyes still clip
+-- into the head mesh when looking at extremes"): the eyes stay inside an ellipse, `eye.aside` studs across (at scale 1),
+-- `eye.up` up and `eye.down` down, so a diagonal never reaches past either (it was a .035 square: .05 on a diagonal); a
+-- rig may carry its own `eyeLook = {aside, up, down}` (BearRigDefinition / BunnyRigDefinition / PetRigDefinitions), else
+-- these. GardenPetVisual turns the eye round the head (PetEyeGlance.frame) instead of sliding it flat.
+C.Look=table.freeze({yaw=math.rad(20),pitch=math.rad(12),eye=table.freeze({aside=.02,up=.012,down=.008}),ease=.12})
 -- The mitten: 48 px on a computer (it is the cursor), 56 px on touch drawn 28 px above the finger, tilting up to 12
 -- degrees with the rub (full tilt at `tiltSpeed` px a second across), squashing to .92 on contact. A gamepad's left
 -- stick moves it at `stick` px a second; X rubs.
@@ -116,9 +120,23 @@ function C.lean(side,weight)
  -- The top of the body moves along (dx, 0, dz): the axis is up x d = (dz, 0, -dx).
  return dz/length*angle,-dx/length*angle
 end
+-- Pure: the eye shift (studs at scale 1) for the look's share across and up (each -1..1), kept inside the ellipse of
+-- `eyeLook` ({aside, up, down}; nil: C.Look.eye). Inside it is unchanged; outside it is scaled back onto its edge.
+function C.eyeShift(nx,ny,eyeLook)
+ local E=C.Look.eye
+ local look=if type(eyeLook)=="table"then eyeLook else E
+ local aside=math.max(1e-4,tonumber(look.aside)or E.aside)
+ local up=math.max(1e-4,tonumber(look.up)or E.up)
+ local down=math.max(1e-4,tonumber(look.down)or E.down)
+ local x,y=(tonumber(nx)or 0)*aside,(tonumber(ny)or 0)*(if(tonumber(ny)or 0)>=0 then up else down)
+ local r=(x/aside)^2+(y/(if y>=0 then up else down))^2
+ if r>1 then local k=1/math.sqrt(r);x,y=x*k,y*k end
+ return x,y
+end
 -- Pure: the head turn and the eye shift toward a point in the pet's own frame (+Z forward, +Y up), from its head.
--- Returns head yaw, head pitch (radians) and eye x, eye y (studs at scale 1), all times `weight`.
-function C.look(rel,weight)
+-- Returns head yaw, head pitch (radians) and eye x, eye y (studs at scale 1), all times `weight`. eyeLook: the rig's
+-- own ellipse (C.eyeShift), nil for the default.
+function C.look(rel,weight,eyeLook)
  weight=math.clamp(tonumber(weight)or 0,0,1)
  if typeof(rel)~="Vector3"then return 0,0,0,0 end
  local flat=math.sqrt(rel.X*rel.X+rel.Z*rel.Z)
@@ -128,7 +146,8 @@ function C.look(rel,weight)
  local L=C.Look
  local ny,np=math.clamp(yaw/L.yaw,-1,1),math.clamp(up/L.pitch,-1,1)
  -- Positive pitch looks down (CFrame.Angles about X), so looking up is negative.
- return ny*L.yaw*weight,-np*L.pitch*weight,ny*L.eye*weight,np*L.eye*weight
+ local ex,ey=C.eyeShift(ny,np,eyeLook)
+ return ny*L.yaw*weight,-np*L.pitch*weight,ex*weight,ey*weight
 end
 -- Pure: the mitten's size (px) and its offset from the pointer: a finger never hides it.
 function C.hand(kind)

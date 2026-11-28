@@ -322,6 +322,8 @@ function Visual:update(dt)
  end
  -- Beta (34): the look round or sniff in the pause after a stroll (PetWalkBeats, set by PetFollow.activity).
  if not reduced and self.gardenAction=="wanderPause"then headYaw+=self.walkLookYaw or 0;headPitch+=self.walkLookPitch or 0 end
+ -- Beta (40): the lead's trot for a following owner looks back over the shoulder (PetLead.lookYaw, via PetFollow).
+ if not reduced and(self.leadLookYaw or 0)~=0 then headYaw+=self.leadLookYaw end
  -- Ears roll about their base anchors and the tail yaws about its anchor (C1).
  local wagBoost=self.wagBoost;if beatWag and beatWag>0 then self.wagBoost=math.max(wagBoost or 0,beatWag)end
  local earL,earR,tailYaw=Motion.appendages(self,expression,dt)
@@ -393,9 +395,12 @@ function Visual:update(dt)
   local cf=upper*CFrame.new(0,hop,0)*entry.frame
   local isFace=channel=="Face"or string.find(name,"Eye")or string.find(name,"Glint")or string.find(name,"Mouth")or string.find(name,"Teeth")or string.find(name,"Cheek")
   if channel=="Head"or isFace or channel=="Charm"then cf=head*entry.frame end
-  -- pet2: the eyes look toward the mitten (a small shift across the face, in the head's own frame).
-  if cuddle and isFace and(cuddle.eyeX~=0 or cuddle.eyeY~=0)and(string.find(name,"Eye")or string.find(name,"Glint"))then
-   cf=head*CFrame.new((cuddle.eyeX or 0)*self.scale,(cuddle.eyeY or 0)*self.scale,0)*entry.frame
+  -- pet2: the eyes look toward the mitten (a small shift across the face, in the head's own frame). Beta (40): turned
+  -- round the head's upright axis and lifted with the travel (PetEyeGlance.frame), inside PetCuddle's ellipse, so an
+  -- extreme look never sinks an eye into the head mesh (the flat slide did).
+  if cuddle and isFace and((cuddle.eyeX or 0)~=0 or(cuddle.eyeY or 0)~=0)and(string.find(name,"Eye")or string.find(name,"Glint"))then
+   if self.glanceScale~=self.scale or self.glanceRig~=self.definition then self.glanceScale,self.glanceRig=self.scale,self.definition;self.glanceCentre=EyeGlance.headCentre(self.definition,self.scale)end
+   cf=EyeGlance.frame(head,cf,self.glanceCentre,self.scale,cuddle.eyeX or 0,cuddle.eyeY or 0)
   end
   if channel=="Head"and(entry.earSide or string.sub(name,1,3)=="Ear")then
    -- Ear pieces and anything pierced through an ear roll about the ear's base anchor.

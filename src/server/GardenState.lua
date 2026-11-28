@@ -507,8 +507,10 @@ function Garden:stand(id,spot,yaw,hold)
 end
 -- ── The lead to the nest (onboarding v3 brief section 1, switch Onboard "lead"; PetLead's rules) ─────────────────────
 -- The owner's pet runs ahead along `points` (the client's trail route, checked by init.server with PetLead.clean) to
--- `goal` (3 studs short of the nest's prompt), stops 12 studs ahead and looks back, runs on when the owner comes within
--- 7, arrives and bounces facing `nest` until the lead ends (leadEnd, leadCheer, or anything else taking the pet). A
+-- `goal` (3 studs short of the nest's prompt), arcs round 22 studs ahead and looks back, runs on when the owner comes
+-- within 14 (or comes on fast), trots on looking back while the owner keeps following (beta 40: PetLead.decide's
+-- "pace", never a stop), arrives and bounces facing `nest` until the lead ends (leadEnd, leadCheer, or anything else
+-- taking the pet). A
 -- nudge (leadBack) runs it back along its route to about 5 studs from the owner, or poofs it to them when no route
 -- point is near (lost: the client sends a new route). Stuck while running (a safety hold): a poof to the next route
 -- point. The snapshot carries {seq, phase, lost} for the client's words; every screen draws the run, hops and spin.
@@ -544,6 +546,110 @@ function Garden.leadSettle(from,velocity,yaw,face,hold,before)
     table.insert(path,holdLeg(from,yaw,hold));total+=hold
     return path,total,from,yaw
 end
+-- Beta (40), Spencer: "it takes too long to turn back around and run again, needs to be smoother". The stop was a
+-- quarter-second brake, a pivot (|turn| / 6 s: half a second for an about-turn), then the hold. Now (PetLead.Arc): ease
+-- down to 40% of the speed, curve round through a small radius (arcLegs: speed-capped cubics), stop
+-- facing `face` and hold `hold` s. nil when it is too slow to arc or a leg does not fit (the caller settles as before).
+local function angleTo(a,b)return math.atan2(math.sin(b-a),math.cos(b-a))end
+-- Pieces of at least Arc.leg s each (a garden cubic's floor), a semicircle in one at most .35 s: the hull keeps it
+-- near the circle and the speed near `keep` (capped at twice it).
+local function arcLegs(path,from,velocity,heading,turn,keep,radius,seconds)
+    local sweep=math.abs(turn)
+    local pieces=math.clamp(math.floor(seconds/leadModule().Arc.leg),1,4)
+    local start,v=from,velocity
+    local yaw=heading
+    for i=1,pieces do
+        local q,h=leadModule().arcPoint(from,heading,turn,radius,sweep*i/pieces)
+        local vq=Vector3.new(math.sin(h),0,math.cos(h))*keep
+        local leg=Activity.leg(start,q,v,vq,keep*2,seconds/pieces,yaw)
+        if not leg then return nil end
+        table.insert(path,leg)
+        start,v,yaw=q,vq,select(3,Activity.legPose(leg,leg.duration))
+    end
+    return start,v,yaw
+end
+function Garden.leadArc(from,velocity,yaw,face,hold)
+    local Lead=leadModule()
+    local A=Lead.Arc
+    local flatV=Vector3.new(velocity.X,0,velocity.Z)
+    local speed=flatV.Magnitude
+    if typeof(face)~="Vector3"or speed<A.min then return nil end
+    local u=flatV.Unit
+    local heading=math.atan2(u.X,u.Z)
+    local keep=math.max(A.min,speed*A.keep)
+    local path,total={},0
+    -- ease down along the way
+    local eased=from+u*((speed+keep)*.5*A.slow)
+    local leg=Activity.leg(from,eased,flatV,u*keep,speed,A.slow,yaw)
+    if not leg then return nil end
+    table.insert(path,leg)
+    local at,v=eased,u*keep
+    heading=select(3,Activity.legPose(leg,leg.duration))
+    -- the curve round to the owner
+    local d=face-at
+    if Vector2.new(d.X,d.Z).Magnitude>.05 then
+        local turn=angleTo(heading,math.atan2(d.X,d.Z))
+        if math.abs(turn)>=.12 then
+            local _,radius,arcTime=Lead.arcFor(turn,speed)
+            local endAt,endV,endYaw=arcLegs(path,at,v,heading,turn,keep,radius,arcTime)
+            if not endAt then return nil end
+            at,v,heading=endAt,endV,endYaw
+        end
+    end
+    -- the stop, facing them
+    local stopAt=at+v*(A.stop*.5)
+    leg=Activity.leg(at,stopAt,v,ZERO,math.max(v.Magnitude,.1),A.stop,heading)
+    if not leg then return nil end
+    table.insert(path,leg)
+    at,heading=stopAt,select(3,Activity.legPose(leg,leg.duration))
+    -- what is left of the turn (the owner moved meanwhile) on the spot, short
+    d=face-at
+    if Vector2.new(d.X,d.Z).Magnitude>.05 then
+        local want=math.atan2(d.X,d.Z)
+        local turn=angleTo(heading,want)
+        if math.abs(turn)>=.12 then
+            local seconds=Activity.turnSeconds(turn)
+            table.insert(path,{from=Activity.pack(at),to=Activity.pack(at),v0={0,0,0},v1={0,0,0},duration=seconds,yaw=heading,turn=turn,turnDuration=seconds,pivot=true})
+        end
+        heading=want
+    end
+    table.insert(path,holdLeg(at,heading,math.max(.05,hold or .05)))
+    for _,step in ipairs(path)do total+=step.duration end
+    return path,total,at,heading
+end
+-- From rest facing the owner to the run (beta 40): set off the way it faces, curve round to the route through the same
+-- small arc, then run on through the route ahead of the arc's end. nil when the turn is small (the run's own short
+-- pivot is fine), or it does not fit.
+Garden.LaunchTurn=1 -- radians: a smaller turn to the route pivots as before
+function Garden.leadLaunch(from,yaw,points,goal,speed,accept)
+    local Lead=leadModule()
+    local A=Lead.Arc
+    local first=Lead.ahead(points,from,goal)[1]
+    local d=first-from
+    if Vector2.new(d.X,d.Z).Magnitude<2 then return nil end
+    local turn=angleTo(yaw,math.atan2(d.X,d.Z))
+    if math.abs(turn)<Garden.LaunchTurn then return nil end
+    local keep=math.max(A.min,speed*A.keep)
+    local u=Vector3.new(math.sin(yaw),0,math.cos(yaw))
+    local path={}
+    local off=from+u*(keep*.5*A.slow)
+    local leg=Activity.leg(from,off,ZERO,u*keep,keep,A.slow,yaw)
+    if not leg then return nil end
+    table.insert(path,leg)
+    local heading=select(3,Activity.legPose(leg,leg.duration))
+    d=first-off
+    local sweep=angleTo(heading,math.atan2(d.X,d.Z))
+    local _,radius,arcTime=Lead.arcFor(sweep,speed)
+    local at,v,endYaw=arcLegs(path,off,u*keep,heading,sweep,keep,radius,arcTime)
+    if not at then return nil end
+    for _,step in ipairs(path)do if accept and not accept(step)then return nil end end
+    local rest,seconds=Activity.through(at,Lead.ahead(points,at,goal),v,speed/Activity.ThroughPace,endYaw,accept)
+    if not rest then return nil end
+    local total=seconds
+    for _,step in ipairs(path)do total+=step.duration end
+    for _,step in ipairs(rest)do table.insert(path,step)end
+    return path,total
+end
 -- Can this pet lead (or cheer) now? In the garden, and nothing else has it (a greeting gives way: release ends it).
 function Garden:leadFree(actor)
     return actor~=nil and actor.mode=="Room"and not actor.park and not actor.care and not actor.dash and not actor.toyReservation
@@ -573,31 +679,63 @@ function Garden:lead(id,points,goal,nest)
     actor.catch={};actor.idleSince=now
     return true
 end
-function Garden:leadRun(actor,position,now)
+-- The leading pet's walks keep its keep-outs (beta 40: validLeadPath, the lead's plants as well as the water and the
+-- solid props), else the everyday check.
+function Garden:leadAccept()
+    local check=self.options.validLeadPath or self.options.validToyPath
+    return function(leg)return check==nil or check({leg})end
+end
+-- Run on along the route: "run" at Lead.Run, or "pace" (beta 40: a following owner, looked back at) at Lead.Pace. From
+-- rest facing the owner it arcs round to the way (leadLaunch).
+function Garden:leadRun(actor,position,now,pace)
     local Lead=leadModule()
     local lead=actor.lead
     local sample=Activity.sample(actor,now)
-    local velocity=sample and sample.velocity or ZERO
+    local moving=sample~=nil and now<actor.endTime
+    local velocity=if moving then sample.velocity else ZERO
     local yaw=sample and sample.yaw or actor.yaw or 0
-    local targets=Lead.ahead(lead.points,position,lead.goal)
-    local accept=self.options.validToyPath
-    local path,seconds=Activity.through(position,targets,velocity,Lead.Run/Activity.ThroughPace,yaw,function(leg)return accept==nil or accept({leg})end)
+    local speed=if pace then Lead.Pace else Lead.Run
+    local accept=self:leadAccept()
+    local path,seconds=nil,nil
+    if velocity.Magnitude<.5 then path,seconds=Garden.leadLaunch(position,yaw,lead.points,lead.goal,speed,accept)end
+    if not path then
+        local targets=Lead.ahead(lead.points,position,lead.goal)
+        path,seconds=Activity.through(position,targets,velocity,speed/Activity.ThroughPace,yaw,accept)
+    end
     if not path then
         -- no smooth walk fits: the server's own planner, straight to the goal round the water and the props
         local planner=self.options.planPath or Activity.plan
-        path,seconds=planner(position,lead.goal,velocity,Lead.Run*3,0,yaw,nil,ZERO)
+        path,seconds=planner(position,lead.goal,velocity,speed*3,0,yaw,nil,ZERO)
     end
-    lead.phase,lead.stuckAt,lead.stuckFrom="run",nil,nil
-    self:transition(actor,"investigate",lead.goal,0,"leadRun",nil,nil,{path=path,duration=seconds})
+    lead.phase,lead.stuckAt,lead.stuckFrom,lead.nudged=if pace then "pace"else "run",nil,nil,nil
+    self:transition(actor,"investigate",lead.goal,0,if pace then "leadPace"else "leadRun",nil,nil,{path=path,duration=seconds})
 end
 function Garden:leadHold(actor,position,now,face,action,phase)
     local Lead=leadModule()
     local sample=Activity.sample(actor,now)
     local moving=sample and now<actor.endTime
-    local path,seconds,at=Garden.leadSettle(position,if moving then sample.velocity else ZERO,sample and sample.yaw or actor.yaw or 0,face,Lead.Hold)
+    local velocity=if moving then sample.velocity else ZERO
+    local yaw=sample and sample.yaw or actor.yaw or 0
+    -- beta 40: a running pet arcs round to face them (never a brake and a pivot), when the arc keeps its keep-outs;
+    -- an arrival stops on its goal as before (an arc would carry it off the spot by the nest)
+    local path,seconds,at=nil,nil,nil
+    if moving and phase=="wait"then
+        path,seconds,at=Garden.leadArc(position,velocity,yaw,face,Lead.Hold)
+        if path then
+            local check=self.options.validLeadPath or self.options.validToyPath
+            if check and not check(path)then path=nil end
+        end
+    end
+    if not path then path,seconds,at=Garden.leadSettle(position,velocity,yaw,face,Lead.Hold)end
     actor.lead.phase=phase
     self:transition(actor,"investigate",at,seconds,action,nil,nil,{path=path,duration=seconds})
     actor.from,actor.to=Activity.pack(position),Activity.pack(at)
+end
+-- Pure: how fast the owner comes toward the pet (studs a second; negative: away), from the owner's sampled velocity.
+function Garden.leadClosing(pet,owner,ownerVelocity)
+    local toPet=Vector3.new(pet.X-owner.X,0,pet.Z-owner.Z)
+    if toPet.Magnitude<1e-3 or typeof(ownerVelocity)~="Vector3"then return 0 end
+    return Vector3.new(ownerVelocity.X,0,ownerVelocity.Z):Dot(toPet.Unit)
 end
 function Garden:leadStep(actor,input,position,now)
     local Lead=leadModule()
@@ -612,9 +750,12 @@ function Garden:leadStep(actor,input,position,now)
         actor.lead=nil;actor.idleSince=now;self.dirty=true;self:transition(actor,"follow",input.anchor,.6);return
     end
     local nest=lead.nest or lead.goal
+    -- beta 40: the owner coming on (following) never makes it stop; a waiting pet runs on at once
+    local closing=Garden.leadClosing(position,input.position,actor.ownerVelocity)
     -- poofed off its route: it waits by the owner for the client's new route (never a run off the route)
-    local next=if lead.lost then nil else Lead.decide(lead,{now=now,pet=position,owner=input.position,goal=lead.goal,moving=now<actor.endTime})
+    local next=if lead.lost then nil else Lead.decide(lead,{now=now,pet=position,owner=input.position,goal=lead.goal,moving=now<actor.endTime,closing=closing})
     if next=="run"then self:leadRun(actor,position,now)
+    elseif next=="pace"then self:leadRun(actor,position,now,true)
     elseif next=="wait"then self:leadHold(actor,position,now,input.position,"leadWait","wait")
     elseif next=="arrive"then self:leadHold(actor,position,now,nest,"leadArrive","arrive")
     elseif next=="poof"then
@@ -622,7 +763,7 @@ function Garden:leadStep(actor,input,position,now)
         actor.hop={seq=(actor.hop and actor.hop.seq or 0)+1,from=Activity.pack(position),why="lead"}
         actor.from,actor.to=Activity.pack(spot),Activity.pack(spot);actor.path=nil
         actor.startTime,actor.endTime=now,now
-        self:leadRun(actor,spot,now)
+        self:leadRun(actor,spot,now,lead.phase=="pace")
     elseif(lead.phase=="wait"or lead.phase=="arrive")and now>=actor.endTime-.05 then
         -- a long wait or arrival: held again, facing the same way
         self:leadHold(actor,position,now,if lead.phase=="wait"then input.position else nest,actor.action,lead.phase)
@@ -641,13 +782,12 @@ function Garden:leadBack(id)
     local velocity=if sample and now<actor.endTime then sample.velocity else ZERO
     local way=Lead.backWay(lead.points,position,input.position)
     if way then
-        local accept=self.options.validToyPath
-        local path,seconds=Activity.through(position,way,velocity,Lead.Run/Activity.ThroughPace,yaw,function(leg)return accept==nil or accept({leg})end)
+        local path,seconds=Activity.through(position,way,velocity,Lead.Run/Activity.ThroughPace,yaw,self:leadAccept())
         if not path then
             local planner=self.options.planPath or Activity.plan
             path,seconds=planner(position,way[#way],velocity,Lead.Run*3,0,yaw,nil,ZERO)
         end
-        lead.phase="back"
+        lead.phase,lead.nudged="back",true
         self:transition(actor,"investigate",way[#way],0,"leadBack",nil,nil,{path=path,duration=seconds})
         return true
     end

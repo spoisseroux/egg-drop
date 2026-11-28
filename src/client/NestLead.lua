@@ -16,7 +16,9 @@
 -- deps: send(kind, payload) (the petLead remote), plan(from, to, done(points)) (the trail route; may yield), actor() (my
 --   garden actor snapshot), serverNow(), pet() -> position, model (the drawn pet, or nil), root(), nest() (the prompt
 --   point), trail (LeadTrail), targetName(), beckon() (chirp and paw wave), hop() (the bubble), chirp(), event(name),
---   celebrate() (hearts and the settle buzz), toast(key).
+--   celebrate() (hearts and the settle buzz), toast(key, vars), hatchLeft() -> seconds to the hatch or nil (the tuck's
+--   countdown words, PetLead.hatchWords), keepOut() -> the lead's keep-out circles (GardenKeepOut.lead; nil: none),
+--   segmentOk(a, b) (optional: a detour's legs stay dry).
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Lead=require(Shared:WaitForChild("PetLead"))
 local NestLead={};NestLead.__index=NestLead
@@ -54,6 +56,13 @@ function NestLead:start(now,from,nest)
 		-- the trail's raw route thinned and re-spaced to the server's caps (Lead.fit: bridge ends kept)
 		if type(points)=="table"then points=Lead.fit(points)end
 		if type(points)~="table"or #points<2 then self:failed(self.now or now);return end
+		-- beta (40) ("the pet runs thru meshes"): round the bushes, reeds and props the navmesh cannot see; a route
+		-- that cannot be cleared goes as it is (the server checks it and refuses one through a keep-out)
+		local keepOut=call(self.d.keepOut)
+		if type(keepOut)=="table"and #keepOut>0 then
+			local cleared=Lead.around(points,keepOut,self.d.segmentOk)
+			if cleared then points=cleared end
+		end
 		self.askedAbove=self.seenSeq
 		self:send("start",{route=points})
 		self.leading,self.acked,self.sentAt=true,false,self.now or now
@@ -128,7 +137,7 @@ function NestLead:finish(tucked)
 	if tucked then
 		self:send("cheer")
 		call(self.d.celebrate)
-		call(self.d.toast,Lead.ToastCopy)
+		call(self.d.toast,Lead.hatchWords("toast",call(self.d.hatchLeft)))
 	elseif wasLeading then self:send("stop")end
 end
 -- The parked prints: today's trail from the player to the nest, laid again when it goes out.
@@ -179,7 +188,9 @@ function NestLead:step(now,dt,ctx)
 		-- 2b on the nest; no leader (stowed, refused): today's trail from the player
 		if self.leading and not petAt then self:stopLead()end
 		if not self.reached and not self.leading then self:keepTrail(now,nest)end
-		return {stage="tuck",on="nest",head=P.tuck.head,sub=P.tuck.sub,icon=P.tuck.icon}
+		-- beta (40): the sub-line counts down to the hatch ("It hatches in 7 h"), never "tomorrow"
+		local sub,subVars=Lead.hatchWords("sub",call(d.hatchLeft))
+		return {stage="tuck",on="nest",head=P.tuck.head,sub=sub,subVars=subVars,icon=P.tuck.icon}
 	end
 	-- 2a: the pet leads
 	local lead,actor=self:serverLead()
@@ -211,7 +222,7 @@ function NestLead:step(now,dt,ctx)
 			local due,beat=Lead.beckonDue(age,self.beckonBeat)
 			if due then self.beckonBeat=beat;call(d.beckon);call(d.hop)end
 		end
-		local event=Lead.watch(self.w,{now=now,dt=dt,active=lead.phase=="run"or lead.phase=="wait",speed=speed,
+		local event=Lead.watch(self.w,{now=now,dt=dt,active=lead.phase=="run"or lead.phase=="pace"or lead.phase=="wait",speed=speed,
 			gap=if typeof(root)=="Vector3"then Lead.flat(root,petAt)else 0,toNest=if typeof(root)=="Vector3"then Lead.flat(root,nest)else nil})
 		if event=="nudge"then
 			self:send("back")

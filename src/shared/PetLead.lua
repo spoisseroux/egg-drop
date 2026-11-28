@@ -8,8 +8,11 @@
 --   run     18 studs a second along the player's trail route (never a straight line through fences)   ("leadRun")
 --           (onboarding fun pass, qa-2026-11-27-beta37/ONBOARDING-FUN-PASS.md section 1: a chase, faster than the
 --           player's 16, so they chase it instead of passing it; was 14, two hops and a 2 s rest after the pet)
---   wait    12 studs ahead of the player it stops, faces them and beckons every 2.5 s ("leadWait")
---           it runs on once the player is within 7 studs (or has passed it)
+--   wait    22 studs ahead of the player it arcs round (never a stop and a pivot), faces them and beckons every 2.5 s
+--           ("leadWait"); it arcs back and runs on once the player is within 14 studs, has passed it, or comes on
+--           faster than 4 studs a second (beta 40; was 12 and 7)
+--   pace    a player who keeps following never makes it stop: it trots on at 15 looking back over its shoulder
+--           ("leadPace") until they are within 14 again, then runs
 --   back    a nudge: it runs back along its route to about 5 studs from the player  ("leadBack")
 --   arrive  3 studs short of the nest it stops, faces the nest and bounces           ("leadArrive")
 --   cheer   the tuck (and the all-set card): a jump and one spin                      ("leadCheer")
@@ -17,8 +20,23 @@ local Lead={}
 
 -- ── Numbers ──────────────────────────────────────────────────────────────────────────────────────────────────────────
 Lead.Run=18            -- studs a second (the player walks 16: a chase; was 14)
-Lead.Ahead=12          -- this far ahead of the player (and nearer the nest than them) it stops and looks back
-Lead.Resume=7          -- the player this close: it runs on
+-- Beta (40), Spencer: "the distance it runs before turning around is too short, and it takes too long to turn back
+-- around and run again, needs to be smoother".
+Lead.Ahead=22          -- this far ahead of the player (and nearer the nest than them) it looks back (was 12)
+Lead.Resume=14         -- the player this close: it runs on (was 7)
+Lead.Closing=4         -- the player coming on faster than this (studs a second, toward the pet) is following: a waiting
+                       -- pet runs on at once, and a running one never stops: it trots at Pace and looks back
+Lead.Pace=15           -- studs a second while it looks back at a following player (a touch under their 16: they close)
+Lead.AheadMax=27       -- even a followed pet waits this far ahead (under Far, so a follow is never a nudge)
+Lead.Arc=table.freeze({keep=.4,radius=1.5,time=.35,slow=.25,stop=.25,min=2,leg=.25}) -- the turn: keep 40% of the
+                       -- speed, curve through at most `radius` studs in about `time` s (after `slow` s easing down to
+                       -- it), then stop in `stop` s facing the player; from rest the same arc the other way, then the
+                       -- run. Under `min` studs a second it pivots on the spot as before. `leg`: the shortest cubic a
+                       -- garden walk has (GardenActivity.leg's floor), so a gentle turn swings wider rather than faster.
+Lead.LookBack=table.freeze({yaw=.9,every=2.5,time=.9}) -- the trot's look over the shoulder (head yaw, radians)
+Lead.Body=.8           -- studs: the leading pet's half-width (its route keeps this clear of every keep-out circle)
+Lead.Detour=.35        -- studs past that a route point is pushed round a keep-out
+Lead.MaxDetours=40     -- points a route may gain going round things
 Lead.Arrive=3          -- it stops this far short of the nest's prompt, along the route
 Lead.Reach=8           -- the player this close to the nest's prompt: prompt 2a is done (2b shows on the nest)
 Lead.Rest=2            -- s between two prompts (was 4)
@@ -139,9 +157,103 @@ function Lead.fit(points)
 	end
 	return nil
 end
+-- ── Round the things the navmesh cannot see (beta 40) ───────────────────────────────────────────────────────────────
+local function circle(entry)return entry.x or entry.X,entry.z or entry.Z,entry.r or entry.R end
+-- Pure: the first keep-out (GardenKeepOut's {x, z, r} or {X, Z, R} records) the leg a-b passes within r + grow of, or
+-- nil. A circle the leg's start stands in is not counted when `fromInside` (the pet may stand in a bush: it walks out),
+-- nor one its end stands in when `toInside` (the route's last point: the nest's prompt is where it must go).
+function Lead.blocker(a,b,list,grow,fromInside,toInside)
+	local KeepOut=require(script.Parent.GardenKeepOut)
+	for _,entry in ipairs(list or {})do
+		local x,z,r=circle(entry)
+		if type(x)=="number"and type(z)=="number"and type(r)=="number"then
+			local reach=r+(grow or 0)
+			local inside=Vector2.new(a.X-x,a.Z-z).Magnitude<reach
+			local ends=Vector2.new(b.X-x,b.Z-z).Magnitude<reach
+			if not(fromInside and inside)and not(toInside and ends)and KeepOut.toSegment(x,z,a.X,a.Z,b.X,b.Z)<reach then return entry end
+		end
+	end
+	return nil
+end
+-- Pure (the client, after Lead.fit): the route pushed round every keep-out circle it passes within Body of. Each leg
+-- that hits one gains a point beside the circle (r + Body + Detour out from its centre, square to the leg, on the side
+-- the leg passes; the other side if that one is in another circle or `ok(a, b)` refuses it: water). A route point
+-- standing in one is moved straight out of it first. The first leg may start inside one (the pet stands in a bush),
+-- the last may end in one (the nest's prompt). Returns the new points, or nil when a leg cannot be cleared or the route
+-- grows past MaxDetours or Route.max points (the caller keeps today's route and the server decides).
+function Lead.around(points,list,ok)
+	if type(points)~="table"or #points<2 then return nil end
+	if type(list)~="table"or #list==0 then return table.clone(points)end
+	local n=#points
+	local moved=table.clone(points)
+	for i=2,n-1 do
+		local p=moved[i]
+		for _=1,4 do
+			local hit=Lead.blocker(p,p,list,Lead.Body,false)
+			if not hit then break end
+			local x,z,r=circle(hit)
+			local away=Vector3.new(p.X-x,0,p.Z-z)
+			if away.Magnitude<1e-3 then away=Vector3.new(1,0,0)end
+			p=Vector3.new(x,p.Y,z)+away.Unit*(r+Lead.Body+Lead.Detour)
+		end
+		if Lead.blocker(p,p,list,Lead.Body,false)then return nil end
+		moved[i]=p
+	end
+	local out={moved[1]}
+	local added=0
+	local queue=table.move(moved,2,n,1,{})
+	local guard=0
+	while #queue>0 do
+		guard+=1
+		if guard>Lead.Route.max*4 then return nil end
+		local a,b=out[#out],queue[1]
+		local first=#out==1
+		local hit=Lead.blocker(a,b,list,Lead.Body,first,#queue==1)
+		if not hit then
+			table.insert(out,table.remove(queue,1))
+		else
+			local x,z,r=circle(hit)
+			local centre=Vector3.new(x,0,z)
+			local ab=Vector3.new(b.X-a.X,0,b.Z-a.Z)
+			local along=if ab.Magnitude>1e-4 then ab.Unit else Vector3.new(1,0,0)
+			local t=math.clamp((centre-Vector3.new(a.X,0,a.Z)):Dot(along)/math.max(ab.Magnitude,1e-4),0,1)
+			local closest=Vector3.new(a.X,0,a.Z)+ab*t
+			local away=closest-centre
+			local side=Vector3.new(-along.Z,0,along.X)
+			if away.Magnitude>1e-3 then side=if away:Dot(side)>=0 then side else -side end
+			local reach=r+Lead.Body+Lead.Detour
+			local y=a.Y+(b.Y-a.Y)*t
+			local chosen=nil
+			for _,s in ipairs({side,-side})do
+				local p=Vector3.new(x+s.X*reach,y,z+s.Z*reach)
+				local clear=Lead.blocker(p,p,list,Lead.Body,false)==nil
+				if clear and(ok==nil or(ok(a,p)and ok(p,b)))then chosen=p;break end
+			end
+			if not chosen then return nil end
+			added+=1
+			if added>Lead.MaxDetours then return nil end
+			table.insert(queue,1,chosen)
+		end
+	end
+	if #out>Lead.Route.max then return nil end
+	-- a detour never makes a leg longer than the server's step (each new leg is shorter than the one it splits, but a
+	-- point pushed out can lengthen one past it): cut any long one in even pieces, checked again
+	local spaced={out[1]}
+	for k=2,#out do
+		local a,b=out[k-1],out[k]
+		local parts=math.max(1,math.ceil(flat(a,b)/(Lead.Route.step-Lead.Fit.margin)))
+		for m=1,parts-1 do table.insert(spaced,a:Lerp(b,m/parts))end
+		table.insert(spaced,b)
+	end
+	if #spaced>Lead.Route.max then return nil end
+	return spaced
+end
 -- Pure (the server's check of the client's route). raw: the route the client sent (Vector3s from the pet to the nest's
 -- prompt). ctx: {pet (the pet's position now), nest (where the nest stands), ground(point) -> y or nil, clear(a, b) ->
--- true when nothing solid stands between the two at the pet's body height}. Returns the grounded points, or nil and why.
+-- true when nothing solid stands between the two at the pet's body height, keepOut (optional: GardenKeepOut.lead's
+-- circles; beta 40: no leg within Body of one, the first leg may start inside one and the last end in one)}. Returns
+-- the grounded points, or
+-- nil and why.
 function Lead.clean(raw,ctx)
 	local R=Lead.Route
 	if type(raw)~="table"or #raw<2 or #raw>R.max then return nil,"count"end
@@ -162,6 +274,7 @@ function Lead.clean(raw,ctx)
 		if step>R.step then return nil,"step"end
 		total+=step
 		if not ctx.clear(out[i-1],out[i])then return nil,"blocked"end
+		if ctx.keepOut and Lead.blocker(out[i-1],out[i],ctx.keepOut,Lead.Body,i==2,i==#out)then return nil,"keepout"end
 	end
 	if total>R.length then return nil,"length"end
 	return out
@@ -220,7 +333,13 @@ end
 
 -- ── The server's state machine ───────────────────────────────────────────────────────────────────────────────────────
 -- Pure: what the leading pet does next. lead: {phase, stuckAt, stuckFrom}; ctx: {now, pet, owner, goal, moving (its
--- walk is still under way)}. Returns "run", "wait", "arrive", "poof" or nil (go on as it is).
+-- walk is still under way), closing (beta 40: how fast the owner comes toward the pet, studs a second; nil 0)}.
+-- Returns "run", "pace" (run on at Pace, looking back: the owner follows), "wait", "arrive", "poof" or nil (go on).
+--   run   at Ahead studs ahead (and the owner not past it): "pace" while the owner follows (closing at least Closing)
+--         and the gap is under AheadMax, else "wait"
+--   pace  the owner within Resume (or past it): "run"; at AheadMax, or the owner no longer following at Ahead: "wait"
+--   wait  the owner within Resume (Back + 2 after a nudge brought it back), past it, or following (closing at least
+--         Closing) under AheadMax: "run" at once
 function Lead.decide(lead,ctx)
 	local phase=lead.phase
 	local pet,owner,goal,now=ctx.pet,ctx.owner,ctx.goal,ctx.now
@@ -230,14 +349,23 @@ function Lead.decide(lead,ctx)
 	if phase=="arrive"then return nil end
 	local gap=flat(pet,owner)
 	local ownerPassed=flat(owner,goal)<=flat(pet,goal)
+	local following=(tonumber(ctx.closing)or 0)>=Lead.Closing
 	if phase=="wait"then
 		if atGoal then return "arrive"end
-		if gap<=Lead.Resume or ownerPassed then return "run"end
+		-- after a nudge's run back (lead.nudged) it waits for the player to come to it (Back + 2) or to follow, as before
+		local resume=if lead.nudged then Lead.Back+2 else Lead.Resume
+		if gap<=resume or ownerPassed or(following and gap<Lead.AheadMax)then return "run"end
 		return nil
 	end
-	if phase=="run"then
+	if phase=="run"or phase=="pace"then
 		if atGoal or(not ctx.moving and flat(pet,goal)<=1.5)then return "arrive"end
-		if gap>=Lead.Ahead and not ownerPassed then return "wait"end
+		if phase=="run"and gap>=Lead.Ahead and not ownerPassed then
+			return if following and gap<Lead.AheadMax then "pace"else "wait"
+		end
+		if phase=="pace"then
+			if gap<=Lead.Resume or ownerPassed then return "run"end
+			if gap>=Lead.AheadMax or(gap>=Lead.Ahead and not following)then return "wait"end
+		end
 		-- stuck: under StuckMove studs in StuckTime s while running
 		if lead.stuckAt==nil or typeof(lead.stuckFrom)~="Vector3"then lead.stuckAt,lead.stuckFrom=now,pet;return nil end
 		if now-lead.stuckAt>=Lead.StuckTime then
@@ -248,6 +376,29 @@ function Lead.decide(lead,ctx)
 		return nil
 	end
 	return nil
+end
+
+-- ── The turn (beta 40: an arc, never a stop and a pivot) ─────────────────────────────────────────────────────────────
+-- Pure: the arc's own numbers for a turn of `turn` radians (signed) at `speed` studs a second: the speed it keeps
+-- through the curve, its radius (at most Arc.radius, smaller for a sharp turn so it still takes about Arc.time) and
+-- its seconds. nil when it is too slow to arc (it pivots).
+function Lead.arcFor(turn,speed)
+	local A=Lead.Arc
+	speed=tonumber(speed)or 0
+	if speed<A.min then return nil end
+	local keep=math.max(A.min,speed*A.keep)
+	local sweep=math.abs(turn)
+	if sweep<1e-3 then return keep,A.radius,0 end
+	local radius=math.min(A.radius,keep*A.time/sweep)
+	local seconds=math.max(A.leg,radius*sweep/keep)
+	return keep,keep*seconds/sweep,seconds
+end
+-- Pure: a point and heading `along` radians into an arc of radius r from `from` heading `yaw`, turning toward the sign
+-- of `turn` (yaw is atan2(x, z), as the garden's).
+function Lead.arcPoint(from,yaw,turn,r,along)
+	local k=if turn>=0 then 1 else -1
+	local h=yaw+k*along
+	return from+Vector3.new(r*k*(math.cos(yaw)-math.cos(h)),0,r*k*(math.sin(h)-math.sin(yaw))),h
 end
 
 -- ── Poses (every screen: GardenPetVisual through PetFollow.activity) ─────────────────────────────────────────────────
@@ -275,8 +426,22 @@ function Lead.pose(action,age,reduced)
 		if age>=C.time then return 0,0 end
 		local u=age/C.time
 		return C.height*math.sin(u*math.pi),math.pi*2*smooth(u)
+	elseif action=="leadPace"then
+		-- beta 40: no stop for a following player; a look back over the shoulder every LookBack.every s (the third
+		-- value: 0..1 of LookBack.yaw, the caller picks the side the owner is on)
+		local L=Lead.LookBack
+		local t=age%L.every
+		return 0,0,if t<L.time then math.sin(t/L.time*math.pi)^2 else 0
 	end
 	return 0,0
+end
+-- Pure: the head's turn (radians) for a look back of `look` (Lead.pose's third value) toward an owner at `rel` (the
+-- owner in the pet's own frame, +Z forward): the side the owner is on, LookBack.yaw at the full look.
+function Lead.lookYaw(look,rel)
+	look=tonumber(look)or 0
+	if look<=0 then return 0 end
+	local side=if typeof(rel)=="Vector3"and rel.X<0 then -1 else 1
+	return side*Lead.LookBack.yaw*math.clamp(look,0,1)
 end
 -- Pure: the start's hop (s); the server turns the pet to the nest during it (GardenState:lead), so the run starts after
 -- the longer of the two.
@@ -320,4 +485,18 @@ Lead.Prompts=table.freeze({
 })
 Lead.ThisWayCopy="onbLead.thisWay"
 Lead.ToastCopy="onbLead.toast"
+-- Beta (40) ("Hatches in X h / X min" always): the tuck's sub-line and the toast count down, never "tomorrow".
+Lead.CountCopy=table.freeze({sub=table.freeze({hours="onbLead.tuckSub",minutes="onbLead.tuckSubMin"}),
+	toast=table.freeze({hours="onbLead.toast",minutes="onbLead.toastMin"})})
+-- Pure: the countdown words for `which` ("sub" or "toast") with `left` seconds to the hatch: a UICopy key and its vars
+-- (Nest.countdown: whole hours over an hour, else minutes, rounded up). nil or a ready egg reads a fresh egg's nap
+-- (Nest.Seconds): the tuck comes right after the egg lands.
+function Lead.hatchWords(which,left)
+	local Nest=require(script.Parent.Nest)
+	local keys=Lead.CountCopy[which]or Lead.CountCopy.sub
+	local kind,value=Nest.countdown(left)
+	if kind=="ready"then kind,value=Nest.countdown(Nest.Seconds)end
+	if kind=="minutes"then return keys.minutes,{minutes=value}end
+	return keys.hours,{hours=value}
+end
 return table.freeze(Lead)

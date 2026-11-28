@@ -86,6 +86,62 @@ function KeepOut.regions(on,graded)
 	return out
 end
 
+-- The lead's plants (beta 40, Spencer: "the pet runs thru meshes when showing you to something"). The lead's route is
+-- the client's PathfindingService way, and the navigation mesh and the server's rays see only collidable parts: the
+-- understory (UnderstoryClient: client-drawn, nothing collides) and the frond bushes (WorldDressing, CanCollide off)
+-- are invisible to both. So the lead keeps these out too, as circles of their own kind "plant" (never in `solids` or
+-- `regions`: the everyday pet planner and the understory's own placement rules are unchanged). Understory clumps are
+-- built under the Alive `scene` switch (their feature); the frond bushes are the world's own (the first MaxBushes, on
+-- the ground: never one on the cliff tiers above a lawn). Hedges and fence posts have no shared layout data yet (they
+-- are in the merged world mesh, which the navmesh does see where it collides).
+KeepOut.Plant=table.freeze({understory=.85,frond=.7}) -- of a plant's half-width: a bush's rim is sparse leaves [PLACEHOLDER]
+local plantCache=nil
+function KeepOut.plants()
+	if plantCache then return plantCache end
+	local out={}
+	local function add(id,x,z,r,feature)
+		if type(x)=="number"and type(z)=="number"and type(r)=="number"and r>0 then
+			table.insert(out,table.freeze({id=id,x=x,z=z,r=r,kind="plant",feature=feature}))
+		end
+	end
+	local okU,U=pcall(function()return require(Shared.Understory)end)
+	if okU and type(U)=="table"then
+		for _,kind in ipairs(U.Kinds or {})do
+			for i,row in ipairs(U.rows(kind))do
+				local ok,r=pcall(U.radius,kind,row)
+				if ok then add(kind.." "..i,row[1],row[3],r*KeepOut.Plant.understory,U.Feature)end
+			end
+		end
+	end
+	local okD,Dressing=pcall(function()return require(Shared.WorldDressing)end)
+	if okD and type(Dressing)=="table"and World.WorldVersion=="v7"then
+		for i,entry in ipairs(Dressing.Bushes or {})do
+			if i>(Dressing.MaxBushes or math.huge)then break end
+			local onGround=type(World.groundY)~="function"or math.abs(entry[2]-World.groundY(entry[1],entry[3]))<2
+			local ok,_,size=pcall(function()return Dressing.bushPlacement(entry)end)
+			if onGround and ok and typeof(size)=="Vector3"then add("frond "..i,entry[1],entry[3],math.max(size.X,size.Z)*.5*KeepOut.Plant.frond,nil)end
+		end
+	end
+	plantCache=table.freeze(out)
+	return plantCache
+end
+-- Everything the lead keeps its route clear of: the built solids and the built plants (on as KeepOut.solids).
+function KeepOut.lead(on,graded)
+	local out=KeepOut.solids(on,graded)
+	for _,entry in ipairs(KeepOut.plants())do
+		if entry.feature==nil or on==nil or on(entry.feature)==true then table.insert(out,entry)end
+	end
+	return out
+end
+-- The lead's circles as planner records (GardenWalkability), r grown by Clearance: the server's lead walks round them.
+function KeepOut.leadRegions(on,graded)
+	local out={}
+	for _,entry in ipairs(KeepOut.lead(on,graded))do
+		table.insert(out,table.freeze({KeepOut=true,Parent=true,Name=entry.id,X=entry.x,Z=entry.z,R=entry.r+KeepOut.Clearance}))
+	end
+	return out
+end
+
 -- Pure geometry (XZ) ----------------------------------------------------------------------------------------------
 -- The distance from (px, pz) to the segment a-b.
 function KeepOut.toSegment(px,pz,ax,az,bx,bz)

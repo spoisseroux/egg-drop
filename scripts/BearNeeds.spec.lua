@@ -196,25 +196,45 @@ return function(client)
 		assert(low>=Bubble.Press.low-1e-6,"never below the squash")
 	end)
 	-- Beta (37) note 2: "tuck the egg in ui thing doesnt constantly follow the pet, it like waits and then catches up".
-	test("beta 37: the guide's worded bubble hangs on the pet itself every frame; the icon bubble keeps its spring",function()
-		assert(Bubble.pinned("Tuck the egg in!")and not Bubble.pinned(nil)and not Bubble.pinned(""))
+	-- Beta (40) note 1: "the onboarding label above the pet ... its all jittery": pinned to the animated Body it shook.
+	test("beta 40: every bubble hangs on its own anchor over the pet's un-animated origin, the same frame, never the Body",function()
 		local host,world=Instance.new("Folder"),Instance.new("Folder")
-		local pet={Position=Vector3.new(0,5,0),Size=Vector3.new(2,2,2),FindFirstAncestorWhichIsA=function()return nil end}
-		local bubble=Bubble.new({parent=host,world=world,adornee=function()return pet end})
-		bubble:set("moon",true,"Tuck the egg in!");bubble:step(1/60)
-		assert(bubble.gui.Adornee==pet,"on the pet's own part")
-		local over=bubble.gui.StudsOffsetWorldSpace.Y
-		assert(over>=1+Bubble.Lift-1e-6,"over its head: "..over)
-		-- the pet walks a step (under the old Dead zone): the bubble goes with it, the same frame
-		pet.Position=Vector3.new(1.2,5,0);bubble:step(1/60)
-		assert(bubble.gui.Adornee==pet and bubble.spot.at==nil,"no anchor, no wait, no catch-up")
+		local origin=Vector3.new(0,4,0)
+		-- the pet's Body: waddling (rolled, swayed, bobbing) over the origin; its top 1.2 over the origin when measured
+		local pet={Position=Vector3.new(0,4.6,0),Size=Vector3.new(1.2,1.2,1.2),FindFirstAncestorWhichIsA=function()return nil end}
+		local bubble=Bubble.new({parent=host,world=world,adornee=function()return pet end,origin=function(part)return if part==pet then origin else nil end})
+		bubble:set("moon",true,"Tuck it in!","It hatches in 7 h");bubble:step(1/60)
+		assert(bubble.gui.Adornee==bubble.anchor,"on its own anchor, never the pet's part")
+		local over=bubble.anchor.CFrame.Position
+		assert(math.abs(over.Y-(origin.Y+1.2+Bubble.Lift))<1e-4 and over.X==0 and over.Z==0,"over the origin by the top and the lift: "..tostring(over))
+		-- the waddle: the Body sways and bobs every frame, the origin walks straight; the words go with the origin only
+		for i=1,120 do
+			origin=Vector3.new(i*.1,4,0)
+			pet.Position=origin+Vector3.new(math.sin(i)*.06,.6+math.sin(i*2)*.05,0)
+			bubble:step(1/60)
+			local at=bubble.anchor.CFrame.Position
+			assert(math.abs(at.X-origin.X)<1e-6 and math.abs(at.Z-origin.Z)<1e-6,"X and Z exactly with the origin, frame "..i)
+			assert(math.abs(at.Y-over.Y)<1e-4,"the Body's bob never moves it, frame "..i)
+		end
+		-- a step up a kerb: the height eases (no jolt), within a few frames
+		origin=origin+Vector3.new(0,.5,0);bubble:step(1/60)
+		local y1=bubble.anchor.CFrame.Position.Y
+		assert(y1>over.Y and y1<over.Y+.5,"the height eases: "..y1)
+		for _=1,30 do bubble:step(1/60)end
+		assert(math.abs(bubble.anchor.CFrame.Position.Y-(over.Y+.5))<.01,"and settles")
 		-- the hop rides on top of it
+		local base=bubble.gui.StudsOffsetWorldSpace.Y
 		bubble:hop();bubble:step(Bubble.HopTime*.5)
-		assert(bubble.gui.StudsOffsetWorldSpace.Y>over+.1,"the hop lifts it")
-		-- the icon bubble (guide off): the anchor and its spring, as before
+		assert(bubble.gui.StudsOffsetWorldSpace.Y>base+.1,"the hop lifts it")
+		-- the icon bubble (no words) hangs the same way
 		bubble:set("ball",true,nil);bubble:step(1/60)
-		assert(bubble.gui.Adornee==bubble.anchor,"back on the sprung anchor")
-		bubble:destroy()
+		assert(bubble.gui.Adornee==bubble.anchor and math.abs(bubble.anchor.CFrame.Position.X-origin.X)<1e-6)
+		-- no origin (the nest's anchor): the part itself, half its height up
+		local nest={Position=Vector3.new(10,5,10),Size=Vector3.new(1,2,1),FindFirstAncestorWhichIsA=function()return nil end}
+		local onNest=Bubble.new({parent=host,world=world,adornee=function()return nest end,origin=function()return nil end})
+		onNest:set("moon",true,"Tuck it in!");onNest:step(1/60)
+		assert((onNest.anchor.CFrame.Position-Vector3.new(10,5+1+Bubble.Lift,10)).Magnitude<1e-4,"on the nest")
+		onNest:destroy();bubble:destroy();bubble:destroy()
 	end)
 	test("each one tap away: the ball lays the prints, the deck opens a round",function()
 		local r=rig({state={coachMask=Coach.with(0,"needHi")}})
@@ -315,29 +335,37 @@ return function(client)
 		r.prompt=true;r.run(.25);assert(r.bubble.icon==nil)
 		r.prompt=false;r.run(.25);assert(r.bubble.icon=="hand")
 	end)
-	test("QA 1: a hit area of at least 96 px round the same 72 px bubble, and a steady place over a shuttling Bear",function()
+	test("QA 1: a hit area of at least 96 px round the same 72 px bubble; beta 40: the follow has no dead zone and no lag",function()
 		assert(Bubble.HitSize>=96 and Bubble.Size==72 and Bubble.HitSize>Bubble.Size)
-		local spot={}
+		local Follow=Bubble.Follow
+		assert(Bubble.follow==Follow.toward,"one follow, shared (GiftBubble may use BubbleFollow too)")
+		local spot=Follow.new()
 		local home=Vector3.new(0,6,0)
-		assert(Bubble.follow(spot,home,.016)==home,"the first frame: over the Bear")
-		-- The Bear's idle shuttle in its first minute: about 1.5 studs either way, every few seconds.
+		assert(Bubble.follow(spot,home,.016)==home,"the first frame: over the pet")
+		-- The Bear's idle shuttle (about 1.5 studs either way): followed exactly, every frame (it waited, then caught up)
 		for i=1,200 do
 			local bear=home+Vector3.new(if math.floor(i/40)%2==0 then 1.5 else -1.5,0,0)
-			assert(Bubble.follow(spot,bear,.016)==home,"a move under Dead studs is ignored")
+			local at=Bubble.follow(spot,bear,.016)
+			assert(at.X==bear.X and at.Z==bear.Z,"no dead zone, frame "..i)
 		end
-		-- A real walk: chased smoothly (no frame jumps more than a stud), then settled on the target.
-		local far=home+Vector3.new(8,0,0)
+		-- the height alone is smoothed: a .4 stud rise is chased, never a jump
+		local up=Vector3.new(-1.5,6.4,0)
 		local last=spot.at
-		for _=1,240 do
-			local at=Bubble.follow(spot,far,.016)
-			assert((at-last).Magnitude<1,"no jump");last=at
+		for _=1,60 do
+			local at=Bubble.follow(spot,up,.016)
+			assert(at.Y>=last.Y-1e-6 and at.Y-last.Y<.4,"eased");last=at
 		end
-		assert((last-far).Magnitude<=Bubble.Settle and not spot.chasing,"there, and still")
-		local jump=far+Vector3.new(0,0,Bubble.Snap+1)
+		assert(math.abs(last.Y-up.Y)<.005,"there")
+		local jump=up+Vector3.new(0,0,Bubble.Snap+1)
 		assert(Bubble.follow(spot,jump,.016)==jump,"a teleport snaps")
-		assert(Bubble.follow({at=home},home+Vector3.new(3,0,0),.016,true)==home+Vector3.new(3,0,0),"Reduced Motion: no glide")
-		assert(Bubble.follow({at=home},home+Vector3.new(1,0,0),.016,true)==home,"Reduced Motion keeps the dead zone")
+		assert(Bubble.follow({at=home},home+Vector3.new(0,1,0),.016,true)==home+Vector3.new(0,1,0),"Reduced Motion: exact")
 		assert(Bubble.follow({at=home},nil,.016)==home)
+		-- over an origin by a height; the top over an origin, measured from the part
+		local s2=Follow.new()
+		assert(Follow.step(s2,Vector3.new(1,2,3),2.5,.016)==Vector3.new(1,4.5,3))
+		local part={Position=Vector3.new(0,5,0),Size=Vector3.new(1,2,1),FindFirstAncestorWhichIsA=function()return nil end}
+		assert(math.abs(Follow.top(part,Vector3.new(0,4,0))-2)<1e-6 and math.abs(Follow.top(part,nil)-1)<1e-6 and Follow.top(nil)==1.5)
+		assert(Follow.bind("spec",function()end)==nil,"offline: no render step, the bubble places itself in step()")
 	end)
 	test("QA 2: a tap on the Bear does the open need's action; the greeting stays the greeting; its key keeps petting",function()
 		local r=rig({state={coachMask=Coach.with(0,"needHi")}});r.run(4);assert(r.bubble.icon=="ball")
