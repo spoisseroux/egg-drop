@@ -13,6 +13,9 @@
 -- machine's status colours (GardenCareClient); the wind's bushes.
 -- Every original is kept on the first write and put back exactly when the layer goes off, the room goes, or the item
 -- leaves it. After the pass only arrivals are painted; the one timer (additions: frame budget, Reduced Motion) is 5 s.
+-- The Hidden Grove (GroveWorld, ARCH-REVIEW-GROVE 1): built here after the kit and additions while the Alive `grove`
+-- switch is on too, in its own workspace folder; what it hides of the backdrop is in its own records (self.groveHidden),
+-- never the kit's; its SunRays multiplier comes through self.look.setSunRays (HollowSunRays keeps one writer, here).
 local GuiService=game:GetService("GuiService")
 local Players=game:GetService("Players")
 local ReplicatedStorage=game:GetService("ReplicatedStorage")
@@ -22,6 +25,8 @@ local Hour=require(Shared:WaitForChild("GardenHour"))
 local Additions=require(script.Parent.AeroAdditions)
 local Kit=require(script.Parent.AeroKit)
 local Grades=require(Shared:WaitForChild("TreeGrades"))
+local GroveRules=require(Shared:WaitForChild("Grove"))
+local Grove=require(script.Parent.GroveWorld)
 
 local World={}
 World.__index=World
@@ -76,7 +81,8 @@ function World.restore(records,item)
 end
 
 -- options (fixtures): world, lighting, data, clock {look, now, apply}, switch {on, changed, trees, treesChanged},
--- level, reduced, reducedChanged, camera, defer, delay, additions, warn. The game passes only clock.
+-- level, reduced, reducedChanged, camera, defer, delay, additions, warn; the grove's: grove (GroveWorld), groveOn,
+-- groveChanged, groveData, groveTemplates, groveCamera, groveConnect, phone, hour. The game passes only clock.
 function World.new(options)
 	options=options or {}
 	local self=setmetatable({world=options.world or workspace,lighting=options.lighting or game:GetService("Lighting"),
@@ -156,7 +162,29 @@ function World.new(options)
 	end
 	-- What HollowClock paints while the layer is on (Clock.look). paint(values): the garden hour's look, nil for WorldAero.
 	self.look={Hour=Values.Hour,Daylight=Values.Daylight,CloudColor=Values.CloudColor,
-		paint=function(values)self:paintLight(values)end,reduced=function()return self.reduced()==true end}
+		paint=function(values)self:paintLight(values)end,reduced=function()return self.reduced()==true end,
+		-- The grove's sun gate (GroveLight): HollowSunRays' Intensity times this while it stands; 1 otherwise.
+		SunRaysGain=1,setSunRays=function(gain)self:setSunRays(gain)end}
+	-- The Hidden Grove (GroveWorld): its switch (Aero on is this layer's own), data, templates and the light's inputs.
+	self.groveModule=options.grove or Grove
+	self.groveHidden={} -- what the grove hides of the backdrop: only dropGrove restores it
+	self.groveOn=options.groveOn or function()return GroveRules.on()end
+	self.groveChanged=options.groveChanged or function()return GroveRules.changed()end
+	self.groveData=options.groveData or function()
+		local module=Shared:FindFirstChild("WorldGrove")
+		return module and require(module)
+	end
+	self.groveTemplates=options.groveTemplates or function()return ReplicatedStorage:FindFirstChild(GroveRules.Templates)end
+	self.groveCamera=options.groveCamera or function()
+		local camera=workspace.CurrentCamera
+		return camera and camera.CFrame
+	end
+	self.groveConnect=options.groveConnect
+	if self.groveConnect==nil and options.world==nil then
+		self.groveConnect=function(fn)return game:GetService("RunService").Heartbeat:Connect(fn)end
+	end
+	self.phone=options.phone or function()return require(script.Parent.AeroFalls).touch()end
+	self.hour=options.hour or Hour
 	return self
 end
 
@@ -198,6 +226,7 @@ end
 function World:paintLight(values)
 	if not self.enabled then return end
 	local look=values or Values
+	self.lastLook=look
 	local lighting=self.lighting
 	-- An effect that was replaced or destroyed is let go (with its own looks, where it still takes them).
 	for _,item in ipairs(self:items(self.light))do
@@ -215,7 +244,7 @@ function World:paintLight(values)
 	all(lighting:FindFirstChildOfClass("Atmosphere"),look.Atmosphere)
 	all(named("SproutHollowGrade","ColorCorrectionEffect"),look.Grade)
 	all(named("HollowBloom","BloomEffect"),look.Bloom)
-	all(named("HollowSunRays","SunRaysEffect"),look.SunRays)
+	all(named("HollowSunRays","SunRaysEffect"),World.sunRays(look.SunRays,self.look.SunRaysGain))
 	local sky=named("WorldSky","Sky")
 	local faces=if values then Hour.skyFaces(values.FaceSet,self.data)else Values.skyFaces(self.data)
 	all(sky,look.Sky)
@@ -225,6 +254,24 @@ function World:paintLight(values)
 	end
 	self:paintGlow(values and values.GlowWarm)
 	self:paintClouds(values and values.Clouds)
+end
+-- Pure: SunRays values with the grove's gain on their Intensity (the same table at gain 1).
+function World.sunRays(values,gain)
+	if type(values)~="table"or type(gain)~="number"or gain==1 or type(values.Intensity)~="number"then return values end
+	local out=table.clone(values)
+	out.Intensity=values.Intensity*gain
+	return out
+end
+-- The grove's sun gate multiplier (GroveLight, through self.look): kept, and written at once over the last look.
+function World:setSunRays(gain)
+	gain=if type(gain)=="number"and gain==gain and gain>0 and gain<math.huge then gain else 1
+	if self.look.SunRaysGain==gain then return end
+	self.look.SunRaysGain=gain
+	if not self.enabled then return end
+	local look=self.lastLook or Values
+	local effect=self.lighting:FindFirstChild("HollowSunRays")
+	if not(effect and effect:IsA("SunRaysEffect")and look.SunRays)then return end
+	for key,value in pairs(World.sunRays(look.SunRays,gain))do self:set(self.light,effect,key,value)end
 end
 -- glow_warm meshes: the hour's colour while it is on; once back to WorldAero's when it goes off; else nothing.
 function World:paintGlow(color)
@@ -343,6 +390,11 @@ function World:queue(item)
 			local ok,problem=pcall(self.hideMerged,self)
 			if not ok then self:complain(problem)end
 		end
+		-- And what the grove hides (ARCH-REVIEW-GROVE 2: streaming re-creates parts).
+		if self.grove then
+			local ok,problem=pcall(self.hideGrove,self)
+			if not ok then self:complain(problem)end
+		end
 	end)
 end
 function World:inside(item)
@@ -375,6 +427,10 @@ function World:watch(folder)
 		local ok,problem=pcall(self.hideMerged,self)
 		if not ok then self:complain(problem)end
 	end
+	if self.grove and folder.Name~=Kit.Folder then
+		local ok,problem=pcall(self.hideGrove,self)
+		if not ok then self:complain(problem)end
+	end
 end
 function World:unwatch(folder)
 	for _,link in ipairs(self.folderLinks[folder]or{})do link:Disconnect()end
@@ -385,6 +441,7 @@ function World:bind(room)
 	for folder in pairs(table.clone(self.folderLinks))do self:unwatch(folder)end
 	for _,link in ipairs(self.roomLinks)do link:Disconnect()end
 	table.clear(self.roomLinks);table.clear(self.late)
+	self:dropGrove(true)
 	self:dropKit()
 	self:restoreAll(self.surfaces)
 	table.clear(self.glows)
@@ -403,6 +460,7 @@ function World:bind(room)
 	for _,child in ipairs(room:GetChildren())do self:watch(child)end
 	self:buildKit()
 	self:buildAdditions()
+	self:buildGrove()
 end
 function World:items(records)
 	local items={}
@@ -425,7 +483,8 @@ function World:tuneAdditions(added)
 end
 function World:buildAdditions()
 	if self.added or self.level()>=World.DropLevel then return end
-	local ok,added=pcall(self.additions.build,{parent=self.world,data=self.data,kit=self.built and self.built.data})
+	local ok,added=pcall(self.additions.build,{parent=self.world,data=self.data,kit=self.built and self.built.data,
+		moat=self.grove and self.grove.moatY})
 	if not ok then self:complain(added);return end
 	self.added=added
 	self:tuneAdditions(added)
@@ -542,6 +601,80 @@ function World:dropKit()
 	built.destroy()
 end
 
+-- The Hidden Grove (GroveWorld): built while the room is bound and the grove switch is on, its templates fetched first
+-- (PreloadAsync: nothing of the backdrop is hidden until every mesh loaded, so a join never shows an empty sky), one
+-- fetch per turn and room. Data that fails the contract (the placeholder quietly) builds nothing. Standing, it hides the
+-- backdrop and the additions are rebuilt so Sky Falls ends at the moat; dropped, everything it hid comes back first.
+function World:buildGrove()
+	if self.grove or not self.room or not self.enabled then return end
+	local okOn,on=pcall(self.groveOn)
+	if not(okOn and on==true)then return end
+	local loading=self.groveLoading
+	if loading and loading.turn==self.turn and loading.room==self.room then return end
+	local okData,data=pcall(self.groveData)
+	if not okData then self:complain(data);return end
+	local valid,problem,placeholder=GroveRules.validate(data)
+	if not valid then
+		if not placeholder then self:complain("grove: "..tostring(problem))end
+		return
+	end
+	local templates=self.groveTemplates()
+	if not templates then return end
+	local turn,room=self.turn,self.room
+	local token={turn=turn,room=room}
+	self.groveLoading=token
+	self.spawn(function()
+		local fetched,loaded=pcall(self.preload,templates)
+		if self.groveLoading==token then self.groveLoading=nil end
+		if turn~=self.turn or room~=self.room or self.grove or not self.enabled then return end
+		if not(fetched and loaded==true)then self:complain(if fetched then "grove meshes did not load" else loaded);return end
+		local stillOn,isOn=pcall(self.groveOn)
+		if not(stillOn and isOn==true)then return end
+		self:standGrove(data,templates,turn)
+	end)
+end
+function World:groveDaylight()
+	local clock=self.clock
+	if clock and clock.daylight then return clock.daylight()end
+	return clock and clock.lastDaylight or Values.Daylight
+end
+function World:standGrove(data,templates,turn)
+	local okPhone,phone=pcall(self.phone)
+	local ok,built=pcall(self.groveModule.build,{data=data,templates=templates,parent=self.world,level=self.level(),
+		reduced=self.reduced()==true,phone=okPhone and phone==true,fallTexture=self.data and self.data.fallTexture,
+		hour=self.hour,daylight=function()return self:groveDaylight()end,camera=self.groveCamera,
+		setSunRays=function(gain)self:setSunRays(gain)end,connect=self.groveConnect,warn=function(problem)self:complain(problem)end})
+	if not ok then self:complain(built);return end
+	self.grove=built
+	local hid,problem=pcall(self.hideGrove,self)
+	if not hid then self:complain(problem);self:dropGrove();return end
+	if self.added then self:dropAdditions();self:buildAdditions()end
+	local function check()
+		if turn~=self.turn or self.grove~=built then return end
+		pcall(built.setLevel,self.level())
+		pcall(built.still,self.reduced()==true)
+		self.delay(World.Interval,check)
+	end
+	self.delay(World.Interval,check)
+end
+function World:hideGrove()
+	local built=self.grove
+	if not(built and self.room)then return end
+	Grove.hideBackdrop(function(records,item,key,value)return self:set(records,item,key,value)end,self.groveHidden,self.folders,
+		GroveRules.hides(built.data))
+end
+-- quiet: the caller drops the additions itself (a new room, the layer off), so they are not rebuilt here.
+function World:dropGrove(quiet)
+	self.groveLoading=nil
+	self:restoreAll(self.groveHidden)
+	local built=self.grove
+	self.grove=nil
+	if not built then return end
+	pcall(built.destroy)
+	-- Sky Falls back to its full drop.
+	if not quiet and self.enabled and self.added then self:dropAdditions();self:buildAdditions()end
+end
+
 function World:enable()
 	if self.enabled then return end
 	self.enabled=true
@@ -558,7 +691,19 @@ function World:enable()
 			self:buildKit()
 		end))
 	end
-	table.insert(self.connections,self.reducedChanged():Connect(function()if self.added then pcall(self.added.still,self.reduced())end end))
+	table.insert(self.connections,self.reducedChanged():Connect(function()
+		if self.added then pcall(self.added.still,self.reduced())end
+		if self.grove then pcall(self.grove.still,self.reduced()==true)end
+	end))
+	-- The Hidden Grove's switch (Alive `grove`): stands or goes with it.
+	local okGrove,groveSignal=pcall(self.groveChanged)
+	if okGrove and groveSignal then
+		table.insert(self.connections,groveSignal:Connect(function()
+			if not self.enabled then return end
+			local ok,on=pcall(self.groveOn)
+			if ok and on==true then self:buildGrove()else self:dropGrove()end
+		end))
+	end
 	self.clock.look=self.look
 	self.clock.apply(self.clock.now())
 	self:bind(self.world:FindFirstChild("EggDropLounge"))

@@ -182,7 +182,17 @@ end
 -- step-1 layers at Tumble (no strands, ribbon, lips, cloud foam, rings or rainbow): two flow beams per drop on the curve
 -- the kit's chutes bow out on (CurveSize0 = curve, CurveSize1 = -curve), a flat foam apron, boil, droplets and a quieter
 -- mist. AeroWorld switches the flat server beams off while the kit stands. Sky Falls keeps its step-1 layers.
-function Falls.build(folder,data,kit)
+-- moatY (the Hidden Grove's moat surface, while it stands; ARCH-REVIEW-GROVE 3): Sky Falls is cut short there instead
+-- of running down to the old sheet's foot (y -68): its bottom and bottom width move up the sheet to that height.
+function Falls.cut(fall,moatY)
+	if type(moatY)~="number"or moatY~=moatY or fall.bottom.Y>=moatY or fall.top.Y<=moatY then return fall end
+	local f=(fall.top.Y-moatY)/(fall.top.Y-fall.bottom.Y)
+	local out=table.clone(fall)
+	out.bottom=fall.top:Lerp(fall.bottom,f)
+	out.width1=fall.width0+(fall.width1-fall.width0)*f
+	return out
+end
+function Falls.build(folder,data,kit,moatY)
 	local root=Instance.new("Folder")
 	root.Name=Falls.Name
 	local layers={}
@@ -195,7 +205,7 @@ function Falls.build(folder,data,kit)
 			local shaped=kit and kit.falls and kit.falls[sheet.name]
 			fall.curve=shaped and shaped.curve or 0
 			tiers[Look.Tiers[sheet.name]]=fall
-		elseif sheet.name==Look.Sky then sky=fallFrame(sheet)end
+		elseif sheet.name==Look.Sky then sky=Falls.cut(fallFrame(sheet),moatY)end
 	end
 	-- Kit mode is all or nothing: both tiers shaped, or today's layers.
 	local kitMode=tiers.Upper and tiers.Lower and tiers.Upper.curve>0 and tiers.Lower.curve>0 or false

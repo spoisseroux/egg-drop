@@ -1,0 +1,85 @@
+{
+ "note": "Fixture for scripts/Grove.spec.lua (a small grove, not the real one): run through build_world_grove_assets.fixture_lua.",
+ "assetId": "1234567890",
+ "operationId": "fixture-op",
+ "moderation": "Approved",
+ "fbxSha256": "fixture",
+ "manifestSha256": "fixture",
+ "parts": [
+  {
+   "name": "GV_Fix_Moat",
+   "meshId": "rbxassetid://900000001",
+   "meshSize": [
+    300,
+    4,
+    280
+   ]
+  },
+  {
+   "name": "GV_Fix_TierNorth",
+   "meshId": "rbxassetid://900000002",
+   "meshSize": [
+    220,
+    120,
+    60
+   ]
+  },
+  {
+   "name": "GV_Fix_FarEast",
+   "meshId": "rbxassetid://900000003",
+   "meshSize": [
+    120,
+    90,
+    200
+   ]
+  },
+  {
+   "name": "GV_Fix_Trunk",
+   "meshId": "rbxassetid://900000004",
+   "meshSize": [
+    24,
+    190,
+    24
+   ]
+  },
+  {
+   "name": "GV_Fix_Crown",
+   "meshId": "rbxassetid://900000005",
+   "meshSize": [
+    70,
+    40,
+    70
+   ]
+  },
+  {
+   "name": "GV_Fix_Lamps",
+   "meshId": "rbxassetid://900000006",
+   "meshSize": [
+    200,
+    30,
+    200
+   ]
+  },
+  {
+   "name": "GV_Fix_Vines",
+   "meshId": "rbxassetid://900000007",
+   "meshSize": [
+    220,
+    60,
+    220
+   ]
+  }
+ ],
+ "textures": {
+  "stone": {
+   "color": "rbxassetid://800000001"
+  },
+  "bark": {
+   "color": "rbxassetid://800000002"
+  },
+  "leaf": {
+   "color": "rbxassetid://800000003",
+   "normal": "rbxassetid://800000004"
+  }
+ }
+}

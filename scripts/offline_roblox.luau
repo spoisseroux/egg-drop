@@ -213,6 +213,7 @@ function methods:GetChildren()return table.clone(self.kids)end
 function methods:GetDescendants()local out={};local function walk(n)for _,k in ipairs(n.kids)do table.insert(out,k);walk(k)end end;walk(self);return out end
 function methods:IsA(class)return self.ClassName==class end
 function methods:IsDescendantOf(other)local n=self;while n do if n==other then return true end;n=n.Parent end;return false end
+function methods:IsAncestorOf(other)return other~=nil and other~=self and methods.IsDescendantOf(other,self)end
 function methods:Destroy()self.Parent=nil end
 -- Sounds and particle emitters: Play / Stop set IsPlaying; Emit counts what was emitted, Clear how often.
 function methods:Play()self.props.IsPlaying=true end

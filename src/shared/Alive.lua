@@ -33,13 +33,16 @@ Alive.PlaceId=107705084891479 -- Pocket Pals Beta
 -- DECK-AERO-BRIEF (qa-2026-11-28-beta44): `deckglass` is the Pocket Deck's glass HUD and Welcome deck (DeckGlass,
 -- DeckGlassUI): plate-coloured glass cards, gel pills, tracks and the well's frame. It dresses the `deckfeel` HUD, so it
 -- needs that switch too. Missing = on. Off = the deck exactly as before.
+-- GROVE-BUILD-PLAN (qa-2026-11-28-grove, ARCH-REVIEW-GROVE 4): `grove` is the Hidden Grove round the island (GroveWorld,
+-- GroveLight: the hollow's ring, rays, motes, bubbles and lanterns, the floating-island backdrop hidden). It also needs
+-- the Aero look (Shared.Grove.on). Like `windbed`, its missing value is OFF.
 Alive.Features=table.freeze({"springs","menus","close","wind","life","scene","snack","windbed","asmr","wobble","balls","crunch","air",
- "fruit","keepout","aerohatch","deckjuice","pet2","paint","deckfeel","music2","deckglass"})
+ "fruit","keepout","aerohatch","deckjuice","pet2","paint","deckfeel","music2","deckglass","grove"})
 local FlagNames=table.freeze({springs="AliveSprings",menus="AliveMenus",close="AliveClose",wind="AliveWind",life="AliveLife",
  scene="AliveScene",snack="AliveSnack",windbed="AliveWindbed",asmr="AliveAsmr",wobble="AliveWobble",balls="AliveBalls",
- crunch="AliveCrunch",air="AliveAir",fruit="AliveFruit",keepout="AliveKeepOut",aerohatch="AliveAeroHatch",deckjuice="AliveDeckJuice",pet2="AlivePet2",paint="AlivePaint",deckfeel="AliveDeckFeel",music2="AliveMusic2",deckglass="AliveDeckGlass"})
+ crunch="AliveCrunch",air="AliveAir",fruit="AliveFruit",keepout="AliveKeepOut",aerohatch="AliveAeroHatch",deckjuice="AliveDeckJuice",pet2="AlivePet2",paint="AlivePaint",deckfeel="AliveDeckFeel",music2="AliveMusic2",deckglass="AliveDeckGlass",grove="AliveGrove"})
 -- What a missing or malformed config value means, where it is not on.
-Alive.Defaults=table.freeze({windbed=false})
+Alive.Defaults=table.freeze({windbed=false,grove=false})
 
 function Alive.attribute(feature)return "Alive_"..feature end
 function Alive.key(feature)return "alive_"..feature end
@@ -50,7 +53,7 @@ function Alive.ceiling(feature,flags,place,studio)
  if studio==nil then studio=RunService:IsStudio()end
  return(place or game.PlaceId)==Alive.PlaceId or studio==true
 end
--- A missing or malformed value (anything but a boolean) is the shipped default: on (Alive.Defaults: off for windbed).
+-- A missing or malformed value (anything but a boolean) is the shipped default: on (Alive.Defaults: off for windbed and grove).
 function Alive.resolve(feature,configValue,override,ceiling)
  if ceiling==nil then ceiling=Alive.ceiling(feature)end
  if not ceiling then return false end

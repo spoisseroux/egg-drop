@@ -156,7 +156,8 @@ function Motion:apply(t)
 	end
 	if self.still~=false then
 		for _,beam in ipairs(self.beams)do beam.TextureSpeed=beam:GetAttribute("WorldFlowSpeed")or .15 end
-		for _,emitter in ipairs(self.emitters)do emitter.Enabled=true end
+		-- The Hidden Grove's hidden backdrop (GroveWorld, attribute GroveHidden) stays off.
+		for _,emitter in ipairs(self.emitters)do if emitter:GetAttribute("GroveHidden")~=true then emitter.Enabled=true end end
 		self.still=false
 	end
 	for _,skin in ipairs(self.skins)do
@@ -172,6 +173,8 @@ function Motion:apply(t)
 	for _,e in ipairs(self.entries)do
 		local part=e.part
 		if not part.Parent then continue end
+		-- ARCH-REVIEW-GROVE 2: a part the Hidden Grove hides (GroveWorld) stops stepping until it shows again.
+		if part:GetAttribute("GroveHidden")==true then continue end
 		if eye and not e.far and(e.rest.Position-eye).Magnitude>Motion.Range+part.Size.Magnitude*.5 then continue end
 		if e.chime and scene then
 			-- Beta 14 W3 row 2: the chime's own swing, at its own rate, near the camera only.
