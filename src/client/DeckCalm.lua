@@ -18,6 +18,12 @@ Calm.TextPC=20;Calm.TextPhone=16
 function Calm.wanted(snapshot,flags)
 	return flags~=nil and flags.CalmFirstDeck==true and type(snapshot)=="table"and snapshot.phase=="Welcome"and(snapshot.owned or 0)==0
 end
+-- Beta (44) note 4: the Bear's grant (combo 3) ends the Welcome gate while the 3D welcome egg is still up through its
+-- hold and finale; restoring then shrank the egg's card under it. Stay calm (`calmOn`: this HUD is calm now) while the
+-- welcome egg shows; restore once it has gone. Never turns calm on by itself.
+function Calm.held(wanted,calmOn,eggShown)
+	return wanted==true or(calmOn==true and eggShown==true)
+end
 local function overlaps(a,b)return a.x<b.x+b.w and b.x<a.x+a.w end
 local function bottom(r)return r.y+r.h end
 -- cards: {name = {x, y, w, h}} for the cards this HUD built. Returns {hide = {names}, coach = rect, egg = rect} (a

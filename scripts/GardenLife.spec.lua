@@ -1028,6 +1028,10 @@ return function(client)
 			if r.now<start then assert(r.life:shakenScale(key,r.now)==nil,"it hangs on till it lets go")end
 			r.step(.4)
 			assert(r.life:shakenScale(key,r.now)==0,"its slot hangs empty")
+			-- Beta (44) note 19: my shake drop comes first in what is off the trees (drawn before any other fruit).
+			local off=r.life:activeFruit(r.now)
+			assert(off[1]and off[1].shake==true and off[1].key==key,"the shake drop first")
+			for index=2,#off do assert(off[index].shake==true or off[index-1].shake==true or off[index-1].start<=off[index].start)end
 			local plucked=false
 			for _,sound in ipairs(r.sounds)do if sound.cue==Fruit.Sounds.pluck then plucked=true end end
 			assert(plucked,"the stem's pluck")

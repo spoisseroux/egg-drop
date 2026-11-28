@@ -263,7 +263,7 @@ function Room.new(gui, board, progress, audio, onReturn, onCustomize, onCollecti
 			if self.onOpenMenu then self.onOpenMenu() else onCollection() end
 		end
 	end)
-	greet.Activated:Connect(function() self:interactPet() end)
+	greet.Activated:Connect(function() self:interactPet(true) end)
 	leave.Activated:Connect(function()
 		if not self.busy and not overlayOpen() then self:requestSwitch(onReturn) end
 	end)
@@ -446,9 +446,33 @@ function Room:updateControls()
 	if self.focusUI then self.focusUI:setActive(self.focusing and self.mode == "Room") end
 	local held=self.pet and(self.pet.careState=="Carried"or self.pet.careState=="Docked")
 	if self.petPrompt then self.petPrompt.Enabled = unobscured and not held and not self:stationInReach() end
-	-- The click/tap box around the whole pet reaches further than the prompt; it is
-	-- off while a station is in reach (interactPet would refuse) so no hover lies.
-	if self.petClick then self.petClick.MaxActivationDistance = if unobscured and not held and not self:stationInReach() then PetClickTarget.Reach else 0 end
+	-- The click/tap box around the whole pet reaches further than the prompt. Beta (44) note 18: a click on the pet
+	-- is unmistakable, so a station in reach no longer turns it off (only the E prompt competes with the stations).
+	if self.petClick then self.petClick.MaxActivationDistance = if unobscured and not held then PetClickTarget.Reach else 0 end
+end
+
+-- Beta (44) note 18: the first gate that refuses the pet now, by name (nil: none). `direct`: the pointer is on the pet
+-- (a click, a tap, the Pet button), which a station in reach never blocks.
+function Room:petClickGate(direct)
+	if GuiService.MenuIsOpen then return "CoreMenu" end
+	if UserInputService:GetFocusedTextBox() then return "TextBox" end
+	if not self.focusing and self.canRoam and not self.canRoam() then
+		local ok,why=pcall(function()return self.roamBlock and self.roamBlock()end)
+		return "CantRoam"..(if ok and type(why)=="string"then ":"..why else "")
+	end
+	if self.mode ~= "Room" then return "Mode" end
+	if self.busy then return "Busy" end
+	if self.overlayOpen() then return "Overlay" end
+	if self.menuOpen then return "Menu" end
+	if not self.pet then return "NoPet" end
+	if not self.focusing and not direct and self:stationInReach() then return "Station" end
+	return nil
+end
+-- Studio only: the player's PetClickRefused attribute names the last gate that refused the pet (nil once it opened).
+function Room:notePetRefused(gate)
+	if not RunService:IsStudio() then return end
+	local player=Players.LocalPlayer
+	if player then pcall(player.SetAttribute,player,"PetClickRefused",gate) end
 end
 
 function Room:setMenuOpen(open)
@@ -460,17 +484,17 @@ function Room:collapseControls()
 	self:setMenuOpen(false)
 end
 
-function Room:interactPet()
- if self.focusUI and self.focusUI.windowActive==false then return false end
-	if GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox() then return false end
-	if not self.focusing and self.canRoam and not self.canRoam() then return false end
-	if self.mode ~= "Room" or self.busy or self.overlayOpen() or self.menuOpen or not self.pet then return false end
+function Room:interactPet(direct)
+	-- Beta (44) note 18: this is input, so the window has focus (a WindowFocused that never came refused every click).
+	if self.focusUI and self.focusUI.windowActive==false then self.focusUI:gainWindowFocus() end
+	local gate=self:petClickGate(direct==true)
+	if gate then self:notePetRefused(gate);return false end
 	if self.focusing then return self:reactPet(false) end
- if self:stationInReach()then return false end
 	local now = os.clock()
 	if now - (self.lastPetAt or -math.huge) < 0.45 then return false end
-	if not self:focusPet() then return false end
+	if not self:focusPet(direct==true) then return false end
 	self.lastPetAt = now
+	self:notePetRefused(nil)
 	return true
 end
 
@@ -558,10 +582,17 @@ function Room:showPet(pet)
 	local lastTap=0
 	local function tapPet()
 		if self.petClick ~= click or os.clock()-lastTap<.35 then return end
-		lastTap=os.clock();self:interactPet()
+		lastTap=os.clock();self:interactPet(true)
 	end
 	click.MouseClick:Connect(function(who) if who == Players.LocalPlayer then tapPet() end end)
-	PetClickTarget.watch(target,tapPet)
+	PetClickTarget.watch(target,tapPet,function(gate)
+		-- the detector off: name the gate that turned it off (a held pet, else the first refusing gate)
+		if gate=="ClickOff" then
+			local held=self.pet and(self.pet.careState=="Carried"or self.pet.careState=="Docked")
+			gate=if held then "Held" else(self:petClickGate(true) or "ClickOff")
+		end
+		self:notePetRefused(gate)
+	end)
 	self.petPrompt, self.petClick, self.petTarget = prompt, click, target
 	if not self.reduceEffects()and not dock then self.pet:greet() end
 	self.heading.Text = "Sprout Hollow · "..pet.name.." · "..Pets.collectionSummary(owned,trials,self.progress:GetAttribute("InventoryMask"))
@@ -1212,16 +1243,20 @@ function Room:focusPet(teach)
 	local lounge = workspace:FindFirstChild("EggDropLounge")
 	local floor = lounge and lounge:FindFirstChild("Floor")
 	if self.focusing then return self:reactPet(false) end
- if teach~=true and self:stationInReach()then return false end
-	if not camera or not self.pet or self.mode ~= "Room" or not root or not floor or self.focusTransitioning then return false end
+ if teach~=true and self:stationInReach()then self:notePetRefused("Station");return false end
+	if not camera or not self.pet or self.mode ~= "Room" or not root or not floor or self.focusTransitioning then
+		self:notePetRefused(if self.focusTransitioning then "Transitioning" elseif not floor then "NoFloor" elseif not root then "NoCharacter" else "NoPetView")
+		return false
+	end
     local actor=self.garden:get(Players.LocalPlayer.UserId,self.shownPet.id,character)
     local public=actor and GardenActivity.sample(actor,workspace:GetServerTimeNow())
     if public and(public.position-root.Position).Magnitude>7 then
         self.focusUI:showFeedback("Let your pet come closer, then try again")
+        self:notePetRefused("PetFar")
         return false
     end
 	local plan = self:planGreeting(camera, root, floor)
-	if not plan then return false end
+	if not plan then self:notePetRefused("NoGreetingPlan");return false end
 	self:cancelCameraTween()
 	self.greetingCamera=PetGreetingShot.capture(camera,root)
 	self.greetingCamera.pet,self.greetingCamera.petOrigin,self.greetingCamera.petYaw=self.pet,self.pet.origin,self.pet.yaw

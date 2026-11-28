@@ -2032,10 +2032,12 @@ function Screen:setWelcome(snapshot,dependencies)
   self.welcomeMeterHost,self.welcomeSkipHost=meter,skip
   h.welcomeStatusSize=h.status.Size;h.welcomeStatusAlignment=h.status.TextYAlignment
  end
- local wanted=snapshot.phase=="Welcome"and(snapshot.owned or 0)==0
+ -- Beta (44) note 4: the welcome egg keeps the Welcome layout (and the calm deck) up until it has gone (Calm.held).
+ local eggUp=self.welcomeView~=nil and self.welcomeView:eggShown()
+ local wanted=Calm.held(snapshot.phase=="Welcome"and(snapshot.owned or 0)==0,true,eggUp)
  -- G2 (CalmFirstDeck): applied and restored only on a change, per HUD instance (a rebuilt HUD starts clean),
  -- before the coach card's size is read below.
- local calm=Calm.wanted(snapshot,FeatureFlags)
+ local calm=Calm.held(Calm.wanted(snapshot,FeatureFlags),h.calm~=nil,eggUp)
  if calm and not h.calm then self:applyCalm(h)elseif not calm and h.calm then self:restoreCalm(h)end
  for _,child in ipairs(h.welcomeMeter:GetChildren())do
   if child:IsA("GuiObject")and child~=self.welcomeMeterHost then

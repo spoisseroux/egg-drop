@@ -93,8 +93,9 @@ Machine.Unclaimed=(function()
 	return table.freeze(out)
 end)()
 Machine.ConfirmWindow=3 -- an armed press with no confirmation this long after it lapses (no turn, no streak)
--- Volumes (from Fable's dB): -16 .16, -20 .1, -24 .063, -26 .05.
-Machine.Volume=table.freeze({click=.1,clunk=.16,roll=.1,tok=.05,tokCrank=.063,hello=.063,land=.5,tuck=.08,rise=.063,shine=.08})
+-- Volumes (from Fable's dB): -16 .16, -20 .1, -24 .063, -26 .05. Beta (44) note 2: the crank went unheard under the
+-- music and the reveal; click .3, clunk .4.
+Machine.Volume=table.freeze({click=.3,clunk=.4,roll=.1,tok=.05,tokCrank=.063,hello=.063,land=.5,tuck=.08,rise=.063,shine=.08})
 -- The capsule shot's schedules (LOOK 1), t = 0 at the confirmation. `start` is when the reveal's clock starts.
 local function clicks(from,seconds,count)
 	local out={}

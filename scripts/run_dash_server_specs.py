@@ -172,7 +172,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           "CareIcons", "PetHop", "PetCuddleUI",
           # MUSIC-BRIEF 3 and 4 (qa-2026-11-28-music, switch music2): the ids, the night weight, the equal-power gains,
           # the sample sync, the deck's lite cross and the deck pair in AmbientAudio.
-          "MusicTracks"]
+          "MusicTracks",
+          # Beta (44) note 18: the pet click's gates (see-through GUI, the roam reason, the need bubble's drawn hit).
+          "PetClickGates"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -265,7 +267,9 @@ def client_modules():
                     # Beta (42) D13-D17: the carry icons, the hop rules, the petting screen (its pure helpers).
                     "CareIcons.lua", "PetHop.lua", "PetCuddleUI.lua",
                     # MUSIC-BRIEF 3 and 4: the v2 music's ids and rules (AmbientAudio requires it).
-                    "MusicTracks.lua"):
+                    "MusicTracks.lua",
+                    # Beta (44) note 18: the pet's click target (its pure gates) and the rig bounds it reads.
+                    "PetClickTarget.lua", "PetRigBounds.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

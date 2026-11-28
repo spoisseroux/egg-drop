@@ -41,24 +41,63 @@ Target.TapMargin=1.25
 function Target.tapRadius(px)return math.clamp((px or 0)*Target.TapMargin,Target.TapMin,Target.TapMax)end
 -- Pure: does a tap at `tap` (Vector2) hit a pet projected at `centre` (Vector2)?
 function Target.tapHits(tap,centre,px)return(tap-centre).Magnitude<=Target.tapRadius(px)end
-function Target.watch(handle,onTap)
+-- Pure (beta 44 note 18): is a GUI object drawn at all (a fill, an image or text one can see)? A clear frame or button
+-- "handles" a click without anyone seeing it. Unreadable: drawn (the safe side).
+function Target.drawn(object)
+ local ok,result=pcall(function()
+  if object.Visible==false then return false end
+  if object:IsA("ViewportFrame")or object:IsA("VideoFrame")then return true end
+  if object.BackgroundTransparency<1 then return true end
+  if(object:IsA("ImageLabel")or object:IsA("ImageButton"))and object.Image~=""and object.ImageTransparency<1 then return true end
+  if(object:IsA("TextLabel")or object:IsA("TextButton")or object:IsA("TextBox"))and object.Text~=""and object.TextTransparency<1 then return true end
+  return false
+ end)
+ return not ok or result==true
+end
+-- Pure (beta 44 note 18): a tap the engine says a GUI took (`processed`) still reaches the pet when every one of the
+-- player's screen GUI objects under it (`objects`) is see-through. None at all means a world GUI (a bubble's
+-- billboard) or the core GUI took it: that tap is theirs.
+function Target.passThrough(processed,objects)
+ if not processed then return true end
+ if type(objects)~="table"or #objects==0 then return false end
+ for _,object in ipairs(objects)do if Target.drawn(object)then return false end end
+ return true
+end
+-- `onRefused(gate)` (optional): a tap on the pet that was refused, by gate name (RoomView's Studio PetClickRefused).
+function Target.watch(handle,onTap,onRefused)
  local UserInputService=game:GetService("UserInputService")
- local function try(x,y,processed)
-  if processed or handle.click.MaxActivationDistance<=0 or not handle.part.Parent then return end
+ local function refuse(gate)if onRefused then pcall(onRefused,gate)end end
+ local function guiAt(x,y)
+  local player=game:GetService("Players").LocalPlayer
+  local gui=player and player:FindFirstChildOfClass("PlayerGui")
+  if not gui then return {}end
+  local ok,list=pcall(gui.GetGuiObjectsAtPosition,gui,x,y)
+  return if ok and type(list)=="table"then list else {}
+ end
+ local function try(x,y,processed,gx,gy)
+  if not handle.part.Parent then return end
   local camera=workspace.CurrentCamera
   local player=game:GetService("Players").LocalPlayer
   local root=player and player.Character and player.Character:FindFirstChild("HumanoidRootPart")
   local centre=handle.part.Position
-  if not camera or not root or(root.Position-centre).Magnitude>handle.click.MaxActivationDistance then return end
+  if not camera or not root then return end
   local point,onScreen=camera:WorldToViewportPoint(centre)
   if not onScreen or point.Z<=0 then return end
   local px=handle.part.Size.Magnitude/2/point.Z*(camera.ViewportSize.Y/2)/math.tan(math.rad(camera.FieldOfView/2))
-  if Target.tapHits(Vector2.new(x,y),Vector2.new(point.X,point.Y),px)then onTap()end
+  if not Target.tapHits(Vector2.new(x,y),Vector2.new(point.X,point.Y),px)then return end
+  -- On the pet from here on: every refusal is named.
+  if processed and not Target.passThrough(true,guiAt(gx,gy))then return refuse("GuiOnTop")end
+  if handle.click.MaxActivationDistance<=0 then return refuse("ClickOff")end
+  if(root.Position-centre).Magnitude>handle.click.MaxActivationDistance then return refuse("TooFar")end
+  onTap()
  end
- local touch=UserInputService.TouchTapInWorld:Connect(function(position,processed)try(position.X,position.Y,processed)end)
+ local touch=UserInputService.TouchTapInWorld:Connect(function(position,processed)try(position.X,position.Y,processed,position.X,position.Y)end)
  local mouse=UserInputService.InputBegan:Connect(function(input,processed)
   if input.UserInputType~=Enum.UserInputType.MouseButton1 then return end
-  local at=UserInputService:GetMouseLocation();try(at.X,at.Y,processed)
+  local at=UserInputService:GetMouseLocation()
+  -- GUI space for the GUI query (the mouse location less the top bar inset), viewport space for the projection.
+  local inset=game:GetService("GuiService"):GetGuiInset()
+  try(at.X,at.Y,processed,at.X-inset.X,at.Y-inset.Y)
  end)
  handle.part.Destroying:Connect(function()touch:Disconnect();mouse:Disconnect()end)
 end

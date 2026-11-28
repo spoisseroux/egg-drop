@@ -443,6 +443,15 @@ local function rainbowSequence()
  return ColorSequence.new(keys)
 end
 
+-- The well's clip, inset by the pattern inset of the well's `radius`; its corner is the well's radius less that inset
+-- (beta 44 note 1: the inner edge stays concentric with the well's round corner). fitClip returns the inset.
+function Stage.clipCornerRadius(radius)return math.max(0,(radius or 0)-Kit.patternInset(radius))end
+function Stage.fitClip(b,radius)
+ local inset=Kit.patternInset(radius)
+ b.clip.Position=UDim2.fromOffset(inset,inset);b.clip.Size=UDim2.new(1,-inset*2,1,-inset*2)
+ if b.clipCorner then b.clipCorner.CornerRadius=UDim.new(0,Stage.clipCornerRadius(radius))end
+ return inset
+end
 -- The shell and the stage well as one piece (the pet reveal draws the same backdrop).
 -- Returns {shell, checkerTile, shafts, well, clip, core, raysImage, pattern, floorLight,
 -- floorShadow, bloom, seat, waitEgg, rim, rimStroke, rimRainbow, ...}.
@@ -491,7 +500,10 @@ function Stage.backdrop(root,z,tier,kind,aero)
  b.well=frame(root,"StageWell",z+3,{BackgroundTransparency=0,BackgroundColor3=st.edge,AnchorPoint=Vector2.new(.5,.5)})
  b.wellCorner=node("UICorner",b.well,{CornerRadius=UDim.new(0,16)})
  b.wellStroke=node("UIStroke",b.well,{Color=Stage.Ink,Thickness=3,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
- b.clip=frame(b.well,"Clip",z+3,{ClipsDescendants=true})
+ -- Beta (44) note 1: the clip is a CanvasGroup with its own rounded corner (Stage.fitClip), so the sky, the vignettes and
+ -- the grass follow the well's round corners instead of a square inside them (a Frame clips to a rectangle).
+ b.clip=node("CanvasGroup",b.well,{Name="Clip",BackgroundTransparency=1,BorderSizePixel=0,ZIndex=z+3,Active=false,Selectable=false,ClipsDescendants=true})
+ b.clipCorner=node("UICorner",b.clip,{Name="ClipCorner",CornerRadius=UDim.new(0,Stage.clipCornerRadius(16))})
  b.core=image(b.clip,"Core","glow",z+3,{ImageColor3=st.core,Position=UDim2.fromScale(.5,.46)})
  local p=if aero then st.aero else nil
  local R=Aero.Rays
@@ -996,8 +1008,7 @@ function Stage:layout()
  self.pityLine.TextSize=tx.small+1;self.pitySub.TextSize=tx.small
  self.stamp.TextSize=tx.stamp;self.skipText.TextSize=tx.small
  self.rimCorner.CornerRadius=UDim.new(0,math.max(8,L.radius-3));self.wellCorner.CornerRadius=UDim.new(0,L.radius)
- local inset=Kit.patternInset(L.radius)
- self.clip.Position=UDim2.fromOffset(inset,inset);self.clip.Size=UDim2.new(1,-inset*2,1,-inset*2)
+ Stage.fitClip(self,L.radius)
  for index,entry in ipairs(self.buttons)do
   local r=if index==2 then L.primary else L.secondary
   entry.node.Size=UDim2.fromOffset(r.w,r.h);entry.x,entry.y=r.x,r.y

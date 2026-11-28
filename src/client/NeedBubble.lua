@@ -65,9 +65,15 @@ end
 -- Pure: where the bubble hangs now. state = {at} (kept by the caller), target = over the pet now (BubbleFollow.toward:
 -- X and Z exactly, the height lightly smoothed, a teleport snaps; beta 40: no dead zone, no spring).
 Bubble.follow=Follow.toward
--- Pure (beta 14 B3b): does a screen tap at `tap` land on a bubble drawn round `centre` (both Vector2, px)?
-function Bubble.hits(tap,centre)
+-- Pure (beta 14 B3b): does a screen tap at `tap` land on a bubble drawn round `centre` (both Vector2, px)? With `size`
+-- (the drawn bubble's px, a Vector2; beta 44 note 18): only on the drawn bubble, centred 6 px over `centre`, its tail
+-- (8 px) under it, never the clear square round it.
+function Bubble.hits(tap,centre,size)
 	if typeof(tap)~="Vector2"or typeof(centre)~="Vector2"then return false end
+	if typeof(size)=="Vector2"then
+		local d=tap-(centre+Vector2.new(0,-6))
+		return math.abs(d.X)<=size.X*.5 and d.Y>=-size.Y*.5 and d.Y<=size.Y*.5+8
+	end
 	return(tap-centre).Magnitude<=Bubble.HitSize*.5
 end
 -- Pure: the press squash `t` seconds after a taken tap (1 at rest), nil once it has settled.
@@ -135,10 +141,12 @@ function Bubble.new(options)
 	key.BackgroundColor3=Bubble.Ink;key.TextColor3=Color3.new(1,1,1);key.Font=Enum.Font.GothamBold;key.TextSize=14;key.ZIndex=5
 	key.BorderSizePixel=0;key.Visible=false;key.Parent=art
 	local keyCorner=Instance.new("UICorner");keyCorner.CornerRadius=UDim.new(0,6);keyCorner.Parent=key
-	-- The hit area: the whole billboard, clear, over everything.
+	-- The hit area: the drawn bubble only (beta 44 note 18: the clear square round it ate clicks on the pet's head), clear,
+	-- over everything; it follows the drawn bubble's size (Bubble:layout).
 	local button=Instance.new("TextButton")
 	button.Name="Hit";button.Text="";button.AutoButtonColor=false;button.Selectable=true;button.Active=true;button.BackgroundTransparency=1
-	button.Size=UDim2.fromScale(1,1);button.BorderSizePixel=0;button.ZIndex=10;button.Parent=gui
+	button.AnchorPoint=art.AnchorPoint;button.Position=art.Position;button.Size=art.Size
+	button.BorderSizePixel=0;button.ZIndex=10;button.Parent=gui
 	local function tapped()
 		if self.shown and self.alpha<.6 and options.onTap then options.onTap()end
 	end
@@ -165,7 +173,8 @@ function Bubble.new(options)
 			if not camera then return end
 			local base=self.gui.Adornee or self.anchor
 			local point,onScreen=camera:WorldToViewportPoint(base.Position+self.gui.StudsOffsetWorldSpace)
-			if onScreen and point.Z>0 and Bubble.hits(Vector2.new(position.X,position.Y),Vector2.new(point.X,point.Y))then tapped()end
+			local drawn=Vector2.new(self.art.Size.X.Offset,self.art.Size.Y.Offset)
+			if onScreen and point.Z>0 and Bubble.hits(Vector2.new(position.X,position.Y),Vector2.new(point.X,point.Y),drawn)then tapped()end
 		end)
 	end
 	-- Onboarding v2 step 5 (the guide): the prompt in words beside the icon, and a gold arrow bouncing under the bubble.
@@ -253,7 +262,7 @@ function Bubble:setWords(text,sub)
 		self.words.Size=if two then UDim2.new(1,-74,0,26)else UDim2.new(1,-74,1,-8)
 	end
 	local h=if two then Bubble.TwoH elseif on then Bubble.WordH else Bubble.Size
-	self.art.Size=UDim2.fromOffset(w,h);self.lip.Size=self.art.Size
+	self.art.Size=UDim2.fromOffset(w,h);self.lip.Size=self.art.Size;self.button.Size=self.art.Size
 	self.gui.Size=UDim2.fromOffset(math.max(Bubble.HitSize,w+16),Bubble.HitSize)
 	self.words.Visible=on;self.arrow.Visible=on
 	self.art.BackgroundColor3=if on then Bubble.WordFill else Bubble.Fill

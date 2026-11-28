@@ -19,6 +19,21 @@ function Stations.canRoam(state)
 		and not state.busy and not state.switchQueued and not state.focusing and not state.overlay
 		and not state.menuOpen and not state.coreMenu and not state.textCapture
 end
+-- Beta (44) note 18: the first reason canRoam is false, by name (nil when it can roam): RoomView's Studio-only
+-- PetClickRefused attribute reads "CantRoam:<reason>".
+Stations.RoamChecks=table.freeze({
+	{"uiReady",function(s)return s.uiReady==true end},{"mode",function(s)return s.mode=="Room"end},
+	{"viewMode",function(s)return s.viewMode=="Room"end},{"alive",function(s)return s.alive==true end},
+	{"busy",function(s)return not s.busy end},{"switchQueued",function(s)return not s.switchQueued end},
+	{"focusing",function(s)return not s.focusing end},{"overlay",function(s)return not s.overlay end},
+	{"menuOpen",function(s)return not s.menuOpen end},{"coreMenu",function(s)return not s.coreMenu end},
+	{"textCapture",function(s)return not s.textCapture end},
+})
+function Stations.roamBlock(state)
+	if type(state)~="table"then return "state"end
+	for _,check in ipairs(Stations.RoamChecks)do if not check[2](state)then return check[1]end end
+	return nil
+end
 function Stations.canBrowse(snapshot,rank,trials)
 	return type(snapshot)=="table" and snapshot.status=="Ready" and type(snapshot.inventoryMask)=="number"
 		and Pets.ownedCount(rank or 0,trials or 0,snapshot.inventoryMask)>0

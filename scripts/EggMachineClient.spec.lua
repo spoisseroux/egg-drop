@@ -407,6 +407,11 @@ return function(client)
 		local landAt
 		for _,s in ipairs(r.sounds)do if s.name=="land"then landAt=s.at end end
 		assert(near(landAt-100.2,.85,1/60+1e-6),tostring(landAt))
+		-- Beta (44) note 2: loud enough to hear under the music and the reveal (click .3, clunk .4).
+		for _,s in ipairs(r.sounds)do
+			if string.match(s.name,"^crank_click")then assert(near(s.volume,.3),tostring(s.volume))end
+			if s.name=="crank_clunk"then assert(near(s.volume,.4),tostring(s.volume))end
+		end
 	end)
 	test("the hold: only the reveal that started after the press, only until the landing; others never",function()
 		local r=rig()

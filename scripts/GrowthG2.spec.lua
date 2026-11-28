@@ -154,6 +154,10 @@ return function(client)
 		assert(not Calm.wanted({phase="Play",owned=0},{CalmFirstDeck=true}))
 		assert(not Calm.wanted({phase="Welcome",owned=0},{CalmFirstDeck=false}),"switch off")
 		assert(Calm.textSize(false)==20 and Calm.textSize(true)==16)
+		-- Beta (44) note 4: the calm deck stays while the welcome egg is up after the Bear's grant; never starts by itself.
+		assert(Calm.held(true,false,false)and Calm.held(false,true,true),"held through the egg's hold and finale")
+		assert(not Calm.held(false,true,false),"the egg gone: everything back")
+		assert(not Calm.held(false,false,true),"an egg alone never turns the calm deck on")
 	end)
 
 	test("calm deck, PC: coach card to the column foot over the quests; egg over Difficulty and Win pays; Controls empty",function()

@@ -825,8 +825,7 @@ function Stage:layout()
   b.rim.Position=b.well.Position;b.rim.Size=UDim2.fromOffset(w-6,h-6)
   local radius=math.max(12,math.floor(16*math.max(.6,L.s)))
   b.wellCorner.CornerRadius=UDim.new(0,radius);b.rimCorner.CornerRadius=UDim.new(0,radius-3)
-  local inset=Kit.patternInset(radius)
-  b.clip.Position=UDim2.fromOffset(inset,inset);b.clip.Size=UDim2.new(1,-inset*2,1,-inset*2)
+  local inset=ItemStage.fitClip(b,radius)
   local diag=math.sqrt(w*w+h*h)*1.05
   b.core.Size=UDim2.fromOffset(w*1.5,h*1.5)
   if not b.aeroParts then b.raysImage.Size=UDim2.fromOffset(diag,diag)end
