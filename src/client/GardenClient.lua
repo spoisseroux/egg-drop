@@ -70,7 +70,8 @@ function Garden:appearance(board,petId)
     local toy=selected and type(item)=="table"and item.toyId or "none"
     if not ToyCatalog.known(toy)then toy=ToyCatalog.Default end
     -- Toy colours (ARCH-REVIEW-ROTATION-2 8): the toy's published colour, kept only as a well-formed skin of that toy.
-    local toySkin=selected and type(item)=="table"and SkinLook.publicSkin(toy,item.toySkin)or nil
+    -- Code review (rotation 2, 2): the rack_toys switch off shows every toy in its own colour at once (no republish needed)
+    local toySkin=selected and type(item)=="table"and require(game:GetService("ReplicatedStorage").Shared.DailyRack).on("toys")and SkinLook.publicSkin(toy,item.toySkin)or nil
     local features=selected and type(item)=="table"and type(item.featureStages)=="table"and item.featureStages or {}
     -- Saved wearables (slot key -> item id) for the selected pet; unknown ids are dropped by the rig rules.
     local wearables={}

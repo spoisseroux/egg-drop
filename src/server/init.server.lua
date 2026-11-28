@@ -2173,7 +2173,9 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		if not called then warn("[DailyRack] "..tostring(ok));ok,reason=false,"Unavailable"end
 		board.nurseryBusy=false;if boards[player]~=board then return end
 		publishNursery(board);publishState(board);publishPetAppearance(board)
-		reply(if ok then "Saved"elseif reason=="Retrying"or reason=="Pending"then "Retrying"else "Rejected",reason);return
+		-- Code review (rotation 2, 1): a Pending refusal never applied this wear, so it answers Rejected (the client
+		-- queue treats Retrying as saved and would keep a colour the server never wore)
+		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
 	end
 
 	-- Ball themes (hatching v11, batch R1): fixed Star price, server-validated,
