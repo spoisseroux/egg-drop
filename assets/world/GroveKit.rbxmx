@@ -6,10 +6,10 @@
     <Item class="MeshPart" referent="GV0">
       <Properties>
         <string name="Name">GV_Bank__stone</string>
-        <Content name="MeshId"><url>rbxassetid://87822352548709</url></Content>
-        <Content name="TextureID"><url>rbxassetid://98144499223270</url></Content>
-        <Vector3 name="Size"><X>373.2473</X><Y>57.9776</Y><Z>369.6183</Z></Vector3>
-        <Vector3 name="InitialSize"><X>1334.6409912109375</X><Y>207.31365966796875</Y><Z>1321.6649169921875</Z></Vector3>
+        <Content name="MeshId"><url>rbxassetid://96013341339835</url></Content>
+        <Content name="TextureID"><url>rbxassetid://93710931516454</url></Content>
+        <Vector3 name="Size"><X>375.161</X><Y>57.9776</Y><Z>370.7932</Z></Vector3>
+        <Vector3 name="InitialSize"><X>1341.4840087890625</X><Y>207.31365966796875</Y><Z>1325.8656005859375</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -18,7 +18,7 @@
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
         <token name="RenderFidelity">1</token>
-        <token name="Material">256</token>
+        <token name="Material">816</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Reflectance">0.0</float>
       </Properties>
@@ -26,10 +26,10 @@
     <Item class="MeshPart" referent="GV1">
       <Properties>
         <string name="Name">GV_Dressing__leaf</string>
-        <Content name="MeshId"><url>rbxassetid://103590972974529</url></Content>
+        <Content name="MeshId"><url>rbxassetid://116212309382811</url></Content>
         <Content name="TextureID"><url>rbxassetid://114119810568848</url></Content>
-        <Vector3 name="Size"><X>566.4727</X><Y>139.0418</Y><Z>560.0185</Z></Vector3>
-        <Vector3 name="InitialSize"><X>2025.5677490234375</X><Y>497.1798400878906</Y><Z>2002.4893798828125</Z></Vector3>
+        <Vector3 name="Size"><X>551.1353</X><Y>161.0954</Y><Z>536.3699</Z></Vector3>
+        <Vector3 name="InitialSize"><X>1970.7252197265625</X><Y>576.0377197265625</Y><Z>1917.927490234375</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -346,10 +346,10 @@
     <Item class="MeshPart" referent="GV17">
       <Properties>
         <string name="Name">GV_Glow__glow</string>
-        <Content name="MeshId"><url>rbxassetid://72077233257143</url></Content>
+        <Content name="MeshId"><url>rbxassetid://100860197643457</url></Content>
         <Content name="TextureID"><url /></Content>
-        <Vector3 name="Size"><X>406.3333</X><Y>80.0217</Y><Z>399.8689</Z></Vector3>
-        <Vector3 name="InitialSize"><X>1452.9483642578125</X><Y>286.1382141113281</Y><Z>1429.83349609375</Z></Vector3>
+        <Vector3 name="Size"><X>407.5717</X><Y>83.601</Y><Z>401.0467</Z></Vector3>
+        <Vector3 name="InitialSize"><X>1457.3765869140625</X><Y>298.936767578125</Y><Z>1434.0450439453125</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -386,7 +386,7 @@
     <Item class="MeshPart" referent="GV19">
       <Properties>
         <string name="Name">GV_Moat__water</string>
-        <Content name="MeshId"><url>rbxassetid://139943978394641</url></Content>
+        <Content name="MeshId"><url>rbxassetid://134422276575898</url></Content>
         <Content name="TextureID"><url>rbxassetid://135229051638910</url></Content>
         <Vector3 name="Size"><X>367.6965</X><Y>0.05</Y><Z>362.798</Z></Vector3>
         <Vector3 name="InitialSize"><X>1314.7930908203125</X><Y>0.00020951693295501173</Y><Z>1297.2772216796875</Z></Vector3>
@@ -406,10 +406,10 @@
     <Item class="MeshPart" referent="GV20">
       <Properties>
         <string name="Name">GV_Props__paint</string>
-        <Content name="MeshId"><url>rbxassetid://80818850617893</url></Content>
+        <Content name="MeshId"><url>rbxassetid://107005108635665</url></Content>
         <Content name="TextureID"><url /></Content>
-        <Vector3 name="Size"><X>482.146</X><Y>154.3171</Y><Z>485.5455</Z></Vector3>
-        <Vector3 name="InitialSize"><X>1724.036376953125</X><Y>551.80029296875</Y><Z>1736.1920166015625</Z></Vector3>
+        <Vector3 name="Size"><X>482.146</X><Y>154.6971</Y><Z>485.5455</Z></Vector3>
+        <Vector3 name="InitialSize"><X>1724.036376953125</X><Y>553.1591186523438</Y><Z>1736.1920166015625</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -427,7 +427,7 @@
       <Properties>
         <string name="Name">GV_Rocks__stone</string>
         <Content name="MeshId"><url>rbxassetid://138245513780788</url></Content>
-        <Content name="TextureID"><url>rbxassetid://98144499223270</url></Content>
+        <Content name="TextureID"><url>rbxassetid://93710931516454</url></Content>
         <Vector3 name="Size"><X>458.1225</X><Y>85.4391</Y><Z>425.757</Z></Vector3>
         <Vector3 name="InitialSize"><X>1638.1341552734375</X><Y>305.50946044921875</Y><Z>1522.40283203125</Z></Vector3>
         <bool name="Anchored">true</bool>
@@ -438,7 +438,7 @@
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
         <token name="RenderFidelity">1</token>
-        <token name="Material">256</token>
+        <token name="Material">816</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Reflectance">0.0</float>
       </Properties>
@@ -446,10 +446,10 @@
     <Item class="MeshPart" referent="GV22">
       <Properties>
         <string name="Name">GV_Tier1__moss</string>
-        <Content name="MeshId"><url>rbxassetid://87290319167996</url></Content>
+        <Content name="MeshId"><url>rbxassetid://126570267302635</url></Content>
         <Content name="TextureID"><url>rbxassetid://98035859522999</url></Content>
-        <Vector3 name="Size"><X>438.6633</X><Y>52.7832</Y><Z>440.7595</Z></Vector3>
-        <Vector3 name="InitialSize"><X>1568.552734375</X><Y>188.74002075195312</Y><Z>1576.04833984375</Z></Vector3>
+        <Vector3 name="Size"><X>440.8736</X><Y>52.7832</Y><Z>442.0465</Z></Vector3>
+        <Vector3 name="InitialSize"><X>1576.456298828125</X><Y>188.74002075195312</Y><Z>1580.650390625</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -466,10 +466,10 @@
     <Item class="MeshPart" referent="GV23">
       <Properties>
         <string name="Name">GV_Tier1__stone</string>
-        <Content name="MeshId"><url>rbxassetid://119414973402591</url></Content>
-        <Content name="TextureID"><url>rbxassetid://98144499223270</url></Content>
-        <Vector3 name="Size"><X>399.9494</X><Y>64.9861</Y><Z>395.2401</Z></Vector3>
-        <Vector3 name="InitialSize"><X>1430.1212158203125</X><Y>232.37428283691406</Y><Z>1413.2821044921875</Z></Vector3>
+        <Content name="MeshId"><url>rbxassetid://119577926376543</url></Content>
+        <Content name="TextureID"><url>rbxassetid://93710931516454</url></Content>
+        <Vector3 name="Size"><X>401.359</X><Y>64.9861</Y><Z>396.7168</Z></Vector3>
+        <Vector3 name="InitialSize"><X>1435.16162109375</X><Y>232.37428283691406</Y><Z>1418.5623779296875</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -478,7 +478,7 @@
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
         <token name="RenderFidelity">1</token>
-        <token name="Material">256</token>
+        <token name="Material">816</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Reflectance">0.0</float>
       </Properties>
@@ -486,10 +486,10 @@
     <Item class="MeshPart" referent="GV24">
       <Properties>
         <string name="Name">GV_Tier2__moss</string>
-        <Content name="MeshId"><url>rbxassetid://96788664086325</url></Content>
+        <Content name="MeshId"><url>rbxassetid://110546720619544</url></Content>
         <Content name="TextureID"><url>rbxassetid://98035859522999</url></Content>
-        <Vector3 name="Size"><X>511.398</X><Y>53.069</Y><Z>510.4167</Z></Vector3>
-        <Vector3 name="InitialSize"><X>1828.6341552734375</X><Y>189.7618408203125</Y><Z>1825.1253662109375</Z></Vector3>
+        <Vector3 name="Size"><X>512.7253</X><Y>53.069</Y><Z>511.3871</Z></Vector3>
+        <Vector3 name="InitialSize"><X>1833.3802490234375</X><Y>189.7618408203125</Y><Z>1828.5950927734375</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -506,10 +506,10 @@
     <Item class="MeshPart" referent="GV25">
       <Properties>
         <string name="Name">GV_Tier2__stone</string>
-        <Content name="MeshId"><url>rbxassetid://117594422424599</url></Content>
-        <Content name="TextureID"><url>rbxassetid://98144499223270</url></Content>
-        <Vector3 name="Size"><X>461.0197</X><Y>65.3512</Y><Z>463.1163</Z></Vector3>
-        <Vector3 name="InitialSize"><X>1648.49365234375</X><Y>233.67984008789062</Y><Z>1655.9906005859375</Z></Vector3>
+        <Content name="MeshId"><url>rbxassetid://135212309868446</url></Content>
+        <Content name="TextureID"><url>rbxassetid://93710931516454</url></Content>
+        <Vector3 name="Size"><X>463.8557</X><Y>65.3512</Y><Z>465.0684</Z></Vector3>
+        <Vector3 name="InitialSize"><X>1658.634765625</X><Y>233.67984008789062</Y><Z>1662.9708251953125</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -518,7 +518,7 @@
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
         <token name="RenderFidelity">1</token>
-        <token name="Material">256</token>
+        <token name="Material">816</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Reflectance">0.0</float>
       </Properties>
@@ -526,7 +526,7 @@
     <Item class="MeshPart" referent="GV26">
       <Properties>
         <string name="Name">GV_Tier3__moss</string>
-        <Content name="MeshId"><url>rbxassetid://104831547373821</url></Content>
+        <Content name="MeshId"><url>rbxassetid://123963123496510</url></Content>
         <Content name="TextureID"><url>rbxassetid://98035859522999</url></Content>
         <Vector3 name="Size"><X>572.7461</X><Y>68.5178</Y><Z>571.7336</Z></Vector3>
         <Vector3 name="InitialSize"><X>2048.0</X><Y>245.00320434570312</Y><Z>2044.37939453125</Z></Vector3>
@@ -546,10 +546,10 @@
     <Item class="MeshPart" referent="GV27">
       <Properties>
         <string name="Name">GV_Tier3__stone</string>
-        <Content name="MeshId"><url>rbxassetid://101871381869111</url></Content>
-        <Content name="TextureID"><url>rbxassetid://98144499223270</url></Content>
-        <Vector3 name="Size"><X>538.7449</X><Y>80.5138</Y><Z>539.6407</Z></Vector3>
-        <Vector3 name="InitialSize"><X>1926.420166015625</X><Y>287.897705078125</Y><Z>1929.623291015625</Z></Vector3>
+        <Content name="MeshId"><url>rbxassetid://115383651624712</url></Content>
+        <Content name="TextureID"><url>rbxassetid://93710931516454</url></Content>
+        <Vector3 name="Size"><X>540.9212</X><Y>80.5138</Y><Z>540.9575</Z></Vector3>
+        <Vector3 name="InitialSize"><X>1934.2022705078125</X><Y>287.897705078125</Y><Z>1934.331787109375</Z></Vector3>
         <bool name="Anchored">true</bool>
         <bool name="CanCollide">false</bool>
         <bool name="CanQuery">false</bool>
@@ -558,7 +558,7 @@
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
         <token name="RenderFidelity">1</token>
-        <token name="Material">256</token>
+        <token name="Material">816</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Reflectance">0.0</float>
       </Properties>

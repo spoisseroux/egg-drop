@@ -314,11 +314,10 @@
   "W7_Backdrop__cloud_1",
   "W7_Backdrop__far_peak_1",
   "W7_IsletsA__bark",
-  "W7_CastleFlag_1__far_peak"
- ],
- "keeps": [
+  "W7_CastleFlag_1__far_peak",
   "W7_Underside__cliff_rock"
  ],
+ "keeps": [],
  "lanterns": [
   {
    "pos": [

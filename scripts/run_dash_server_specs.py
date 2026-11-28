@@ -338,7 +338,20 @@ def client_modules():
     out["client/MovementLock"] = (ROOT / "src/client/MovementLock.lua").read_text(encoding="utf-8")
     out["client/EggEntryScan"] = egg_entry_scan()
     out["client/WorldGroveFixture"] = grove_fixture()
+    out["client/GroveKitMaterials"] = grove_kit_materials()
     return out
+
+
+def grove_kit_materials():
+    """The grove templates' Enum.Material tokens (Grove spec): the fixture's through the generator's rule, and the
+    committed GroveKit.rbxmx's as read from the file."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import build_world_grove_assets as g
+
+    def table(rows):
+        return "{" + ",".join(f"{name}={token}" for name, token in sorted(rows.items())) + "}"
+    return ("return{fixture=" + table(g.fixture_materials(ROOT / "scripts" / "fixtures")) + ",kit=" + table(g.kit_materials())
+            + ",tokens={Plastic=%d,SmoothPlastic=%d,Concrete=%d}}" % (g.PLASTIC, g.SMOOTH_PLASTIC, g.CONCRETE))
 
 
 def grove_fixture():

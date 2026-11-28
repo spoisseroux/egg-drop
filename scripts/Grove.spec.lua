@@ -95,7 +95,7 @@ return function(client,offline)
 		assert(Fixture.bubbles[1].period==80 and Fixture.bubbles[1].size==3)
 		assert(Fixture.totals.tris==26100 and Fixture.totals.groups==11 and Fixture.totals.meshes==7)
 		assert(Fixture.meshes.GV_Fix_Moat__water.size[2]==.05 and Fixture.meshes.GV_Fix_Moat__water.texture=="")
-		-- The committed data is the real grove (Model 109554618731968) or the placeholder; either way it is safe.
+		-- The committed data is the real grove (Model 103710774142699, art pass 2) or the placeholder; either way it is safe.
 		ok,problem,placeholder=Rules.validate(Data)
 		assert(ok or placeholder,"WorldGrove: "..tostring(problem))
 	end)
@@ -104,10 +104,10 @@ return function(client,offline)
 		-- The upload is confirmed (2026-11-28), so the committed data must be the real grove now.
 		local valid,problem=Rules.validate(Data)
 		assert(valid,"WorldGrove: "..tostring(problem))
-		assert(Data.assetId=="109554618731968"and Data.turnApplied==false,"the uploaded pack, the turn not baked")
+		assert(Data.assetId=="103710774142699"and Data.turnApplied==false,"the uploaded pack (art pass 2), the turn not baked")
 		local b=Rules.budget(Data)
 		assert(#b.problems==0,table.concat(b.problems," | "))
-		assert(b.tris==42605 and b.groups==40 and b.meshes==28,("%d %d %d"):format(b.tris,b.groups,b.meshes))
+		assert(b.tris==44849 and b.groups==40 and b.meshes==28,("%d %d %d"):format(b.tris,b.groups,b.meshes))
 		local problems=Rules.clearances(Data,ctx)
 		assert(#problems==0,table.concat(problems," | "))
 		-- Ray 7's foot (88, 13, -16) is under the raised east ground: drawn stopped over it; the rest as authored.
@@ -125,7 +125,11 @@ return function(client,offline)
 		for _,index in ipairs(phone)do assert(Data.rays[index].phone==true)end
 		local hides=Rules.hides(Data)
 		assert(table.find(hides,"W7_Crystals__glow_aqua")and table.find(hides,"Water_SkyFalls")and table.find(hides,"W7_Water__cloud"))
-		assert(not table.find(hides,"W7_Underside__cliff_rock")and not table.find(hides,"W7_Water__waterfall_sky"),"kept")
+		-- Art pass 2's plinth seals the island's foot, so the underside goes too (INGAME-CRITIQUE 4); the Sky Falls mesh stays.
+		for _,name in ipairs({"W7_Underside__bark","W7_Underside__cliff_rock","W7_Underside__foliage"})do
+			assert(table.find(hides,name),name.." hidden")
+		end
+		assert(not table.find(hides,"W7_Water__waterfall_sky"),"kept")
 		-- The sun gate is where Studio's sun is at 10.5 (GetSunDirection, 2026-11-28).
 		local gate=Light.gateDirection(Data.sunGate)
 		assert((gate-Vector3.new(.3635,.8775,.3129)).Magnitude<.005,tostring(gate.X).." "..tostring(gate.Z))
@@ -316,7 +320,7 @@ return function(client,offline)
 		assert(Light.daylightLook(.9).weight==1 and not Light.daylightLook(.9).night,"Aero alone reads .9")
 		assert(Light.daylightLook(Hour.Holds.night.Daylight).weight==1 and Light.daylightLook(.12).night)
 		assert(Light.daylightLook(.55).weight==0 and Light.daylightLook(.3).weight==0 and Light.daylightLook(nil).weight==0)
-		assert(Light.rayClear(1)==.8 and Light.rayClear(0)==1 and near(Light.rayClear(.5),.9))
+		assert(Light.rayClear(1,.8)==.8 and Light.rayClear(0,.8)==1 and near(Light.rayClear(.5,.8),.9)and Light.rayClear(nil,.5)==1)
 		assert(Light.lanternsLit(.25)==true and Light.lanternsLit(.35)==false and Light.lanternsLit(nil)==false)
 	end)
 
@@ -438,6 +442,71 @@ return function(client,offline)
 		assert(Falls.cut(fall,nil)==fall and Falls.cut(fall,-80)==fall and Falls.cut(fall,10)==fall)
 	end)
 
+	test("light: the ray texture comes from the data (the falls strand only without one), at Fable's values",function()
+		assert(Light.Ray.length==140 and Light.Ray.emission==.7 and Light.Ray.speed==.015,"INGAME-CRITIQUE B")
+		local function hex(c,want)
+			local w=Color3.fromHex(want)
+			return near(c.R,w.R)and near(c.G,w.G)and near(c.B,w.B)
+		end
+		assert(hex(Light.Ray.day,"#FFF2D2")and hex(Light.Ray.night,"#9FE8FF"),"colours unchanged")
+		local texture,length=Light.rayTexture(Data)
+		assert(Data.textures.ray and texture==Data.textures.ray.color and texture=="rbxassetid://101246128497046","the uploaded ray")
+		assert(length==140 and Data.textures.ray.studsPerTile==140,"its studsPerTile is the TextureLength")
+		assert(Fixture.textures.ray==nil)
+		texture,length=Light.rayTexture(Fixture)
+		assert(texture==Values.Waterfall.Textures.Strand and length==Light.Ray.fallbackLength,"no ray image: the strand")
+		local bad=deep(Fixture);bad.textures.ray={color="tex/grove-ray.png",studsPerTile=140}
+		assert(Light.rayTexture(bad)==Values.Waterfall.Textures.Strand,"a file name is not an image id")
+		assert(Light.rayTexture(nil)==Values.Waterfall.Textures.Strand)
+		local withRay=deep(Fixture);withRay.textures.ray={color="rbxassetid://800000009",studsPerTile=140}
+		local function beams(data)
+			local light=Light.build({parent=Instance.new("Folder"),data=data,lanterns={},level=0,reduced=false,phone=false,
+				daylight=function()return .9 end,now=function()return 10 end})
+			return light.rays
+		end
+		for _,ray in ipairs(beams(withRay))do
+			assert(ray.beam.Texture=="rbxassetid://800000009"and ray.beam.TextureLength==140 and ray.beam.LightEmission==.7)
+		end
+		for _,ray in ipairs(beams(Fixture))do
+			assert(ray.beam.Texture==Values.Waterfall.Textures.Strand and ray.beam.TextureLength==60,"the fallback at its old tile")
+		end
+	end)
+
+	test("light: the ray's transparency keys by day and night, scaled by weight (0 unseen)",function()
+		local function same(keys,want)
+			assert(#keys==#want,#keys.." keys")
+			for i,key in ipairs(keys)do
+				assert(near(key[1],want[i][1],1e-6)and near(key[2],want[i][2],1e-6),("key %d: %g %g"):format(i,key[1],key[2]))
+			end
+		end
+		-- Position 0 is Attachment0, the canopy end.
+		same(Light.rayKeys(1,false),{{0,1},{.10,.52},{.55,.60},{.86,.82},{1,1}})
+		same(Light.rayKeys(1,true),{{0,1},{.10,.71},{.55,.76},{.86,.89},{1,1}})
+		for _,night in ipairs({false,true})do
+			for _,key in ipairs(Light.rayKeys(0,night))do assert(key[2]==1,"weight 0: nothing shows")end
+		end
+		same(Light.rayKeys(.5,false),{{0,1},{.10,.76},{.55,.80},{.86,.91},{1,1}})
+		same(Light.rayKeys(2,true),Light.rayKeys(1,true))
+		for _,key in ipairs(Light.rayKeys(-1,false))do assert(key[2]==1)end
+	end)
+
+	test("templates: stone meshes are Concrete; the rest keep Plastic, the lanterns SmoothPlastic",function()
+		if not offline then return end -- the generator's tokens are bundled offline
+		local M=require(client.GroveKitMaterials)
+		local t=M.tokens
+		assert(t.Concrete==816 and t.Plastic==256 and t.SmoothPlastic==272)
+		assert(M.fixture.GV_Fix_TierNorth__stone==t.Concrete,"the fixture's stone")
+		assert(M.fixture.GV_Fix_Trunk__bark==t.Plastic and M.fixture.GV_Fix_Crown__leaf==t.Plastic and M.fixture.GV_Fix_Moat__water==t.Plastic)
+		assert(M.fixture.GV_Fix_Glow__glow==t.SmoothPlastic)
+		local count=0
+		for name,mesh in pairs(Data.meshes)do
+			local want=if mesh.kind=="stone"then t.Concrete elseif mesh.role=="lanterns"then t.SmoothPlastic else t.Plastic
+			assert(M.kit[name]==want,("%s: %s"):format(name,tostring(M.kit[name])))
+			count+=1
+		end
+		assert(count==28 and M.kit.GV_Tier1__stone==t.Concrete and M.kit.GV_Bank__stone==t.Concrete and M.kit.GV_Rocks__stone==t.Concrete)
+	end)
+
 	test("WorldMotion: a part or emitter the grove hides stops stepping (read after the range check)",function()
 		local m=Motion.new(workspace)
 		m.reduced=function()return false end
@@ -504,7 +573,8 @@ return function(client,offline)
 		local cloud=backdrop("W7_Backdrop__cloud_1")
 		local foam=backdrop("W7_Water__cloud")
 		local skin=Instance.new("Texture");skin.Name="Skin";skin.LocalTransparencyModifier=0;skin.Parent=foam
-		local keep=backdrop("W7_Underside__cliff_rock")
+		local keep=backdrop("W7_Rocks__cliff_rock")
+		local underside=backdrop("W7_Underside__cliff_rock")
 		local crystals=backdrop("W7_Crystals__glow_aqua")
 		crystals.CanCollide=false -- its own: never collides, still queried
 		local skyMesh=backdrop("W7_Water__waterfall_sky")
@@ -551,7 +621,8 @@ return function(client,offline)
 		assert(spray.Enabled==false and spray:GetAttribute("GroveHidden")==true,"Sky Falls' spray off")
 		assert(foam.LocalTransparencyModifier==1 and skin.LocalTransparencyModifier==1,"Sky Falls' cloud foam and its skin")
 		assert(sheet.Enabled==false and sheet:GetAttribute("GroveHidden")==true,"Sky Falls' server sheet off")
-		assert(keep.LocalTransparencyModifier==0,"the underside stays")
+		assert(keep.LocalTransparencyModifier==0,"the island's own rocks stay")
+		assert(underside.LocalTransparencyModifier==1 and underside.CanCollide==false,"the underside goes (the plinth seals the foot)")
 		assert(crystals.LocalTransparencyModifier==1,"the crystals would stand out of the moat")
 		assert(skyMesh.LocalTransparencyModifier==0,"the Sky Falls mesh lands in the opaque moat")
 		assert(builds[#builds]==-26 and builds[#builds-1]==false,"the additions rebuilt with the moat: "..tostring(builds[#builds]))
@@ -583,6 +654,7 @@ return function(client,offline)
 		assert(foam.LocalTransparencyModifier==0 and skin.LocalTransparencyModifier==0 and late.LocalTransparencyModifier==0)
 		assert(sheet.Enabled==true and sheet:GetAttribute("GroveHidden")==nil)
 		assert(cloud.CanCollide==true and cloud.CanQuery==true,"collides and is queried again")
+		assert(underside.LocalTransparencyModifier==0 and underside.CanCollide==true,"the underside back")
 		assert(crystals.CanCollide==false and crystals.CanQuery==true,"its own values exactly")
 		assert(spray.Enabled==false and spray:GetAttribute("GroveHidden")==nil,"Reduced Motion now: the spray stays off")
 		assert(next(self.groveHidden)==nil,"no records left")
