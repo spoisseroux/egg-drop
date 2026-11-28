@@ -82,13 +82,15 @@ end
 -- left; pleased/affectionate faces (deck cheers, petting) flap quicker and a
 -- little wider; sleepy barely stirs. Amplitude and rate ease between moods, the
 -- phase only advances with dt, and Reduced Effects rests them at zero.
+-- Angel Wings (ROTATION-2-BRIEF 3) ride the same flap; `wingsStill` (AngelWings' stepper: Reduced Motion or the game's
+-- Motion: Low on a pet wearing them) rests it too.
 Motion.WingIdle,Motion.WingExcited,Motion.WingSleepy=math.rad(10),math.rad(14),math.rad(2)
 Motion.WingIdleRate,Motion.WingExcitedRate,Motion.WingSleepyRate=1/1.8,2.6,.3
 Motion.WingLag=.45
 Motion.WingMax=Motion.WingExcited
 local wingExcited={pleased=true,affectionate=true,joy=true}
 function Motion.wings(visual,expression,dt)
- if visual.reducedEffects or visual.idleMotionFrozen then return 0,0 end
+ if visual.reducedEffects or visual.idleMotionFrozen or visual.wingsStill then return 0,0 end
  dt=math.clamp(dt or 0,0,.25)
  local excited=wingExcited[expression]==true or visual.petting==true
  local amp,rate
@@ -105,8 +107,11 @@ function Motion.wings(visual,expression,dt)
 end
 -- Conservative per-axis displacement beyond an actual expression/greeting box.
 -- Includes rotation of each corner, breathing and Dot's independent translation.
+-- Angel Wings' halo bobs +-HaloBob (rig studs at garden size) about its rest frame (AngelWings.haloBob).
+Motion.HaloBob=.02
 function Motion.padding(visual,entry)
  local scale=visual.scale or 1
+ local bob=if entry.halo then Motion.HaloBob*scale else 0
  local anchors=visual.definition and visual.definition.anchors
  if entry.name=="Tail"and anchors and anchors.Tail then
   local a=anchors.Tail;local pivot=Vector3.new(a[1],a[2],a[3])*scale
@@ -132,7 +137,7 @@ function Motion.padding(visual,entry)
  local pivot=Vector3.new(anchor[1],anchor[2],anchor[3])*scale
  local radius=(entry.frame.Position-pivot).Magnitude+entry.size.Magnitude*.5
  local turn=2*radius*math.sin(Motion.HeadAngle*1.5*.5)
- local pad=Vector3.new(turn,turn+Motion.Breath*scale,turn)
+ local pad=Vector3.new(turn,turn+Motion.Breath*scale+bob,turn)
  if entry.role=="charm"then
   local diameter=math.max(entry.size.X,entry.size.Y,entry.size.Z)
   local squash=diameter*Motion.DotStretch*.55

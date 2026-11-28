@@ -8,8 +8,17 @@
 -- Previews are posed once and never animate (cheap, and calm under Reduced Motion).
 local Factory=require(script.Parent.PetFactory)
 local Bounds=require(script.Parent.PetRigBounds)
-local Cache={Live=8,Size=16}
+-- Angel Wings (ROTATION-2-BRIEF 3): a card that wears them turns the pet and pulls the camera back so the wings read.
+local Wings=require(script.Parent.AngelWings)
+local Cache={Live=8,Size=16,Yaw=-.35}
 Cache.__index=Cache
+-- Pure: a preview's yaw and zoom for an appearance: the default turn, or Angel Wings' pose (35 degrees, 15% back).
+function Cache.pose(appearance,zoom)
+ zoom=zoom or .95
+ local wings=Wings.previewPose(appearance)
+ if wings then return wings.yaw,zoom*wings.pull end
+ return Cache.Yaw,zoom
+end
 
 -- Pure: is a card (top y, height) inside the scroll window (top y, height), with a margin.
 function Cache.visible(cardY,cardH,windowY,windowH)
@@ -41,7 +50,7 @@ local function frame(entry)
  local v=entry.visual;if not v or v.destroyed then return end
  -- PetHeadshot entries keep their head framing when the rig changes.
  if entry.head then require(script.Parent.PetHeadshot).frame(entry.camera,v);entry.rig=v.rigRevision;return end
- v.yaw=-.35;v.reducedEffects=true;v.poseDirty=true;v:update(0)
+ v.yaw=entry.yaw or Cache.Yaw;v.reducedEffects=true;v.poseDirty=true;v:update(0)
  entry.rig=v.rigRevision
  local box,size=Bounds.get(v)
  local half=math.tan(math.rad(entry.camera.FieldOfView/2))
@@ -59,7 +68,8 @@ function Cache.buildPet(pet,appearance,zoom,decorate)
  local camera=Instance.new("Camera");camera.FieldOfView=30;camera.Parent=viewport;viewport.CurrentCamera=camera
  local ok,visual=pcall(Factory.new,world,Vector3.zero,pet,nil,appearance)
  if not ok or not visual then viewport:Destroy();return false end
- local entry={viewport=viewport,camera=camera,visual=visual,zoom=zoom}
+ local yaw,posed=Cache.pose(appearance,zoom)
+ local entry={viewport=viewport,camera=camera,visual=visual,zoom=posed,yaw=yaw}
  -- A preview can die with its card (the screen is rebuilt under it: a resize, a rotation).
  -- Its Parent is then locked; pump drops it and builds a fresh one instead of raising
  -- "The Parent property of CardPreview is locked" on every frame.
