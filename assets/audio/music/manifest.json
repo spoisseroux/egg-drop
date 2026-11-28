@@ -75,5 +75,105 @@
       "runtime_owner": "src/client/AmbientAudio.lua: deck_music",
       "voice_volume": 0.15
     }
+  },
+  "v2": {
+    "date": "2026-11-28",
+    "built_by": "scripts/build_music.py",
+    "brief": "artifacts/qa-2026-11-28-music/MUSIC-BRIEF.md",
+    "credit": "Spencer's own stems (assets/audio/music-src), arranged and mixed; sample palette synthesized in the script or chopped from his stems. No downloads, no generated audio.",
+    "upload_format": "ogg (Vorbis q6); WAV is the master",
+    "assets": {
+      "garden-day-v2": {
+        "wav": "garden-day-v2.wav",
+        "wav_bytes": 23158196,
+        "wav_sha256": "7e860d6ea1762478fcb254666eb5246548c1c9d7fec0f8a426ada1c74acfddc2",
+        "frames": 5789538,
+        "seconds": 131.282,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bits": 16,
+        "loop": true,
+        "integrated_lufs": -17.6,
+        "true_peak_dbtp": -4.45,
+        "loudness_range_lu": 2.79,
+        "ogg": "garden-day-v2.ogg",
+        "ogg_bytes": 3029819,
+        "ogg_sha256": "bb0d83a5d7637f82d79df6e374d8bb6ede9d1efbf19d34cd5a88f2599644cb08"
+      },
+      "garden-night-v2": {
+        "wav": "garden-night-v2.wav",
+        "wav_bytes": 23158196,
+        "wav_sha256": "7027bb8fa19a253eed45a8f55b5b40f3b0220b4018dfbd81654ede880f460870",
+        "frames": 5789538,
+        "seconds": 131.282,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bits": 16,
+        "loop": true,
+        "integrated_lufs": -20.6,
+        "true_peak_dbtp": -7.08,
+        "loudness_range_lu": 3.71,
+        "ogg": "garden-night-v2.ogg",
+        "ogg_bytes": 2312211,
+        "ogg_sha256": "e4bee79fdf14188fe3b4162aa5befa1ae0a7c9311b3f4b821fa9aacdfcbdf4fc"
+      },
+      "pocket-deck-v2": {
+        "wav": "pocket-deck-v2.wav",
+        "wav_bytes": 11579120,
+        "wav_sha256": "68d2a9e1864943e2c77a9a44f5e7b5c505e4081aee97b3769917cbe1a7381485",
+        "frames": 2894769,
+        "seconds": 65.641,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bits": 16,
+        "loop": true,
+        "integrated_lufs": -18.91,
+        "true_peak_dbtp": -5.82,
+        "loudness_range_lu": 4.74,
+        "ogg": "pocket-deck-v2.ogg",
+        "ogg_bytes": 1324142,
+        "ogg_sha256": "0c99e7e44e55236f8afaf3f7338955cfde1abc5d3e53e3b8257cace1816aaf21"
+      },
+      "pocket-deck-lite-v2": {
+        "wav": "pocket-deck-lite-v2.wav",
+        "wav_bytes": 5789584,
+        "wav_sha256": "aa8e6aa59e494f89c92f970ba33ecb19c36bcb846f96464376b6739640ef410d",
+        "frames": 1447385,
+        "seconds": 32.821,
+        "sample_rate": 44100,
+        "channels": 2,
+        "bits": 16,
+        "loop": true,
+        "integrated_lufs": -21.9,
+        "true_peak_dbtp": -9.03,
+        "loudness_range_lu": 2.73,
+        "ogg": "pocket-deck-lite-v2.ogg",
+        "ogg_bytes": 579478,
+        "ogg_sha256": "69dfaa7e1d263008f29c14b4f5039118c4a07797091cef311095f266fadc9187"
+      }
+    },
+    "crossfade": {
+      "day_lufs": -17.6,
+      "night_lufs": -20.6,
+      "midpoint_equal_power_lufs": -16.56,
+      "bump_equal_power_lu": 1.04,
+      "midpoint_exp1_5_lufs": -18.06,
+      "bump_exp1_5_lu": -0.46,
+      "ship_exponent": 1.5,
+      "loudness_vs_day_at_w_0_to_1": [
+        0.0,
+        0.13,
+        0.18,
+        0.09,
+        -0.12,
+        -0.46,
+        -0.92,
+        -1.46,
+        -2.04,
+        -2.6,
+        -3.0
+      ],
+      "rule": "day = V*cos(w*pi/2)^e, night = V*sin(w*pi/2)^e; e = 1.5 only if the equal-power midpoint is > 1 LU over day"
+    }
   }
 }

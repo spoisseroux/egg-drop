@@ -1,0 +1,1475 @@
+#!/usr/bin/env python3
+"""Deterministic render of the garden day / night and Pocket Deck music from Spencer's stems.
+
+Follows artifacts/qa-2026-11-28-music/MUSIC-BRIEF.md (Fable, 2026-11-28).
+
+  python scripts/build_music.py                      # full build
+  python scripts/build_music.py --without boing,eep  # drop risky samples
+  python scripts/build_music.py --no-encode          # WAV only, skip OGG/MP3
+
+Inputs:  assets/audio/music-src/{main,deck}/*.mp3 (Spencer's stems, his own music)
+         assets/audio/music/garden-loop.wav, pocket-deck-loop.wav (alignment + loudness reference)
+Outputs: assets/audio/music/{garden-day-v2,garden-night-v2,pocket-deck-v2,pocket-deck-lite-v2}.{wav,ogg}
+         assets/audio/music/samples/*.wav, assets/audio/music/manifest.json ("v2" block)
+         artifacts/qa-2026-11-28-music/report.json, previews/*.mp3
+
+Every sample-palette sound is synthesized here from an original recipe, or is a chop/resample of
+Spencer's stems. No downloads, no generated audio. All randomness comes from fixed seeds, so two
+runs give byte-identical files.
+
+Loop safety: every filter is a zero-phase magnitude curve applied in the frequency domain over the
+whole loop (so it is circular by construction); dynamics and reverb run over three copies of the
+loop and keep the middle one, so tails and compressor state wrap across the seam.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import subprocess
+import sys
+import warnings
+from dataclasses import dataclass, field
+
+import numpy as np
+import soundfile as sf
+import pyloudnorm as pyln
+import librosa
+from scipy import signal
+from scipy.ndimage import minimum_filter1d
+from pedalboard import Pedalboard, Compressor, Reverb
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SRC_MAIN = os.path.join(ROOT, "assets", "audio", "music-src", "main")
+SRC_DECK = os.path.join(ROOT, "assets", "audio", "music-src", "deck")
+OUT_DIR = os.path.join(ROOT, "assets", "audio", "music")
+SAMPLE_DIR = os.path.join(OUT_DIR, "samples")
+QA_DIR = os.path.join(ROOT, "artifacts", "qa-2026-11-28-music")
+PREVIEW_DIR = os.path.join(QA_DIR, "previews")
+REF_GARDEN = os.path.join(OUT_DIR, "garden-loop.wav")
+REF_DECK = os.path.join(OUT_DIR, "pocket-deck-loop.wav")
+
+SR = 44100
+BPM = 117.0
+BAR = 60.0 / BPM * 4 * SR          # 90461.538... frames
+BEAT = BAR / 4
+SEED = 20261128
+
+N_DAY = int(round(64 * BAR))        # 5,789,538
+N_DECK = int(round(32 * BAR))       # 2,894,769
+N_LITE = int(round(16 * BAR))       # 1,447,385
+# Not in the brief: bass + chords sit lower in A1 "wake" and the C1 breakdown, for the loudness range it asks for
+C1_BED_DB = -4.5
+A1_BED_DB = -2.5
+
+PITCH_SET = (0, 2, 4, 7, 9)          # C D E G A, never F or F#
+RISKY = ("boing", "eep", "la-chop")
+ALL_SAMPLES = ("pip", "la-chop", "tok", "plip", "boing", "swell", "music-box", "shaker",
+               "kalimba", "eep", "ribbit", "hoo")
+
+# chords / bass / drums: which 8-bar source phrase plays in each 8-bar phrase of the 64-bar loop.
+# Source phrase 3 (bars 25-32) carries the bass dropouts, so it only plays in C1 (bars 33-40).
+PHRASE_SRC = [0, 1, 2, 1, 3, 0, 1, 2]
+
+
+def db(x):
+    return 10 ** (x / 20.0)
+
+
+def todb(x):
+    return 20 * np.log10(max(float(x), 1e-12))
+
+
+def pos(bar, beat=1.0):
+    """Frame of a 1-based bar and beat, on the 117.00 BPM grid."""
+    return int(round(((bar - 1) + (beat - 1) / 4.0) * BAR))
+
+
+def barf(bar0):
+    """Frame of a 0-based (possibly fractional) bar index."""
+    return int(round(bar0 * BAR))
+
+
+# ----------------------------------------------------------------------------- zero-phase filters
+
+def _rbj(kind, f0, gain_db, q):
+    a = db(gain_db / 2.0)
+    w0 = 2 * np.pi * f0 / SR
+    cw, sw = np.cos(w0), np.sin(w0)
+    alpha = sw / (2 * q)
+    if kind == "peak":
+        b = [1 + alpha * a, -2 * cw, 1 - alpha * a]
+        den = [1 + alpha / a, -2 * cw, 1 - alpha / a]
+    elif kind == "highshelf":
+        sa = 2 * np.sqrt(a) * alpha
+        b = [a * ((a + 1) + (a - 1) * cw + sa), -2 * a * ((a - 1) + (a + 1) * cw), a * ((a + 1) + (a - 1) * cw - sa)]
+        den = [(a + 1) - (a - 1) * cw + sa, 2 * ((a - 1) - (a + 1) * cw), (a + 1) - (a - 1) * cw - sa]
+    else:
+        raise ValueError(kind)
+    return np.array(b), np.array(den)
+
+
+def mag_rbj(f, kind, f0, gain_db, q=0.707):
+    b, a = _rbj(kind, f0, gain_db, q)
+    z = np.exp(-1j * 2 * np.pi * f / SR)
+    h = (b[0] + b[1] * z + b[2] * z * z) / (a[0] + a[1] * z + a[2] * z * z)
+    return np.abs(h)
+
+
+def mag_hp(f, fc, order=2):
+    with np.errstate(divide="ignore"):
+        r = np.where(f > 0, fc / np.maximum(f, 1e-9), np.inf)
+    return 1.0 / np.sqrt(1.0 + r ** (2 * order))
+
+
+def mag_lp(f, fc, order=2):
+    return 1.0 / np.sqrt(1.0 + (f / fc) ** (2 * order))
+
+
+def fft_filter(x, mag):
+    """Zero-phase circular filter: multiply the loop's spectrum by a real magnitude curve.
+    `mag` is a function of frequency (Hz) returning the linear magnitude."""
+    n = len(x)
+    f = np.fft.rfftfreq(n, 1.0 / SR)
+    h = mag(f)
+    spec = np.fft.rfft(x, axis=0)
+    spec *= h[:, None] if x.ndim == 2 else h
+    return np.fft.irfft(spec, n=n, axis=0)
+
+
+def fft_filter_padded(x, mag, pad=4096):
+    """Zero-phase filter for a one-shot (non-loop) sound: pad with zeros so nothing wraps."""
+    z = np.concatenate([x, np.zeros((pad,) + x.shape[1:])])
+    return fft_filter(z, mag)[: len(x)]
+
+
+def ms_split(x):
+    return (x[:, 0] + x[:, 1]) * 0.5, (x[:, 0] - x[:, 1]) * 0.5
+
+
+def ms_join(m, s):
+    return np.stack([m + s, m - s], axis=1)
+
+
+def stereo(m):
+    return np.stack([m, m], axis=1)
+
+
+# ----------------------------------------------------------------------------- measurement
+
+_METER = pyln.Meter(SR)
+
+
+def lufs(x):
+    return float(_METER.integrated_loudness(np.asarray(x, dtype=np.float64)))
+
+
+def true_peak_db(x):
+    pad = 64
+    z = np.concatenate([x[-pad:], x, x[:pad]], axis=0)
+    up = signal.resample_poly(z, 4, 1, axis=0)[4 * pad: -4 * pad]
+    return todb(np.abs(up).max())
+
+
+def k_weight(x):
+    y = np.asarray(x, dtype=np.float64)
+    for filt in _METER._filters.values():
+        y = signal.lfilter(filt.b, filt.a, y, axis=0)
+    return y
+
+
+def loudness_range(x):
+    """EBU R128 LRA on 3 s short-term windows (0.1 s hop), treated as a loop."""
+    n = len(x)
+    pre = int(3 * SR)
+    kw = k_weight(np.concatenate([x[-pre:], x], axis=0))[pre:]   # settle the K filter on the wrap
+    p = (kw ** 2).sum(axis=1)
+    cs = np.concatenate([[0.0], np.cumsum(np.concatenate([p, p[:pre]]))])
+    hop = int(0.1 * SR)
+    starts = np.arange(0, n, hop)
+    ms = (cs[starts + pre] - cs[starts]) / pre
+    st = -0.691 + 10 * np.log10(np.maximum(ms, 1e-20))
+    st = st[st > -70]
+    if len(st) == 0:
+        return 0.0
+    rel = -0.691 + 10 * np.log10(np.mean(10 ** ((st + 0.691) / 10))) - 20
+    st = st[st > rel]
+    return float(np.percentile(st, 95) - np.percentile(st, 10))
+
+
+def hf_share(x, fc=6000.0):
+    spec = np.abs(np.fft.rfft(x, axis=0)) ** 2
+    f = np.fft.rfftfreq(len(x), 1.0 / SR)
+    tot = spec.sum()
+    return float(spec[f >= fc].sum() / tot)
+
+
+def mono_loss_db(x):
+    m, _ = ms_split(x)
+    st = np.sqrt(((x[:, 0] ** 2).mean() + (x[:, 1] ** 2).mean()) / 2)
+    return todb(np.sqrt((m ** 2).mean()) / max(st, 1e-12))
+
+
+def crest_db(x):
+    return todb(np.abs(x).max()) - todb(np.sqrt((x ** 2).mean()))
+
+
+def seam_stats(x):
+    """Loop seam check: the wrap (last sample -> first sample) against the track's own motion."""
+    w = int(0.05 * SR)
+    last, first = x[-w:], x[:w]
+    d1 = np.abs(np.diff(x, axis=0))
+    wrap1 = np.abs(x[0] - x[-1])
+    d2 = np.abs(np.diff(x, n=2, axis=0))
+    wrap2 = np.abs(x[1] - 2 * x[0] + x[-1])
+    # HF (>8 kHz) energy in 20 ms around the seam vs the same window at every other bar line:
+    # a click would make the seam stand out from the downbeats it should sound like
+    hf = fft_filter(x, lambda f: mag_hp(f, 8000, 4))
+    e = (hf ** 2).sum(axis=1)
+    win = int(0.02 * SR)
+    nb = int(round(len(x) / BAR))
+    at = lambda c: e[(np.arange(c - win // 2, c + win // 2)) % len(e)].mean()
+    seam_e = at(0)
+    bars = [at(barf(k)) for k in range(1, nb)]
+    lag = int(0.004 * SR)
+    a = last[-lag:].mean(axis=1)
+    b = first[:lag].mean(axis=1)
+    return {
+        "rms_last50_db": round(todb(np.sqrt((last ** 2).mean())), 2),
+        "rms_first50_db": round(todb(np.sqrt((first ** 2).mean())), 2),
+        "wrap_step": [int(round(v * 32767)) for v in wrap1],
+        "p99_step": [int(round(v * 32767)) for v in np.percentile(d1, 99, axis=0)],
+        "wrap_step_ratio_p99": round(float((wrap1 / np.maximum(np.percentile(d1, 99, axis=0), 1e-12)).max()), 3),
+        "wrap_curvature_ratio_p99": round(float((wrap2 / np.maximum(np.percentile(d2, 99, axis=0), 1e-12)).max()), 3),
+        "hf_seam_vs_median_barline_db": round(10 * np.log10(max(seam_e, 1e-20) / max(np.median(bars), 1e-20)), 2),
+        "hf_seam_vs_loudest_barline_db": round(10 * np.log10(max(seam_e, 1e-20) / max(np.max(bars), 1e-20)), 2),
+        "slope_last4ms_vs_first4ms": [round(float(np.mean(np.diff(a)) * 32767), 2), round(float(np.mean(np.diff(b)) * 32767), 2)],
+    }
+
+
+def measure(x, name):
+    m = {
+        "file": name,
+        "frames": int(len(x)),
+        "seconds": round(len(x) / SR, 3),
+        "integrated_lufs": round(lufs(x), 2),
+        "true_peak_dbtp": round(true_peak_db(x), 2),
+        "sample_peak_dbfs": round(todb(np.abs(x).max()), 2),
+        "loudness_range_lu": round(loudness_range(x), 2),
+        "mono_loss_db": round(mono_loss_db(x), 2),
+        "share_above_6k": round(hf_share(x), 4),
+        "seam": seam_stats(x),
+    }
+    return m
+
+
+# ----------------------------------------------------------------------------- dynamics / reverb
+
+def tile3(fn, x):
+    n = len(x)
+    y = fn(np.concatenate([x, x, x], axis=0))
+    return y[n: 2 * n]
+
+
+def pb_run(board, x):
+    y = board(np.ascontiguousarray(x.T, dtype=np.float32), SR)
+    return y.T.astype(np.float64)
+
+
+_REV_CAL = {}
+
+
+def reverb_gain(room):
+    """Freeverb's wet gain, measured on seeded noise, so a send of -14 dB returns 14 dB under."""
+    if room not in _REV_CAL:
+        rng = np.random.default_rng(7)
+        n = np.ascontiguousarray(rng.standard_normal((2, 4 * SR)).astype(np.float32) * 0.1)
+        out = Pedalboard([Reverb(room_size=room, damping=0.5, wet_level=1.0, dry_level=0.0, width=0.7)])(n, SR)
+        _REV_CAL[room] = float(np.sqrt((n[:, 2 * SR:] ** 2).mean()) / np.sqrt((out[:, 2 * SR:] ** 2).mean()))
+    return _REV_CAL[room]
+
+
+def room(send, size):
+    """Shared room: wet only, return HP 300 Hz / LP 6 kHz, three loops rendered, middle kept."""
+    board = Pedalboard([Reverb(room_size=size, damping=0.5, wet_level=1.0, dry_level=0.0, width=0.7)])
+    wet = tile3(lambda z: pb_run(board, z), send) * reverb_gain(size)
+    return fft_filter(wet, lambda f: mag_hp(f, 300, 2) * mag_lp(f, 6000, 2))
+
+
+def soft_clip(x, ceiling):
+    return ceiling * np.tanh(x / ceiling)
+
+
+def drum_chain(x, label, target_crest=12.5):
+    """Garden drum treatment: -4 dB, high shelf -4 dB @ 6 kHz, mono below 150 Hz,
+    soft clip then 4:1 / 5 ms / 80 ms compressor, clip depth searched for a 12-13 dB crest."""
+    x = x * db(-4)
+    x = fft_filter(x, lambda f: mag_rbj(f, "highshelf", 6000, -4, 0.707))
+    m, s = ms_split(x)
+    s = fft_filter(s, lambda f: mag_hp(f, 150, 2))
+    x = ms_join(m, s)
+    peak = np.abs(x).max()
+    rms_db = todb(np.sqrt((x ** 2).mean()))
+    comp = Pedalboard([Compressor(threshold_db=rms_db + 6, ratio=4, attack_ms=5, release_ms=80)])
+    best = None
+    for depth in np.arange(0.0, 18.01, 0.5):
+        y = pb_run(comp, soft_clip(x, peak * db(-depth)))
+        c = crest_db(y)
+        if best is None or abs(c - target_crest) < abs(best[1] - target_crest):
+            best = (depth, c)
+        if c <= target_crest:
+            break
+    depth = best[0]
+    y = tile3(lambda z: pb_run(comp, soft_clip(z, peak * db(-depth))), x)
+    info = {"clip_depth_db": float(depth), "crest_before_db": round(crest_db(x), 2), "crest_after_db": round(crest_db(y), 2)}
+    print(f"  drums[{label}]: crest {info['crest_before_db']} -> {info['crest_after_db']} dB (clip {depth} dB)")
+    return y, info
+
+
+def glue(x, target_gr=1.5):
+    """2:1 bus glue; threshold searched so the loudness drops 1-2 dB."""
+    l0 = lufs(x)
+    chosen = None
+    for thr in np.arange(-6.0, -40.01, -1.0):
+        board = Pedalboard([Compressor(threshold_db=float(thr), ratio=2, attack_ms=15, release_ms=150)])
+        gr = l0 - lufs(pb_run(board, x))
+        chosen = (float(thr), gr)
+        if gr >= target_gr:
+            break
+    board = Pedalboard([Compressor(threshold_db=chosen[0], ratio=2, attack_ms=15, release_ms=150)])
+    y = tile3(lambda z: pb_run(board, z), x)
+    return y, {"threshold_db": chosen[0], "loudness_reduction_db": round(l0 - lufs(y), 2)}
+
+
+def tp_limit(x, ceiling_db, look_ms=3.0, release_ms=60.0):
+    """Look-ahead true-peak limiter on a loop: gain = min over a window of ceiling/peak(4x), smoothed.
+    The min window covers the smoothing kernel, so the smoothed gain never exceeds what each sample needs."""
+    n = len(x)
+    pad = 64
+    z = np.concatenate([x[-pad:], x, x[:pad]], axis=0)
+    up = np.abs(signal.resample_poly(z, 4, 1, axis=0))[4 * pad: -4 * pad].max(axis=1)
+    pk = up.reshape(n, 4).max(axis=1)
+    pk = np.maximum(pk, np.abs(x).max(axis=1))
+    need = np.minimum(1.0, db(ceiling_db) / np.maximum(pk, 1e-12))
+    if need.min() >= 1.0:
+        return x.copy()
+    la = int(look_ms * 1e-3 * SR)
+    rel = int(release_ms * 1e-3 * SR)
+    g = minimum_filter1d(need, size=2 * (la + rel) + 1, mode="wrap")
+    ker = np.hanning(2 * rel + 1)
+    ker /= ker.sum()
+    gpad = np.concatenate([g[-rel:], g, g[:rel]])
+    g = np.convolve(gpad, ker, mode="valid")
+    g = np.minimum(g, 1.0)
+    return x * g[:, None]
+
+
+def finish(x, target_lufs, tp_max):
+    """Loudness-normalize to target and limit to the true-peak ceiling (iterated)."""
+    g = db(target_lufs - lufs(x))
+    ceil = tp_max - 0.4
+    y = x * g
+    for _ in range(12):
+        y = tp_limit(x * g, ceil)
+        l, tp = lufs(y), true_peak_db(y)
+        if abs(l - target_lufs) <= 0.05 and tp <= tp_max - 0.15:
+            break
+        g *= db(target_lufs - l)
+        if tp > tp_max - 0.15:
+            ceil -= (tp - (tp_max - 0.15)) + 0.05
+    return y
+
+
+def quantize16(x, seed):
+    rng = np.random.default_rng(seed)
+    d = (rng.random(x.shape) - rng.random(x.shape))
+    q = np.round(x * 32767.0 + d)
+    return np.clip(q, -32768, 32767).astype(np.int16)
+
+
+# ----------------------------------------------------------------------------- stems
+
+def load_mp3(path):
+    x, sr = sf.read(path, dtype="float64", always_2d=True)
+    assert sr == SR, path
+    return x
+
+
+def measure_offset(ref, stems):
+    """Decoder offset of the MP3 stems: circular cross-correlation of the drum stem against the
+    reference loop. Returns the stem frame that lines up with reference frame 0 (bar 1 beat 1)."""
+    r = ref.mean(axis=1)
+    out = {}
+    for name, x in stems.items():
+        m = x.mean(axis=1)
+        n = len(r)
+        rr = np.concatenate([r, r, r])
+        c = signal.fftconvolve(rr, m[::-1], mode="valid")
+        j = int(np.argmax(np.abs(c)))
+        score = float(c[j] / np.sqrt((m ** 2).sum() * (r ** 2).sum()))
+        off = (-j) % n
+        # offsets are mod the bar grid of the reference (stems can sit at any bar of it)
+        off_bar = off - int(round(off / BAR)) * BAR
+        out[name] = (int(round(off_bar)) % int(round(BAR)), score)
+    return out
+
+
+def grid_stem(x, offset, nbars):
+    """Cut a decoded stem to its bar grid. The MP3s end a few hundred frames short of the grid;
+    the missing tail is filled from the same spot 8 bars (4 for 8-bar stems) earlier."""
+    n = int(round(nbars * BAR))
+    body = x[offset:]
+    out = np.zeros((n, 2))
+    k = min(len(body), n)
+    out[:k] = body[:k]
+    missing = n - k
+    if missing > 0:
+        back = int(round((8 if nbars >= 16 else 4) * BAR))
+        x0 = 64
+        fill = out[k - back - x0: n - back]
+        ramp = 0.5 - 0.5 * np.cos(np.pi * (np.arange(x0) + 0.5) / x0)
+        seg = fill.copy()
+        out[k - x0:k] = out[k - x0:k] * (1 - ramp)[:, None] + seg[:x0] * ramp[:, None]
+        out[k:n] = seg[x0:]
+    return out, missing
+
+
+@dataclass
+class Note:
+    slot: int      # 16th-note index from the stem's start
+    midi: int
+    dur: float     # in 16ths
+
+
+def transcribe(x, nbars):
+    """Onset + pitch transcription of a monophonic stem (pyin), quantized to 16ths."""
+    m = x.mean(axis=1).astype(np.float32)
+    b = int(round(BAR))
+    m2 = np.concatenate([m[-b:], m])           # wrap so the bar-1 downbeat registers as an onset
+    hop = 256
+    f0, _, _ = librosa.pyin(m2, fmin=130, fmax=2100, sr=SR, frame_length=2048, hop_length=hop)
+    on = librosa.onset.onset_detect(y=m2, sr=SR, hop_length=hop, units="samples")
+    six = BAR / 16
+    notes = []
+    for i, o in enumerate(on):
+        e = on[i + 1] if i + 1 < len(on) else len(m2)
+        a = o // hop + 2
+        seg = f0[a: min(e // hop, a + 20)]
+        seg = seg[~np.isnan(seg)]
+        if len(seg) < 2 or o < b - six / 2:
+            continue
+        midi = int(np.round(np.median(librosa.hz_to_midi(seg))))
+        q = int(np.round((o - b) / six))
+        if q >= nbars * 16:
+            continue
+        notes.append(Note(q, midi, (e - o) / six))
+    # octave-error guard: fold notes more than 9 semitones from the bar's median
+    for bar in range(nbars):
+        inbar = [n for n in notes if n.slot // 16 == bar]
+        if not inbar:
+            continue
+        med = np.median([n.midi for n in inbar])
+        for n in inbar:
+            while n.midi - med > 9:
+                n.midi -= 12
+            while med - n.midi > 9:
+                n.midi += 12
+    dedup = {}
+    for n in notes:
+        dedup.setdefault(n.slot, n)
+    return [dedup[k] for k in sorted(dedup)]
+
+
+def bar_chroma(x, nbars):
+    m = x.mean(axis=1).astype(np.float32)
+    out = []
+    for i in range(nbars):
+        seg = m[barf(i): barf(i + 1)]
+        if np.abs(seg).max() < 1e-4:
+            out.append(np.ones(12) / 12)
+            continue
+        c = librosa.feature.chroma_stft(y=seg, sr=SR, n_fft=8192, hop_length=2048, tuning=0.0).mean(axis=1)
+        out.append(c / c.max())
+    return np.array(out)
+
+
+def pc_fit(chroma, midi):
+    pc = midi % 12
+    return chroma[pc] - 0.8 * max(chroma[(pc + 1) % 12], chroma[(pc - 1) % 12])
+
+
+# ----------------------------------------------------------------------------- arrangement
+
+@dataclass
+class Block:
+    src: np.ndarray
+    s: float           # source bar (0-based)
+    d: float           # destination bar (0-based)
+    n: float           # length in bars
+    g: float = 1.0
+
+
+def assemble(n_out, blocks, h=64):
+    """Copy bar blocks into a loop. Each block is tapered over 2h frames centred on its edges;
+    neighbouring blocks overlap there, so continuous source material passes through unchanged."""
+    out = np.zeros((n_out, 2))
+    for bl in blocks:
+        ns = len(bl.src)
+        s0, d0 = barf(bl.s), barf(bl.d)
+        length = barf(bl.d + bl.n) - d0
+        idx = np.arange(-h, length + h)
+        seg = bl.src[(s0 + idx) % ns]
+        w = np.ones(len(idx))
+        r = 0.5 - 0.5 * np.cos(np.pi * (np.arange(2 * h) + 0.5) / (2 * h))
+        w[: 2 * h] = r
+        w[-2 * h:] = r[::-1]
+        di = (d0 + idx) % n_out
+        out[di] += seg * (w * bl.g)[:, None]
+    return out
+
+
+def gate(x, regions, value=0.0, ramp=220):
+    """Multiply frame regions [a, b) by `value`, with raised-cosine ramps centred on the edges."""
+    n = len(x)
+    g = np.ones(n)
+    for a, b in regions:
+        idx = np.arange(a - ramp // 2, b + ramp // 2)
+        w = np.ones(len(idx)) * value
+        r = 0.5 - 0.5 * np.cos(np.pi * (np.arange(ramp) + 0.5) / ramp)
+        w[:ramp] = 1 + (value - 1) * r
+        w[-ramp:] = value + (1 - value) * r
+        g[idx % n] = np.minimum(g[idx % n], w) if value <= 1 else w
+    return x * g[:, None]
+
+
+def place(bus, snd, frame, gain=1.0, pan=0.0):
+    """Circular add of a mono (constant-power pan) or stereo sound at `frame`."""
+    n = len(bus)
+    if snd.ndim == 1:
+        th = (pan + 1) * np.pi / 4
+        snd = np.stack([snd * np.cos(th), snd * np.sin(th)], axis=1)
+    idx = (frame + np.arange(len(snd))) % n
+    bus[idx] += snd * gain
+
+
+def balance(x, p):
+    th = (p + 1) * np.pi / 4
+    return x * np.array([np.cos(th), np.sin(th)]) * np.sqrt(2)
+
+
+# ----------------------------------------------------------------------------- synth palette
+
+def hz(midi):
+    return 440.0 * 2 ** ((midi - 69) / 12.0)
+
+
+def env_ad(n, att, tau):
+    t = np.arange(n) / SR
+    e = np.exp(-t / tau)
+    a = int(att * SR)
+    if a > 0:
+        e[:a] *= 0.5 - 0.5 * np.cos(np.pi * np.arange(a) / a)
+    tail = min(n, int(0.004 * SR))
+    e[-tail:] *= np.linspace(1, 0, tail)
+    return e
+
+
+def osc(freq_curve):
+    return np.cumsum(2 * np.pi * freq_curve / SR)
+
+
+def s_pip(midi, scale, rng):
+    n = int(0.070 * scale * SR)
+    t = np.arange(n) / SR
+    f1 = hz(midi)
+    f = f1 * (0.6 + 0.4 * (1 - np.exp(-t / 0.012)))          # 900 -> 1500 shape, landing on the note
+    f *= 1 + 0.012 * np.sin(2 * np.pi * 30 * t)               # 30 Hz vibrato
+    ph = osc(f)
+    y = np.sin(ph) + db(-12) * np.sin(2 * ph)
+    return y * env_ad(n, 0.003, 0.03)
+
+
+def s_tok(midi, scale, rng):
+    n = int(0.16 * scale * SR)
+    t = np.arange(n) / SR
+    f = hz(midi)
+    y = (np.sin(2 * np.pi * f * t) * np.exp(-t / (0.090 * scale / 3))
+         + 0.45 * np.sin(2 * np.pi * 3.9 * f * t) * np.exp(-t / 0.012)
+         + 0.18 * np.sin(2 * np.pi * 9.2 * f * t) * np.exp(-t / 0.005))
+    c = int(0.002 * SR)
+    click = rng.standard_normal(c) * np.linspace(1, 0, c) * 0.35
+    y[:c] += fft_filter_padded(click, lambda fr: mag_hp(fr, 2000, 2) * mag_lp(fr, 7000, 2))
+    y[: int(0.0005 * SR)] *= np.linspace(0, 1, int(0.0005 * SR))
+    return y * env_ad(n, 0.0, 10.0)
+
+
+def s_plip(midi, scale, rng):
+    n = int(0.055 * scale * SR)
+    t = np.arange(n) / SR
+    f1 = hz(midi)
+    f0 = f1 / 3.5                                             # 400 -> 1400 Hz ratio
+    k = np.minimum(t / (0.035 * scale), 1.0)
+    f = f0 * (f1 / f0) ** k
+    y = np.sin(osc(f)) * env_ad(n, 0.001, 0.02)
+    tip = int(0.005 * SR)
+    nz = fft_filter_padded(rng.standard_normal(tip), lambda fr: mag_hp(fr, 3000, 2) * mag_lp(fr, 7000, 2))
+    y[:tip] += nz * np.linspace(0.25, 0, tip)
+    return y
+
+
+def s_boing(midi, scale, rng):
+    n = int(0.25 * scale * SR)
+    t = np.arange(n) / SR
+    u = t / t[-1]
+    f = hz(midi) * 2 ** ((5 / 12) * (u ** 0.6))              # bend up a 4th
+    ph = osc(f)
+    y = np.zeros(n)
+    for k in range(1, 60):                                    # band-limited saw
+        live = (k * f) < 7000
+        y += live * np.sin(k * ph) / k
+    # time-varying state-variable band-pass sweeping 400 -> 1800 -> 600 Hz
+    fc = np.where(u < 0.4, 400 * (1800 / 400) ** (u / 0.4), 1800 * (600 / 1800) ** ((u - 0.4) / 0.6))
+    q = 4.0
+    lo = bp = 0.0
+    out = np.zeros(n)
+    for i in range(n):
+        fcoef = 2 * np.sin(np.pi * fc[i] / SR)
+        hi = y[i] - lo - bp / q
+        bp += fcoef * hi
+        lo += fcoef * bp
+        out[i] = bp
+    return out * env_ad(n, 0.004, 0.12)
+
+
+def s_music_box(midi, scale, rng, dur=0.6):
+    n = int(max(dur, 0.25) * SR * scale) + int(0.2 * SR)
+    t = np.arange(n) / SR
+    f = hz(midi)
+    y = (np.sin(2 * np.pi * f * t) * np.exp(-t / 0.18)
+         + db(-14) * np.sin(2 * np.pi * 4.07 * f * t) * np.exp(-t / 0.06)
+         + 0.3 * np.sin(2 * np.pi * 6.3 * f * t) * np.exp(-t / 0.004))
+    y[: int(0.001 * SR)] *= np.linspace(0, 1, int(0.001 * SR))
+    end = min(n, int(dur * scale * SR) + int(0.15 * SR))
+    y = y[:end] * env_ad(end, 0.0, 10.0)
+    return fft_filter_padded(y, lambda fr: mag_lp(fr, 5000, 2))
+
+
+def s_kalimba(midi, scale, rng):
+    n = int(0.7 * scale * SR)
+    t = np.arange(n) / SR
+    f = hz(midi)
+    y = np.sin(2 * np.pi * f * t) * np.exp(-t / 0.22) + 0.3 * np.sin(2 * np.pi * 5.4 * f * t) * np.exp(-t / 0.025)
+    th = int(0.003 * SR)
+    y[:th] += fft_filter_padded(rng.standard_normal(th), lambda fr: mag_lp(fr, 2500, 2)) * np.linspace(0.3, 0, th)
+    y[: int(0.0008 * SR)] *= np.linspace(0, 1, int(0.0008 * SR))
+    return y * env_ad(n, 0.0, 10.0)
+
+
+def s_eep(midi, scale, rng):
+    n = int(0.09 * scale * SR)
+    u = np.linspace(0, 1, n)
+    peak = hz(midi)
+    up, down = np.clip(u / 0.45, 0, 1), np.clip((u - 0.45) / 0.55, 0, 1)
+    contour = np.where(u < 0.45, 1.2 + 0.6 * np.sin(np.pi / 2 * up), 1.8 - 0.7 * down ** 0.8) / 1.8   # 1.2-1.8-1.1 kHz
+    f = peak * contour
+    ph = osc(f)
+    y = np.zeros(n)
+    for k in range(1, 8):                                     # band-limited 25% pulse
+        live = (k * f) < 6000
+        y += live * (np.sin(np.pi * k * 0.25) / k) * np.cos(k * ph)
+    return y * env_ad(n, 0.005, 0.05)
+
+
+def s_ribbit(midi, scale, rng):
+    n = int(0.18 * scale * SR)
+    t = np.arange(n) / SR
+    u = t / t[-1]
+    f = hz(midi) * (hz(midi - 2) / hz(midi)) ** u             # A3 -> G3
+    ph = osc(f)
+    y = np.zeros(n)
+    for k in (1, 3, 5, 7, 9, 11):                             # band-limited triangle
+        y += ((-1) ** ((k - 1) // 2)) * np.sin(k * ph) / (k * k)
+    am = 0.55 + 0.45 * np.sin(2 * np.pi * 28 * t - np.pi / 2)
+    return y * am * env_ad(n, 0.01, 0.1)
+
+
+def s_hoo(midi, scale, rng):
+    one = int(0.34 * scale * SR)
+    parts = []
+    for m in (midi, midi - 2):                                # E4 -> D4
+        t = np.arange(one) / SR
+        f = hz(m) * (1 + 0.006 * np.sin(2 * np.pi * 5 * t))
+        y = np.sin(osc(f))
+        e = np.minimum(1, t / 0.07) * np.exp(-np.maximum(t - 0.12, 0) / 0.18)
+        parts.append(y * e)
+    y = np.concatenate(parts)
+    br = fft_filter_padded(rng.standard_normal(len(y)), lambda fr: mag_hp(fr, 300, 2) * mag_lp(fr, 2200, 2))
+    br *= np.concatenate([p != 0 for p in parts]).astype(float) * 0.05
+    y = fft_filter_padded(y + br, lambda fr: mag_lp(fr, 2200, 2))
+    return y * env_ad(len(y), 0.0, 10.0)
+
+
+def s_shaker(accent, scale, rng):
+    n = int(0.045 * scale * SR)
+    nz = fft_filter_padded(rng.standard_normal(n), lambda fr: mag_hp(fr, 4000, 2) * mag_lp(fr, 8000, 2))
+    return nz * env_ad(n, 0.004, 0.012) * accent
+
+
+RECIPES = {"pip": s_pip, "tok": s_tok, "plip": s_plip, "boing": s_boing, "music-box": s_music_box,
+           "kalimba": s_kalimba, "eep": s_eep, "ribbit": s_ribbit, "hoo": s_hoo}
+
+# variant pitch pools (all in C D E G A; ribbit and hoo glide to the next set note down)
+POOLS = {"pip": [79, 81, 84], "tok": [72, 74, 76, 79, 81], "plip": [81, 84, 88, 91, 93],
+         "boing": [45], "music-box": [72, 76, 79], "kalimba": [76, 79, 81], "eep": [91, 93],
+         "ribbit": [57], "hoo": [64]}
+
+
+def body_rms(y):
+    a = np.abs(y if y.ndim == 1 else y.mean(axis=1))
+    k = max(1, int(0.005 * SR))
+    sm = np.convolve(a, np.ones(k) / k, mode="same")
+    mask = sm > 0.1 * sm.max()
+    v = y[mask]
+    return float(np.sqrt((v ** 2).mean()))
+
+
+class Palette:
+    def __init__(self, seed, disabled):
+        self.rng = np.random.default_rng(seed)
+        self.disabled = set(disabled)
+        self.variants = {}
+        self.cache = {}
+        for name, pool in POOLS.items():
+            r = np.random.default_rng(seed + sum(map(ord, name)))
+            picks = list(r.choice(pool, size=3, replace=False)) if len(pool) >= 3 else [pool[i % len(pool)] for i in range(3)]
+            if name == "pip":
+                picks = [79, 81, 84]                         # the brief names G5 / A5 / C6
+            if name == "kalimba":
+                picks = [76, 79, 81]                         # E G A ostinato
+            scales = list(1 + r.uniform(-0.04, 0.04, size=3))
+            self.variants[name] = [(int(p), float(s), int(r.integers(1 << 30))) for p, s in zip(picks, scales)]
+
+    def on(self, name):
+        return name not in self.disabled
+
+    def render(self, name, midi, scale, vseed, **kw):
+        key = (name, midi, round(scale, 6), vseed, tuple(sorted(kw.items())))
+        if key not in self.cache:
+            y = RECIPES[name](midi, scale, np.random.default_rng(vseed), **kw)
+            self.cache[key] = y / max(body_rms(y), 1e-9)       # unit body RMS
+        return self.cache[key]
+
+    def best(self, name, chroma, k=1, shift=0):
+        vs = self.variants[name]
+        order = sorted(range(len(vs)), key=lambda i: (-pc_fit(chroma, vs[i][0]), i))
+        return [vs[i] for i in order[:k]]
+
+    def note(self, name, midi, idx=0, **kw):
+        _, scale, vseed = self.variants[name][idx % 3]
+        return self.render(name, midi, scale, vseed, **kw)
+
+
+def make_swell(chords_src, src_bar, size):
+    """Swell: one bar of Spencer's chords stem, reversed, through the room, fading up to the downbeat."""
+    seg = chords_src[barf(src_bar): barf(src_bar + 1)][::-1].copy()
+    n = len(seg)
+    pad = np.concatenate([np.zeros((int(0.5 * SR), 2)), seg, np.zeros((int(2 * SR), 2))])
+    board = Pedalboard([Reverb(room_size=size, damping=0.5, wet_level=1.0, dry_level=0.0, width=0.7)])
+    wet = pb_run(board, pad)[int(0.5 * SR): int(0.5 * SR) + n] * reverb_gain(size)
+    y = 0.5 * seg + 0.8 * wet
+    u = np.linspace(0, 1, n)
+    y *= (u ** 2.2)[:, None]
+    f = int(0.012 * SR)
+    y[-f:] *= np.linspace(1, 0, f)[:, None]
+    y = fft_filter_padded(y, lambda fr: mag_hp(fr, 150, 2) * mag_lp(fr, 6000, 2))
+    return y / max(body_rms(y), 1e-9)
+
+
+def make_lachop(melody_src, notes, seed):
+    """la-chop: 240 ms of Spencer's melody at note onsets, resampled +12 (to 120 ms), through
+    two parallel band-passes (700 / 1100 Hz, Q 4): a small 'la/da' syllable."""
+    r = np.random.default_rng(seed)
+    cand = [n for n in notes if n.midi % 12 in PITCH_SET and n.dur >= 1.5]
+    picks = sorted(r.choice(len(cand), size=min(3, len(cand)), replace=False).tolist())
+    out = []
+    six = BAR / 16
+    m = melody_src.mean(axis=1)
+    for i in picks:
+        nt = cand[i]
+        scale = 1 + r.uniform(-0.04, 0.04)
+        a = int(round(nt.slot * six))
+        seg = m[a: a + int(0.240 * scale * SR)]
+        seg = signal.resample_poly(seg, 1, 2)
+        bp = lambda f, c: 1.0 / np.sqrt(1 + (4 * (f / c - c / np.maximum(f, 1e-9))) ** 2)
+        y = fft_filter_padded(seg, lambda f: bp(f, 700) + 0.8 * bp(f, 1100))
+        y *= env_ad(len(y), 0.004, 0.06)
+        out.append((nt.midi + 12, y / max(body_rms(y), 1e-9)))
+    return out
+
+
+# ----------------------------------------------------------------------------- render helpers
+
+@dataclass
+class Mix:
+    n: int
+    dry: np.ndarray = None
+    send: np.ndarray = None
+    events: list = field(default_factory=list)
+
+    def __post_init__(self):
+        self.dry = np.zeros((self.n, 2))
+        self.send = np.zeros((self.n, 2))
+        self.fx = np.zeros((self.n, 2))      # sample-palette hits only, for the level check
+
+    def add(self, x, send_db=None):
+        self.dry += x
+        if send_db is not None:
+            self.send += x * db(send_db)
+
+    def hit(self, name, snd, frame, gain, pan, send_db):
+        place(self.dry, snd, frame, gain, pan)
+        place(self.fx, snd, frame, gain, pan)
+        place(self.send, snd, frame, gain * db(send_db), pan)
+        mono = snd if snd.ndim == 1 else snd.mean(axis=1) * np.sqrt(2)
+        own = fft_filter_padded(mono, lambda f: mag_hp(f, 200, 2)) ** 2
+        k = min(len(own), int(0.1 * SR))                       # loudest 100 ms of the sound
+        loud = np.sqrt(np.convolve(own, np.ones(k) / k, mode="valid").max())
+        self.events.append({"sound": name, "frame": int(frame), "bar": round(frame / BAR + 1, 3),
+                            "rms": float(gain * np.sqrt(0.5) * loud)})
+
+    def fx_levels(self):
+        """Median level of each palette sound (over its own length) against the rest of the mix over
+        the bar around it, both high-passed at 200 Hz so the sub bass does not hide the comparison (dB)."""
+        hp = lambda f: mag_hp(f, 200, 2)
+        bed = fft_filter(self.dry - self.fx, hp)
+        out = {}
+        half = int(BAR / 2)
+        for e in self.events:
+            ctx = (e["frame"] + np.arange(-half, half)) % self.n
+            a = e["rms"]
+            b = np.sqrt((bed[ctx] ** 2).mean())
+            out.setdefault(e["sound"], []).append(todb(a / max(b, 1e-9)))
+        return {k: round(float(np.median(v)), 1) for k, v in sorted(out.items())}
+
+
+def melody_line(notes, src_bar0, nbars, octave, keep=None, src_len_bars=16):
+    """Notes of the transcription for source bars [src_bar0, src_bar0+nbars), as (rel16, midi, dur16)."""
+    out = []
+    for nt in notes:
+        b = nt.slot // 16
+        rel = (b - src_bar0) % src_len_bars
+        if rel >= nbars:
+            continue
+        if keep is not None and (nt.slot % 16) not in keep:
+            continue
+        out.append((rel * 16 + nt.slot % 16, nt.midi + 12 * octave, nt.dur))
+    out.sort()
+    # duration: until the next kept note, max one beat and a half
+    res = []
+    for i, (s, m, d) in enumerate(out):
+        nxt = out[i + 1][0] if i + 1 < len(out) else s + 8
+        res.append((s, m, min(nxt - s, 6)))
+    return res
+
+
+def play_line(mix, pal, line, dst_bar0, gain, send_db, pan=0.0, name="music-box"):
+    six = BAR / 16
+    for i, (s, m, d) in enumerate(line):
+        dur = d * six / SR
+        snd = pal.render("music-box", m, 1.0, 11 + i % 3, dur=round(dur, 4))
+        mix.hit(name, snd, barf(dst_bar0) + int(round(s * six)), gain, pan, send_db)
+
+
+# ----------------------------------------------------------------------------- the build
+
+def build(args):
+    disabled = [s.strip() for s in (args.without or "").split(",") if s.strip()]
+    bad = [s for s in disabled if s not in ALL_SAMPLES]
+    if bad:
+        sys.exit(f"unknown sample(s) for --without: {bad}; choose from {ALL_SAMPLES}")
+    pal = Palette(args.seed, disabled)
+    report = {"brief": "artifacts/qa-2026-11-28-music/MUSIC-BRIEF.md", "seed": args.seed, "bpm": BPM,
+              "bar_frames": BAR, "disabled_samples": disabled, "notes": []}
+
+    print("loading stems")
+    main = {k: load_mp3(os.path.join(SRC_MAIN, f)) for k, f in [
+        ("drums", "[stem]maindrumloop.mp3"), ("bass", "[stem]-mainbass.mp3"), ("chords", "[stem]mainchords.mp3"),
+        ("melody", "[stem]-mainmelody.mp3"), ("lead2", "[stem]-mainlead2.mp3")]}
+    deck = {k: load_mp3(os.path.join(SRC_DECK, f)) for k, f in [
+        ("drums", "[stem]gameboydrums.mp3"), ("chords", "[stem]gameboychords.mp3"), ("lead", "[stem]gameboylead.mp3")]}
+    ref_g, _ = sf.read(REF_GARDEN, dtype="float64", always_2d=True)
+    ref_d, _ = sf.read(REF_DECK, dtype="float64", always_2d=True)
+
+    offs = measure_offset(ref_g, {k: main[k] for k in ("drums", "chords", "melody")})
+    offs.update({"deck_" + k: v for k, v in measure_offset(ref_d, deck).items()})
+    off = offs["drums"][0]
+    for k, (o, sc) in offs.items():
+        print(f"  offset {k}: {o} frames (score {sc:.2f})")
+        if sc > 0.15 and abs(o - off) > 48:
+            sys.exit(f"stem {k} offset {o} disagrees with drums {off}; refusing to guess")
+    report["stem_offset_frames"] = off
+    nbars = {"drums": 32, "bass": 32, "chords": 32, "melody": 16, "lead2": 8}
+    G = {}
+    for k, x in main.items():
+        G[k], miss = grid_stem(x, off, nbars[k])
+        report["notes"].append(f"main {k}: cut at frame {off}, {miss} frames short of the grid, tail filled")
+    D = {}
+    for k, x in deck.items():
+        D[k], miss = grid_stem(x, off, 8)
+        report["notes"].append(f"deck {k}: cut at frame {off}, {miss} frames short of the grid, tail filled")
+
+    print("transcribing melody and deck lead")
+    mel_notes = transcribe(G["melody"], 16)
+    deck_notes = transcribe(D["lead"], 8)
+    chroma_main = bar_chroma(G["chords"], 32)
+    chroma_deck = bar_chroma(D["chords"], 8)
+    report["transcription"] = {
+        "melody_bars_1_2": [(n.slot, librosa.midi_to_note(n.midi)) for n in mel_notes if n.slot < 32],
+        "deck_lead_bars_1_2": [(n.slot, librosa.midi_to_note(n.midi)) for n in deck_notes if n.slot < 32]}
+
+    print("processing stems")
+    drums_full, dinfo = drum_chain(G["drums"], "garden")
+    drums_tops = fft_filter(drums_full, lambda f: mag_hp(f, 250, 2)) * db(-6)
+    bass_m = fft_filter(G["bass"].mean(axis=1), lambda f: mag_hp(f, 35, 2))
+    pk = np.abs(bass_m).max()
+    harm = fft_filter(np.tanh(4 * bass_m / pk), lambda f: mag_hp(f, 120, 2) * mag_lp(f, 500, 2))
+    harm *= np.sqrt((bass_m ** 2).mean()) / np.sqrt((harm ** 2).mean()) * db(-10)
+    bass_day = stereo(bass_m + harm)
+    bass_night = stereo(bass_m) * db(-3)
+    chords = fft_filter(G["chords"], lambda f: mag_hp(f, 110, 2)) * db(1)
+
+    def lead_proc(x, gain_db):
+        m, s = ms_split(x)
+        y = ms_join(m, s * db(-8)) * db(gain_db)
+        return fft_filter(y, lambda f: mag_lp(f, 7000, 2))
+
+    melody = lead_proc(G["melody"], 2)
+    lead2 = lead_proc(G["lead2"], 0)
+    report["mono_loss_db"] = {
+        "melody_before": round(mono_loss_db(G["melody"]), 2), "melody_after": round(mono_loss_db(melody), 2),
+        "lead2_before": round(mono_loss_db(G["lead2"]), 2), "lead2_after": round(mono_loss_db(lead2), 2)}
+    report["drums_garden"] = dinfo
+
+    def active_rms(x):
+        e = (x ** 2).mean(axis=1)
+        k = int(0.1 * SR)
+        blocks = e[: (len(e) // k) * k].reshape(-1, k).mean(axis=1)
+        thr = blocks.max() * db(-30) ** 2
+        return float(np.sqrt(blocks[blocks > thr].mean()))
+
+    REF = active_rms(melody)
+    rel = lambda d: REF * db(d) / np.sqrt(0.5)   # unit-body-RMS mono sound -> dB under the melody
+
+    # ---------------------------------------------------------------- DAY
+    print("arranging day")
+    day = Mix(N_DAY)
+    sp = lambda b: PHRASE_SRC[(b - 1) // 8] * 8 + (b - 1) % 8     # source bar (0-based) of loop bar b
+    drum_mode = {}
+    for b in range(1, 65):
+        sec = (b - 1) // 8
+        drum_mode[b] = ["tops", "full", "full", "full", "none", "tops", "full", "full"][sec]
+    blocks = [Block(drums_tops if drum_mode[b] == "tops" else drums_full, sp(b), b - 1, 1)
+              for b in range(1, 65) if drum_mode[b] != "none"]
+    drums_day = assemble(N_DAY, blocks)
+    mutes = [(pos(b, 4), pos(b + 1, 1)) for b in (8, 24, 56)] + [(pos(64, 3), N_DAY)]
+    drums_day = gate(drums_day, mutes)
+    day.add(drums_day, -24)
+
+    bed = lambda p: db(C1_BED_DB) if p == 4 else db(A1_BED_DB) if p == 0 else 1.0
+    bass_blocks = [Block(bass_day, PHRASE_SRC[p] * 8, p * 8, 8, bed(p)) for p in range(8)]
+    day.add(assemble(N_DAY, bass_blocks))
+
+    chords_arr = assemble(N_DAY, [Block(chords, PHRASE_SRC[p] * 8, p * 8, 8, bed(p)) for p in range(8)])
+
+    def c1_sweep(x):
+        """C1 chords: LP sweeping 500 Hz to open over bars 33-40 (STFT magnitude mask, zero-phase).
+        Outside C1 the mask is 1, so the STFT round trip leaves the audio unchanged."""
+        a, b = pos(33), pos(41)
+        nfft, hop = 4096, 1024
+        margin = 4 * nfft
+        idx = np.arange(a - margin, b + margin) % len(x)
+        out = x.copy()
+        keep = np.arange(margin // 2, len(idx) - margin // 2)
+        for ch in range(2):
+            seg = x[idx, ch]
+            f, t, Z = signal.stft(seg, fs=SR, window="hann", nperseg=nfft, noverlap=nfft - hop,
+                                  boundary=None, padded=False)
+            tf = (t * SR - margin) / (b - a)                   # 0..1 across C1
+            fc = 500 * (20000 / 500) ** np.clip(tf, 0, 1)
+            mask = 1.0 / np.sqrt(1 + (f[:, None] / fc[None, :]) ** 6)
+            mask = np.where((tf >= 0) & (tf < 1), mask, 1.0)
+            with warnings.catch_warnings():       # NOLA fails only at the cropped margins
+                warnings.simplefilter("ignore")
+                _, y = signal.istft(Z * mask, fs=SR, window="hann", nperseg=nfft, noverlap=nfft - hop, boundary=False)
+            out[idx[keep], ch] = y[keep]
+        return out
+
+    chords_day = c1_sweep(chords_arr)
+    day.add(chords_day, -18)
+
+    mel_bars = [b for b in range(1, 65) if (b <= 16) or (17 <= b <= 20) or (25 <= b <= 28) or (49 <= b <= 64)]
+    mel_blocks = [Block(melody, (b - 1) % 16, b - 1, 1) for b in mel_bars]
+    melody_day = assemble(N_DAY, mel_blocks)
+    day.add(melody_day, -14)
+
+    l2_blocks = [Block(lead2, (b - 1) % 8, b - 1, 1) for b in list(range(21, 25)) + list(range(29, 33))]
+    l2_blocks += [Block(balance(lead2, 0.25), (b - 1) % 8, b - 1, 1, db(-5)) for b in range(57, 65)]
+    day.add(assemble(N_DAY, l2_blocks), -12)
+
+    # day samples
+    SEND_S = -10
+    chroma_of = lambda b: chroma_main[sp(b)]
+    pan_cycle = [0.4, -0.4]
+    pc_i = [0]
+
+    def nextpan(scale=1.0):
+        pc_i[0] += 1
+        return pan_cycle[pc_i[0] % 2] * scale
+
+    if pal.on("pip"):
+        for k, b in enumerate((4, 12, 36, 44, 60)):
+            v = pal.best("pip", chroma_of(b), k=2)
+            v = v if k % 2 == 0 else v[::-1]
+            p = nextpan()
+            for j, (m, s, vs) in enumerate(v):
+                day.hit("pip", pal.render("pip", m, s, vs), pos(b, 4.5 + 0.25 * j), rel(-10), p, SEND_S)
+    if pal.on("tok"):
+        for b in list(range(1, 9)) + list(range(33, 41)):
+            for bt in (1.5, 2.5, 3.5, 4.5):
+                if b in (8,) and bt >= 4:
+                    continue
+                m, s, vs = pal.variants["tok"][int(bt) % 2]
+                day.hit("tok", pal.render("tok", m, s, vs), pos(b, bt), rel(-15), nextpan(0.75), SEND_S)
+        for b in (8, 24, 56):
+            fill = sorted(pal.variants["tok"], key=lambda v: -v[0])
+            for j, bt in enumerate((4.0, 4 + 1 / 3, 4 + 2 / 3)):
+                m, s, vs = fill[j]
+                day.hit("tok-fill", pal.render("tok", m, s, vs), pos(b, bt), rel(-11), (-0.3, 0.0, 0.3)[j], SEND_S)
+    if pal.on("plip"):
+        for b in (8, 24, 40):
+            v = pal.best("plip", chroma_of(b), k=2)
+            beats = (4 + 1 / 6, 4.5) if b in (8, 24) else (4.0, 4.375)
+            p = nextpan(0.9)
+            for j, (m, s, vs) in enumerate(v):
+                day.hit("plip", pal.render("plip", m, s, vs), pos(b, beats[j]), rel(-11), p * (1 - 2 * j), SEND_S)
+    if pal.on("boing"):
+        for b in (16, 48):
+            m, s, vs = pal.variants["boing"][b % 3]
+            day.hit("boing", pal.render("boing", m, s, vs), pos(b, 4), rel(-12), -0.2 if b == 16 else 0.2, SEND_S)
+    if pal.on("swell"):
+        sw = make_swell(chords, 31, 0.25)
+        for b in (16, 32, 48, 64):
+            day.hit("swell", sw, pos(b, 1), rel(-10) * np.sqrt(0.5), 0.0, SEND_S)
+    if pal.on("music-box"):
+        line = melody_line(mel_notes, 8, 8, +1)
+        play_line(day, pal, line, 40, rel(-4), -14)
+    if pal.on("shaker"):
+        r = np.random.default_rng(args.seed + 8)
+        six = BAR / 16
+        for b in list(range(17, 33)) + list(range(49, 65)):
+            for k in range(16):
+                swing = 0.1 * six if k % 2 == 1 else 0.0
+                accent = db(6) if k in (4, 12) else db(r.uniform(-1.5, 1.5))
+                snd = s_shaker(1.0, 1 + r.uniform(-0.04, 0.04), np.random.default_rng(int(r.integers(1 << 30))))
+                snd = snd / max(body_rms(snd), 1e-9)
+                day.hit("shaker", snd, pos(b) + int(round(k * six + swing)), rel(-24) * accent, 0.3 if k % 4 else -0.3, SEND_S)
+    if pal.on("kalimba"):
+        cyc = [76, 79, 81]
+        i = 0
+        for b in (33, 34, 37, 38, 57, 58, 61, 62):
+            for e8 in range(8):
+                m = cyc[i % 3]
+                i += 1
+                snd = pal.note("kalimba", m, i)
+                acc = db(0) if e8 % 2 == 0 else db(-3)
+                day.hit("kalimba", snd, pos(b, 1 + e8 * 0.5), rel(-11) * acc, 0.25 if e8 % 2 else -0.25, SEND_S)
+    if pal.on("eep"):
+        for b, bt in ((31, 4.5), (63, 2.5)):
+            m, s, vs = pal.best("eep", chroma_of(b), k=1)[0]
+            day.hit("eep", pal.render("eep", m, s, vs), pos(b, bt), rel(-14), 0.4, SEND_S)
+    if pal.on("la-chop"):
+        chops = make_lachop(G["melody"], mel_notes, args.seed + 3)
+        for b in (34, 38, 62):
+            order = sorted(range(len(chops)), key=lambda i: -pc_fit(chroma_of(b), chops[i][0]))
+            for j, bt in enumerate((2.5, 3.0, 4.0)):
+                m, y = chops[order[(0, 1, 0)[j] % len(order)]]
+                day.hit("la-chop", y, pos(b, bt), rel(-11), (-0.3, 0.3, -0.1)[j], SEND_S)
+        report["la_chop_pitches"] = [librosa.midi_to_note(m) for m, _ in chops]
+
+    print("  day room + bus")
+    day_wet = room(day.send, 0.25)
+    day_mix = day.dry + day_wet
+    day_mix, glue_day = glue(day_mix)
+    shelf = 0.0
+    while hf_share(day_mix) > 0.04 and shelf > -3.0:
+        shelf -= 0.5
+        day_mix = fft_filter(day_mix, lambda f: mag_rbj(f, "highshelf", 6000, -0.5, 0.707))
+    if shelf:
+        report["notes"].append(f"day: {shelf} dB master shelf at 6 kHz to keep the share above 6 kHz under 4%")
+    day_out = finish(day_mix, -17.6, -1.5)
+    report["glue"] = {"day": glue_day}
+
+    # ---------------------------------------------------------------- NIGHT
+    print("arranging night")
+    night = Mix(N_DAY)
+    night.add(assemble(N_DAY, [Block(bass_night, PHRASE_SRC[p] * 8, p * 8, 8, bed(p)) for p in range(8)]))
+    chords_night = c1_sweep(fft_filter(chords_arr, lambda f: mag_lp(f, 1800, 2)))
+    night.add(chords_night, -12)
+    mel_night = fft_filter(melody_day, lambda f: mag_lp(f, 1200, 2)) * db(-10)
+    night.add(mel_night, -10)
+    NSEND = -8
+    if pal.on("music-box"):
+        for b in mel_bars:
+            line = melody_line(mel_notes, (b - 1) % 16, 1, +1, keep={0, 4, 8})
+            play_line(night, pal, line, b - 1, rel(-2), NSEND)
+        play_line(night, pal, melody_line(mel_notes, 8, 8, +1), 40, rel(-4), NSEND)
+    # lead2 ghost: bar-wise reversed (so each bar stays on its chord), room only
+    ghost = np.zeros((N_DAY, 2))
+    for b in range(57, 65):
+        seg = lead2[barf((b - 1) % 8): barf((b - 1) % 8 + 1)][::-1]
+        place(ghost, seg, pos(b))
+    night.send += ghost * db(-4)
+    if pal.on("tok"):
+        for b in list(range(17, 33)) + list(range(49, 65)):
+            for bt, idx in ((2, 0), (4, 1)):
+                v = sorted(pal.variants["tok"], key=lambda q: -q[0])[0 if idx == 0 else -1]
+                night.hit("tok-ticktock", pal.render("tok", *v), pos(b, bt), rel(-20), (0.2, -0.2)[idx], NSEND)
+    if pal.on("ribbit"):
+        for b, bt, p in ((12, 2.5, -0.4), (44, 3.5, 0.4)):
+            m, s, vs = pal.variants["ribbit"][b % 3]
+            night.hit("ribbit", pal.render("ribbit", m, s, vs), pos(b, bt), rel(-12), p, NSEND)
+    if pal.on("hoo"):
+        for b, bt, p in ((30, 2.0, 0.3), (62, 2.5, -0.3)):
+            m, s, vs = pal.variants["hoo"][b % 3]
+            night.hit("hoo", pal.render("hoo", m, s, vs), pos(b, bt), rel(-11), p, NSEND)
+    if pal.on("plip"):
+        for b in (8, 24, 40):
+            v = pal.best("plip", chroma_of(b), k=2)
+            for j, (m, s, vs) in enumerate(v):
+                night.hit("plip", pal.render("plip", m, s, vs), pos(b, (4.0, 4.375)[j]), rel(-15), (0.35, -0.35)[j], NSEND)
+    if pal.on("pip"):
+        for b in (4, 36, 60):
+            m, s, vs = pal.best("pip", chroma_of(b), k=1)[0]
+            night.hit("pip", pal.render("pip", m - 12, s, vs), pos(b, 4.5), rel(-14), 0.3, NSEND)
+
+    print("  night room + bus")
+    night_wet = room(night.send, 0.6)
+    night_mix = night.dry + night_wet
+    night_mix = fft_filter(night_mix, lambda f: mag_rbj(f, "highshelf", 5000, -3, 0.707))
+    night_mix, glue_night = glue(night_mix)
+    night_out = finish(night_mix, -20.6, -6.0)
+    report["glue"]["night"] = glue_night
+
+    # ---------------------------------------------------------------- POCKET DECK
+    print("arranging pocket deck")
+    ddrums, dinfo2 = drum_chain(D["drums"], "deck")
+    report["drums_deck"] = dinfo2
+    dtops = fft_filter(ddrums, lambda f: mag_hp(f, 250, 2)) * db(-6)
+    dchords = D["chords"].copy()
+    dlead = D["lead"] * db(-2)
+    if mono_loss_db(dlead) < -1.0:
+        m, s = ms_split(dlead)
+        dlead = ms_join(m, s * db(-8))
+    REFD = active_rms(dlead)
+    reld = lambda d: REFD * db(d) / np.sqrt(0.5)
+    dk = Mix(N_DECK)
+    blocks = [Block(dtops, 0, 0, 8)] + [Block(ddrums, 0, p * 8, 8, db(-2) if p == 2 else 1.0) for p in (1, 2, 3)]
+    dk.add(assemble(N_DECK, blocks), -30)
+    dk_chords = assemble(N_DECK, [Block(dchords, 0, p * 8, 8, db(1.5) if p == 2 else 1.0) for p in range(4)])
+    dk.add(dk_chords, -24)
+    lead_arr = assemble(N_DECK, [Block(dlead, 0, p * 8, 8) for p in (0, 1, 3)])
+    gaps = [(pos(b, 3), pos(b + 1, 1)) for b in (26, 28, 30)]
+    lead_arr_g = gate(lead_arr, gaps)
+    echo = np.roll(lead_arr, int(round(0.75 * BEAT)), axis=0) * db(-12) + np.roll(lead_arr, int(round(1.5 * BEAT)), axis=0) * db(-18)
+    echo = gate(echo, [(0, gaps[0][0])] + [(gaps[i][1], gaps[i + 1][0]) for i in range(len(gaps) - 1)] + [(gaps[-1][1], N_DECK)])
+    dk.add(lead_arr_g + echo, -20)
+    DS = -16
+    chroma_d = lambda b: chroma_deck[(b - 1) % 8]
+    if pal.on("tok"):
+        for b in range(1, 9):
+            for bt in (1.5, 2.5, 3.5, 4.5):
+                m, s, vs = pal.variants["tok"][int(bt) % 2]
+                dk.hit("tok", pal.render("tok", m, s, vs), pos(b, bt), reld(-16), nextpan(0.75), DS)
+    if pal.on("pip"):
+        for b in (12, 16):
+            v = pal.best("pip", chroma_d(b), k=2)
+            p = nextpan()
+            for j, (m, s, vs) in enumerate(v):
+                dk.hit("pip", pal.render("pip", m, s, vs), pos(b, 4.5 + 0.25 * j), reld(-11), p, DS)
+    if pal.on("kalimba"):
+        for b in (17, 19, 21, 23, 24):
+            fig = [72, 76, 79] if b != 24 else [79, 76, 72]
+            for j, m in enumerate(fig):
+                dk.hit("kalimba", pal.note("kalimba", m, j), pos(b, 3 + 0.5 * j), reld(-7), (-0.25, 0.0, 0.25)[j], DS)
+    if pal.on("plip"):
+        for b in (20, 24):
+            v = pal.best("plip", chroma_d(b), k=2)
+            for j, (m, s, vs) in enumerate(v):
+                dk.hit("plip", pal.render("plip", m, s, vs), pos(b, (4.5, 4.875)[j]), reld(-12), (0.35, -0.35)[j], DS)
+    if pal.on("swell"):
+        dsw = make_swell(dchords, 7, 0.25)
+        dk.hit("swell", dsw, pos(32, 1), reld(-11) * np.sqrt(0.5), 0.0, DS)
+    print("  deck room + bus")
+    deck_mix = dk.dry + room(dk.send, 0.25)
+    deck_mix = fft_filter(deck_mix, lambda f: mag_rbj(f, "peak", 3000, -2, 0.7))
+    deck_mix, glue_deck = glue(deck_mix)
+    deck_target = round(lufs(ref_d), 1)
+    deck_out = finish(deck_mix, deck_target, -1.5)
+    report["glue"]["deck"] = glue_deck
+
+    # ---------------------------------------------------------------- DECK LITE
+    print("arranging deck lite")
+    lt = Mix(N_LITE)
+    lt.add(assemble(N_LITE, [Block(dchords, 0, p * 8, 8) for p in range(2)]), -24)
+    if pal.on("tok"):
+        for b in range(1, 17):
+            for bt, idx in ((2, 0), (4, 1)):
+                v = sorted(pal.variants["tok"], key=lambda q: -q[0])[0 if idx == 0 else -1]
+                lt.hit("tok-ticktock", pal.render("tok", *v), pos(b, bt), reld(-20), (0.2, -0.2)[idx], DS)
+    if pal.on("music-box"):
+        play_line(lt, pal, melody_line(deck_notes, 0, 8, +1, src_len_bars=8), 0, reld(-3), -16)
+        play_line(lt, pal, melody_line(deck_notes, 0, 8, +1, keep={0, 4, 8}, src_len_bars=8), 8, reld(-3), -16)
+    lite_mix = lt.dry + room(lt.send, 0.25)
+    lite_mix = fft_filter(lite_mix, lambda f: mag_rbj(f, "peak", 3000, -2, 0.7))
+    lite_mix, glue_lite = glue(lite_mix)
+    lite_out = finish(lite_mix, deck_target - 3.0, -1.5)
+    report["glue"]["lite"] = glue_lite
+
+    # ---------------------------------------------------------------- feature-sound checks
+    feats = {"pip", "la-chop", "plip", "boing", "eep", "ribbit", "hoo"}
+    warn = []
+    for label, mx in (("day", day), ("night", night)):
+        wins = {}
+        for e in mx.events:
+            if e["sound"] in feats:
+                w = int((e["bar"] - 1) // 2)
+                wins.setdefault(w, set()).add(e["sound"])
+        for w, s in sorted(wins.items()):
+            if len(s) > 1:
+                warn.append(f"{label}: bars {2 * w + 1}-{2 * w + 2} carry {sorted(s)}")
+    report["feature_density_warnings"] = warn
+    report["event_counts"] = {lab: _count(mx.events) for lab, mx in (("day", day), ("night", night), ("deck", dk), ("lite", lt))}
+    report["sample_vs_bed_db"] = {lab: mx.fx_levels() for lab, mx in (("day", day), ("night", night), ("deck", dk), ("lite", lt))}
+    print("sample level vs everything else in its window (dB):")
+    for lab, v in report["sample_vs_bed_db"].items():
+        print(f"  {lab}: {v}")
+
+    # ---------------------------------------------------------------- write
+    os.makedirs(OUT_DIR, exist_ok=True)
+    os.makedirs(SAMPLE_DIR, exist_ok=True)
+    os.makedirs(PREVIEW_DIR, exist_ok=True)
+    files = {"garden-day-v2": day_out, "garden-night-v2": night_out, "pocket-deck-v2": deck_out,
+             "pocket-deck-lite-v2": lite_out}
+    q = {}
+    for i, (name, x) in enumerate(files.items()):
+        qi = quantize16(x, args.seed + 100 + i)
+        sf.write(os.path.join(OUT_DIR, name + ".wav"), qi, SR, subtype="PCM_16")
+        q[name] = qi.astype(np.float64) / 32767.0
+    write_samples(pal, chords, dchords, G["melody"], mel_notes, args.seed)
+
+    print("measuring")
+    meas = {name: measure(x, name + ".wav") for name, x in q.items()}
+    report["files"] = meas
+
+    # dusk crossfade: midpoint loudness bump (brief section 3)
+    dayq, nightq = q["garden-day-v2"], q["garden-night-v2"]
+    l_day = meas["garden-day-v2"]["integrated_lufs"]
+    mid1 = lufs(np.sqrt(0.5) * dayq + np.sqrt(0.5) * nightq)
+    mid15 = lufs(np.sqrt(0.5) ** 1.5 * dayq + np.sqrt(0.5) ** 1.5 * nightq)
+    expo = 1.0 if mid1 - l_day <= 1.0 else 1.5
+    sweep = []
+    for w in np.linspace(0, 1, 11):
+        gd, gn = np.cos(w * np.pi / 2) ** expo, np.sin(w * np.pi / 2) ** expo
+        sweep.append(round(lufs(gd * dayq + gn * nightq) - l_day, 2))
+    report["crossfade"] = {
+        "day_lufs": l_day, "night_lufs": meas["garden-night-v2"]["integrated_lufs"],
+        "midpoint_equal_power_lufs": round(mid1, 2), "bump_equal_power_lu": round(mid1 - l_day, 2),
+        "midpoint_exp1_5_lufs": round(mid15, 2), "bump_exp1_5_lu": round(mid15 - l_day, 2),
+        "ship_exponent": expo, "loudness_vs_day_at_w_0_to_1": sweep,
+        "rule": "day = V*cos(w*pi/2)^e, night = V*sin(w*pi/2)^e; e = 1.5 only if the equal-power midpoint is > 1 LU over day"}
+
+    if not args.no_encode:
+        print("encoding OGG / MP3")
+        for name in files:
+            wav = os.path.join(OUT_DIR, name + ".wav")
+            ogg = os.path.join(OUT_DIR, name + ".ogg")
+            ffmpeg(["-i", wav, "-c:a", "libvorbis", "-q:a", "6", ogg])
+            dec = decode(ogg)
+            ref = q[name]
+            n = min(len(dec), len(ref))
+            err = dec[:n] - ref[:n]
+            meas[name]["ogg"] = {
+                "bytes": os.path.getsize(ogg), "decoded_frames": int(len(dec)),
+                "frames_match": bool(len(dec) == len(ref)),
+                "snr_vs_wav_db": round(todb(np.sqrt((ref[:n] ** 2).mean()) / max(np.sqrt((err ** 2).mean()), 1e-12)), 1),
+                "seam": seam_stats(dec), "true_peak_dbtp": round(true_peak_db(dec), 2)}
+            ffmpeg(["-i", wav, "-c:a", "libmp3lame", "-q:a", "2", os.path.join(PREVIEW_DIR, name + ".mp3")])
+        write_previews(q, ref_g, expo, args.seed)
+
+    with open(os.path.join(QA_DIR, "report.json"), "w", encoding="utf-8", newline="\n") as fh:
+        json.dump(report, fh, indent=2, default=_jsonable)
+        fh.write("\n")
+    update_manifest(meas, report)
+    print_summary(report)
+    return report
+
+
+def _count(events):
+    c = {}
+    for e in events:
+        c[e["sound"]] = c.get(e["sound"], 0) + 1
+    return dict(sorted(c.items()))
+
+
+def _jsonable(o):
+    if isinstance(o, (np.integer,)):
+        return int(o)
+    if isinstance(o, (np.floating,)):
+        return float(o)
+    if isinstance(o, np.bool_):
+        return bool(o)
+    raise TypeError(type(o))
+
+
+def ffmpeg(args):
+    cmd = ["ffmpeg", "-y", "-v", "error"] + args[:-1] + \
+          ["-fflags", "+bitexact", "-flags:a", "+bitexact", "-map_metadata", "-1", args[-1]]
+    subprocess.run(cmd, check=True)
+
+
+def decode(path):
+    out = subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-f", "f32le", "-ac", "2", "-ar", str(SR), "-"],
+                         check=True, capture_output=True).stdout
+    return np.frombuffer(out, dtype=np.float32).reshape(-1, 2).astype(np.float64)
+
+
+def write_mp3(x, path, seed):
+    tmp = path[:-4] + ".tmp.wav"
+    sf.write(tmp, quantize16(x, seed), SR, subtype="PCM_16")
+    ffmpeg(["-i", tmp, "-c:a", "libmp3lame", "-q:a", "2", path])
+    os.remove(tmp)
+
+
+def smoothstep(u):
+    u = np.clip(u, 0, 1)
+    return u * u * (3 - 2 * u)
+
+
+def dusk(day, night, total_s, fade_start_s, fade_s, expo):
+    n = int(total_s * SR)
+    idx = np.arange(n) % len(day)
+    t = np.arange(n) / SR
+    w = smoothstep((t - fade_start_s) / fade_s)
+    gd = np.cos(w * np.pi / 2) ** expo
+    gn = np.sin(w * np.pi / 2) ** expo
+    y = day[idx] * gd[:, None] + night[idx] * gn[:, None]
+    f = int(0.5 * SR)
+    y[-f:] *= np.linspace(1, 0, f)[:, None]
+    return y
+
+
+def write_previews(q, ref_g, expo, seed):
+    day, night = q["garden-day-v2"], q["garden-night-v2"]
+    # 60 s: day, 20 s smoothstep fade (brief's shortened preview) from 20 s, night to the end
+    write_mp3(dusk(day, night, 60, 20, 20, expo), os.path.join(PREVIEW_DIR, "dusk-crossfade-60s.mp3"), seed + 201)
+    # real dusk: 15 s day, the 120 s in-game fade, 15 s night
+    write_mp3(dusk(day, night, 150, 15, 120, expo), os.path.join(PREVIEW_DIR, "dusk-crossfade-120s-realtime.mp3"), seed + 202)
+    # before / after: old loop 30 s, then new day 30 s
+    n = 30 * SR
+    old = ref_g[np.arange(n) % len(ref_g)]
+    new = day[:n]
+    f = int(0.03 * SR)
+    old[-f:] *= np.linspace(1, 0, f)[:, None]
+    new = new.copy()
+    new[:f] *= np.linspace(0, 1, f)[:, None]
+    write_mp3(np.concatenate([old, np.zeros((int(0.4 * SR), 2)), new]), os.path.join(PREVIEW_DIR, "before-after.mp3"), seed + 203)
+
+
+def write_samples(pal, chords, dchords, melody_src, mel_notes, seed):
+    for name in ("pip", "tok", "plip", "boing", "music-box", "kalimba", "eep", "ribbit", "hoo"):
+        for i, (m, s, vs) in enumerate(pal.variants[name]):
+            y = pal.render(name, m, s, vs)
+            y = y / np.abs(y).max() * db(-3)
+            sf.write(os.path.join(SAMPLE_DIR, f"{name}-{i + 1}-{librosa.midi_to_note(m).replace('♯', '#')}.wav"),
+                     quantize16(y, seed + i), SR, subtype="PCM_16")
+    for i, (m, y) in enumerate(make_lachop(melody_src, mel_notes, seed + 3)):
+        y = y / np.abs(y).max() * db(-3)
+        sf.write(os.path.join(SAMPLE_DIR, f"la-chop-{i + 1}-{librosa.midi_to_note(m).replace('♯', '#')}.wav"),
+                 quantize16(y, seed + 10 + i), SR, subtype="PCM_16")
+    r = np.random.default_rng(seed + 8)
+    for i in range(3):
+        y = s_shaker(1.0, 1 + r.uniform(-0.04, 0.04), np.random.default_rng(int(r.integers(1 << 30))))
+        sf.write(os.path.join(SAMPLE_DIR, f"shaker-{i + 1}.wav"), quantize16(y / np.abs(y).max() * db(-3), seed + 20 + i), SR,
+                 subtype="PCM_16")
+    for tag, src, bar in (("garden", chords, 31), ("deck", dchords, 7)):
+        y = make_swell(src, bar, 0.25)
+        sf.write(os.path.join(SAMPLE_DIR, f"swell-{tag}.wav"), quantize16(y / np.abs(y).max() * db(-3), seed + 30), SR,
+                 subtype="PCM_16")
+
+
+def sha256(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def update_manifest(meas, report):
+    path = os.path.join(OUT_DIR, "manifest.json")
+    man = {}
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as fh:
+            man = json.load(fh)
+    v2 = {"date": "2026-11-28", "built_by": "scripts/build_music.py", "brief": report["brief"],
+          "credit": "Spencer's own stems (assets/audio/music-src), arranged and mixed; sample palette synthesized "
+                    "in the script or chopped from his stems. No downloads, no generated audio.",
+          "upload_format": "ogg (Vorbis q6); WAV is the master", "assets": {}}
+    for name, m in meas.items():
+        wav = os.path.join(OUT_DIR, name + ".wav")
+        entry = {"wav": name + ".wav", "wav_bytes": os.path.getsize(wav), "wav_sha256": sha256(wav),
+                 "frames": m["frames"], "seconds": m["seconds"], "sample_rate": SR, "channels": 2, "bits": 16,
+                 "loop": True, "integrated_lufs": m["integrated_lufs"], "true_peak_dbtp": m["true_peak_dbtp"],
+                 "loudness_range_lu": m["loudness_range_lu"]}
+        ogg = os.path.join(OUT_DIR, name + ".ogg")
+        if os.path.exists(ogg) and "ogg" in m:
+            entry.update({"ogg": name + ".ogg", "ogg_bytes": os.path.getsize(ogg), "ogg_sha256": sha256(ogg)})
+        v2["assets"][name] = entry
+    v2["crossfade"] = report["crossfade"]
+    man["v2"] = v2
+    with open(path, "w", encoding="utf-8", newline="\n") as fh:
+        json.dump(man, fh, indent=2)
+        fh.write("\n")
+
+
+def print_summary(report):
+    print("\n%-22s %10s %9s %8s %8s %6s %6s %7s %6s" % ("file", "frames", "seconds", "LUFS", "dBTP", "LRA", "mono", ">6k", "seam"))
+    for name, m in report["files"].items():
+        print("%-22s %10d %9.3f %8.2f %8.2f %6.2f %6.2f %6.1f%% %6.2f" % (
+            name, m["frames"], m["seconds"], m["integrated_lufs"], m["true_peak_dbtp"], m["loudness_range_lu"],
+            m["mono_loss_db"], 100 * m["share_above_6k"], m["seam"]["wrap_step_ratio_p99"]))
+        if "ogg" in m:
+            o = m["ogg"]
+            print("   ogg %d bytes, %d frames (match %s), SNR %.1f dB, seam step ratio %.2f, TP %.2f" % (
+                o["bytes"], o["decoded_frames"], o["frames_match"], o["snr_vs_wav_db"], o["seam"]["wrap_step_ratio_p99"],
+                o["true_peak_dbtp"]))
+    c = report["crossfade"]
+    print(f"\ncrossfade midpoint: equal-power {c['bump_equal_power_lu']:+.2f} LU vs day, exponent 1.5 "
+          f"{c['bump_exp1_5_lu']:+.2f} LU -> ship exponent {c['ship_exponent']}")
+    print("loudness vs day across w (0..1):", c["loudness_vs_day_at_w_0_to_1"])
+    print("mono loss:", report["mono_loss_db"])
+    if report["feature_density_warnings"]:
+        print("feature density:", report["feature_density_warnings"])
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--without", help="comma list of samples to leave out, e.g. boing,eep,la-chop")
+    ap.add_argument("--seed", type=int, default=SEED)
+    ap.add_argument("--no-encode", action="store_true", help="skip OGG/MP3 encoding and previews")
+    build(ap.parse_args())
+
+
+if __name__ == "__main__":
+    main()

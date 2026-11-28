@@ -1,0 +1,501 @@
+{
+  "brief": "artifacts/qa-2026-11-28-music/MUSIC-BRIEF.md",
+  "seed": 20261128,
+  "bpm": 117.0,
+  "bar_frames": 90461.53846153845,
+  "disabled_samples": [],
+  "notes": [
+    "main drums: cut at frame 2257, 2050 frames short of the grid, tail filled",
+    "main bass: cut at frame 2257, 2050 frames short of the grid, tail filled",
+    "main chords: cut at frame 2257, 2050 frames short of the grid, tail filled",
+    "main melody: cut at frame 2257, 1578 frames short of the grid, tail filled",
+    "main lead2: cut at frame 2257, 1341 frames short of the grid, tail filled",
+    "deck drums: cut at frame 2257, 1341 frames short of the grid, tail filled",
+    "deck chords: cut at frame 2257, 1341 frames short of the grid, tail filled",
+    "deck lead: cut at frame 2257, 1341 frames short of the grid, tail filled"
+  ],
+  "stem_offset_frames": 2257,
+  "transcription": {
+    "melody_bars_1_2": [
+      [
+        0,
+        "C4"
+      ],
+      [
+        4,
+        "E4"
+      ],
+      [
+        6,
+        "G4"
+      ],
+      [
+        7,
+        "G4"
+      ],
+      [
+        8,
+        "C5"
+      ],
+      [
+        10,
+        "G4"
+      ],
+      [
+        11,
+        "G4"
+      ],
+      [
+        12,
+        "E4"
+      ],
+      [
+        16,
+        "G4"
+      ],
+      [
+        18,
+        "A4"
+      ],
+      [
+        19,
+        "A4"
+      ],
+      [
+        20,
+        "G4"
+      ],
+      [
+        24,
+        "E4"
+      ],
+      [
+        26,
+        "G4"
+      ],
+      [
+        27,
+        "G4"
+      ],
+      [
+        28,
+        "E4"
+      ]
+    ],
+    "deck_lead_bars_1_2": [
+      [
+        0,
+        "C4"
+      ],
+      [
+        4,
+        "E4"
+      ],
+      [
+        7,
+        "G4"
+      ],
+      [
+        8,
+        "C5"
+      ],
+      [
+        11,
+        "G4"
+      ],
+      [
+        12,
+        "E4"
+      ],
+      [
+        16,
+        "F4"
+      ],
+      [
+        19,
+        "A4"
+      ],
+      [
+        20,
+        "F4"
+      ],
+      [
+        24,
+        "E4"
+      ],
+      [
+        27,
+        "G4"
+      ],
+      [
+        28,
+        "E4"
+      ]
+    ]
+  },
+  "mono_loss_db": {
+    "melody_before": -3.91,
+    "melody_after": -0.9,
+    "lead2_before": -2.94,
+    "lead2_after": -0.62
+  },
+  "drums_garden": {
+    "clip_depth_db": 6.5,
+    "crest_before_db": 18.06,
+    "crest_after_db": 12.5
+  },
+  "la_chop_pitches": [
+    "E5",
+    "G5",
+    "C5"
+  ],
+  "glue": {
+    "day": {
+      "threshold_db": -19.0,
+      "loudness_reduction_db": 1.71
+    },
+    "night": {
+      "threshold_db": -22.0,
+      "loudness_reduction_db": 1.83
+    },
+    "deck": {
+      "threshold_db": -22.0,
+      "loudness_reduction_db": 1.62
+    },
+    "lite": {
+      "threshold_db": -24.0,
+      "loudness_reduction_db": 1.61
+    }
+  },
+  "drums_deck": {
+    "clip_depth_db": 8.5,
+    "crest_before_db": 16.93,
+    "crest_after_db": 12.66
+  },
+  "feature_density_warnings": [],
+  "event_counts": {
+    "day": {
+      "boing": 2,
+      "eep": 2,
+      "kalimba": 64,
+      "la-chop": 9,
+      "music-box": 64,
+      "pip": 10,
+      "plip": 6,
+      "shaker": 512,
+      "swell": 4,
+      "tok": 63,
+      "tok-fill": 9
+    },
+    "night": {
+      "hoo": 2,
+      "music-box": 184,
+      "pip": 3,
+      "plip": 6,
+      "ribbit": 2,
+      "tok-ticktock": 64
+    },
+    "deck": {
+      "kalimba": 15,
+      "pip": 4,
+      "plip": 4,
+      "swell": 1,
+      "tok": 32
+    },
+    "lite": {
+      "music-box": 72,
+      "tok-ticktock": 32
+    }
+  },
+  "sample_vs_bed_db": {
+    "day": {
+      "boing": -10.9,
+      "eep": -15.7,
+      "kalimba": -6.8,
+      "la-chop": -4.1,
+      "music-box": 1.2,
+      "pip": -10.6,
+      "plip": -11.5,
+      "shaker": -26.8,
+      "swell": -9.7,
+      "tok": -13.9,
+      "tok-fill": -13.2
+    },
+    "night": {
+      "hoo": -6.5,
+      "music-box": 4.5,
+      "pip": -9.8,
+      "plip": -11.6,
+      "ribbit": -10.4,
+      "tok-ticktock": -19.2
+    },
+    "deck": {
+      "kalimba": 2.2,
+      "pip": -10.4,
+      "plip": -9.3,
+      "swell": -10.3,
+      "tok": -17.8
+    },
+    "lite": {
+      "music-box": 8.5,
+      "tok-ticktock": -14.4
+    }
+  },
+  "files": {
+    "garden-day-v2": {
+      "file": "garden-day-v2.wav",
+      "frames": 5789538,
+      "seconds": 131.282,
+      "integrated_lufs": -17.6,
+      "true_peak_dbtp": -4.45,
+      "sample_peak_dbfs": -4.47,
+      "loudness_range_lu": 2.79,
+      "mono_loss_db": -0.23,
+      "share_above_6k": 0.0024,
+      "seam": {
+        "rms_last50_db": -19.16,
+        "rms_first50_db": -20.2,
+        "wrap_step": [
+          273,
+          11
+        ],
+        "p99_step": [
+          1072,
+          1343
+        ],
+        "wrap_step_ratio_p99": 0.255,
+        "wrap_curvature_ratio_p99": 0.179,
+        "hf_seam_vs_median_barline_db": -11.91,
+        "hf_seam_vs_loudest_barline_db": -16.71,
+        "slope_last4ms_vs_first4ms": [
+          0.88,
+          8.13
+        ]
+      },
+      "ogg": {
+        "bytes": 3029819,
+        "decoded_frames": 5789538,
+        "frames_match": true,
+        "snr_vs_wav_db": 30.1,
+        "seam": {
+          "rms_last50_db": -19.16,
+          "rms_first50_db": -20.15,
+          "wrap_step": [
+            255,
+            1
+          ],
+          "p99_step": [
+            1053,
+            1314
+          ],
+          "wrap_step_ratio_p99": 0.242,
+          "wrap_curvature_ratio_p99": 0.163,
+          "hf_seam_vs_median_barline_db": -11.71,
+          "hf_seam_vs_loudest_barline_db": -16.66,
+          "slope_last4ms_vs_first4ms": [
+            0.93,
+            7.98
+          ]
+        },
+        "true_peak_dbtp": -4.42
+      }
+    },
+    "garden-night-v2": {
+      "file": "garden-night-v2.wav",
+      "frames": 5789538,
+      "seconds": 131.282,
+      "integrated_lufs": -20.6,
+      "true_peak_dbtp": -7.08,
+      "sample_peak_dbfs": -7.08,
+      "loudness_range_lu": 3.71,
+      "mono_loss_db": -0.33,
+      "share_above_6k": 0.0,
+      "seam": {
+        "rms_last50_db": -23.48,
+        "rms_first50_db": -20.37,
+        "wrap_step": [
+          5,
+          13
+        ],
+        "p99_step": [
+          591,
+          580
+        ],
+        "wrap_step_ratio_p99": 0.022,
+        "wrap_curvature_ratio_p99": 0.246,
+        "hf_seam_vs_median_barline_db": -3.24,
+        "hf_seam_vs_loudest_barline_db": -10.97,
+        "slope_last4ms_vs_first4ms": [
+          -2.01,
+          21.46
+        ]
+      },
+      "ogg": {
+        "bytes": 2312211,
+        "decoded_frames": 5789538,
+        "frames_match": true,
+        "snr_vs_wav_db": 32.8,
+        "seam": {
+          "rms_last50_db": -23.44,
+          "rms_first50_db": -20.34,
+          "wrap_step": [
+            44,
+            16
+          ],
+          "p99_step": [
+            592,
+            580
+          ],
+          "wrap_step_ratio_p99": 0.074,
+          "wrap_curvature_ratio_p99": 0.627,
+          "hf_seam_vs_median_barline_db": -3.0,
+          "hf_seam_vs_loudest_barline_db": -10.85,
+          "slope_last4ms_vs_first4ms": [
+            -2.18,
+            21.61
+          ]
+        },
+        "true_peak_dbtp": -7.1
+      }
+    },
+    "pocket-deck-v2": {
+      "file": "pocket-deck-v2.wav",
+      "frames": 2894769,
+      "seconds": 65.641,
+      "integrated_lufs": -18.91,
+      "true_peak_dbtp": -5.82,
+      "sample_peak_dbfs": -5.83,
+      "loudness_range_lu": 4.74,
+      "mono_loss_db": -0.15,
+      "share_above_6k": 0.0057,
+      "seam": {
+        "rms_last50_db": -52.88,
+        "rms_first50_db": -16.57,
+        "wrap_step": [
+          379,
+          370
+        ],
+        "p99_step": [
+          1160,
+          1396
+        ],
+        "wrap_step_ratio_p99": 0.327,
+        "wrap_curvature_ratio_p99": 0.065,
+        "hf_seam_vs_median_barline_db": -3.61,
+        "hf_seam_vs_loudest_barline_db": -5.88,
+        "slope_last4ms_vs_first4ms": [
+          2.81,
+          58.34
+        ]
+      },
+      "ogg": {
+        "bytes": 1324142,
+        "decoded_frames": 2894769,
+        "frames_match": true,
+        "snr_vs_wav_db": 31.1,
+        "seam": {
+          "rms_last50_db": -52.95,
+          "rms_first50_db": -16.52,
+          "wrap_step": [
+            450,
+            613
+          ],
+          "p99_step": [
+            1140,
+            1371
+          ],
+          "wrap_step_ratio_p99": 0.447,
+          "wrap_curvature_ratio_p99": 0.099,
+          "hf_seam_vs_median_barline_db": -3.46,
+          "hf_seam_vs_loudest_barline_db": -5.8,
+          "slope_last4ms_vs_first4ms": [
+            2.76,
+            57.4
+          ]
+        },
+        "true_peak_dbtp": -5.75
+      }
+    },
+    "pocket-deck-lite-v2": {
+      "file": "pocket-deck-lite-v2.wav",
+      "frames": 1447385,
+      "seconds": 32.821,
+      "integrated_lufs": -21.9,
+      "true_peak_dbtp": -9.03,
+      "sample_peak_dbfs": -9.04,
+      "loudness_range_lu": 2.73,
+      "mono_loss_db": -0.2,
+      "share_above_6k": 0.0001,
+      "seam": {
+        "rms_last50_db": -75.48,
+        "rms_first50_db": -20.47,
+        "wrap_step": [
+          16,
+          15
+        ],
+        "p99_step": [
+          634,
+          631
+        ],
+        "wrap_step_ratio_p99": 0.025,
+        "wrap_curvature_ratio_p99": 0.19,
+        "hf_seam_vs_median_barline_db": -7.23,
+        "hf_seam_vs_loudest_barline_db": -9.02,
+        "slope_last4ms_vs_first4ms": [
+          0.15,
+          17.4
+        ]
+      },
+      "ogg": {
+        "bytes": 579478,
+        "decoded_frames": 1447385,
+        "frames_match": true,
+        "snr_vs_wav_db": 36.5,
+        "seam": {
+          "rms_last50_db": -75.48,
+          "rms_first50_db": -20.42,
+          "wrap_step": [
+            105,
+            75
+          ],
+          "p99_step": [
+            635,
+            633
+          ],
+          "wrap_step_ratio_p99": 0.165,
+          "wrap_curvature_ratio_p99": 0.396,
+          "hf_seam_vs_median_barline_db": -7.23,
+          "hf_seam_vs_loudest_barline_db": -9.07,
+          "slope_last4ms_vs_first4ms": [
+            0.15,
+            16.62
+          ]
+        },
+        "true_peak_dbtp": -9.08
+      }
+    }
+  },
+  "crossfade": {
+    "day_lufs": -17.6,
+    "night_lufs": -20.6,
+    "midpoint_equal_power_lufs": -16.56,
+    "bump_equal_power_lu": 1.04,
+    "midpoint_exp1_5_lufs": -18.06,
+    "bump_exp1_5_lu": -0.46,
+    "ship_exponent": 1.5,
+    "loudness_vs_day_at_w_0_to_1": [
+      0.0,
+      0.13,
+      0.18,
+      0.09,
+      -0.12,
+      -0.46,
+      -0.92,
+      -1.46,
+      -2.04,
+      -2.6,
+      -3.0
+    ],
+    "rule": "day = V*cos(w*pi/2)^e, night = V*sin(w*pi/2)^e; e = 1.5 only if the equal-power midpoint is > 1 LU over day"
+  }
+}
