@@ -197,7 +197,7 @@ return function(server)
 		assert(select(2,r.send({kind="shake",tree=1}))=="Far","a shake from too far")
 		r.root=Vector3.new(tree.x+tree.trunk+1,4,tree.z)
 		assert(r.send({kind="shake",tree=1}))
-		assert(select(2,r.send({kind="shake",tree=1}))=="Rate","one shake a tree a minute or so")
+		assert(select(2,r.send({kind="shake",tree=1}))=="Rate","beta 42: at most one shake a tree every Shake.serverGap")
 		assert(r.eat())
 		assert(heart(r.state)==2 and r.saves==1 and r.fired[#r.fired].kind=="fed"and r.fired[#r.fired].xp==2)
 		-- The shake is used up: the next claim (a minute on) needs the wind or another shake.
@@ -208,30 +208,71 @@ return function(server)
 		assert(w.eat()and heart(w.state)==2)
 	end)
 
-	test("the host: a shake that drops two opens two claims (each within the minute's and the day's caps); never more than two",function()
-		assert(Fruit.shakeClaims(nil)==1 and Fruit.shakeClaims(0)==1 and Fruit.shakeClaims(2)==2 and Fruit.shakeClaims(9)==Fruit.MaxDrops
-			and Fruit.shakeClaims(1.5)==1 and Fruit.shakeClaims(0/0)==1 and Fruit.MaxDrops==2)
+	test("beta 42 E18: shake again and again, one fruit a shake; claims add up to the tree's slots per regrow, each once, each paid only within the minute's and the day's caps",function()
+		assert(Fruit.MaxDrops==1 and Fruit.shakeClaims(nil)==1 and Fruit.shakeClaims(0)==0 and Fruit.shakeClaims(1)==1
+			and Fruit.shakeClaims(2)==1 and Fruit.shakeClaims(9)==1 and Fruit.shakeClaims(1.5)==1 and Fruit.shakeClaims(0/0)==1
+			and Fruit.shakeClaims(-3)==0)
+		assert(Fruit.Shake.every==1.5 and Fruit.Shake.serverGap<=Fruit.Shake.every and Fruit.Shake.serverGap>0)
+		local budget=Fruit.shakeBudget(tree)
+		assert(budget==Fruit.slotsFor(tree.tree)and Fruit.shakeBudget(tree.tree)==budget)
 		local r=rig()
-		assert(r.send({kind="shake",tree=1,drops=2}))
-		assert(r.eat(),"the first fruit")
+		local function shake(drops)r.clock+=Fruit.Shake.serverGap;return r.send({kind="shake",tree=1,drops=drops})end
+		for n=1,budget do assert(shake(1),"shake "..n)end
+		assert(select(2,shake(1))=="Rate","past the tree's slots in one regrow: refused")
+		local rec=r.host.records[r.board]
+		assert(#rec.shaken[1]==budget and #rec.shakeAt[1]==budget,"one claim a shake, added up")
+		assert(r.eat(),"the first fruit pays")
 		assert(select(2,r.eat())=="Rate","the second inside the minute: the minute's cap")
-		local shake=r.host.records[r.board].shaken[1]
-		assert(shake and shake.left==1,"one claim left for the second fruit")
-		-- the second fruit's claim, inside the window and past the gap (a test gap)
-		r.host.records[r.board].paidAt=-math.huge;shake.at=r.clock-1
-		assert(r.eat(),"the second fruit")
-		assert(r.host.records[r.board].shaken[1]==nil,"both used")
-		r.host.records[r.board].paidAt=-math.huge
-		assert(select(2,r.eat())=="NoFruit","never a third")
-		assert(heart(r.state)==2*Fruit.XP)
-		-- one fruit (or an old client that says nothing): one claim
-		local o=rig()
-		assert(o.send({kind="shake",tree=1}))
-		assert(o.eat());o.host.records[o.board].paidAt=-math.huge
-		assert(select(2,o.eat())=="NoFruit")
-		local m=rig()
-		assert(m.send({kind="shake",tree=1,drops=50}))
-		assert(m.host.records[m.board].shaken[1].left==Fruit.MaxDrops,"capped")
+		assert(#rec.shaken[1]==budget-1,"a refused claim uses nothing")
+		rec.paidAt=-math.huge
+		assert(r.eat(),"the next fruit (past the minute)")
+		assert(#rec.shaken[1]==budget-2 and heart(r.state)==2*Fruit.XP)
+		-- an empty shake (nothing fell) opens nothing and spends nothing
+		local e=rig()
+		e.clock+=Fruit.Shake.serverGap
+		assert(e.send({kind="shake",tree=1,drops=0}))
+		assert(e.host.records[e.board].shaken[1]==nil and(e.host.records[e.board].shakeAt[1]==nil or #e.host.records[e.board].shakeAt[1]==0))
+		assert(select(2,e.eat())=="NoFruit")
+		-- claims last Window; the budget comes back after Shake.gap
+		local w=rig()
+		w.clock+=Fruit.Shake.serverGap;assert(w.send({kind="shake",tree=1}))
+		w.clock+=Fruit.Window+1
+		assert(select(2,w.eat())=="NoFruit","an old claim is gone")
+		local g=rig()
+		local function gshake()g.clock+=Fruit.Shake.serverGap;return g.send({kind="shake",tree=1})end
+		for _=1,budget do assert(gshake())end
+		assert(select(2,gshake())=="Rate")
+		g.clock+=Fruit.Shake.gap
+		assert(gshake(),"a regrow on: shakes again")
+	end)
+	test("beta 42 E18: a shake flood never opens more claims than the tree's slots per regrow, and never pays more than one a minute",function()
+		local r=rig()
+		local budget=Fruit.shakeBudget(tree)
+		local random=Random.new(42)
+		local accepted={}
+		local paidAt={}
+		local start=r.clock
+		while r.clock-start<600 do
+			r.clock+=random:NextNumber(0,1.2)
+			if random:NextNumber()<.7 then
+				local drops=({nil,0,1,2,50})[random:NextInteger(1,5)]
+				if r.send({kind="shake",tree=1,drops=drops})and Fruit.shakeClaims(drops)>0 then table.insert(accepted,r.clock)end
+			else
+				local before=heart(r.state)
+				r.eat()
+				if heart(r.state)>before then table.insert(paidAt,r.clock)end
+			end
+			local open=r.host.records[r.board].shaken[1]
+			assert(open==nil or #open<=budget,"open claims "..tostring(open and #open))
+		end
+		for i,t in ipairs(accepted)do
+			local inWindow=0
+			for j=i,#accepted do if accepted[j]-t<Fruit.Shake.gap then inWindow+=1 end end
+			assert(inWindow<=budget,"accepted shakes in one regrow: "..inWindow)
+			if i>1 then assert(t-accepted[i-1]>=Fruit.Shake.serverGap-1e-9,"two shakes too close")end
+		end
+		for i=2,#paidAt do assert(paidAt[i]-paidAt[i-1]>=Fruit.Gap,"paid twice in a minute")end
+		assert(#paidAt>=2 and #accepted>=budget,"the flood did shake and pay ("..#accepted..", "..#paidAt..")")
 	end)
 	test("the host: one a minute, twelve a day; the pet near the fruit, the player near; busy, no pet, off",function()
 		local r=rig({now=yes})
@@ -301,15 +342,26 @@ return function(server)
 		assert(near(Fruit.sizeAt(11.34,11,11.34),1)and near(Fruit.sizeAt(20,11,11.34),1))
 		local mid=Fruit.sizeAt(11.17,11,11.34)
 		assert(mid<tree and mid>1,"eases down")
-		-- Drops: the first on the second swing; a second .3 later about one shake in four.
-		local seconds=0
-		for count=1,2000 do
+		-- Drops: on the second swing; beta 42 E18: exactly one a shake.
+		for count=1,200 do
 			local t=Fruit.dropTimes(100,count)
-			assert(near(t[1],100+Fruit.Drops.first),"the second swing")
-			if t[2]then seconds+=1;assert(near(t[2]-t[1],Fruit.Drops.second))end
-			assert(#Fruit.dropTimes(100,count)==#t,"the same on a re-run")
+			assert(#t==1 and near(t[1],100+Fruit.Drops.first),"one, on the second swing")
 		end
-		assert(seconds>350 and seconds<650,"about one in four ("..seconds..")")
+	end)
+
+	test("beta 42 E20: the leaves' measured face (scripts/crown_fruit_surface.py) for the blossom crown: whole, in range, bilinear, wrapping round; other meshes none",function()
+		local s=Fruit.Surface.W7_Kit_Crown_Blossom__foliage_blossom
+		assert(s and #s.r==s.lats*s.az and s.lat0==Fruit.Canopy.seatFrom and s.lat0+s.step*(s.lats-1)==Fruit.Canopy.seatTo)
+		for _,v in ipairs(s.r)do assert(v>=.5 and v<=1.05,"a share of the ellipsoid: "..v)end
+		local mesh="W7_Kit_Crown_Blossom__foliage_blossom"
+		local function near(a,b)return math.abs(a-b)<1e-6 end
+		assert(near(Fruit.surfaceAt(mesh,0,10),s.r[1])and near(Fruit.surfaceAt(mesh,2*math.pi,10),s.r[1]),"a = 0 and a full turn")
+		assert(near(Fruit.surfaceAt(mesh,2*math.pi/s.az,15),s.r[s.az+2]),"the next column of the next row")
+		local mid=Fruit.surfaceAt(mesh,math.pi/s.az,12.5)
+		assert(near(mid,(s.r[1]+s.r[2]+s.r[s.az+1]+s.r[s.az+2])/4),"bilinear between")
+		assert(near(Fruit.surfaceAt(mesh,0,0),s.r[1])and near(Fruit.surfaceAt(mesh,0,90),s.r[(s.lats-1)*s.az+1]),"latitude clamps")
+		assert(Fruit.surfaceAt("W7_Kit_Crown_Round__foliage",0,20)==nil and Fruit.surfaceAt(mesh,0/0,20)==nil)
+		assert(Fruit.Canopy.hull>=.7 and Fruit.Canopy.hull<=.85,"the fallback near the measured mean")
 	end)
 
 	test("the host never errors and never pays a bad packet (a fuzz of 3,000)",function()

@@ -81,6 +81,7 @@ Beta (33), 2026-11-26: player scale (row 60). Beta (32), 2026-11-26: the first e
 
 | # | What | Beta | Try | Switch |
 |---|---|---|---|---|
+| - | **Beta (42) notes 18-21: shake a tree for one fruit each shake, the pet eats it; birds fly at a real pace and fade out; fruit up in the crowns; the stairs rock collides** | - | Shake a blossom tree with R again and again: one fruit each time till it's bare; your pet trots to each (even while following you). Watch birds land, go down to the lawn and leave: no jumps, no pop. Fruit sits up on the leaves. Walk into the boulder at the foot of the terrace stairs, then walk up the first step past it | `/alive fruit`, `/alive snack`, `/alive scene` (birds forage) |
 
 ## Scoped, not built
 

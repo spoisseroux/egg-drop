@@ -889,6 +889,7 @@ function Life:disable()
 	local folder=self.folder
 	self.folder,self.shown,self.birdPool,self.birdArt,self.flyPool,self.leafPool,self.bubblePool=nil,nil,nil,nil,nil,nil,nil
 	self.birds,self.flies,self.leaves,self.bubbles,self.birdStill,self.skitter=nil,nil,nil,nil,nil,nil
+	self.birdFade=nil
 	self.fruitPool,self.grove,self.loose,self.view,self.fruitOf,self.fruitCount=nil,nil,nil,nil,nil,0
 	self.firePool,self.fireflies,self.sceneParts,self.sceneFailed=nil,nil,nil,nil
 	self.shaken,self.shakeDrops,self.shakeReady,self.shakeLanded,self.shakeLeaves,self.crumbs,self.voices,self.fruitTrees=nil,nil,nil,nil,nil,nil,nil,nil
@@ -1131,11 +1132,12 @@ function Life:step(dt)
 				-- A nil frame (the legs in flight) parks that part: hidden.
 				for i,p in ipairs(pool)do if list[i]then put(p,list[i])else hide(p)end end
 			end
+			self:fadeBird(bird.slot,bird.fade or 0)
 			still[bird.slot]=if bird.still then bird else nil
 		end
 	end
 	for slot,pool in ipairs(self.birdPool)do
-		if not used[pool]then still[slot]=nil;for _,p in ipairs(pool)do hide(p)end end
+		if not used[pool]then still[slot]=nil;self:fadeBird(slot,0);for _,p in ipairs(pool)do hide(p)end end
 	end
 	for _,event in ipairs(self.birds:drain())do
 		if event.kind=="flush"then
@@ -1574,12 +1576,26 @@ local function ask(fn,...)
 	return if ok then value else nil
 end
 function Life:shakeBlocked()return ask(self.promptBlocked)==true end
--- The prompts on while a shake is allowed for me (now past the tree's rest); `on` false: every prompt off.
+-- Beta 42 E18: does a fruit still hang on grove crown i for the next shake (on the tree, not shaken loose or still
+-- growing back from a shake)?
+function Life:fruitLeft(i,now)
+	local grove=self.grove
+	local stems=grove and grove.stems and grove.stems[i]
+	if type(stems)~="table"or type(now)~="number"then return false end
+	local S=Fruit.Shake
+	for _,slot in ipairs(stems)do
+		local at=self.shaken and self.shaken[slot.key]
+		if(at==nil or now-at>=S.hidden+S.grow)and grove:hanging(slot.key,now)~=nil then return true end
+	end
+	return false
+end
+-- The prompts on while a shake is allowed for me (now past the tree's rest, a fruit on it); `on` false: every prompt off.
 function Life:promptStep(now,on)
 	local blocked,near,kind
 	if on~=false then blocked,near,kind=self:shakeBlocked(),ask(self.sayHiNear)==true,ask(self.inputKind)end
 	for i,entry in pairs(self.shakePrompts or {})do
 		local ready=on~=false and type(now)=="number"and now>=(self.shakeReady and self.shakeReady[i]or -math.huge)
+			and self:fruitLeft(i,now)
 		local want=Life.shakePromptWanted(ready,blocked,near,kind)
 		if want~=entry.on then entry.on=want;entry.prompt.Enabled=want end
 	end
@@ -1622,12 +1638,14 @@ function Life:stepShake(now,reduced,put)
 		end
 	end
 end
--- Beta 38 (3b): the fruit lets go on the second swing (GardenFruit.dropTimes) and one shake in four a second follows;
--- an empty tree still shakes (leaves only). Sounds: the shake layer, the rustles and, with fruit, a low creak and a
--- pluck per fruit; an empty shake is the shake and the rustles alone, a little lower. Returns the first plan.
+-- Beta 38 (3b): the fruit lets go on the second swing (GardenFruit.dropTimes); an empty tree still shakes (leaves
+-- only). Sounds: the shake layer, the rustles and, with fruit, a low creak and a pluck per fruit; an empty shake is the
+-- shake and the rustles alone, a little lower. Returns the first plan.
+-- Beta 42 E18: one fruit a shake, and the tree shakes again Shake.every seconds on while a fruit still hangs on it
+-- (Shake.emptyRest when none does, or under Reduced Motion).
 function Life:shake(i,crown,now,reduced,put)
 	local S,Sounds=Fruit.Shake,Fruit.Sounds
-	self.shakeReady[i]=now+S.hidden+S.grow
+	self.shakeReady[i]=now+S.emptyRest
 	local under=crown.position-Vector3.new(0,(typeof(crown.size)=="Vector3"and crown.size.Y or 4)*.25,0)
 	self.shakeCount+=1
 	-- What will fall (nothing falls under Reduced Motion: its sounds are the empty shake's).
@@ -1665,6 +1683,7 @@ function Life:shake(i,crown,now,reduced,put)
 		self.shaken[plan.key]=plan.start
 		table.insert(self.shakeDrops,plan)
 	end
+	if full and self:fruitLeft(i,now)then self.shakeReady[i]=now+S.every end
 	return plans[1]
 end
 
@@ -1697,6 +1716,18 @@ function Life:chirp(perch,position,_cue)
 		end
 	end
 	return result,why
+end
+-- Beta 42 E19: a leaving bird fades out (0 shown, 1 gone): every part's LocalTransparencyModifier (its decals follow),
+-- written only on a change of .02 or more (or to exactly 0 / 1).
+function Life:fadeBird(slot,fade)
+	local pool=self.birdPool and self.birdPool[slot]
+	if not pool then return end
+	self.birdFade=self.birdFade or {}
+	fade=math.clamp(if type(fade)=="number"and fade==fade then fade else 0,0,1)
+	local was=self.birdFade[slot]or 0
+	if math.abs(fade-was)<.02 and not((fade==0 or fade==1)and fade~=was)then return end
+	self.birdFade[slot]=fade
+	for _,p in ipairs(pool)do p.LocalTransparencyModifier=fade end
 end
 -- A landing bird's colourway: body, head and beak colours, the breast and tail tints, the wing file.
 function Life:paintBird(slot,look)

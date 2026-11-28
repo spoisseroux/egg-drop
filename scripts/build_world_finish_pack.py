@@ -220,6 +220,81 @@ def rot_rows(yaw):
     return [round(v, 6) for v in _ry(yaw)]
 
 
+# Beta 42 E21 (Spencer's note 21: "the rock at the bottom of the stairs going up to the terrace is missing a collider"):
+# the path's foot boulders (world_finish_path.foot_stones: the lawn-side flank, the stub's big boulder and the one in
+# front) are visual only (WorldFinishMount.still), so each gets an invisible box FOOT_BOX of its drawn bounds, same
+# centre and yaw (the import turn is a half turn: the same box). A boulder row marked "foot" is one; a path manifest
+# built before the mark has them as its first FOOT_STONES boulders. A bounding box overstates a rounded rock at its
+# corners, and two of the three reach over the path's edge: each box is trimmed, a face FOOT_STEP at a time, until no
+# point of its FOOT_GRID^3 sample stands over the tread or within FOOT_MARGIN of its edge at walking height
+# (cliff_den_sculpt.over_tread; scripts/check_world_finish_path.py --boxes checks the same). One trimmed under
+# FOOT_KEEP of its volume is left out.
+FOOT_BOX = .85
+FOOT_STONES = 3
+FOOT_MARGIN = .5
+FOOT_STEP = .1
+FOOT_GRID = 9
+FOOT_KEEP = .2
+
+
+def _box_grid(c, r, lo, hi, n=FOOT_GRID):
+    for i in range(n):
+        for j in range(n):
+            for k in range(n):
+                p = [lo[a] + (hi[a] - lo[a]) * (q / (n - 1)) for a, q in enumerate((i, j, k))]
+                yield p, (c[0] + r[0] * p[0] + r[1] * p[1] + r[2] * p[2], c[1] + r[3] * p[0] + r[4] * p[1] + r[5] * p[2],
+                          c[2] + r[6] * p[0] + r[7] * p[1] + r[8] * p[2])
+
+
+def trim_off_tread(c, s, r, blocked):
+    """(centre, size) of the box (centre c, size s, rotation rows r) trimmed until no grid point is blocked(x, y, z)."""
+    lo, hi = [-v / 2 for v in s], [v / 2 for v in s]
+    for _ in range(2000):
+        votes = [0] * 6
+        for p, q in _box_grid(c, r, lo, hi):
+            if blocked(*q):
+                near = min(range(6), key=lambda f: (hi[f // 2] - p[f // 2] if f % 2 else p[f // 2] - lo[f // 2])
+                           / max(1e-9, hi[f // 2] - lo[f // 2]))
+                votes[near] += 1
+        if not any(votes):
+            break
+        f = max(range(6), key=lambda k: votes[k])
+        if hi[f // 2] - lo[f // 2] <= 2 * FOOT_STEP:
+            return None
+        if f % 2:
+            hi[f // 2] -= FOOT_STEP
+        else:
+            lo[f // 2] += FOOT_STEP
+    mid = [(lo[a] + hi[a]) / 2 for a in range(3)]
+    centre = [c[i] + r[3 * i] * mid[0] + r[3 * i + 1] * mid[1] + r[3 * i + 2] * mid[2] for i in range(3)]
+    return centre, [hi[a] - lo[a] for a in range(3)]
+
+
+def foot_boxes(manifest: dict, place: dict, parts: dict) -> list:
+    out = []
+    legacy = manifest.get("slice") == "path"
+    rows = [b for i, b in enumerate(place.get("boulders", [])) if b.get("foot", legacy and i < FOOT_STONES)]
+    if not rows:
+        return out
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import path_offline
+    sculpt = path_offline.sculpt()
+    for b in rows:
+        t = parts.get(f"W7_F_Lip{b['kit']}__boulder_rock")
+        if not t:
+            continue
+        scale = b["scale"]
+        size = [a * k * FOOT_BOX for a, k in zip(t["size"], scale)]
+        centre = cf(b["at"], b["yaw"], [a * k for a, k in zip(t["centre"], scale)])[:3]
+        rot = rot_rows(b["yaw"])
+        kept = trim_off_tread(centre, size, rot, lambda x, y, z: sculpt.over_tread(x, y, z, margin=FOOT_MARGIN))
+        if not kept or kept[1][0] * kept[1][1] * kept[1][2] < FOOT_KEEP * size[0] * size[1] * size[2]:
+            print(f"WorldFinish: foot rock {b['kit']} at {b['at']} left without a box (it is mostly over the tread)")
+            continue
+        out.append({"kind": "footrock", "c": [round(v, 4) for v in kept[0]], "s": [round(v, 4) for v in kept[1]], "r": rot})
+    return out
+
+
 def slice_data(manifest: dict, allparts: dict | None = None, rename: dict | None = None) -> dict:
     """rename: {part name: pack template name} for this slice's parts an earlier slice also packs (see template_names)."""
     rename = rename or {}
@@ -270,7 +345,8 @@ def slice_data(manifest: dict, allparts: dict | None = None, rename: dict | None
     out["boxes"] = list(place.get("mouthBoxes", [])) + [
         {"kind": "lipstone", "c": lp["box"]["c"], "s": lp["box"]["s"], "r": rot_rows(lp["box"]["yaw"])}
         for lp in place.get("lips", []) if "box" in lp] + [
-        {"kind": b["kind"], "c": b["c"], "s": b["s"], "r": rot_rows(b["yaw"])} for b in place.get("extraBoxes", [])]
+        {"kind": b["kind"], "c": b["c"], "s": b["s"], "r": rot_rows(b["yaw"])} for b in place.get("extraBoxes", [])] + \
+        foot_boxes(manifest, place, allparts or parts)
     if place.get("requires"):
         out["requires"] = place["requires"]
     # templates borrowed from an earlier slice (the terrace's lip stones are the path's kit): the mount checks them too

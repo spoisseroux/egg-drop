@@ -30,7 +30,8 @@ local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local Fruit=require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("GardenFruit"))
 
 local Pet={};Pet.__index=Pet
-Pet.Snack=table.freeze({notice=8,cooldown=90,turn=.3,pause=.4,trot=3.5,arrive=.9,nibble=.35,nibbles=3,hop=.35,hopTime=.3,
+-- Beta 42 E18: `shakeCooldown`, the wait after any snack before a fruit my shake dropped (a gust's waits `cooldown`).
+Pet.Snack=table.freeze({notice=8,cooldown=90,shakeCooldown=5,turn=.3,pause=.4,trot=3.5,arrive=.9,nibble=.35,nibbles=3,hop=.35,hopTime=.3,
 	content=1.5,heart=.8,heartRise=1,heartSize=.6,back=.35,drift=8,leash=16,release=.3,pausePitch=-.15,nod=9,
 	heartColour=Color3.fromHex("#F4A9C4"),heartImage="rbxassetid://129048015089227",lift=.5,sole=.025,reach=2})
 Pet.Look=table.freeze({pitch=-.25,rise=.2,hold=.7,fall=.3,over=.5})
@@ -44,7 +45,9 @@ local function finite(n)return type(n)=="number"and n==n and math.abs(n)<math.hu
 -- resting or pausing (a follow only while the owner stands still).
 -- Second answer: why not (the SnackWhy diagnostic). STUDIO-CHECK-R5 R6: the snapshot's actor carries `parkId` and
 -- `peerId` (GardenState:snapshot), never `park` or `pairId`; both spellings are read.
-function Pet.free(actor,ownerStill)
+-- Beta 42 E18 (Spencer's note 18: "why won't my pet eat the fruit shaken off the tree?"): `shaken` true for a fruit my
+-- own shake dropped: a pet following me may take it while I move (I shook it down for the pet).
+function Pet.free(actor,ownerStill,shaken)
 	if type(actor)~="table"then return false,"no garden actor (park, race, focus or a hop drew the pet)"end
 	if actor.mode~="Room"then return false,"mode "..tostring(actor.mode)end
 	if actor.care then return false,"care"end
@@ -54,7 +57,7 @@ function Pet.free(actor,ownerStill)
 	if actor.action=="focus"then return false,"focus"end
 	if actor.behavior=="rest"or actor.action=="wanderPause"or actor.action=="settle"then return true end
 	if actor.behavior=="follow"then
-		if ownerStill==true then return true end
+		if ownerStill==true or shaken==true then return true end
 		return false,"following a moving owner"
 	end
 	return false,"busy with "..tostring(actor.behavior).."/"..tostring(actor.action)
@@ -100,12 +103,14 @@ function Pet:notice(loose,now)
 	if not self:on()then return false end
 	local busy=self:isBusy()
 	if busy then self:why("refused: "..busy);return false end
-	if now<self.cooldownUntil then self:why(string.format("refused: cooldown %.0f s",self.cooldownUntil-now));return false end
+	local shaken=type(loose)=="table"and loose.shake==true
+	local ready=if shaken then(self.lastSnackAt or -math.huge)+S.shakeCooldown else self.cooldownUntil
+	if now<ready then self:why(string.format("refused: cooldown %.0f s",ready-now));return false end
 	local visual,actor=self.visual,self.lastActor
 	if not visual or visual.destroyed or typeof(visual.origin)~="Vector3"or typeof(loose.rest)~="Vector3"then
 		self:why("refused: no pet drawn");return false
 	end
-	local free,whyNot=Pet.free(actor,call(self.d.ownerStill)==true)
+	local free,whyNot=Pet.free(actor,call(self.d.ownerStill)==true,shaken)
 	if not free then self:why("refused: "..whyNot);return false end
 	local d=flat(visual.origin,loose.rest)
 	if d>S.notice then self:why(string.format("refused: fruit %.1f studs off (notice %d)",d,S.notice));return false end
@@ -138,6 +143,7 @@ function Pet:notice(loose,now)
 	self.active={loose=loose,fruit=fruit,stop=Vector3.new(stop.X,fruit.Y-S.lift+S.sole,stop.Z),phase="turn",at=now,
 		pos=visual.origin,yaw=visual.yaw or 0,fromYaw=visual.yaw or 0,wantYaw=math.atan2(to.X,to.Z)}
 	self.cooldownUntil=now+S.cooldown
+	self.lastSnackAt=now
 	return true
 end
 
@@ -199,7 +205,7 @@ function Pet:drive(visual,actor,now,dt)
 	local sample=visual.origin
 	self.sample=sample
 	if not a then return self:lookUp(visual,actor,now)end
-	local free,whyNot=Pet.free(actor,call(self.d.ownerStill)==true)
+	local free,whyNot=Pet.free(actor,call(self.d.ownerStill)==true,a.loose~=nil and a.loose.shake==true)
 	local busy=self:isBusy()
 	if not a.quick then
 		-- A park pose owns the pet this frame (ParkClient:drive) as much as a race does.

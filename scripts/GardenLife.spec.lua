@@ -65,7 +65,7 @@ return function(client)
 			-- GARDEN-PLAY-BRIEF-2: the `fruit` switch (off unless a case asks), and what the shake does.
 			fruit=if options.fruit then function()return true end else nil,
 			play=function(cue,at,volume,pitch)table.insert(r.sounds,{cue=cue,at=at,volume=volume,pitch=pitch})end,
-			shook=function(i)table.insert(r.shakes,i)end,rock=function(p)table.insert(r.rocked,p)end,
+			shook=function(i,drops)table.insert(r.shakes,i);r.shakeDrops=r.shakeDrops or {};table.insert(r.shakeDrops,drops)end,rock=function(p)table.insert(r.rocked,p)end,
 			promptBlocked=function()return r.promptBlocked==true end,sayHiNear=function()return r.sayHi==true end,
 			inputKind=function()return r.inputKind or "Keyboard"end,
 			buzz=function(name)table.insert(r.buzzed,name)end,
@@ -251,7 +251,8 @@ return function(client)
 			assert(r.life:chirp(2,LANDING-Vector3.new(.3,5,.2),"bird_chirp_1")=="land")
 			r.ambient.onChirp(1,SPOTS.Landings[1]-Vector3.new(0,6,0),"bird_chirp_2")
 			assert(r.life:counts().birds==2,"the hook lands one too")
-			r.step(1.2)
+			-- Beta 42 E19: a landing takes its distance at Bird.speed (9 to 12 out, 4 to 6 up: at most 1.7 s).
+			r.step(1.9)
 			local sitting
 			for slot=1,3 do
 				local b=body(r,slot)
@@ -1018,10 +1019,9 @@ return function(client)
 			local rustles=0
 			for _,sound in ipairs(r.sounds)do if string.sub(sound.cue,1,10)=="asmr_flake"then rustles+=1 end end
 			assert(rustles==Fruit.Sounds.rustles and r.buzzed[1]==Fruit.Buzz)
-			-- Beta 38: one fruit (one shake in four, two) lets go on the second swing.
+			-- Beta 38: the fruit lets go on the second swing; beta 42 E18: exactly one a shake.
 			local drops=#r.life.shakeDrops
-			assert((drops==1 or drops==2)and r.life.shakeDrops[1].shake==true,"one fruit drops")
-			assert(drops==#Fruit.dropTimes(0,r.life.shakeCount),"a second only on the one-in-four")
+			assert(drops==1 and r.life.shakeDrops[1].shake==true and r.shakeDrops[1]==1,"one fruit drops, one told")
 			local key=r.life.shakeDrops[1].key
 			local start=r.life.shakeDrops[1].start
 			assert(start-r.now<=Fruit.Drops.first+1e-6,"on the second swing")
@@ -1036,14 +1036,37 @@ return function(client)
 			for _,sound in ipairs(r.sounds)do if sound.cue==Fruit.Sounds.land then landed=true end end
 			assert(landed,"a thud as it lands")
 			assert(#r.life.loose.list>=1,"drawn on the lawn")
-			-- Again at once: nothing (the tree has nothing to shake till its fruit grows back).
-			r.player=trunk+Vector3.new(TREE.trunk+5,0,0);r.step(.1)
-			walkIn()
-			assert(#r.shakes==1,"once till it grows back")
+			-- Beta 42 E18: again and again while fruit hangs, one fruit each, Shake.every apart; the bare tree rests.
+			local first=r.life.shakeReady[1]
+			assert(math.abs(first-(r.life.shakeDrops[1].start-Fruit.Drops.first+Fruit.Shake.every))<1e-6,"ready again Shake.every on")
+			local slots=#r.life.grove.stems[1]
+			local keys={[key]=true}
+			local shakes=1
+			for _=1,slots+2 do
+				r.now=math.max(r.now,r.life.shakeReady[1])+.01
+				r.player=trunk+Vector3.new(TREE.trunk+5,0,0);r.step(.1)
+				local before=#r.shakes
+				walkIn()
+				if #r.shakes>before then
+					shakes+=1
+					local plan=r.life.shakeDrops[#r.life.shakeDrops]
+					if r.shakeDrops[#r.shakeDrops]==1 then
+						assert(plan.shake and not keys[plan.key],"a fresh slot each shake")
+						keys[plan.key]=true
+					end
+				end
+			end
+			local fell=0
+			for _ in pairs(keys)do fell+=1 end
+			assert(fell==slots,"every slot shaken down one at a time ("..fell.." of "..slots..")")
+			assert(not r.life:fruitLeft(1,r.now),"bare")
+			assert(r.life.shakeReady[1]-r.now>Fruit.Shake.every,"a bare tree rests")
 			r.now+=Fruit.Shake.hidden+Fruit.Shake.grow+1
+			assert(r.life:fruitLeft(1,r.now),"grown back")
 			r.player=trunk+Vector3.new(TREE.trunk+5,0,0);r.step(.1)
+			local before=#r.shakes
 			walkIn()
-			assert(#r.shakes==2,"grown back, it shakes again")
+			assert(#r.shakes==before+1,"grown back, it shakes again")
 		end)
 		test("beta 38: the Shake prompt at each fruit tree's trunk (R, gamepad X, clickable), on only while a shake is allowed; a press within reach shakes like a bump and tells the server; out of reach nothing; resting: off and ignored",function()
 			local r=fruitRig()

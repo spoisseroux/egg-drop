@@ -217,5 +217,35 @@ return function(server)
 			for _,row in ipairs(slice.instances or {})do assert(set[row.template],name..": "..row.template)end
 		end
 	end)
+	test("beta 42 E21: the path's three foot boulders each have an invisible colliding box inside the rock, same yaw (scripts/check_world_finish_path.py --boxes keeps them off the tread)",function()
+		local gen=require(server.WorldFinishData)
+		local path=gen.slices.path
+		local feet={}
+		for _,b in ipairs(path.boxes)do if b.kind=="footrock"then table.insert(feet,b)end end
+		assert(#feet==3,"three foot rocks: "..#feet)
+		for _,b in ipairs(feet)do
+			-- the boulder this box belongs to: the nearest Lip-kit instance
+			local best,bd=nil,math.huge
+			for _,row in ipairs(path.instances)do
+				if string.match(row.template,"^W7_F_Lip%d__boulder_rock")then
+					local d=(Vector3.new(row.cframe[1],row.cframe[2],row.cframe[3])-Vector3.new(b.c[1],b.c[2],b.c[3])).Magnitude
+					if d<bd then best,bd=row,d end
+				end
+			end
+			assert(best,"a boulder for the box")
+			local rock=CFrame.new(table.unpack(best.cframe))
+			local box=CFrame.new(b.c[1],b.c[2],b.c[3],table.unpack(b.r))
+			assert(math.abs(rock.LookVector:Dot(box.LookVector))>1-1e-4,"same yaw (the import half turn aside)")
+			-- inside the rock's drawn bounds, at most .85 of them
+			local local_=rock:PointToObjectSpace(box.Position)
+			for axis,size in ipairs(b.s)do
+				local half=best.size[axis]/2
+				local off=math.abs(({local_.X,local_.Y,local_.Z})[axis])
+				assert(size<=best.size[axis]*.85+1e-3 and off+size/2<=half*.85+1e-3,"inside the rock on axis "..axis)
+			end
+			-- the mount builds it like every box: invisible, colliding
+			assert(type(b.s[1])=="number"and #b.r==9)
+		end
+	end)
 	return {passed=#cases,cases=cases}
 end
