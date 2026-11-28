@@ -5900,6 +5900,13 @@ do
     if not(model and model.Parent)then return nil end
     return model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart",true)
    end
+   -- Beta (40) note 1 (BubbleFollow): the pet's un-animated origin when `part` is the drawn pet's, else nil.
+   local function petOrigin(part)
+    local pet=roomView.pet;local model=pet and not pet.destroyed and pet.model
+    if not(model and part and typeof(pet.origin)=="Vector3")then return nil end
+    if part~=model and not part:IsDescendantOf(model)then return nil end
+    return pet.origin
+   end
    local function nestAt()local f=clientUI.nestPlace;local at=type(f)=="function"and f()or nil;return if typeof(at)=="Vector3"then at else nil end
    -- The v3 brief's 2b bubble sits on the nest: an invisible part over its prompt (in its own model, so the bubble's
    -- height reads the part, not the world).
@@ -5923,6 +5930,8 @@ do
    local bubble=require(script.BubbleHold).new(function()
     return require(script.NeedBubble).new({parent=player:WaitForChild("PlayerGui"),
      adornee=function()if needs and needs.bubbleOn=="nest"then return nestAnchor()or petPart()end;return petPart()end,
+     -- beta (40) note 1: over the pet's un-animated origin (never its waddling Body); the nest's anchor is its own place
+     origin=petOrigin,
      chipAdornee=petPart,onChip=function()if needs then needs:chipTap()end end,
      reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
      -- Onboarding v2 (Onboard "guide"): never a key name on a computer; the pad's X picture.
@@ -5949,7 +5958,8 @@ do
     words=function(id)local key,vars=Needs.guideWords(id,petName());return if key then Copy.get(key,vars)else nil end,
     -- The v3 brief: the lead to the nest (Onboard "lead") and the new end card (Onboard "allset2").
     lead=function()return Onboard.leadOn()end,allSet2=function()return Onboard.on("allset2")end,nestOn=function()return Onboard.on("nest")end,
-    copy=function(key)return Copy.get(key,{pet=petName()})end,
+    -- vars: the tuck's countdown (beta 40, PetLead.hatchWords), with {pet} always
+    copy=function(key,vars)local with={pet=petName()};for k,v in pairs(vars or {})do with[k]=v end;return Copy.get(key,with)end,
     leadDeps=(function()
      -- the Things trail leads (trail2: start as a guide trail, then leadBy the pet); off, it is today's trail
      local leadTrail=require(script.LeadTrail).new({things=trail})
@@ -5991,9 +6001,26 @@ do
        if pet and not pet.destroyed and roomView.affection then pcall(function()roomView.affection:bondBurst(pet.secondaryColor,reducedNow())end)end
        pcall(function()require(script.Haptics).play("settle")end)
       end,
-      toast=function(key)
+      toast=function(key,vars)
        toaster=toaster or require(script.DeckKit).toaster(overlayGui)
-       toaster.show(Copy.get(key,{pet=petName()}))
+       local with={pet=petName()};for k,v in pairs(vars or {})do with[k]=v end
+       toaster.show(Copy.get(key,with))
+      end,
+      -- beta (40): the tuck's words count down to the hatch (the nest's own clock), never "tomorrow"
+      hatchLeft=function()
+       local nest=clientUI.nest;local summary=nest and nest:summary()
+       return summary and summary.left
+      end,
+      -- beta (40): the lead's route goes round the bushes, reeds and props the navmesh cannot see (GardenKeepOut.lead)
+      keepOut=function()
+       local KeepOut=require(ReplicatedStorage.Shared.GardenKeepOut)
+       local Alive=require(ReplicatedStorage.Shared.Alive)
+       return KeepOut.lead(function(feature)return Alive.on(feature)end)
+      end,
+      -- a detour round one stays dry (the trail's own water list)
+      segmentOk=function(a,b)
+       local Route=require(script.ThingsTrail)
+       return require(ReplicatedStorage.Shared.GardenWalkability).segmentAllowed(a,b,Route.wet())
       end}
     end)(),
     far=function(where)

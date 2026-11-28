@@ -267,6 +267,23 @@ local function keepOutRegions()
 	if not ok then warn("[KeepOut] not read: "..tostring(regions));return {}end
 	return regions
 end
+-- Beta (40): the lead's keep-outs (GardenKeepOut.lead: the built solids and plants), read each time (cheap: cached lists).
+local function leadKeepOut()
+	local ok,list=pcall(function()
+		local Alive=require(ReplicatedStorage.Shared.Alive)
+		return GardenKeepOut.lead(function(feature)return Alive.on(feature)end)
+	end)
+	if not ok then warn("[KeepOut] lead not read: "..tostring(list));return {}end
+	return list
+end
+local function leadRegions()
+	local ok,list=pcall(function()
+		local Alive=require(ReplicatedStorage.Shared.Alive)
+		return GardenKeepOut.leadRegions(function(feature)return Alive.on(feature)end)
+	end)
+	if not ok then return {}end
+	return list
+end
 local function petAnchor(state)
 	local room=workspace:FindFirstChild("EggDropLounge")
 	local floor=room and room:FindFirstChild("Floor")
@@ -478,6 +495,13 @@ local garden = GardenState.new({sharedToyEnabled=false,now=function()return work
     warn=warn,
     validToyPath=function(path)
         local scene=gardenScene();return scene~=nil and GardenWalkability.pathAllowed(path,scene.wet)
+    end,
+    -- Beta (40): the lead to the nest also walks round the plants the navmesh cannot see (GardenKeepOut.lead: the
+    -- understory and the frond bushes, with the solid props), whatever the `keepout` switch says.
+    validLeadPath=function(path)
+        local scene=gardenScene();if scene==nil then return false end
+        if not GardenWalkability.pathAllowed(path,scene.wet)then return false end
+        return GardenWalkability.pathAllowed(path,leadRegions())
     end,
     validRestPath=function(path)
         local scene=gardenScene();return scene~=nil and GardenPathPlanner.restPathClear(path,scene.solids)
@@ -1672,17 +1696,26 @@ local function onBoardRequest(player, action, value, sticker)
 				if not hit or hit.Material==Enum.Material.Water then return nil end
 				return hit.Position.Y
 			end,
-			-- a fence, a wall or a prop between two route points at the pet's body height (the ground is not one)
+			-- a fence, a wall or a prop between two route points at the pet's body height (the ground is not one).
+			-- Beta (40): a sphere the pet's width (Lead.Body), not one thin ray, so a post or a trunk beside the line
+			-- counts; a hit that faces up is a floor or a bump under the sweep, never a wall.
 			clear=function(a,b)
 				local up=Vector3.new(0,Lead.Route.body,0)
 				local d=(b+up)-(a+up)
-				return d.Magnitude<.05 or workspace:Raycast(a+up,d,solidParams)==nil
-			end})
+				if d.Magnitude<.05 then return true end
+				local okCast,hit=pcall(function()return workspace:Spherecast(a+up,Lead.Body,d,solidParams)end)
+				if not okCast then hit=workspace:Raycast(a+up,d,solidParams)end
+				return hit==nil or hit.Normal.Y>.7
+			end,
+			-- beta (40): and the keep-outs the navmesh never sees (the understory, the frond bushes, the props)
+			keepOut=leadKeepOut()})
 		if not points then return end
 		local goal=Lead.trim(points,Lead.Arrive)
 		goal=goal[#goal]
 		if Lead.flat(goal,nest)>Lead.Route.goalNear then return end
-		local ok=garden:lead(player.UserId,Lead.simplify(Lead.trim(points,Lead.Arrive)),goal,nest)
+		-- beta (40): no second simplify: it cut the corners the client's route takes round the bushes (the checked
+		-- route, trimmed, is what the pet runs)
+		local ok=garden:lead(player.UserId,Lead.trim(points,Lead.Arrive),goal,nest)
 		if ok and board.firstSession then pcall(function()board.firstSession:record("LeadStarted")end)end
 		return
 	elseif action=="firstStand"then

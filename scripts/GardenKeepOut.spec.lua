@@ -214,6 +214,47 @@ return function(_server,offline)
 			stats.searches,stats.nodes,stats.expanded,stats.checks))
 	end)
 
+	-- Beta (40), Spencer: "the pet runs thru meshes when showing you to something" (the lead to the nest).
+	test("beta 40: the lead's plants: every understory clump and the ground frond bushes, their own kind, off the everyday lists",function()
+		local U=require(Shared.Understory)
+		local Dressing=require(Shared.WorldDressing)
+		local plants=KeepOut.plants()
+		local kinds,ids={},{}
+		for _,entry in ipairs(plants)do
+			assert(entry.kind=="plant"and type(entry.x)=="number"and type(entry.z)=="number"and entry.r>0 and entry.r<3,entry.id)
+			assert(not ids[entry.id],"unique: "..entry.id);ids[entry.id]=true
+			local kind=string.match(entry.id,"^(%a+) ")
+			kinds[kind]=(kinds[kind]or 0)+1
+		end
+		assert(kinds.bush==#U.rows("bush")and kinds.flower==#U.rows("flower")and kinds.reeds==#U.rows("reeds"),"every understory clump")
+		assert((kinds.bush or 0)+(kinds.flower or 0)+(kinds.reeds or 0)==U.Budget.instances,"the 46 of P1")
+		for _,entry in ipairs(plants)do
+			if string.sub(entry.id,1,6)=="frond "then assert(entry.feature==nil,"the world's own")else assert(entry.feature==U.Feature,entry.id)end
+		end
+		if World.WorldVersion=="v7"then
+			assert((kinds.frond or 0)>0 and kinds.frond<=Dressing.MaxBushes,"the ground frond bushes: "..tostring(kinds.frond))
+		end
+		-- a bush's circle sits on the bush and is about its size (the rim is sparse)
+		local row=U.rows("bush")[1]
+		local first=nil;for _,entry in ipairs(plants)do if entry.id=="bush 1"then first=entry end end
+		assert(first and first.x==row[1]and first.z==row[3]and math.abs(first.r-U.radius("bush",row)*KeepOut.Plant.understory)<1e-9)
+		-- the lead's list: the solids and the built plants; the scene switch off (live) leaves the understory out
+		local all=function()return true end
+		local lead=KeepOut.lead(all)
+		assert(#lead==#KeepOut.solids(all)+#plants,"solids and plants")
+		local noScene=KeepOut.lead(function(feature)return feature~=U.Feature end)
+		local fronds=kinds.frond or 0
+		assert(#noScene==#KeepOut.solids(function(feature)return feature~=U.Feature end)+fronds,"no understory without its switch")
+		assert(#KeepOut.leadRegions(all)==#lead and KeepOut.leadRegions(all)[1].R==lead[1].r+KeepOut.Clearance and KeepOut.leadRegions(all)[1].KeepOut)
+		-- the everyday lists are unchanged: no plant in solids, regions or all (the understory's own placement reads all)
+		for _,list in ipairs({KeepOut.all(),KeepOut.solids(),KeepOut.regions()})do
+			for _,entry in ipairs(list)do assert(entry.kind~="plant","no plant in the everyday lists")end
+		end
+		-- the rule: a leg through a bush is caught, one round it is not
+		local b=first
+		assert(KeepOut.hit(Vector3.new(b.x-5,4,b.z),Vector3.new(b.x+5,4,b.z),{b},.8)==b)
+		assert(KeepOut.hit(Vector3.new(b.x-5,4,b.z+b.r+1),Vector3.new(b.x+5,4,b.z+b.r+1),{b},.8)==nil)
+	end)
 	test("the switch: Alive `keepout` (AliveKeepOut), beta and Studio only, never live",function()
 		assert(table.find(Alive.Features,KeepOut.Feature)and Flags.AliveKeepOut==true)
 		assert(Alive.ceiling("keepout",{AliveKeepOut=true},Alive.PlaceId,false)==true)

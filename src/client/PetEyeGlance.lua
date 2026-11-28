@@ -31,15 +31,30 @@ function Glance.headCentre(definition,scale)
 end
 
 -- cf: the eye piece's world frame; head: the head channel's world frame (the rig frame, posed); centre: Glance.headCentre.
-function Glance.frame(head,cf,centre,scale)
+-- Beta (40) ("the eyes still clip into the head mesh when looking at extremes", the petting screen): generalised. With
+-- `aside` and `up` (studs at scale 1, in the head's own frame: +X its left-to-right, +Y up; PetCuddle.look's eye shift)
+-- the eye travels that far instead of the glance's .018 along its own X and .01 up, turned round the head's upright axis
+-- the same way, and the Lift out grows with the travel (none at rest, full from the glance's own travel), so an eye that
+-- looks a little never jumps off the face. Without a centre (no Head piece) or too far aside: the flat slide as before.
+function Glance.frame(head,cf,centre,scale,aside,up)
  local s=scale;local inHead=head:ToObjectSpace(cf)
- local aside=inHead:VectorToWorldSpace(Vector3.new(Glance.Aside*s,0,0)).X
+ local custom=aside~=nil or up~=nil
+ local across,rise,lifted
+ if custom then
+  across,rise=(tonumber(aside)or 0)*s,(tonumber(up)or 0)*s
+  lifted=math.clamp(math.sqrt(((tonumber(aside)or 0)/Glance.Aside)^2+((tonumber(up)or 0)/Glance.Up)^2),0,1)
+ else
+  across,rise,lifted=inHead:VectorToWorldSpace(Vector3.new(Glance.Aside*s,0,0)).X,Glance.Up*s,1
+ end
  local reach=centre and inHead.Position.Z-centre.Z
- if not reach or reach<=math.abs(aside)then return cf*CFrame.new(Glance.Aside*s,Glance.Up*s,0)end
- local turned=CFrame.new(centre)*CFrame.Angles(0,math.asin(aside/reach),0)*CFrame.new(-centre)*inHead
+ if not reach or reach<=math.abs(across)then
+  if custom then return head*CFrame.new(across,rise,0)*inHead end
+  return cf*CFrame.new(Glance.Aside*s,Glance.Up*s,0)
+ end
+ local turned=CFrame.new(centre)*CFrame.Angles(0,math.asin(across/reach),0)*CFrame.new(-centre)*inHead
  local out=Vector3.new(turned.Position.X-centre.X,0,turned.Position.Z-centre.Z)
- local lift=if out.Magnitude>1e-6 then out.Unit*(Glance.Lift*s)else Vector3.zero
- return head*CFrame.new(Vector3.new(0,Glance.Up*s,0)+lift)*turned
+ local lift=if out.Magnitude>1e-6 then out.Unit*(Glance.Lift*s*lifted)else Vector3.zero
+ return head*CFrame.new(Vector3.new(0,rise,0)+lift)*turned
 end
 
 return Glance

@@ -308,9 +308,12 @@ local Table={
  },
  -- Onboarding v3 brief section 1 (Onboard "lead", qa-2026-11-27-beta37/ONBOARDING-V3-BRIEF.md): two lines, a headline
  -- of 16 characters or fewer and a sub-line of 28 or fewer; the post-tuck toast. The onboarding fun pass: the headlines
- -- are the pet's own voice (it asks, we do not order); thisWay is the nudge's word over "This way!".
- onbLead={pet="Pet me!",follow="This way!",followSub="A new egg is waiting",tuck="Tuck it in!",tuckSub="It hatches tomorrow",
-  deck="Let's win Stars!",deckSub="Stars turn the crank!",thisWay="Come on!",toast="Sweet dreams! Come back tomorrow to hatch it."},
+ -- are the pet's own voice (it asks, we do not order); thisWay is the nudge's word over "This way!". Beta (40): the
+ -- tuck's sub-line and the toast count down to the hatch ({hours} / {minutes}: PetLead.hatchWords), never "tomorrow".
+ onbLead={pet="Pet me!",follow="This way!",followSub="A new egg is waiting",tuck="Tuck it in!",tuckSub="It hatches in {hours} h",
+  tuckSubMin="It hatches in {minutes} min",
+  deck="Let's win Stars!",deckSub="Stars turn the crank!",thisWay="Come on!",toast="Sweet dreams! It hatches in {hours} h.",
+  toastMin="Sweet dreams! It hatches in {minutes} min."},
  -- The gift chain (ONBOARDING-FUN-PASS section 2, Onboard "gifts"): the pet asks (its own voice), a headline of 16
  -- characters or fewer and a sub-line of 28 or fewer; the gift card, the Things row and the parked lines.
  onbGift={

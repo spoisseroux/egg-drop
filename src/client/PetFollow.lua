@@ -182,10 +182,19 @@ function Follow.activity(visual,actor,now,dt,state,reduced)
 	-- The lead to the nest (Shared.PetLead, onboarding v3 brief section 1): its hops, the beckon, the arrival bounce
 	-- and the jump-spin, from the shared clock, the same on every screen. Reduced Motion: none.
 	local action=sample.action
+	visual.leadLookYaw=0
 	if type(action)=="string"and string.sub(action,1,4)=="lead"and type(actor.startTime)=="number"then
-		local lift,spin=require(game:GetService("ReplicatedStorage").Shared.PetLead).pose(action,sampleTime-actor.startTime,reduced==true)
+		local Lead=require(game:GetService("ReplicatedStorage").Shared.PetLead)
+		local lift,spin,look=Lead.pose(action,sampleTime-actor.startTime,reduced==true)
 		if lift~=0 then visual.origin+=Vector3.new(0,lift,0)end
 		if spin~=0 then visual.yaw+=spin end
+		-- beta 40: trotting on for a following owner, it looks back over the shoulder they are on (every screen)
+		if look and look>0 then
+			local owner=game:GetService("Players"):GetPlayerByUserId(tonumber(actor.ownerId)or 0)
+			local root=owner and owner.Character and owner.Character:FindFirstChild("HumanoidRootPart")
+			local rel=if root then CFrame.Angles(0,visual.yaw or 0,0):VectorToObjectSpace(root.Position-visual.origin)else nil
+			visual.leadLookYaw=Lead.lookYaw(look,rel)
+		end
 	end
 	local traveled=Vector2.new(visual.origin.X-old.X,visual.origin.Z-old.Z).Magnitude
 	if sample.mode=="Focus"or dt<=0 or traveled>8 then

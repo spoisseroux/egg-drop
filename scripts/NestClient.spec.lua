@@ -853,9 +853,9 @@ return function(client)
 		assert(math.abs(r.client.root.Y-reseat.Y)<1e-6 and r.client.egg~=nil and r.client.view~=nil,"re-seated, the egg still there")
 		Onboard.inject(nil)
 	end)
-	test("First Hatch (nestfirst): the first egg's ticket says Hatches tomorrow; a later egg counts down; ready reads ready",function()
+	-- Beta (40), Spencer: "Hatches in X h / X min" always: the first egg's "Hatches tomorrow" is gone.
+	test("beta 40: the first egg's ticket counts down like every egg, on a later day too; ready reads ready",function()
 		local tomorrow=UICopy.get("onb3.nest.tomorrow")
-		assert(tomorrow=="Hatches tomorrow",tomorrow)
 		local savedNow=Client.now
 		-- local clock hours (os.time with a table reads it as UTC; os.date "*t" is local)
 		local function localHour(hour)local base=1795723200;local d=os.date("*t",base);return base-d.hour*3600-d.min*60-d.sec+hour*3600 end
@@ -865,7 +865,7 @@ return function(client)
 		Client.now=function()return morning end
 		local same=rig({env={flags={OnboardingV3=true},studio=true,corner=false,gifts=false}})
 		same.fire(state(3600,{tucked=true}));same.client:step(0)
-		assert(same.tickets[1].data.text==UICopy.get("onb3.nest.chipHours",{hours=7}),"ready this afternoon: the countdown, never tomorrow")
+		assert(same.tickets[1].data.text==UICopy.get("onb3.nest.chipHours",{hours=7}),"ready this afternoon: the countdown")
 		same.client:clear();Onboard.inject(nil)
 		Client.now=function()return evening end
 		local r=rig({env={flags={OnboardingV3=true},studio=true,corner=false,gifts=false}})
@@ -873,9 +873,10 @@ return function(client)
 		assert(#r.tickets==0 or r.tickets[1].cancelled,"no ticket before the tuck")
 		r.fire(state(3600,{tucked=true}));r.client:step(0)
 		local d=r.tickets[1]and r.tickets[1].data
-		assert(d and d.text==tomorrow and d.tone=="plain"and d.priority==Client.TicketPriority.clock,d and d.text)
+		assert(d and d.text==UICopy.get("onb3.nest.chipHours",{hours=7})and d.text~=tomorrow and d.tone=="plain"
+			and d.priority==Client.TicketPriority.clock,"ready tomorrow morning: still the countdown, never tomorrow: "..tostring(d and d.text))
 		r.narrow=true;r.client:step(0)
-		assert(d.text==tomorrow,"narrow too")
+		assert(d.text==UICopy.get("onb3.strip.short.h",{hours=7}),"narrow too: "..tostring(d.text))
 		r.narrow=false;r.now=NOW;r.fire(state(Nest.Seconds,{tucked=true}));r.client:step(0)
 		assert(d.text==UICopy.get("onb3.nest.chipReady")and d.tone=="gold","ready: the ready words, never tomorrow")
 		r.client:clear();Onboard.inject(nil)

@@ -81,5 +81,48 @@ return function(client)
 		near((out.Position-want.Position).Magnitude,0,"fallback slide")
 	end)
 
+	-- Beta (40), Spencer: "the eyes still clip into the head mesh when looking at extremes" (the petting screen's look:
+	-- PetCuddle.look's eye shift, in the head's own frame, was a flat slide up to .035 a side, .05 on a diagonal).
+	test("beta 40: the petting look turns each eye round the head inside PetCuddle's ellipse; no extreme sinks an eye",function()
+		local C=require(game:GetService("ReplicatedStorage").Shared.PetCuddle)
+		local E=C.Look.eye
+		for _,head in ipairs(heads)do
+			for _,name in ipairs({"EyeL","EyeR"})do
+				local rest=eye(name,head)
+				local inRest=head:ToObjectSpace(rest)
+				local function radiusIn(cf)local p=head:ToObjectSpace(cf).Position;return Vector3.new(p.X-centre.X,0,p.Z-centre.Z).Magnitude end
+				-- at rest (no look): exactly where it was, no lift
+				local still=Glance.frame(head,rest,centre,S,0,0)
+				near((still.Position-rest.Position).Magnitude,0,name.." at rest",1e-5)
+				-- every direction on the ellipse's edge, and half way: never nearer the head's axis than at rest, lifted
+				for i=0,35 do
+					local a=i/36*math.pi*2
+					for _,reach in ipairs({.5,1,50})do
+						local _,_,x,y=C.look(Vector3.new(math.cos(a)*reach,math.sin(a)*reach,1),1)
+						local out=Glance.frame(head,rest,centre,S,x,y)
+						assert(radiusIn(out)>=radiusIn(rest)-1e-5,string.format("%s sank at %d deg x %.1f",name,i*10,reach))
+						local inOut=head:ToObjectSpace(out)
+						near(inOut.Position.Y,inRest.Position.Y+y*S,name.." up by the shift",1e-5)
+						-- it still looks that way: across by about the shift (the turn's chord)
+						assert(math.abs((inOut.Position.X-inRest.Position.X)-x*S)<=.25*math.abs(x*S)+Glance.Lift*S+1e-5,name.." across")
+					end
+				end
+				-- the old slide at the old extreme (.035 straight across): the inward eye went in onto the face
+				local sideIn=if inRest.Position.X>0 then -1 else 1
+				local slid=head*CFrame.new(sideIn*.035*S,0,0)*inRest
+				assert(radiusIn(slid)<radiusIn(rest)-.001*S,name..": the flat slide sank it")
+				local turned=Glance.frame(head,rest,centre,S,sideIn*E.aside,0)
+				near(radiusIn(turned),radiusIn(rest)+Glance.Lift*S,name..": turned and lifted the full Lift at the ellipse's side",1e-5)
+				-- a small look lifts in proportion (never a jump off the face)
+				local small=Glance.frame(head,rest,centre,S,sideIn*Glance.Aside*.25,0)
+				near(radiusIn(small),radiusIn(rest)+Glance.Lift*S*.25,name..": a quarter of the travel, a quarter of the lift",1e-5)
+			end
+		end
+		-- no Head piece: the old flat shift in the head's frame
+		local rest=eye("EyeR",CFrame.new())
+		local flat=Glance.frame(CFrame.new(),rest,nil,S,.01,.005)
+		near((flat.Position-(rest.Position+Vector3.new(.01*S,.005*S,0))).Magnitude,0,"flat without a head",1e-6)
+	end)
+
 	return{passed=#cases,cases=cases}
 end

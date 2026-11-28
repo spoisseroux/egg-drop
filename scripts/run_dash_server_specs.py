@@ -176,7 +176,7 @@ def client_modules():
                     # The island re-export: the Aero world kit (split crowns, falls sheets, rocks).
                     "AeroKit.lua", "AeroFountain.lua",
                     # Onboarding v3 A+B: the needs, the tour gate, the station label tips and the pill's quiet stage.
-                    "BearNeeds.lua", "NeedBubble.lua", "BubbleHold.lua", "WorldFeelClient.lua", "CoachCards.lua", "StationAttract*.lua", "LoungeStations.lua",
+                    "BearNeeds.lua", "NeedBubble.lua", "BubbleFollow.lua", "BubbleHold.lua", "WorldFeelClient.lua", "CoachCards.lua", "StationAttract*.lua", "LoungeStations.lua",
                     "JournalPromptPriority.lua", "FirstSpendGuide.lua",
                     # Onboarding v3 D+E: the nest in the garden and the See you tomorrow strip.
                     "NestClient.lua", "TomorrowStrip.lua", "DeckResultsLayout.lua", "FocusRow.lua", "TipChime.lua",
