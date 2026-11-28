@@ -137,16 +137,20 @@ function Picks.open(host,model,options)
 		if self.closed or not root.Parent then return end
 		local window,at=list.Size.Y.Offset,list.CanvasPosition.Y
 		local wanted={}
+		-- Studio check (beta 46): a half-scrolled row still counted as visible, so with 9 picks the 8 live previews all
+		-- went to the first eight and the ninth (the 1% Angel Wings on a wings day) stayed a flat disc. A preview goes to
+		-- a card whose middle is in the window.
+		local function shown(y)local mid=y+self.cardH*.5;return mid>=at and mid<=at+window end
 		for _,entry in ipairs(self.cards)do
 			local look=entry.look
 			if look==nil then look=lookFor(entry.card,petId,baseLook())or false;entry.look=look end
 			if entry.card.kind=="toy"and entry.card.toy then
 				-- the toy in that colour, still (no pet): RackArt.toyEntry, cached like a pet preview
 				local card=entry.card
-				table.insert(wanted,{holder=entry.well,key="toy:"..tostring(card.toy)..":"..tostring(card.skin),visible=Cache.visible(entry.y,self.cardH,at,window),
+				table.insert(wanted,{holder=entry.well,key="toy:"..tostring(card.toy)..":"..tostring(card.skin),visible=shown(entry.y),
 					build=function()return require(script.Parent.RackArt).toyEntry(card.toy,card.skin)end})
 			elseif look then
-				table.insert(wanted,{holder=entry.well,key=Cache.key(petId,entry.card.id,nil),visible=Cache.visible(entry.y,self.cardH,at,window),
+				table.insert(wanted,{holder=entry.well,key=Cache.key(petId,entry.card.id,nil),visible=shown(entry.y),
 					build=function()return Cache.buildPet(pet,look,.95)end})
 			end
 			if entry.sparks then
