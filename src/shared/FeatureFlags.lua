@@ -143,5 +143,7 @@ return table.freeze({PetTrail=true,FirstHelloBonus=true,RoundTwoNudge=true,ToyPi
  AliveMusic2=true,
  -- AliveDeckGlass (DECK-AERO-BRIEF, qa-2026-11-28-beta44): the Pocket Deck's glass HUD (DeckGlass); beta and Studio only.
  AliveDeckGlass=true,
+ -- AliveGrove (GROVE-BUILD-PLAN, qa-2026-11-28-grove): the Hidden Grove round the island (GroveWorld); beta and Studio only.
+ AliveGrove=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
  PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,PlayerScale=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true,TierPets=true,ParkTopLawn=true,ThisWeek=true,DailyRack=true})

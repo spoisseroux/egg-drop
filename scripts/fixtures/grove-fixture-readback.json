@@ -1,0 +1,88 @@
+{
+ "note": "Fixture for scripts/Grove.spec.lua (a small grove in the art lane's manifest shape, not the real one): run through build_world_grove_assets.fixture_lua.",
+ "assetId": "1234567890",
+ "operationId": "fixture-op",
+ "moderation": "Approved",
+ "fbxSha256": "fixture",
+ "manifestSha256": "fixture",
+ "importScale": 3.5,
+ "parts": [
+  {
+   "name": "GV_Fix_Moat__water",
+   "meshId": "rbxassetid://900000001",
+   "meshSize": [
+    1050.0,
+    0.0002,
+    980.0
+   ]
+  },
+  {
+   "name": "GV_Fix_TierNorth__stone",
+   "meshId": "rbxassetid://900000002",
+   "meshSize": [
+    770.0,
+    420.0,
+    210.0
+   ]
+  },
+  {
+   "name": "GV_Fix_FarEast__leaf",
+   "meshId": "rbxassetid://900000003",
+   "meshSize": [
+    420.0,
+    315.0,
+    700.0
+   ]
+  },
+  {
+   "name": "GV_Fix_Trunk__bark",
+   "meshId": "rbxassetid://900000004",
+   "meshSize": [
+    84.0,
+    665.0,
+    84.0
+   ]
+  },
+  {
+   "name": "GV_Fix_Crown__leaf",
+   "meshId": "rbxassetid://900000005",
+   "meshSize": [
+    245.0,
+    140.0,
+    245.0
+   ]
+  },
+  {
+   "name": "GV_Fix_Glow__glow",
+   "meshId": "rbxassetid://900000006",
+   "meshSize": [
+    700.0,
+    105.0,
+    700.0
+   ]
+  },
+  {
+   "name": "GV_Fix_Vines__leaf",
+   "meshId": "rbxassetid://900000007",
+   "meshSize": [
+    770.0,
+    210.0,
+    770.0
+   ]
+  }
+ ],
+ "textures": {
+  "stone": {
+   "decalId": "1",
+   "image": "rbxassetid://800000001"
+  },
+  "bark": {
+   "decalId": "2",
+   "image": "rbxassetid://800000002"
+  },
+  "leaf": {
+   "decalId": "3",
+   "image": "rbxassetid://800000003"
+  }
+ }
+}

@@ -1,0 +1,414 @@
+{
+ "note": "Fixture for scripts/Grove.spec.lua (a small grove in the art lane's manifest shape, not the real one): run through build_world_grove_assets.fixture_lua.",
+ "version": 1,
+ "assetId": "",
+ "coordinateRule": "FIXTURE. Roblox (X, Y, Z) = Blender (x, z + 4, -y); every position here is already Roblox.",
+ "turnApplied": false,
+ "meshes": {
+  "GV_Fix_Moat__water": {
+   "name": "GV_Fix_Moat__water",
+   "role": "water",
+   "band": "near",
+   "kind": "water",
+   "tris": 1200,
+   "size": [
+    300,
+    0.0,
+    280
+   ],
+   "center": [
+    12,
+    -26,
+    -8
+   ],
+   "texture": "",
+   "shadow": false,
+   "doubleSided": false,
+   "maxLevel": 2,
+   "minRimDist": -60
+  },
+  "GV_Fix_TierNorth__stone": {
+   "name": "GV_Fix_TierNorth__stone",
+   "role": "tier",
+   "band": "mid",
+   "kind": "stone",
+   "tris": 4000,
+   "size": [
+    220,
+    120,
+    60
+   ],
+   "center": [
+    12,
+    40,
+    -190
+   ],
+   "texture": "stone",
+   "shadow": false,
+   "doubleSided": false,
+   "maxLevel": 2,
+   "minRimDist": 46
+  },
+  "GV_Fix_FarEast__leaf": {
+   "name": "GV_Fix_FarEast__leaf",
+   "role": "far",
+   "band": "far",
+   "kind": "leaf",
+   "tris": 1800,
+   "size": [
+    120,
+    90,
+    200
+   ],
+   "center": [
+    330,
+    70,
+    -8
+   ],
+   "texture": "leaf",
+   "shadow": false,
+   "doubleSided": false,
+   "maxLevel": 2,
+   "minRimDist": 130
+  },
+  "GV_Fix_Trunk__bark": {
+   "name": "GV_Fix_Trunk__bark",
+   "role": "giant_trunk",
+   "band": "giant",
+   "kind": "bark",
+   "tris": 3000,
+   "size": [
+    24,
+    190,
+    24
+   ],
+   "pivotToCentre": [
+    0,
+    95,
+    0
+   ],
+   "texture": "bark",
+   "shadow": false,
+   "doubleSided": false,
+   "maxLevel": 2,
+   "minRimDist": -8
+  },
+  "GV_Fix_Crown__leaf": {
+   "name": "GV_Fix_Crown__leaf",
+   "role": "giant_crown",
+   "band": "giant",
+   "kind": "leaf",
+   "tris": 2500,
+   "size": [
+    70,
+    40,
+    70
+   ],
+   "pivotToCentre": [
+    -10,
+    10,
+    0
+   ],
+   "texture": "leaf",
+   "shadow": false,
+   "doubleSided": false,
+   "maxLevel": 2,
+   "minRimDist": -25
+  },
+  "GV_Fix_Glow__glow": {
+   "name": "GV_Fix_Glow__glow",
+   "role": "lanterns",
+   "band": "dressing",
+   "kind": "glow",
+   "tris": 600,
+   "size": [
+    200,
+    30,
+    200
+   ],
+   "center": [
+    12,
+    30,
+    -8
+   ],
+   "texture": "",
+   "shadow": false,
+   "doubleSided": false,
+   "maxLevel": 1,
+   "minRimDist": 44
+  },
+  "GV_Fix_Vines__leaf": {
+   "name": "GV_Fix_Vines__leaf",
+   "role": "dressing",
+   "band": "dressing",
+   "kind": "leaf",
+   "tris": 2000,
+   "size": [
+    220,
+    60,
+    220
+   ],
+   "center": [
+    12,
+    90,
+    -8
+   ],
+   "texture": "leaf",
+   "shadow": false,
+   "doubleSided": false,
+   "maxLevel": 1,
+   "minRimDist": 20
+  }
+ },
+ "instances": [
+  {
+   "tree": "Giant_1",
+   "mesh": "GV_Fix_Trunk__bark",
+   "pivot": [
+    150,
+    -25,
+    -8
+   ],
+   "yaw": 0.0,
+   "scale": 1.0
+  },
+  {
+   "tree": "Giant_2",
+   "mesh": "GV_Fix_Trunk__bark",
+   "pivot": [
+    -130,
+    -25,
+    40
+   ],
+   "yaw": 2.1,
+   "scale": 1.1
+  },
+  {
+   "tree": "Giant_3",
+   "mesh": "GV_Fix_Trunk__bark",
+   "pivot": [
+    12,
+    -25,
+    140
+   ],
+   "yaw": 4.0,
+   "scale": 0.95
+  },
+  {
+   "tree": "Giant_1",
+   "mesh": "GV_Fix_Crown__leaf",
+   "pivot": [
+    150,
+    165,
+    -8
+   ],
+   "yaw": 0.0,
+   "scale": 1.0
+  },
+  {
+   "tree": "Giant_2",
+   "mesh": "GV_Fix_Crown__leaf",
+   "pivot": [
+    -130,
+    184,
+    40
+   ],
+   "yaw": 2.1,
+   "scale": 1.1
+  },
+  {
+   "tree": "Giant_3",
+   "mesh": "GV_Fix_Crown__leaf",
+   "pivot": [
+    12,
+    155,
+    140
+   ],
+   "yaw": 4.0,
+   "scale": 0.95
+  }
+ ],
+ "textures": {
+  "stone": {
+   "color": "tex/stone.png",
+   "colorId": "",
+   "studsPerTile": 32.0
+  },
+  "bark": {
+   "color": "tex/bark.png",
+   "colorId": "",
+   "studsPerTile": 24.0
+  },
+  "leaf": {
+   "color": "tex/leaf.png",
+   "colorId": "",
+   "studsPerTile": 24.0
+  }
+ },
+ "rays": [
+  {
+   "from": [
+    72.437,
+    212.0,
+    40.957
+   ],
+   "to": [
+    -10,
+    13,
+    -30
+   ],
+   "w0": 5,
+   "w1": 9,
+   "phone": true
+  },
+  {
+   "from": [
+    102.437,
+    212.0,
+    80.957
+   ],
+   "to": [
+    20,
+    13,
+    10
+   ],
+   "w0": 6,
+   "w1": 11,
+   "phone": false
+  },
+  {
+   "from": [
+    22.437,
+    212.0,
+    70.957
+   ],
+   "to": [
+    -60,
+    13,
+    0
+   ],
+   "w0": 5.5,
+   "w1": 10,
+   "phone": true
+  }
+ ],
+ "sun": {
+  "clockTime": 10.5,
+  "dir": [
+   0.3635,
+   0.87748,
+   0.31288
+  ]
+ },
+ "sunGate": {
+  "az": 40.72,
+  "el": 61.34
+ },
+ "moat": {
+  "surfaceY": -26.0,
+  "bedOpaque": true,
+  "bankTopY": -8.8
+ },
+ "canopyBottomY": 133.27,
+ "hides": [
+  "W7_Backdrop__cloud_1",
+  "W7_Backdrop__far_peak_1",
+  "W7_IsletsA__bark",
+  "W7_CastleFlag_1__far_peak"
+ ],
+ "keeps": [
+  "W7_Underside__cliff_rock"
+ ],
+ "lanterns": [
+  {
+   "pos": [
+    140,
+    20,
+    -8
+   ],
+   "kind": "warm",
+   "radius": 4.5,
+   "source": "house"
+  },
+  {
+   "pos": [
+    -120,
+    22,
+    40
+   ],
+   "kind": "aqua",
+   "radius": 1.5,
+   "source": "post"
+  }
+ ],
+ "falls": [
+  {
+   "gorge": 1,
+   "tier": 1,
+   "top": [
+    150,
+    30,
+    -60
+   ],
+   "bottom": [
+    140,
+    -25.9,
+    -58
+   ],
+   "width": 8,
+   "into": "moat"
+  }
+ ],
+ "bubbles": [
+  {
+   "path": [
+    [
+     -20,
+     12,
+     30
+    ],
+    [
+     10,
+     18,
+     40
+    ],
+    [
+     30,
+     14,
+     10
+    ],
+    [
+     0,
+     10,
+     0
+    ]
+   ],
+   "closed": true,
+   "radius": 1.5,
+   "seconds": 80
+  },
+  {
+   "path": [
+    [
+     -70,
+     16,
+     -20
+    ],
+    [
+     -40,
+     22,
+     -40
+    ]
+   ],
+   "closed": true,
+   "radius": 1.2,
+   "seconds": 60
+  }
+ ],
+ "totals": {
+  "triangles": 26100,
+  "meshes": 7,
+  "instances": 6,
+  "groups": 11
+ }
+}

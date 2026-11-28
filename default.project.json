@@ -77,6 +77,9 @@
       "AeroTrunks": {
         "$path": "assets/world/AeroTrunks.rbxmx"
       },
+      "GroveKit": {
+        "$path": "assets/world/GroveKit.rbxmx"
+      },
       "EggMachine": {
         "$path": "assets/world/EggMachine.rbxmx"
       },

@@ -203,7 +203,10 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # Rotation slice 2, lane D: Deck style as a closet under rack_deck (DeckCloset's pure rules).
           "DeckCloset",
           # Rotation slice 2, lane E (ROTATION-2-BRIEF 3): Angel Wings' look, halo, finish, preview pose and closet cards.
-          "AngelWings"]
+          "AngelWings",
+          # The Hidden Grove (qa-2026-11-28-grove, ARCH-REVIEW-GROVE): the switch, the WorldGrove contract (placeholder and
+          # a fixture through the generator), budgets, clearances, the ring, its hides in AeroWorld, the light's rules.
+          "Grove"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -310,7 +313,9 @@ def client_modules():
                     # Rotation slice 2, lane D: the Deck style closet's pure rules.
                     "DeckCloset.lua",
                     # Rotation slice 2, lane E: Angel Wings' rules and the idle flap they ride.
-                    "AngelWings.lua", "PetIdleMotion.lua"):
+                    "AngelWings.lua", "PetIdleMotion.lua",
+                    # The Hidden Grove: the ring, its light, and the Aero layer that runs them (its room fixtures).
+                    "GroveWorld.lua", "GroveLight.lua", "AeroWorld.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")
@@ -329,7 +334,16 @@ def client_modules():
     out["client/InitModal"] = "return function(clientUI,isPickerOpen,journal,nurseryView,gameMenu,modal)\n" + modal + "\nreturn clientUI.anyModalOpen\nend"
     out["client/MovementLock"] = (ROOT / "src/client/MovementLock.lua").read_text(encoding="utf-8")
     out["client/EggEntryScan"] = egg_entry_scan()
+    out["client/WorldGroveFixture"] = grove_fixture()
     return out
+
+
+def grove_fixture():
+    """The Hidden Grove spec's data: scripts/fixtures/grove-fixture-*.json through the real generator's contract and
+    binding (build_world_grove_assets.fixture_lua), never the real grove."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import build_world_grove_assets
+    return build_world_grove_assets.fixture_lua(ROOT / "scripts" / "fixtures")
 
 
 def egg_entry_scan():

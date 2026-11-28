@@ -48,13 +48,21 @@ end
 
 -- The Aero world kit (assets/world/AeroKit.rbxmx: split crowns, falls sheets, lips, rocks) is mounted in ServerStorage and
 -- copied to ReplicatedStorage only where the ceiling passes, so live clients never download it. Missing: nothing.
--- deps (specs): ceiling() -> bool, from (ServerStorage), to (ReplicatedStorage). Returns the copy, or nil.
+-- deps (specs): ceiling() -> bool, groveCeiling() -> bool, from (ServerStorage), to (ReplicatedStorage). Returns the
+-- copy, or nil.
 function Config.mountKit(deps)
 	deps=deps or {}
 	local ceiling=deps.ceiling or Aero.ceiling
 	if not ceiling()then return nil end
 	local from=deps.from or game:GetService("ServerStorage")
 	local to=deps.to or game:GetService("ReplicatedStorage")
+	-- The Hidden Grove's templates (assets/world/GroveKit.rbxmx, GROVE-BUILD-PLAN; an empty folder until its upload is
+	-- confirmed): only where the grove's own ceiling (Alive `grove`) passes too, so no other client downloads them.
+	local groveCeiling=deps.groveCeiling or function()
+		return require(game:GetService("ReplicatedStorage").Shared.Alive).ceiling("grove")
+	end
+	local grove=from:FindFirstChild("GroveKit")
+	if grove and groveCeiling()and not to:FindFirstChild("GroveKit")then grove:Clone().Parent=to end
 	-- Beta 38: the tree grades' trunk pack (assets/world/AeroTrunks.rbxmx) goes with it, the same way (an empty
 	-- placeholder folder until its upload is confirmed: the clients then keep today's trunks).
 	local trunks=from:FindFirstChild("AeroTrunks")

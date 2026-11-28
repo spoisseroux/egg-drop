@@ -161,7 +161,8 @@ end
 
 -- Returns {folder, emitters, falls, still(reduced), update({level, camera, daylight}), destroy(), fireflies()};
 -- everything or nothing. options: parent, data (WorldV7Data), groundY, clouds=false, falls=false, hour (GardenHour; a
--- fixture in specs), kit (WorldAeroKit while the world kit stands: the falls layers fit its bowed sheets and lips).
+-- fixture in specs), kit (WorldAeroKit while the world kit stands: the falls layers fit its bowed sheets and lips), moat
+-- (the Hidden Grove's moat surface Y while it stands: Sky Falls' layers end there, AeroFalls.cut).
 function Additions.build(options)
 	local folder=Instance.new("Folder")
 	folder.Name=Additions.Name
@@ -171,7 +172,7 @@ function Additions.build(options)
 		Additions.dome(folder)
 		Additions.lips(folder)
 		local list=Additions.glints(folder,groundY)
-		if options.falls~=false then falls=Falls.build(folder,options.data or require(Shared:WaitForChild("WorldV7Data")),options.kit)end
+		if options.falls~=false then falls=Falls.build(folder,options.data or require(Shared:WaitForChild("WorldV7Data")),options.kit,options.moat)end
 		-- LOOK-R2 3: the fountain only where the kit's fountain stone stands.
 		if options.falls~=false and options.kit and options.kit.fountain then
 			local ambient=options.ambient
