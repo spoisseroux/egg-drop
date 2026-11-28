@@ -1583,7 +1583,29 @@ def s_kick(rng):
     y = np.sin(osc(f)) * np.exp(-t / 0.15)
     c = int(0.002 * SR)
     y[:c] += fft_filter_padded(rng.standard_normal(c), lambda fr: mag_lp(fr, 4000, 2)) * np.linspace(0.3, 0, c)
+    k = int(0.003 * SR)                                       # 3 ms 2.5 kHz click: phone speakers hear the kick
+    y[:k] += 0.35 * np.sin(2 * np.pi * 2500 * t[:k]) * np.exp(-t[:k] / 0.001)
     return y * note_env(n, 0.0005, 10, 0.01)
+
+
+def phone_weight(y, rel_db):
+    """Parallel tanh drive kept to 300 Hz-2 kHz, `rel_db` under the dry sound: harmonics a phone can play."""
+    d = fft_filter_padded(np.tanh(3 * y / max(np.abs(y).max(), 1e-9)), lambda f: mag_hp(f, 300, 2) * mag_lp(f, 2000, 2))
+    return d * (np.sqrt((y ** 2).mean()) / max(np.sqrt((d ** 2).mean()), 1e-12)) * db(rel_db)
+
+
+def s_hat(rng, open_=False):
+    n = int((0.22 if open_ else 0.03) * SR)
+    t = np.arange(n) / SR
+    nz = fft_filter_padded(rng.standard_normal(n), lambda fr: mag_hp(fr, 7000, 2))
+    return nz * note_env(n, 0.0005, 0.09 if open_ else 0.008, 0.004)
+
+
+def s_crash(rng):
+    n = int(2.0 * SR)
+    t = np.arange(n) / SR
+    nz = fft_filter_padded(rng.standard_normal(n), lambda fr: mag_hp(fr, 3000, 2))
+    return nz * np.exp(-t / (1.2 / 3)) * note_env(n, 0.001, 10, 0.05)     # ~1.2 s to -26 dB
 
 
 def s_snare(rng):
@@ -1744,7 +1766,7 @@ def build_v3(args):
     # ---------------------------------------------------------------- DAY
     print("v3: day")
     day = Mix(N)
-    day.add(pad, -6)
+    day.add(gate(pad, [(pos(33), pos(41))], value=db(-6), ramp=int(BEAT)), -6)   # real space in 33-40
     day.add(chords_soft, -8)
     day.add(bass_day)
     perc_bars = list(range(9, 33)) + list(range(41, 65))
@@ -1762,9 +1784,9 @@ def build_v3(args):
             for k in range(0, 16, 2):
                 acc = db(3) if k in (4, 12) else db(r.uniform(-2, 0))
                 snd = unit(s_shaker(1.0, 1 + r.uniform(-0.04, 0.04), np.random.default_rng(int(r.integers(1 << 30)))))
-                day.hit("shaker", snd, pos(b) + int(round(k * six + (0.1 * six if k % 4 == 2 else 0))), rel(-29) * acc,
+                day.hit("shaker", snd, pos(b) + int(round(k * six + (0.1 * six if k % 4 == 2 else 0))), rel(-23) * acc,
                         0.25 if k % 4 else -0.25, -12)
-            day.hit("brush", unit(s_brush(np.random.default_rng(int(r.integers(1 << 30))))), pos(b, 3), rel(-30), -0.2, -12)
+            day.hit("brush", unit(s_brush(np.random.default_rng(int(r.integers(1 << 30))))), pos(b, 3), rel(-25), -0.2, -12)
     chroma_of = lambda b: chroma_main[sp(b)]
     if on("pip"):
         for k, b in enumerate((20, 52)):
@@ -1808,18 +1830,19 @@ def build_v3(args):
     # ---------------------------------------------------------------- NIGHT
     print("v3: night")
     night = Mix(N)
-    night.add(fft_filter(pad, lambda f: mag_lp(f, 1100, 2)), -3)
-    night.add(fft_filter(chords_soft, lambda f: mag_lp(f, 1100, 2)) * db(-6), -4)
+    night.add(fft_filter(pad, lambda f: mag_lp(f, 1600, 2)), -3)
+    night.add(fft_filter(chords_soft, lambda f: mag_lp(f, 1600, 2)) * db(-6), -4)
     night.add(bass_night)
     NS = -4
     if on("music-box"):
         for b in mel_bars:
             play_line(night, pal, melody_line(mel_notes, (b - 1) % 16, 1, +1, keep={0}), b - 1, rel(-7), NS)
-        for b in (25, 29, 57, 61):
+        for b in (25, 29, 57, 61, 3, 7, 19, 23, 35, 39, 51, 55):
             play_line(night, pal, melody_line(mel_notes, (b - 1) % 16, 1, +1, keep={8}), b - 1, rel(-10), NS)
     if on("crickets"):
-        for b, bt, p in ((6, 2.5, 0.4), (22, 3.25, -0.4), (38, 1.75, 0.3), (54, 3.0, -0.3)):
-            night.hit("crickets", unit(s_cricket(np.random.default_rng(args.seed + b))), pos(b, bt), rel(-22), p, NS)
+        for b, bt, p in ((6, 2.5, 0.4), (14, 1.5, -0.3), (22, 3.25, -0.4), (30, 3.75, 0.35), (38, 1.75, 0.3),
+                         (46, 2.25, -0.35), (54, 3.0, -0.3), (62, 1.25, 0.4)):
+            night.hit("crickets", unit(s_cricket(np.random.default_rng(args.seed + b))), pos(b, bt), rel(-15), p, NS)
     if on("hoo"):
         for b, bt, p in ((30, 2.0, 0.3), (62, 2.5, -0.3)):
             m, s, vs = pal.variants["hoo"][b % 3]
@@ -1849,12 +1872,13 @@ def build_v3(args):
     stem_dr = gate(assemble(ND, [Block(ddrums, 0, p * 8, 8, db(-3)) for p in range(4)]), [(pos(16, 3), pos(17))])
     dk.add(stem_dr, -30)
     kit = Mix(ND)                                   # the kit gets the garden drum shelf before it joins the mix
-    kick = unit(s_kick(np.random.default_rng(args.seed + 41)))
+    kick = s_kick(np.random.default_rng(args.seed + 41))
+    kick = unit(kick + phone_weight(kick, -6))
     snares = [unit(s_snare(np.random.default_rng(args.seed + 42 + i))) for i in range(3)]
     fills = (8, 24, 32)
     for b in range(1, 33):
-        if 17 <= b <= 20:
-            kicks = (1, 2, 3, 4)                    # the drop: four on the floor
+        if 17 <= b <= 20 or 29 <= b <= 32:
+            kicks = (1, 2, 3, 4)                    # the drop, and the last phrase: four on the floor
         elif b == 16:
             kicks = (1, 2)
         else:
@@ -1873,12 +1897,22 @@ def build_v3(args):
     roll = [(15, 1 + 0.5 * k) for k in range(8)] + [(16, 1 + 0.25 * k) for k in range(8)] + \
            [(16, 3 + 0.125 * k) for k in range(16)]
     for i, (b, bt) in enumerate(roll):
-        kit.hit("snare-roll", snares[i % 3], pos(b, bt), reld(-16 + 11 * i / (len(roll) - 1)), 0.05, -24)
+        kit.hit("snare-roll", snares[i % 3], pos(b, bt), reld(-18 + 8 * i / (len(roll) - 1)), 0.05, -24)
     toms = [unit(s_tom(m, np.random.default_rng(args.seed + 50 + m))) for m in (55, 52, 50, 48)]   # G3 E3 D3 C3
     for b in fills:
         for j in range(4):
             kit.hit("tom", toms[j], pos(b, 4 + 0.25 * j), reld(-6), (0.3, 0.1, -0.1, -0.3)[j], -24)
-    dk.add(fft_filter(kit.dry, lambda f: mag_rbj(f, "highshelf", 6000, -4, 0.707)))
+    hr = np.random.default_rng(args.seed + 45)
+    closed = [unit(s_hat(hr)) for _ in range(3)]
+    opened = unit(s_hat(hr, open_=True))
+    for b in range(9, 33):
+        for k in range(16):
+            kit.hit("hat", closed[k % 3], pos(b, 1 + 0.25 * k), reld(-18) * (1 if k % 2 == 0 else db(-3)),
+                    0.2 if k % 2 else -0.2, -30)
+        if 17 <= b <= 20:
+            for bt in (1.5, 2.5, 3.5, 4.5):
+                kit.hit("open-hat", opened, pos(b, bt), reld(-13), 0.15, -24)
+    dk.add(fft_filter(kit.dry, lambda f: mag_rbj(f, "highshelf", 6000, -1, 0.707)))
     dk.send += kit.send
     dk.events += kit.events
     # octave bass, 8ths (16ths in the drop); out on beat 4 of bar 16
@@ -1891,8 +1925,9 @@ def build_v3(args):
                 continue
             m = root + (12 if k % 2 else 0)
             ln = int(step * BEAT * 0.85)
-            y = tab_tone(TAB_PULSE, hz(m), ln) * 0.6 + np.sin(2 * np.pi * hz(m) * np.arange(ln) / SR) * 0.8
-            y = fft_filter_padded(y * note_env(ln, 0.003, 0.25, 0.012), lambda f: mag_lp(f, 1400, 2))
+            y = tab_tone(TAB_PULSE, hz(m), ln) * 1.0 + np.sin(2 * np.pi * hz(m) * np.arange(ln) / SR) * 0.5
+            y = fft_filter_padded(y * note_env(ln, 0.003, 0.25, 0.012), lambda f: mag_lp(f, 2200, 2))
+            y = y + phone_weight(y, -4)
             lift = db(2) if 17 <= b <= 20 else 1.0
             dk.hit("bass", unit(y), pos(b, bt), reld(-5) * lift * (1 if k % 2 == 0 else db(-2)), 0.0, -40)
     # pumping pad from the deck chords
@@ -1932,18 +1967,37 @@ def build_v3(args):
     lead_arr = assemble(ND, [Block(dlead, 0, p * 8, 8) for p in (0, 1, 3)] + [Block(dlead, 4, 20, 4)])
     lead_arr = gate(lead_arr, [(pos(b, 3), pos(b + 1)) for b in (26, 28, 30)])
     dk.add(lead_arr, -20)
+    # the drop hook: the lead's first four bars on the pulse voice, an octave up
+    for s16, m, d in melody_line(deck_notes, 0, 4, +1, src_len_bars=8):
+        ln = int(d * BEAT / 4)
+        y = tab_tone(TAB_PULSE, hz(m), ln) * note_env(ln, 0.003, 0.3, 0.02)
+        y = unit(fft_filter_padded(y, lambda f: mag_lp(f, 4000, 2)))
+        dk.hit("drop-hook", y, barf(16) + int(round(s16 * BAR / 16)), reld(-5), 0.0, -18)
+    # the gap: everything but the riser stops for the last half beat of bar 16
+    gap = [(pos(16, 4.5), pos(17))]
+    dk.dry = gate(dk.dry, gap)
+    dk.send = gate(dk.send, gap)
+    rz = Mix(ND)                                   # riser on its own, so its reverb rides through the gap
     if on("fun-hits"):
         rr = np.random.default_rng(args.seed + 60)
-        dk.hit("riser", unit(s_riser(pos(17) - pos(15), rr)), pos(15), reld(-11), 0.0, -14)
-        dk.hit("boom", unit(s_boom(rr)), pos(17), reld(-6), 0.0, -14)                    # the drop lands
+        rz.hit("riser", unit(s_riser(pos(17) - pos(15), rr)), pos(15), reld(-11), 0.0, -14)
+        dk.hit("boom", unit(s_boom(rr)), pos(17), reld(-2), 0.0, -14)                    # the drop lands
+        dk.hit("crash", unit(s_crash(np.random.default_rng(args.seed + 61))), pos(17), reld(-12), 0.0, -14)
         dk.hit("laser", unit(s_laser(43, rr)), pos(8, 4.5), reld(-12), 0.35, -16)       # zip down to G2
         dk.hit("laser", unit(s_laser(45, rr)), pos(24, 4.5), reld(-12), -0.35, -16)     # zip down to A2
         dk.hit("coin", unit(s_coin(79, rr)), pos(12, 4.5), reld(-13), 0.3, -16)          # G5 -> C6
         dk.hit("coin", unit(s_coin(79, rr)), pos(32, 3.5), reld(-13), -0.3, -16)
     print("v3: deck room + bus")
-    deck_mix = dk.dry + room(dk.send, 0.35)
+    deck_mix = dk.dry + gate(room(dk.send, 0.35), gap) + rz.dry + room(rz.send, 0.35)
+    dk.events += rz.events
     deck_mix = fft_filter(deck_mix, lambda f: mag_rbj(f, "peak", 3000, -3, 0.7))   # leave 3 kHz to the merge SFX
+    # low shelf -6 dB under ~120 Hz (high shelf +6 with -6 overall): the lows came up 10 dB on v2, phones need mids
+    deck_mix = fft_filter(deck_mix, lambda f: mag_rbj(f, "highshelf", 120, 6.0, 0.707) * db(-6.0)
+                         * mag_rbj(f, "peak", 800, 1.5, 0.7))           # and +1.5 dB of 800 Hz body
     deck_mix, g_deck = glue(deck_mix, 1.5)
+    ramp = int(0.03 * SR)                           # section gains after the glue: the drop sits up
+    deck_mix = gate(deck_mix, [(pos(1), pos(15))], value=db(-1.0), ramp=ramp)
+    deck_mix = gate(deck_mix, [(pos(17), pos(21))], value=db(1.3), ramp=ramp)
     deck_out = finish(deck_mix, V3_LUFS["pocket-deck-v3"], V3_TP["pocket-deck-v3"])
 
     # ---------------------------------------------------------------- DECK LITE (calm: the v2 recipe plus a soft pad)
@@ -1993,6 +2047,34 @@ def build_v3(args):
     print("v3: measuring")
     meas = {name: measure(x, name + ".wav") for name, x in q.items()}
     report["files"] = meas
+
+    def phone_lufs(x):
+        """Phone speaker proxy: mono (played on both channels), high-passed at 300 Hz."""
+        return round(float(_METER.integrated_loudness(stereo(fft_filter(x.mean(axis=1), lambda f: mag_hp(f, 300, 2))))), 2)
+
+    def seg_lufs(x, b0, b1):
+        return float(_METER.integrated_loudness(x[pos(b0): pos(b1)]))
+
+    def band_db(x, b0, b1, lo):
+        y = fft_filter(x, lambda f: mag_hp(f, lo, 4))[pos(b0): pos(b1)]
+        return 10 * np.log10((y ** 2).mean())
+
+    dq = q["pocket-deck-v3"]
+    drop = {"bar16_lufs": round(seg_lufs(dq, 16, 17), 2), "bar17_lufs": round(seg_lufs(dq, 17, 18), 2),
+            "bars1_16_lufs": round(seg_lufs(dq, 1, 17), 2), "bars17_20_lufs": round(seg_lufs(dq, 17, 21), 2),
+            "above5k_17_20_vs_1_16_db": round(band_db(dq, 17, 21, 5000) - band_db(dq, 1, 17, 5000), 2)}
+    drop["bar17_minus_bar16_lu"] = round(drop["bar17_lufs"] - drop["bar16_lufs"], 2)
+    drop["drop_minus_1_16_lu"] = round(drop["bars17_20_lufs"] - drop["bars1_16_lufs"], 2)
+    report["deck_drop"] = drop
+    phone = {}
+    for name, x in q.items():
+        phone[name] = phone_lufs(x)
+        old = os.path.join(OUT_DIR, name.replace("-v3", "-v2") + ".wav")
+        if os.path.exists(old):
+            phone[name.replace("-v3", "-v2")] = phone_lufs(sf.read(old, dtype="float64", always_2d=True)[0])
+    report["phone_lufs_mono_hp300"] = phone
+    print("deck drop:", drop)
+    print("phone loudness (mono, HP 300 Hz):", phone)
     dayq, nightq = q["garden-day-v3"], q["garden-night-v3"]
     l_day = meas["garden-day-v3"]["integrated_lufs"]
 

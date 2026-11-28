@@ -73,15 +73,15 @@
   "glue": {
     "day": {
       "threshold_db": -21.0,
-      "loudness_reduction_db": 1.09
+      "loudness_reduction_db": 1.08
     },
     "night": {
       "threshold_db": -24.0,
-      "loudness_reduction_db": 1.29
+      "loudness_reduction_db": 1.32
     },
     "deck": {
       "threshold_db": -22.0,
-      "loudness_reduction_db": 1.74
+      "loudness_reduction_db": 1.86
     },
     "lite": {
       "threshold_db": -24.0,
@@ -115,8 +115,8 @@
       "swell": 2
     },
     "night": {
-      "crickets": 4,
-      "music-box": 20,
+      "crickets": 8,
+      "music-box": 28,
       "owl-hoo": 2,
       "plip": 1,
       "ribbit": 1
@@ -126,8 +126,12 @@
       "bass": 286,
       "boom": 1,
       "coin": 2,
-      "kick": 99,
+      "crash": 1,
+      "drop-hook": 24,
+      "hat": 384,
+      "kick": 102,
       "laser": 2,
+      "open-hat": 16,
       "riser": 1,
       "snare": 57,
       "snare-roll": 32,
@@ -141,33 +145,37 @@
   },
   "sample_vs_bed_db": {
     "day": {
-      "brush": -26.0,
+      "brush": -21.0,
       "eep": -16.9,
       "kalimba": -9.1,
       "music-box": -2.5,
       "pip": -10.9,
       "plip": -12.2,
-      "shaker": -29.3,
+      "shaker": -23.3,
       "swell": -10.1
     },
     "night": {
-      "crickets": -25.1,
-      "music-box": 0.2,
-      "owl-hoo": -8.1,
-      "plip": -12.9,
-      "ribbit": -12.7
+      "crickets": -18.2,
+      "music-box": -0.3,
+      "owl-hoo": -8.3,
+      "plip": -13.0,
+      "ribbit": -12.8
     },
     "deck": {
-      "arp": -11.7,
-      "bass": -13.6,
-      "boom": -14.6,
-      "coin": -10.2,
-      "kick": -13.1,
-      "laser": -10.8,
-      "riser": -6.4,
-      "snare": -7.5,
-      "snare-roll": -11.5,
-      "stab": -2.6,
+      "arp": -11.8,
+      "bass": -10.2,
+      "boom": -10.2,
+      "coin": -10.3,
+      "crash": -5.5,
+      "drop-hook": 1.4,
+      "hat": -20.6,
+      "kick": -9.1,
+      "laser": -10.9,
+      "open-hat": -6.8,
+      "riser": -6.5,
+      "snare": -7.6,
+      "snare-roll": -14.7,
+      "stab": -2.4,
       "tom": -7.3
     },
     "lite": {
@@ -181,177 +189,177 @@
       "frames": 5789538,
       "seconds": 131.282,
       "integrated_lufs": -18.6,
-      "true_peak_dbtp": -7.21,
+      "true_peak_dbtp": -7.22,
       "sample_peak_dbfs": -7.22,
-      "loudness_range_lu": 1.65,
-      "mono_loss_db": -0.49,
-      "share_above_6k": 0.0,
+      "loudness_range_lu": 1.81,
+      "mono_loss_db": -0.46,
+      "share_above_6k": 0.0002,
       "seam": {
-        "rms_last50_db": -18.94,
-        "rms_first50_db": -22.26,
+        "rms_last50_db": -18.78,
+        "rms_first50_db": -22.11,
         "wrap_step": [
-          1069,
-          1140
+          1089,
+          1162
         ],
         "p99_step": [
-          499,
-          488
+          552,
+          532
         ],
-        "wrap_step_ratio_p99": 2.336,
-        "wrap_curvature_ratio_p99": 0.059,
-        "hf_seam_vs_median_barline_db": -26.42,
-        "hf_seam_vs_loudest_barline_db": -28.62,
+        "wrap_step_ratio_p99": 2.184,
+        "wrap_curvature_ratio_p99": 0.026,
+        "hf_seam_vs_median_barline_db": -30.01,
+        "hf_seam_vs_loudest_barline_db": -32.19,
         "slope_last4ms_vs_first4ms": [
-          -12.18,
-          -0.17
+          -12.41,
+          -0.16
         ]
       },
       "ogg": {
-        "bytes": 2471816,
-        "sha256": "d3138701967ef17b76dd04671ccbbc31f453243aca3a39f4f747c313690fcde1",
+        "bytes": 2497985,
+        "sha256": "29938398c1c2832c36795ea5c99c54aba463dea3162d57fdb1e40d303775ba93",
         "decoded_frames": 5789538,
         "frames_match": true,
         "seam": {
-          "rms_last50_db": -18.85,
-          "rms_first50_db": -22.24,
+          "rms_last50_db": -18.8,
+          "rms_first50_db": -22.07,
           "wrap_step": [
-            930,
-            1178
+            1029,
+            1166
           ],
           "p99_step": [
-            496,
-            484
+            546,
+            526
           ],
-          "wrap_step_ratio_p99": 2.433,
-          "wrap_curvature_ratio_p99": 0.619,
-          "hf_seam_vs_median_barline_db": -23.85,
-          "hf_seam_vs_loudest_barline_db": -26.36,
+          "wrap_step_ratio_p99": 2.217,
+          "wrap_curvature_ratio_p99": 0.111,
+          "hf_seam_vs_median_barline_db": -28.96,
+          "hf_seam_vs_loudest_barline_db": -31.36,
           "slope_last4ms_vs_first4ms": [
-            -11.66,
-            -0.63
+            -11.76,
+            -1.04
           ]
         },
-        "true_peak_dbtp": -7.28
+        "true_peak_dbtp": -7.32
       },
-      "wav_sha256": "a5049e8887e964786fde3eeaeae3fffb154927c96b32aef7f26f7624ba9e810f"
+      "wav_sha256": "5c22fa9286f86250ccb0c92a66efad12d0fc13f8621bd33f87df6b01ca63cdac"
     },
     "garden-night-v3": {
       "file": "garden-night-v3.wav",
       "frames": 5789538,
       "seconds": 131.282,
       "integrated_lufs": -21.6,
-      "true_peak_dbtp": -10.86,
-      "sample_peak_dbfs": -10.86,
-      "loudness_range_lu": 0.95,
-      "mono_loss_db": -0.87,
+      "true_peak_dbtp": -11.0,
+      "sample_peak_dbfs": -11.01,
+      "loudness_range_lu": 0.92,
+      "mono_loss_db": -0.88,
       "share_above_6k": 0.0,
       "seam": {
-        "rms_last50_db": -22.62,
-        "rms_first50_db": -24.68,
+        "rms_last50_db": -22.67,
+        "rms_first50_db": -24.67,
         "wrap_step": [
-          591,
-          622
+          661,
+          706
         ],
         "p99_step": [
-          308,
-          293
+          339,
+          329
         ],
-        "wrap_step_ratio_p99": 2.123,
-        "wrap_curvature_ratio_p99": 0.195,
-        "hf_seam_vs_median_barline_db": -0.06,
-        "hf_seam_vs_loudest_barline_db": -25.92,
+        "wrap_step_ratio_p99": 2.146,
+        "wrap_curvature_ratio_p99": 0.169,
+        "hf_seam_vs_median_barline_db": -1.01,
+        "hf_seam_vs_loudest_barline_db": -24.52,
         "slope_last4ms_vs_first4ms": [
-          -12.09,
-          -0.11
+          -11.6,
+          0.55
         ]
       },
       "ogg": {
-        "bytes": 2229807,
-        "sha256": "88f08ba7b12aec066c9659bd9e2f862633262ceb0afe86c0cee3c1b3523e580f",
+        "bytes": 2272559,
+        "sha256": "c9b6c9bb41d769dc6c5e8b3b15dabb0e541e43216844d690e106c057bc478fc7",
         "decoded_frames": 5789538,
         "frames_match": true,
         "seam": {
-          "rms_last50_db": -22.67,
-          "rms_first50_db": -24.66,
+          "rms_last50_db": -22.72,
+          "rms_first50_db": -24.64,
           "wrap_step": [
-            644,
-            565
+            498,
+            927
           ],
           "p99_step": [
-            308,
-            293
+            339,
+            329
           ],
-          "wrap_step_ratio_p99": 2.091,
-          "wrap_curvature_ratio_p99": 1.399,
-          "hf_seam_vs_median_barline_db": 8.68,
-          "hf_seam_vs_loudest_barline_db": -18.92,
+          "wrap_step_ratio_p99": 2.82,
+          "wrap_curvature_ratio_p99": 3.715,
+          "hf_seam_vs_median_barline_db": 15.96,
+          "hf_seam_vs_loudest_barline_db": -8.46,
           "slope_last4ms_vs_first4ms": [
-            -11.8,
-            0.01
+            -12.05,
+            0.36
           ]
         },
-        "true_peak_dbtp": -10.84
+        "true_peak_dbtp": -11.03
       },
-      "wav_sha256": "8fe1326655bb9a076b56eccba897a5af3af72061128ed62698d0d219d0a68f81"
+      "wav_sha256": "a513859f284b38093246f2a8300305e961de8a68689a0484b85a0b4cc7f7a1cf"
     },
     "pocket-deck-v3": {
       "file": "pocket-deck-v3.wav",
       "frames": 2894769,
       "seconds": 65.641,
       "integrated_lufs": -17.5,
-      "true_peak_dbtp": -3.53,
-      "sample_peak_dbfs": -3.56,
-      "loudness_range_lu": 1.0,
-      "mono_loss_db": -0.16,
-      "share_above_6k": 0.0039,
+      "true_peak_dbtp": -1.9,
+      "sample_peak_dbfs": -1.96,
+      "loudness_range_lu": 3.12,
+      "mono_loss_db": -0.19,
+      "share_above_6k": 0.0076,
       "seam": {
-        "rms_last50_db": -24.27,
-        "rms_first50_db": -15.21,
+        "rms_last50_db": -25.43,
+        "rms_first50_db": -16.76,
         "wrap_step": [
-          1293,
-          1252
+          2612,
+          2655
         ],
         "p99_step": [
-          1370,
-          1549
+          1946,
+          2189
         ],
-        "wrap_step_ratio_p99": 0.944,
-        "wrap_curvature_ratio_p99": 0.052,
-        "hf_seam_vs_median_barline_db": 0.04,
-        "hf_seam_vs_loudest_barline_db": -8.74,
+        "wrap_step_ratio_p99": 1.342,
+        "wrap_curvature_ratio_p99": 1.372,
+        "hf_seam_vs_median_barline_db": -4.35,
+        "hf_seam_vs_loudest_barline_db": -14.51,
         "slope_last4ms_vs_first4ms": [
-          27.81,
-          24.43
+          2.36,
+          51.95
         ]
       },
       "ogg": {
-        "bytes": 1295255,
-        "sha256": "abfe1ebefa0f0147de8058f44cc8c97397c994b10aaf53d7f11b9804aaad9eab",
+        "bytes": 1378981,
+        "sha256": "5d869a0e02e7cf93d51c07eb6663cf039de8dd384acb3abae5099215a994d331",
         "decoded_frames": 2894769,
         "frames_match": true,
         "seam": {
-          "rms_last50_db": -24.25,
-          "rms_first50_db": -15.18,
+          "rms_last50_db": -25.4,
+          "rms_first50_db": -16.74,
           "wrap_step": [
-            1369,
-            1330
+            2751,
+            2582
           ],
           "p99_step": [
-            1343,
-            1517
+            1921,
+            2157
           ],
-          "wrap_step_ratio_p99": 1.019,
-          "wrap_curvature_ratio_p99": 0.098,
-          "hf_seam_vs_median_barline_db": 0.1,
-          "hf_seam_vs_loudest_barline_db": -8.81,
+          "wrap_step_ratio_p99": 1.433,
+          "wrap_curvature_ratio_p99": 1.4,
+          "hf_seam_vs_median_barline_db": -4.14,
+          "hf_seam_vs_loudest_barline_db": -14.21,
           "slope_last4ms_vs_first4ms": [
-            27.96,
-            23.94
+            2.35,
+            51.47
           ]
         },
-        "true_peak_dbtp": -3.53
+        "true_peak_dbtp": -2.01
       },
-      "wav_sha256": "b473b4c6f5451ac58510351abad6d3dfb7a96a244294eeb8783644e95d1b5fca"
+      "wav_sha256": "8dfad10b5a52095b52174745c71600b6cf140c4bdccf87e1502360132ba0cc4d"
     },
     "pocket-deck-lite-v3": {
       "file": "pocket-deck-lite-v3.wav",
@@ -413,49 +421,68 @@
       "wav_sha256": "5a3d5fe84d8d9068cb434c5d67dc64accf58a1a141f1f9afa189a7ba58485e9a"
     }
   },
+  "deck_drop": {
+    "bar16_lufs": -16.96,
+    "bar17_lufs": -15.58,
+    "bars1_16_lufs": -18.25,
+    "bars17_20_lufs": -15.49,
+    "above5k_17_20_vs_1_16_db": 6.93,
+    "bar17_minus_bar16_lu": 1.38,
+    "drop_minus_1_16_lu": 2.76
+  },
+  "phone_lufs_mono_hp300": {
+    "garden-day-v3": -24.48,
+    "garden-day-v2": -22.85,
+    "garden-night-v3": -26.72,
+    "garden-night-v2": -23.85,
+    "pocket-deck-v3": -19.23,
+    "pocket-deck-v2": -20.27,
+    "pocket-deck-lite-v3": -22.55,
+    "pocket-deck-lite-v2": -22.45
+  },
   "crossfade": {
     "day_lufs": -18.6,
     "night_lufs": -21.6,
-    "bump_equal_power_lu": 1.41,
-    "bump_exp1_5_lu": -0.09,
+    "bump_equal_power_lu": 1.37,
+    "bump_exp1_5_lu": -0.13,
     "exp1_5_within_1lu": true,
     "loudness_vs_day_at_w_0_to_1_exp1_5": [
       0.0,
-      0.18,
-      0.32,
-      0.34,
-      0.2,
-      -0.09,
-      -0.53,
-      -1.11,
-      -1.79,
-      -2.49,
+      0.17,
+      0.3,
+      0.31,
+      0.16,
+      -0.13,
+      -0.58,
+      -1.15,
+      -1.81,
+      -2.5,
       -3.0
     ],
     "exponent_for_flat_midpoint": 1.5,
-    "midpoint_at_that_exponent_lu": -0.09,
+    "midpoint_at_that_exponent_lu": -0.13,
     "midpoint_by_exponent": {
-      "1.0": 1.41,
-      "1.1": 1.11,
-      "1.2": 0.81,
-      "1.3": 0.51,
-      "1.4": 0.21,
-      "1.5": -0.09,
-      "1.6": -0.39,
-      "1.7": -0.69,
-      "1.8": -0.99,
-      "1.9": -1.3,
-      "2.0": -1.6,
-      "2.1": -1.9,
-      "2.2": -2.2,
-      "2.3": -2.5,
-      "2.4": -2.8,
-      "2.5": -3.1,
-      "2.6": -3.4,
-      "2.7": -3.7,
-      "2.8": -4.01,
-      "2.9": -4.31,
-      "3.0": -4.61
+      "1.0": 1.37,
+      "1.1": 1.07,
+      "1.2": 0.77,
+      "1.3": 0.47,
+      "1.4": 0.17,
+      "1.5": -0.13,
+      "1.6": -0.43,
+      "1.7": -0.74,
+      "1.8": -1.04,
+      "1.9": -1.34,
+      "2.0": -1.64,
+      "2.1": -1.94,
+      "2.2": -2.24,
+      "2.3": -2.54,
+      "2.4": -2.84,
+      "2.5": -3.14,
+      "2.6": -3.44,
+      "2.7": -3.75,
+      "2.8": -4.05,
+      "2.9": -4.35,
+      "3.0": -4.65
     }
   }
 }
