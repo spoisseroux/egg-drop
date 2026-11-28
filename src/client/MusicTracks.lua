@@ -12,12 +12,13 @@ Tracks.Feature="music2"
 -- Upload ids (assets/audio/music/*-v2.ogg, MUSIC-BRIEF 6). 0 = not uploaded: that pair stays today's track.
 --   garden_day    garden-day-v4         131.28 s (5,789,538 frames)
 --   garden_night  garden-night-v4       the same frame count, so the pair can cross at any moment
---   deck          pocket-deck-v2        65.64 s (2,894,769 frames)
---   deck_lite     pocket-deck-lite-v2   32.82 s (16 bars: half the deck, so it follows the deck's grid modulo)
-Tracks.Ids={garden_day=125877989254797,garden_night=88487379039156,deck=0,deck_lite=0}
+--   deck          pocket-deck-v5        121.90 s (5,376,000 frames; 126 BPM, 64 bars)
+--   deck_lite     pocket-deck-lite-v5   60.95 s (32 bars: half the deck, so it follows the deck's grid modulo)
+Tracks.Ids={garden_day=125877989254797,garden_night=88487379039156,deck=130088304023754,deck_lite=100133562955630}
 
 -- The lengths the brief renders (s); the runtime reads each Sound's own TimeLength.
-Tracks.Lengths=table.freeze({garden=5789538/44100,deck=2894769/44100,deck_lite=16*60/117*4})
+-- deck v5 (126 BPM, bar 84,000 frames): main 64 bars, lite 32 bars, exactly 2:1
+Tracks.Lengths=table.freeze({garden=5789538/44100,deck=5376000/44100,deck_lite=2688000/44100})
 -- Brief 3: if the render's midpoint (.707 day + .707 night) is over 1 LU above day, ship 1.5 on both curves
 -- (report.json, mid-fade loudness). 1 = plain equal power.
 Tracks.Exponent=1.5 -- build_music.py measured +1.04 LU at the midpoint with 1; 1.5 gives -0.46 LU (report.json)
