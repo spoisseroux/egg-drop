@@ -31,6 +31,8 @@ local BallThemes=require(script.Parent.BallThemeState)
 local Lifetime=require(script.Parent.LifetimeState)
 local PlayDate=require(script.Parent.PlayDateState)
 local Coach=require(ReplicatedStorage.Shared.CoachMarks)
+-- The lessons remembered (TEACH-MORE-BRIEF 3, ARCH-REVIEW-TEACH): optional `teachMask` and `teachParked` beside coachMask.
+local TeachMarks=require(ReplicatedStorage.Shared.TeachMarks)
 -- Growth cuts (2026-11-25): the Welcome bonus on a new save's first three field rounds (optional `starterRounds`).
 local StarterBonus=require(ReplicatedStorage.Shared.StarterBonus)
 -- G2 (2026-11-25): the first hello, +2 Stars on a new save's first paid pet (optional `firstHello`).
@@ -246,7 +248,7 @@ local function validV10(state)return validVersion(state,10,false)and Wearables.v
 -- lookCharmMisses and lookFound on v11 (LookState.valid, run inside HueState.valid).
 -- Welcome bonus (growth cuts 2026-11-25): optional additive `starterRounds` on v11, valid when missing (no version bump).
 -- First hello (G2 2026-11-25): optional additive `firstHello` on v11, valid when missing (no version bump).
-local function valid(state)return validVersion(state,11,false)and PaintPots.valid(state)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and StarterBonus.valid(state)and FirstHello.valid(state)and WelcomeGift.valid(state)and Bond.valid(state)and Stats.valid(state)and Stats.validBoosts(state)and StatEggs.valid(state)and Names.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
+local function valid(state)return validVersion(state,11,false)and PaintPots.valid(state)and BallThemes.valid(state)and Lifetime.valid(state)and PlayDate.valid(state)and Coach.valid(state)and TeachMarks.valid(state)and StarterBonus.valid(state)and FirstHello.valid(state)and WelcomeGift.valid(state)and Bond.valid(state)and Stats.valid(state)and Stats.validBoosts(state)and StatEggs.valid(state)and Names.valid(state)and Wearables.valid(state)and QuestState.valid(state.quests)and MaterialState.valid(state)and ToyState.valid(state)and FeatureState.valid(state)and Guard.valid(state)and Purchases.valid(state)and Faceplates.valid(state)end
 Hatching.validV10,Hatching.valid=validV10,valid
 
 -- Upgrade only inside the lease-acquisition UpdateAsync callback. Legacy
@@ -374,6 +376,17 @@ function Hatching.load(userId, profile, adapter)
 		if type(state) == "table" and state.playDate ~= nil then state.playDate = PlayDate.sanitize(state.playDate) end
 		-- A malformed coach mask is dropped (reads 0), never a failed load.
 		if type(state) == "table" and state.coachMask ~= nil then state.coachMask = Coach.sanitize(state.coachMask) end
+		-- The lessons remembered (ARCH-REVIEW-TEACH 2): malformed teach fields are dropped, then, with Onboard `teach` on,
+		-- the load-time rules OR their bits in (veteran, moved on, the facts already true). In this callback, so no write of
+		-- their own; never a failed load (an error drops both fields: at worst a repeat lesson). Off: the save is untouched.
+		if type(state) == "table" then
+			if state.teachMask ~= nil then state.teachMask = TeachMarks.sanitize(state.teachMask) end
+			if state.teachParked ~= nil then state.teachParked = TeachMarks.sanitize(state.teachParked) end
+			if TeachMarks.allows() then
+				local backfilled, problem = pcall(TeachMarks.backfill, state)
+				if not backfilled then warn("Egg Drop: dropped teach marks at load:", problem); state.teachMask = nil; state.teachParked = nil end
+			end
+		end
 		-- A malformed Welcome bonus counter is dropped (then read as a save that has played: no bonus), never a failed load.
 		if type(state) == "table" and state.starterRounds ~= nil then state.starterRounds = StarterBonus.sanitize(state.starterRounds) end
 		-- G2: a malformed first-hello field is dropped (then read by its rule: a save with a paid pet is done), never a failed load.
@@ -538,6 +551,9 @@ function Hatching.public(handle)
 	if Onboard.on("nest") and not NestState.halted then public.nest = NestState.public(state, handle.adapter.now()) end
 	-- Onboarding: one-time coach cards already shown (0 when the field is missing).
 	public.coachMask = Coach.mask(state.coachMask)
+	-- The lessons remembered: latched lessons, tips and `done`. No key while nothing is latched (the client reads that as
+	-- 0), so a save that never met the lessons publishes the snapshot it did before.
+	public.teachMask = if TeachMarks.mask(state.teachMask) > 0 then TeachMarks.mask(state.teachMask) else nil
 	-- Bond XP per pet (slice F): {} when the field is missing. Levels come from BondCatalog.
 	public.bond = Bond.public(state).bond
 	-- v2 stats (S1): per owned pet XP, levels and total; Bonus XP left today per stat.
@@ -662,6 +678,12 @@ local function transact(handle, signature, expectedRevision, apply, candidate, o
 		local before = { nectar = state.nectar, inventoryMask = state.inventoryMask }
 		local allowed, failure = pending.apply(state, pending.candidate)
 		if not allowed then reason = failure; return if pending.kind=="pet"or pending.kind=="hue"or pending.kind=="material"or pending.kind=="toy"or pending.kind=="feature"or pending.kind=="pot"then root else nil end
+		-- ARCH-REVIEW-TEACH 1: a lesson whose fact this write made true (a pot used, a snack fed, a ribbon won, the
+		-- twelfth round) is latched in the same write, before a later one can make the fact false again.
+		if TeachMarks.allows() then
+			local latched = pcall(TeachMarks.latch, state)
+			if not latched then warn("Egg Drop: teach latch skipped") end
+		end
 		-- `now` is read here, inside the callback, so the state-derived Discoveries
 		-- (BookCatalog.stateBits) see the clock of this attempt.
 		Lifetime.record(before, state, pending.signature, handle.adapter.now())
@@ -1332,18 +1354,27 @@ end
 
 -- One-time coach cards (onboarding v1): OR `bits` into the optional `coachMask`. Already saved
 -- is a success with no write. OR-only, so an ambiguous write retried later is harmless.
-function Hatching.coachMark(handle, bits)
-	if not Coach.integer(bits) or bits < 1 then return false, "InvalidCoach" end
+-- The lessons remembered (ARCH-REVIEW-TEACH): `teach` (teachMask bits) and `parked` (teachParked bits) ride the same
+-- write, so the coach and teach queues cost one revision bump per quiet window. Either may be 0 or nil; all three 0 is
+-- refused.
+function Hatching.coachMark(handle, bits, teach, parked)
+	bits = if bits == nil then 0 else bits
+	teach = if teach == nil then 0 else teach
+	parked = if parked == nil then 0 else parked
+	if not Coach.integer(bits) or not TeachMarks.integer(teach) or not TeachMarks.integer(parked) or bits + teach + parked < 1 then return false, "InvalidCoach" end
 	if handle.status ~= "Ready" and handle.status ~= "Retrying" then return false, handle.status end
-	if Coach.covers(handle.state.coachMask, bits) then return true, "AlreadySaved" end
-	local signature = "coach:" .. bits
+	if Coach.covers(handle.state.coachMask, bits) and TeachMarks.covers(handle.state.teachMask, teach)
+		and TeachMarks.covers(handle.state.teachParked, parked) then return true, "AlreadySaved" end
+	local signature = if teach == 0 and parked == 0 then "coach:" .. bits else "coach:" .. bits .. ":" .. teach .. ":" .. parked
 	local pending = handle.pending
 	if pending and pending.signature ~= signature then return false, "Pending" end
-	local candidate = if pending then pending.candidate else table.freeze({ bits = bits })
+	local candidate = if pending then pending.candidate else table.freeze({ bits = bits, teach = teach, parked = parked })
 	return transact(handle, signature, handle.state.revision, function(state, captured)
-		state.coachMask = Coach.merge(state.coachMask, captured.bits)
+		if (captured.bits or 0) > 0 then state.coachMask = Coach.merge(state.coachMask, captured.bits) end
+		if (captured.teach or 0) > 0 then state.teachMask = TeachMarks.merge(state.teachMask, captured.teach) end
+		if (captured.parked or 0) > 0 then state.teachParked = TeachMarks.merge(state.teachParked, captured.parked) end
 		return true
-	end, candidate, nil, nil, "coach:" .. bits)
+	end, candidate, nil, nil, signature)
 end
 
 -- Private beta only (Spencer 2026-11-20: "give me stars to buy the bunny"): a one-time Star

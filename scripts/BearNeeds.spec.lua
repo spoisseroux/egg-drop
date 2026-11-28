@@ -501,5 +501,14 @@ return function(client)
 		assert(r.bubble.icon=="moon")
 		r.state.nest={n=0,at=1,tucked=true};r.run(Needs.Rest+1.5);assert(r.bubble.icon=="deck")
 	end)
+	test("teach more (ARCH-REVIEW-TEACH 3): the `needs` latch ends the bubbles for good, only with Onboard teach on",function()
+		local Teach=require(Shared.TeachMarks)
+		local on={on=true,owned=1}
+		local over=Teach.with(0,"needs")
+		assert(Needs.current(facts({teachMask=over},{teach=true}),on)==nil,"the bubbles are over (a later build's new need never comes back)")
+		assert(Needs.current(facts({},{teach=true,teachMask=over}),on)==nil,"this session's latch counts at once")
+		assert(Needs.current(facts({teachMask=over},{teach=false}),on)=="needHi","teach off: beta (42), the latch is not read")
+		assert(Needs.current(facts({teachMask=Teach.with(0,"done")},{teach=true}),on)=="needHi","graduation alone is not the bubbles' end")
+	end)
 	return{passed=#cases,cases=cases}
 end

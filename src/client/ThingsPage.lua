@@ -51,7 +51,13 @@ function Page.rows(ctx)
 			elseif ctx.prizes==true and type(saved)=="table"and type(saved.limit)=="number"
 			then UICopy.get("things.dash.prizes",{done=saved.paid or 0,total=saved.limit})
 			else UICopy.get("things.dash.idle")
-		table.insert(rows,{id="dash",icon="trophy",tint="quests",name=UICopy.get("dash.title"),help="dash",line=line,new=ctx.new==true,button=UICopy.get("things.show")})
+		local row={id="dash",icon="trophy",tint="quests",name=UICopy.get("dash.title"),help="dash",line=line,new=ctx.new==true,button=UICopy.get("things.show")}
+		-- Teach more (TEACH-MORE-BRIEF 2, `dash`): while the Dash lesson waits, its row leads the list (after a waiting gift),
+		-- marked new, so "Garden Dash: Show me" is never below the fold.
+		if ctx.dashLesson==true then
+			row.new=true
+			table.insert(rows,if rows[1]and rows[1].id=="gift"then 2 else 1,row)
+		else table.insert(rows,row)end
 	end
 	return rows
 end

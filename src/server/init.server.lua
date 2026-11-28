@@ -14,6 +14,7 @@ local Lounge = require(script.Lounge)
 local Progress = require(script.PlayerProgress)
 local FirstSession = require(script.FirstSession)
 local CoachMarks = require(ReplicatedStorage.Shared.CoachMarks)
+local TeachMarks = require(ReplicatedStorage.Shared.TeachMarks)
 local FieldRun = require(script.FieldRun)
 local FieldObjectives = require(ReplicatedStorage.Shared.FieldObjectives)
 local PetContactController = require(script.PetContact)
@@ -1969,7 +1970,13 @@ local function flushCoach(player, board)
 		local tries = 0
 		while boards[player] == board and not board.closing and tries < 60 and os.clock() - (board.coachFlushStart or 0) < 900 do
 			local queued = CoachMarks.mask(board.coachPending)
-			if queued == 0 or CoachMarks.covers(board.nursery.state.coachMask, queued) then board.coachPending = nil; break end
+			-- The lessons remembered (ARCH-REVIEW-TEACH): the teach latches and the ignore thermometer flush in this write.
+			local teachQueued, parkQueued = TeachMarks.mask(board.teachPending), TeachMarks.mask(board.teachParkPending)
+			local saved = board.nursery.state
+			if CoachMarks.covers(saved.coachMask, queued) then board.coachPending = nil; queued = 0 end
+			if TeachMarks.covers(saved.teachMask, teachQueued) then board.teachPending = nil; teachQueued = 0 end
+			if TeachMarks.covers(saved.teachParked, parkQueued) then board.teachParkPending = nil; parkQueued = 0 end
+			if queued == 0 and teachQueued == 0 and parkQueued == 0 then break end
 			-- Quiet window (code review): a coach write bumps the save revision, so it waits until no
 			-- player command (hatch, buy, equip...) arrived for 10 s and 10 s passed since the card was
 			-- queued; a first Hatch tap right after the Hatch card never meets "Busy"/"RevisionChanged".
@@ -1977,10 +1984,15 @@ local function flushCoach(player, board)
 			if quiet and canProgress(board) and not board.nurseryBusy and not board.nursery.busy and not board.nursery.pending and not board.payoutPending then
 				tries += 1
 				board.nurseryBusy = true
-				local ok, reason = Nursery.coachMark(board.nursery, queued)
+				local wasDone = TeachMarks.has(board.nursery.state.teachMask, "done")
+				local ok, reason = Nursery.coachMark(board.nursery, queued, teachQueued, parkQueued)
 				board.nurseryBusy = false
 				if boards[player] ~= board then break end
-				if not ok and reason == "InvalidCoach" then board.coachPending = nil; break end
+				if not ok and reason == "InvalidCoach" then board.coachPending = nil; board.teachPending = nil; board.teachParkPending = nil; break end
+				-- TeachGraduated (TEACH-MORE-BRIEF 3): the funnel's reason, once, when this write graduated the save.
+				if ok and not wasDone and TeachMarks.has(board.nursery.state.teachMask, "done") and board.firstSession and board.teachReason then
+					board.firstSession:record("TeachGraduated_" .. board.teachReason)
+				end
 				publishNursery(board)
 			end
 			task.wait(2)
@@ -2001,7 +2013,7 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 	end
 	if not board.profileReady then return end
 	-- (the welcome gift neither: its own loop waits for a free save, and it must not hold the coach bits' flush back)
-	if action ~= "coachMark" and action ~= "welcomeGift" and action ~= "giftEgg" then board.lastNurseryCommand = os.clock() end
+	if action ~= "coachMark" and action ~= "teachMark" and action ~= "welcomeGift" and action ~= "giftEgg" then board.lastNurseryCommand = os.clock() end
 	-- Faceplate Star purchase (UI-SPEC 5.5): fixed price, server-validated,
 	-- idempotent by the client's operation id. Success equips the plate.
 	if action=="faceplateBuy"then
@@ -2310,6 +2322,34 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		return
 	end
 
+	-- The lessons remembered (TEACH-MORE-BRIEF 3, ARCH-REVIEW-TEACH): the client names a latch ("deckTour"), asks to
+	-- graduate with its reason ("done:finished" every lesson latched, "done:skipped" Settings > Skip the tips) or reports
+	-- a lesson ignored this session ("park:menu"; the third session latches it). Queued beside the coach bits and saved in
+	-- the same quiet-window write. Refused while Onboard `teach` is off; veteran and moved on are the server's own.
+	if action=="teachMark"then
+		local request=TeachMarks.parse(value)
+		if not request or not TeachMarks.allows()then return end
+		local saved=board.nursery.state
+		local mask=TeachMarks.merge(saved.teachMask,board.teachPending)
+		if TeachMarks.has(mask,"done")then return end -- graduated: nothing more to remember
+		if request.kind=="park"then
+			board.teachParkedSession=board.teachParkedSession or {}
+			if board.teachParkedSession[request.id]or TeachMarks.has(mask,request.id)then return end
+			board.teachParkedSession[request.id]=true
+			local parkBits,teachBits=TeachMarks.parkStep(TeachMarks.merge(saved.teachParked,board.teachParkPending),request.id)
+			if parkBits>0 then board.teachParkPending=TeachMarks.merge(board.teachParkPending,parkBits)end
+			if teachBits>0 then board.teachPending=TeachMarks.merge(board.teachPending,teachBits)end
+		else
+			local bit=TeachMarks.bit(request.id)
+			if TeachMarks.covers(mask,bit)then return end
+			if request.kind=="done"then board.teachReason=request.reason end
+			board.teachPending=TeachMarks.merge(board.teachPending,bit)
+		end
+		board.coachQueuedAt=os.clock()
+		flushCoach(player,board)
+		return
+	end
+
 	-- Collection book milestone claim (play-forever F1): the server computes the page
 	-- percent from the save; the client sends only {id = opId, milestoneId}. Idempotent by
 	-- the op id (bound to milestone + reward). Replies ride FaceplateResult with kind="book";
@@ -2520,8 +2560,13 @@ settleReward = function(player, board)
 		while boards[player] == board and not board.closing and board.payoutPending do
 			local wait = 2
 			if not board.closing and not board.nurseryBusy and not board.nursery.busy then
+				local wasDone = TeachMarks.has(board.nursery.state.teachMask, "done")
 				local ok, reason = Nursery.award(board.nursery, board.runSequence, amount, summary, boost, boost.petId)
 				if boards[player] ~= board then break end
+				-- TeachGraduated "moved on" (TEACH-MORE-BRIEF 3 rule 4): the award's write latched `done` at round 12.
+				if ok and not wasDone and TeachMarks.has(board.nursery.state.teachMask, "done") and board.firstSession then
+					board.firstSession:record("TeachGraduated_movedOn")
+				end
 				publishNursery(board)
 				local outcome = RewardRetry.classify(ok, reason)
 				if outcome == "Permanent" then

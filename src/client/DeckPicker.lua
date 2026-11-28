@@ -99,6 +99,10 @@ function Picker.new(gui,make,label,onPreview,onClose,onApply,onSetting)
  -- Onboarding v2: "Watch the first hatch again" (init.client sets `onReplayHatch`: the stork and the crack, no rewards).
  self.replayButton=button(scroll,"ReplayHatchSetting",require(Shared.UICopy).get("onb2.replay"),function()self:replayHatch()end)
  self.replayButton.Visible=false
+ -- Teach more (TEACH-MORE-BRIEF 3 rule 2, Onboard "teach"): "Skip the tips" (init.client's TeachWiring sets `onSkipTips`
+ -- and `skipTipsShown`: one confirm, then no lesson, tour or lesson tip again).
+ self.skipTipsButton=button(scroll,"SkipTipsSetting",require(Shared.UICopy).get("teach.skipAll"),function()self:skipTips()end)
+ self.skipTipsButton.Visible=false
  shade:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:layout()end)
  Art.watchTextPreference(shade,function()return shade.Visible end,function()self.safeTop=nil;self:layout()end)
  self.shop=Shop.new(shade,{
@@ -178,8 +182,8 @@ function Picker:layout()
    local h=Art.textHeight(self.saveDetail,bodyW-8,24)
    place(self.saveDetail,4,y,bodyW-8,h);y+=h+12
   end
-  for _,control in ipairs({self.sound,self.music,self.motion,self.vibration,self.greet,self.menuColours,self.reportButton,self.tipsButton,self.replayButton})do
-   if(control==self.tipsButton or control==self.vibration or control==self.replayButton)and not control.Visible then continue end
+  for _,control in ipairs({self.sound,self.music,self.motion,self.vibration,self.greet,self.menuColours,self.reportButton,self.tipsButton,self.replayButton,self.skipTipsButton})do
+   if(control==self.tipsButton or control==self.vibration or control==self.replayButton or control==self.skipTipsButton)and not control.Visible then continue end
    styleType(control,"Action",short);local h=Art.actionHeight(control,bodyW-8)
    place(control,4,y,bodyW-8,h);y+=h+8
   end
@@ -249,6 +253,7 @@ function Picker:showTab(active)
  self.reportButton.Visible=settings and self.onReport~=nil
  self.tipsButton.Visible=settings and self.onTips~=nil
  self.replayButton.Visible=settings and self.onReplayHatch~=nil and(self.replayHatchShown==nil or self.replayHatchShown()==true)
+ self.skipTipsButton.Visible=settings and self.onSkipTips~=nil and(self.skipTipsShown==nil or self.skipTipsShown()==true)
  self.scroll.CanvasPosition=Vector2.zero;self:layout()
  if changed then
   self:bumpControllerEpoch();local selected=GuiService.SelectedObject
@@ -298,6 +303,12 @@ end
 function Picker:replayHatch()
  if not self.shade.Visible or self.active~="Settings"or not self.onReplayHatch then return false end
  if self.onReplayHatch()==false then return false end
+ if self.onAccepted then self.onAccepted("confirm")end;return true
+end
+-- Settings > Skip the tips (teach more): init.client asks once (ConfirmDialog); the row hides once they are off.
+function Picker:skipTips()
+ if not self.shade.Visible or self.active~="Settings"or not self.onSkipTips then return false end
+ if self.onSkipTips()==false then return false end
  if self.onAccepted then self.onAccepted("confirm")end;return true
 end
 -- Settings > Show tips again (R3.8): R1's coach tips replay; the screen stays as it is.
