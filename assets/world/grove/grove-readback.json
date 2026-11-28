@@ -1,14 +1,14 @@
 {
- "assetId": "109554618731968",
- "operationId": "e8e58467-9631-40fa-8913-4b3e6e64dcb2",
+ "assetId": "103710774142699",
+ "operationId": "3176feee-e6f8-4569-88ff-d37083b0dbbb",
  "moderation": "Approved",
- "fbxSha256": "14685a0ab79448afeca4519958d9f64b85c40662beacbf92b23235c6f5551390",
- "manifestSha256": "4e7f34761b886f5f9dc277b439e973ef75088f7d59242b2cce45ae0b0081f823",
+ "fbxSha256": "e41e8200c5ca0906d9f4eee4481f5ca475b0f3dbc8a997eb6a5d998d81f65d6c",
+ "manifestSha256": "ef68c4f25267feb9349c8ffc79e9430fb80408abb3ef5b2eb697f43f5794428e",
  "importScale": 3.576,
  "textures": {
   "stone": {
-   "decalId": "132162182282059",
-   "image": "rbxassetid://98144499223270"
+   "decalId": "71697506626581",
+   "image": "rbxassetid://93710931516454"
   },
   "moss": {
    "decalId": "111177864465932",
@@ -21,25 +21,29 @@
   "leaf": {
    "decalId": "136721136978460",
    "image": "rbxassetid://114119810568848"
+  },
+  "ray": {
+   "decalId": "72945323292320",
+   "image": "rbxassetid://101246128497046"
   }
  },
  "parts": [
   {
-   "meshId": "rbxassetid://87822352548709",
+   "meshId": "rbxassetid://96013341339835",
    "name": "GV_Bank__stone",
    "meshSize": [
-    1334.6409912109375,
+    1341.4840087890625,
     207.31365966796875,
-    1321.6649169921875
+    1325.8656005859375
    ]
   },
   {
-   "meshId": "rbxassetid://103590972974529",
+   "meshId": "rbxassetid://116212309382811",
    "name": "GV_Dressing__leaf",
    "meshSize": [
-    2025.5677490234375,
-    497.1798400878906,
-    2002.4893798828125
+    1970.7252197265625,
+    576.0377197265625,
+    1917.927490234375
    ]
   },
   {
@@ -178,12 +182,12 @@
    ]
   },
   {
-   "meshId": "rbxassetid://72077233257143",
+   "meshId": "rbxassetid://100860197643457",
    "name": "GV_Glow__glow",
    "meshSize": [
-    1452.9483642578125,
-    286.1382141113281,
-    1429.83349609375
+    1457.3765869140625,
+    298.936767578125,
+    1434.0450439453125
    ]
   },
   {
@@ -196,7 +200,7 @@
    ]
   },
   {
-   "meshId": "rbxassetid://139943978394641",
+   "meshId": "rbxassetid://134422276575898",
    "name": "GV_Moat__water",
    "meshSize": [
     1314.7930908203125,
@@ -205,11 +209,11 @@
    ]
   },
   {
-   "meshId": "rbxassetid://80818850617893",
+   "meshId": "rbxassetid://107005108635665",
    "name": "GV_Props__paint",
    "meshSize": [
     1724.036376953125,
-    551.80029296875,
+    553.1591186523438,
     1736.1920166015625
    ]
   },
@@ -223,43 +227,43 @@
    ]
   },
   {
-   "meshId": "rbxassetid://87290319167996",
+   "meshId": "rbxassetid://126570267302635",
    "name": "GV_Tier1__moss",
    "meshSize": [
-    1568.552734375,
+    1576.456298828125,
     188.74002075195312,
-    1576.04833984375
+    1580.650390625
    ]
   },
   {
-   "meshId": "rbxassetid://119414973402591",
+   "meshId": "rbxassetid://119577926376543",
    "name": "GV_Tier1__stone",
    "meshSize": [
-    1430.1212158203125,
+    1435.16162109375,
     232.37428283691406,
-    1413.2821044921875
+    1418.5623779296875
    ]
   },
   {
-   "meshId": "rbxassetid://96788664086325",
+   "meshId": "rbxassetid://110546720619544",
    "name": "GV_Tier2__moss",
    "meshSize": [
-    1828.6341552734375,
+    1833.3802490234375,
     189.7618408203125,
-    1825.1253662109375
+    1828.5950927734375
    ]
   },
   {
-   "meshId": "rbxassetid://117594422424599",
+   "meshId": "rbxassetid://135212309868446",
    "name": "GV_Tier2__stone",
    "meshSize": [
-    1648.49365234375,
+    1658.634765625,
     233.67984008789062,
-    1655.9906005859375
+    1662.9708251953125
    ]
   },
   {
-   "meshId": "rbxassetid://104831547373821",
+   "meshId": "rbxassetid://123963123496510",
    "name": "GV_Tier3__moss",
    "meshSize": [
     2048,
@@ -268,14 +272,14 @@
    ]
   },
   {
-   "meshId": "rbxassetid://101871381869111",
+   "meshId": "rbxassetid://115383651624712",
    "name": "GV_Tier3__stone",
    "meshSize": [
-    1926.420166015625,
+    1934.2022705078125,
     287.897705078125,
-    1929.623291015625
+    1934.331787109375
    ]
   }
  ],
- "note": "Read back with InsertService:LoadAsset and game:GetObjects in Studio Edit, 2026-11-28. Grove files are -text in .gitattributes so their bytes (LF) are the same in every checkout."
+ "note": "Art pass 2 (Fable in-game critique), read back with InsertService:LoadAsset and game:GetObjects in Studio Edit, 2026-11-28. Unchanged meshes dedupe to their first-upload ids. Grove files are -text in .gitattributes."
 }
