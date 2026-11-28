@@ -14,7 +14,7 @@ return function(client)
 	local brief={
 		ball={"FeltBall",{sky="#5CBEF5",bubblegum="#FF86C8",midnight="#2F2C7C",gold="#F0B429"}},
 		bone={"BoneBody",{mint="#7FE0CF",grape="#9B7BE8",midnight="#2F2C7C",gold="#F0B429"}},
-		sparkler={"IndigoGrip",{cherry="#E9574C",mint="#7FE0CF",grape="#9B7BE8",rose_gold="#F2A0A8"}},
+		sparkler={"IndigoGrip",{cherry="#E9574C",mint="#7FE0CF",grape="#9B7BE8",rosegold="#F2A0A8"}},
 		wobble_top={"TealBody",{cherry="#E9574C",grape="#9B7BE8",midnight="#2F2C7C",gold="#F0B429"}},
 		squeaky_carrot={"CarrotBody",{butter="#FFD86B",grape="#9B7BE8",snow="#F4F6FB",gold="#F0B429"}},
 		pocket_deck={"DeckShell",{sky="#5CBEF5",bubblegum="#FF86C8",midnight="#2F2C7C",gold="#F0B429"}},
@@ -35,7 +35,7 @@ return function(client)
 		assert(count==24)
 		for toy in pairs(brief)do assert(perToy[toy]==4,toy)end
 		assert(Look.row("ball_sky").name=="Sky Ball"and Look.row("squeaky_carrot_grape").name=="Purple Carrot")
-		assert(Look.row("sparkler_rose_gold").name=="Rose Gold Sparkler")
+		assert(Look.row("sparkler_rosegold").name=="Rose Gold Sparkler")
 	end)
 
 	test("a skin draws only on its own toy and only on its named part; anything else is the original",function()
