@@ -538,9 +538,13 @@ function Host.advance(board, now, dt, hooks)
 			takeOver(board, state, "Stalled")
 		elseif now - state.lastProgressAt >= (if host.paused then L.PausedIdleSeconds else L.IdleSeconds) then
 			if host.phase == "Settling" then takeOver(board, state, "Idle")
-			else
+			-- Code review (beta 45 blocker): a 0-drop round (the deck tour holds drops) is never taken over: a takeover
+			-- without the finish left a closed, never-ending server round that refused every later drop. It just waits.
+			elseif L.idleFinishes(hb.drops) then
 				takeOver(board, state, "Idle")
-				if L.idleFinishes(hb.drops) then RoundSim.finish(host) end
+				RoundSim.finish(host)
+			else
+				state.lastProgressAt = now
 			end
 		end
 	elseif board.mode ~= "Board" then

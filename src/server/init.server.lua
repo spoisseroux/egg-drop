@@ -2343,7 +2343,7 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 			local bit=TeachMarks.bit(request.id)
 			if TeachMarks.covers(mask,bit)then return end
 			-- beta 44 (ARCH-REVIEW-SIMPLIFY 6): the tour is latched only from the deck (the gift takes it as a round played)
-			if TeachMarks.OnDeck[request.id]and board.mode~="Board"then return end
+			if TeachMarks.OnDeck[request.id]and(board.mode~="Board"or not board.field)then return end -- code review: a field round, not the Welcome
 			-- beta 44 (ARCH-REVIEW-SIMPLIFY 5): graduating ends the need bubbles in the same write
 			if request.kind=="done"then board.teachReason=request.reason;bit=TeachMarks.doneBits()end
 			board.teachPending=TeachMarks.merge(board.teachPending,bit)

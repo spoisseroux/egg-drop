@@ -198,7 +198,8 @@ function Wiring:step(now,dt)
 	if focusing and not self.focused then self.visit+=1 end
 	self.focused=focusing
 	local ok,tourWhy=pcall(self.tour.step,self.tour,now,dt)
-	if not ok then warn("[DeckTour] "..tostring(tourWhy))end
+	-- Code review (beta 45): a tour that throws lets go of the drop hold at once (destroy releases hold, keys, veils)
+	if not ok then warn("[DeckTour] "..tostring(tourWhy));pcall(self.tour.destroy,self.tour)end
 	local okSet,setWhy=pcall(self.stepAllSet,self,now)
 	if not okSet then self.allSetDone=true;warn("[Teach] all set: "..tostring(setWhy))end
 end

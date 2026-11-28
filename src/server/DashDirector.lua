@@ -17,7 +17,8 @@
 --   finished(userId, result) (DashState.validResult shape), publish(roster), warn(text)
 --   announce(packet) optional (beta 44 note 22): {kind="soon", raceId, mode} when a race opens (gather), and
 --                            {kind="won", raceId, userId, petId} when a player's pet wins one. Never a trial, never a pal
---                            (or a pet whose owner left), never a race that ended unpaid. The host rate-limits and words it.
+--                            (or a pet whose owner left). A race with prizes off still names its winner (Spencer's ask;
+--                            Dash prizes are off by default). The host rate-limits and words it.
 local Shared=game:GetService("ReplicatedStorage").Shared
 local Sim=require(Shared.DashSim)
 local Stats=require(Shared.DashStats)
