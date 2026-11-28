@@ -39,7 +39,9 @@ Tour.TipWords=table.freeze({tipNext="teach.tipNext",tipChain="teach.tipChain",ti
 -- ctx: {mode, phase, guided, drops, over, overlay}
 function Tour.opener(ctx)
 	ctx=ctx or {}
-	return ctx.mode=="Board"and ctx.phase~=nil and ctx.phase~="Welcome"and ctx.guided~=true and(ctx.drops or 0)==0
+	-- Beta 43 Studio check: the first field rounds are guided (Easy, no level to pick), and the tour belongs on the very
+	-- first one, so a guided opener counts; it just skips the level step (Tour.last), which waits for an unguided one.
+	return ctx.mode=="Board"and ctx.phase~=nil and ctx.phase~="Welcome"and(ctx.drops or 0)==0
 		and ctx.over~=true and ctx.overlay~=true
 end
 -- Which tour wants this opener: "tour" (the first field round), "level" (the round-two opener, step 3 alone) or nil.
@@ -49,14 +51,17 @@ function Tour.mode(f,ctx)
 	local l=f.latched or {}
 	local rounds=f.rounds or 0
 	if rounds==0 and not l.deckTour then return "tour"end
-	if rounds==1 and not l.level then return "level"end
+	-- the level step alone: the first unguided opener after the tour (guided rounds have no level to pick)
+	if rounds>=1 and not l.level and ctx.guided~=true then return "level"end
 	return nil
 end
 function Tour.first(mode)return if mode=="level"then Tour.LevelStep elseif mode=="tour"then 1 else nil end
 -- The step after `step` for an action ("next", "skip", "drop"); nil when the tour is over.
-function Tour.after(mode,step,action)
+-- The tour's last step: the level card's, or the one before it on a guided round.
+function Tour.last(guided)return if guided==true then Tour.LevelStep-1 else #Tour.Steps end
+function Tour.after(mode,step,action,guided)
 	if action~="next"or mode~="tour"then return nil end
-	if step<#Tour.Steps then return step+1 end
+	if step<Tour.last(guided)then return step+1 end
 	return nil
 end
 -- What the tour saves when it ends: the tour always (mode "tour"); `level` when it was stepped on step 3, and always in
@@ -205,7 +210,7 @@ end
 function Tour:act(action)
 	local a=self.active
 	if not a then return end
-	local nextStep=Tour.after(a.mode,a.step,action)
+	local nextStep=Tour.after(a.mode,a.step,action,a.guided)
 	if nextStep then
 		a.step=nextStep
 		a.since=os.clock()
@@ -228,6 +233,24 @@ function Tour:hide()
 	self:bind(false)
 end
 function Tour:touring()return self.active~=nil end
+-- The overlay the tour's pointer draws in: one ScreenGui beside the card's own, same insets, DisplayOrder 11 (over the
+-- play well's gui at 10; the tour hides whenever an overlay or modal is up).
+Tour.OverlayOrder=11
+function Tour:overlayFor(card)
+	local host=card
+	while host and not host:IsA("LayerCollector")do host=host.Parent end
+	if not host or not host:IsA("ScreenGui")then return nil end
+	local gui=self.overlay
+	if not gui or gui.Parent~=host.Parent then
+		if gui then gui:Destroy()end
+		gui=Instance.new("ScreenGui")
+		gui.Name="EggDropTourPointer";gui.ResetOnSpawn=false;gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+		gui.DisplayOrder=Tour.OverlayOrder;gui.IgnoreGuiInset=host.IgnoreGuiInset;gui.ScreenInsets=host.ScreenInsets
+		gui.Parent=host.Parent
+		self.overlay=gui
+	end
+	return gui
+end
 function Tour:step(now,dt)
 	local d=self.d
 	local f=d.facts()
@@ -243,7 +266,7 @@ function Tour:step(now,dt)
 	if not a then
 		local mode=Tour.mode(f,ctx)
 		if mode then
-			a={mode=mode,step=Tour.first(mode),since=now,picked=d.picked and d.picked()}
+			a={mode=mode,step=Tour.first(mode),since=now,picked=d.picked and d.picked(),guided=ctx.guided==true}
 			self.active=a
 			if d.event then pcall(d.event,"TourShown")end
 		end
@@ -272,9 +295,14 @@ function Tour:step(now,dt)
 		else
 			a.missing=nil
 			self:listen();self:bind(true)
-			local count=d.text("teach.count",{n=a.step,of=#Tour.Steps})
+			local count=d.text("teach.count",{n=a.step,of=Tour.last(a.guided)})
 			local line=Tour.label(d.text(s.words),a.mode,a.step,count)
-			if d.pointer then d.pointer:show(card,line,Tour.Glyphs);d.pointer:step(dt or 0)end
+			-- Beta 43 Studio check: drawn in an overlay ScreenGui just above the play well's (the deck's own gui sits under it,
+			-- and the well hid the label), with the deck gui's insets so the positions match.
+			if d.pointer then
+				local opts=table.clone(Tour.Glyphs);opts.gui=self:overlayFor(card);opts.rect=true
+				d.pointer:show(card,line,opts);d.pointer:step(dt or 0)
+			end
 			local lit={[s.card]=true}
 			if s.sub then lit[s.sub]=true end
 			self:dim(lit)
@@ -303,5 +331,6 @@ function Tour:destroy()
 	self.active=nil
 	self:hide()
 	if self.listening then self.listening:Disconnect();self.listening=nil end
+	if self.overlay then self.overlay:Destroy();self.overlay=nil end
 end
 return Tour

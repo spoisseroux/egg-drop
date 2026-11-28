@@ -210,9 +210,17 @@ function Lessons:step(now,dt)
 		if self.returned then self.session.skipped.dress=true end
 	end
 	local id,target,words=nil,nil,nil
-	for _,candidate in ipairs(Lessons.candidates(f,self.session))do
-		local ok,t,w=pcall(self.d.target,candidate,f)
-		if ok and t and w then id,target,words=candidate,t,w;break end
+	-- Beta 43 Studio check: once saved (ResetSeen), the reset ring stays for the rest of this Back to white visit, so
+	-- its words can be read; it lets go when the card leaves the screen.
+	if self.session.resetHold then
+		local ok,t,w=pcall(self.d.target,"reset",f)
+		if ok and t and w=="reset"then id,target,words="reset",t,w else self.session.resetHold=nil end
+	end
+	if not id then
+		for _,candidate in ipairs(Lessons.candidates(f,self.session))do
+			local ok,t,w=pcall(self.d.target,candidate,f)
+			if ok and t and w then id,target,words=candidate,t,w;break end
+		end
 	end
 	if not(id and target and words)then
 		if self.shown then self:hide()end
@@ -227,7 +235,7 @@ function Lessons:step(now,dt)
 	end
 	-- the reset lesson is show-only: saved once its ringed card has been on screen a moment (never asks for the tap)
 	local showOnly=id=="reset"and words=="reset"
-	if showOnly and now-s.since>=Lessons.ResetSeen then self:latch("reset")end
+	if showOnly and now-s.since>=Lessons.ResetSeen and not self.session.resetHold then self:latch("reset");self.session.resetHold=true end
 	if Lessons.ignored(now-s.since)and not showOnly then
 		-- untouched: it fades, and this lesson waits for the next session (the third such session latches it)
 		self.session.parked[id]=true

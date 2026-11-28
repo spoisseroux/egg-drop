@@ -20,9 +20,15 @@ return function(client)
 	test("pure: the tour only on the first field round's untouched opener; the round-two opener's level step; never graduated",function()
 		assert(Tour.mode(facts(),opener)=="tour")
 		assert(Tour.mode(facts({rounds=1}),opener)=="level","round two: step 3 alone")
-		assert(Tour.mode(facts({rounds=1,latched={level=true}}),opener)==nil and Tour.mode(facts({rounds=2}),opener)==nil)
+		assert(Tour.mode(facts({rounds=1,latched={level=true}}),opener)==nil)
+		assert(Tour.mode(facts({rounds=2}),opener)=="level","beta 43: the first unguided opener after the tour, not only round two")
+		-- beta 43 Studio check: the first field rounds are guided; the tour runs there, the level step waits
+		assert(Tour.mode(facts(),with(opener,{guided=true}))=="tour","the guided first round gets the tour")
+		assert(Tour.mode(facts({rounds=1}),with(opener,{guided=true}))==nil,"no level step on a guided round")
+		assert(Tour.last(true)==2 and Tour.last(false)==3)
+		assert(Tour.after("tour",2,"next",true)==nil and Tour.after("tour",2,"next",false)==3,"guided: two steps")
 		assert(Tour.mode(facts({latched={deckTour=true}}),opener)==nil,"once")
-		for _,bad in ipairs({{phase="Welcome"},{guided=true},{drops=1},{over=true},{overlay=true},{mode="Room"}})do
+		for _,bad in ipairs({{phase="Welcome"},{drops=1},{over=true},{overlay=true},{mode="Room"}})do
 			assert(Tour.mode(facts(),with(opener,bad))==nil,"not this opener")
 		end
 		local noField=table.clone(opener);noField.phase=nil

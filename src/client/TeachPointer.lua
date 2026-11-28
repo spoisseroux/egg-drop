@@ -66,15 +66,17 @@ Pointer.ShadowDrop=3
 
 -- ── Pure ────────────────────────────────────────────────────────────────────────────────────────────────────────────
 -- Is a w x h target round (a circle ring)?
-function Pointer.round(w,h)return h>0 and w/h<=Pointer.Round end
+-- Beta 43 Studio check: square-ish both ways (a tall card, w/h well under 1, is a rounded rect, not a giant circle).
+function Pointer.round(w,h)return h>0 and w>0 and w/h<=Pointer.Round and h/w<=Pointer.Round end
 -- A UICorner's radius in screen px: scale resolves against min(w, h); offset carries the target's UIScale.
 function Pointer.cornerPx(scale,offset,w,h,uiScale)
 	return(scale or 0)*math.min(w,h)+(offset or 0)*(uiScale or 1)
 end
 -- The ring for a w x h target at `pad` (default Pad): {circle, w, h, corner} (corner in px).
-function Pointer.shape(w,h,corner,pad)
+-- rect: never a circle (opts.rect: a packed layout such as the deck's cards, where a circle would spill onto neighbours).
+function Pointer.shape(w,h,corner,pad,rect)
 	pad=pad or Pointer.Pad
-	if Pointer.round(w,h)then
+	if rect~=true and Pointer.round(w,h)then
 		local d=math.max(w,h)+pad*2
 		return {circle=true,w=d,h=d,corner=d/2}
 	end
@@ -302,7 +304,8 @@ end
 function Pointer:show(target,words,opts)
 	opts=opts or {}
 	if not Pointer.live(target)then self:hide();return false end
-	local gui=screenGuiOf(target)
+	-- opts.gui: draw in this ScreenGui instead of the target's own (the deck tour's overlay, above the play well's gui)
+	local gui=opts.gui or screenGuiOf(target)
 	if not gui then return false end
 	if self.target~=target then
 		local shown=self.target~=nil and self.v~=nil and self.v.root.Visible and self.tipX~=nil
@@ -411,14 +414,14 @@ function Pointer:step(dt)
 			local r=sw.ring
 			placeRing(v,r.x,r.y,r.shape);ringAlpha=old
 		else
-			placeRing(v,cx,cy,Pointer.shape(rect.w,rect.h,corner,popPad));ringAlpha=new
+			placeRing(v,cx,cy,Pointer.shape(rect.w,rect.h,corner,popPad,self.opts and self.opts.rect));ringAlpha=new
 		end
 		if age>=Pointer.RingPopAt+Pointer.RingPop then self.swap=nil;self.ringTime=0 end
 	else
 		self.ringTime=(self.ringTime or 0)+dt
-		placeRing(v,cx,cy,Pointer.shape(rect.w,rect.h,corner,pad))
+		placeRing(v,cx,cy,Pointer.shape(rect.w,rect.h,corner,pad,self.opts and self.opts.rect))
 	end
-	self.ringNow={x=cx,y=cy,shape=Pointer.shape(rect.w,rect.h,corner,Pointer.Pad)}
+	self.ringNow={x=cx,y=cy,shape=Pointer.shape(rect.w,rect.h,corner,Pointer.Pad,self.opts and self.opts.rect)}
 	setAlpha(v,"ring",ringAlpha)
 	v.overStroke.Color=if b.flash then Pointer.White else Pointer.Pink
 	-- the hand: along its own axis from the tip; Reduced Motion and the gamepad: none
