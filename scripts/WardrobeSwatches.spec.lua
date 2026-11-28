@@ -70,5 +70,21 @@ return function(client,offline)
 		assert(Wear.swatchRow("pip","tee",owned)==nil,"a single colour: no row")
 	end)
 
+	-- Code review (beta 45): a Retrying answer is the server's last word on that equip, so the queue lets go of it and
+	-- sends the tap waiting behind it (before, every later swatch waited for the whole session). Studio only (GUI module).
+	if not offline then
+		test("a Retrying answer frees the queue: the waiting tap is sent",function()
+			local Shop=require(client.WardrobeShop)
+			local q=Swatches.new()
+			local a,b=order("a","beanie_sky"),order("b","beanie_gold")
+			q:tap(a);q:tap(b)
+			local sent={}
+			local fake={equips={a},swatchQueue=q,pending=a,confirmed={},petId="pip",callbacks={equip=function(o)table.insert(sent,o)end}}
+			Shop.result(fake,{id="a",status="Retrying"})
+			assert(#sent==1 and sent[1]==b and fake.pending==b and q.inflight==b and q.queued==nil,"the waiting tap goes out")
+			Shop.result(fake,{id="b",status="Retrying"})
+			assert(not q:busy(),"nothing left in flight")
+		end)
+	end
 	return {passed=#cases,cases=cases}
 end

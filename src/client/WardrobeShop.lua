@@ -1124,7 +1124,18 @@ function Shop:result(message)
  local index=nil
  for i,order in ipairs(self.equips or {})do if order.id==message.id then index=i end end
  if index then
-  if message.status=="Retrying"then return false end
+  if message.status=="Retrying"then
+   -- Code review (beta 45): Retrying is the server's last word on this equip (the save retries on its own), so the
+   -- closet's queue lets go of it here; otherwise every later swatch tap waits behind it for the whole session.
+   if self.swatchQueue then
+    local nextOrder=self.swatchQueue:settle(message.id,function(o)return o.petId~=self.equips[index].petId or Shop.changes(o.petId,self.confirmed,o)end)
+    if nextOrder then
+     self.pending=nextOrder;table.insert(self.equips,nextOrder)
+     if self.callbacks.equip then self.callbacks.equip(nextOrder)end
+    end
+   end
+   return false
+  end
   local order=table.remove(self.equips,index)
   local latest=index>#self.equips and not(self.swatchQueue and self.swatchQueue.queued) -- nothing newer was tapped after it
   if self.pending==order then self.pending=self.equips[#self.equips]end
