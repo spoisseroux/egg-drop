@@ -33,6 +33,8 @@ local Locked=require(script.Parent.LockedItem)
 -- Off (ctx.closet not true): the Wardrobe exactly as before.
 local Swatches=require(script.Parent.WardrobeSwatches)
 local Finish=require(script.Parent.WearableFinish)
+-- Angel Wings (ROTATION-2-BRIEF 3): an egg-only Back item, never sold; its card (and the Back tab) shows only once owned.
+local Wings=require(script.Parent.AngelWings)
 local Shop={}
 Shop.__index=Shop
 Shop.Size=Vector2.new(848,608)
@@ -49,7 +51,10 @@ Shop.ClosetCopy=table.freeze({
  tile={"rack.closet.tile","Outfit Egg"},
  more={"rack.closet.more","More colours come from the Outfit Egg."},
  promise={"rack.closet.promise","Clothes come from the Outfit Egg."},
- reason={"rack.closet.reason","Clothes come from the Outfit Egg now."}})
+ reason={"rack.closet.reason","Clothes come from the Outfit Egg now."},
+ -- Angel Wings: the Back tab and the pane's note while the pet has grown wings of its own.
+ wingsTab={"rack.wings.tab","Back"},
+ wingsNote={"rack.wings.note","Your own wings rest while these are on"}})
 function Shop.closetCopy(name)
  local row=Shop.ClosetCopy[name];if not row then return ""end
  return if UICopy.has(row[1])then UICopy.get(row[1])else row[2]
@@ -73,11 +78,17 @@ function Shop.tileList(petId,slot,owned,tab,closet)
   local item=Catalog.forPet(petId,math.huge).byId[tab.thisWeek]
   return if item then {item}else {}
  end
- local items=if closet==true then Catalog.closetTab(petId,slot,owned)else Catalog.shopTab(petId,slot,owned)
+ local items=Shop.slotCards(petId,slot,owned,closet)
  if #items==0 then return {}end
  local list={{id=Shop.NoneId,none=true,slot=slot,name=UICopy.get("r4.wardrobe.none")}}
  for _,item in ipairs(items)do table.insert(list,item)end
  return list
+end
+-- Pure: one slot tab's catalogue cards (the closet's or the shop's), without an egg-only base the pet does not own
+-- (Angel Wings: a card only once owned, so its Back tab shows only then; AngelWings.ownedOnly).
+function Shop.slotCards(petId,slot,owned,closet)
+ local items=if closet==true then Catalog.closetTab(petId,slot,owned)else Catalog.shopTab(petId,slot,owned)
+ return Wings.ownedOnly(items,owned)
 end
 -- Pure: the item if it is for sale to this pet now. A "This week" pick is for sale only in the server's week
 -- (ctx.thisWeek, public.thisWeek), never by the device clock (review B37); everything else is the catalogue's list.
@@ -118,7 +129,8 @@ function Shop.status(petId,itemId,ctx)
   return {kind="egg",text=Shop.closetCopy("fromEgg"),button=Shop.closetCopy("go"),enabled=true}
  end
  if not owned and not Shop.forSale(petId,itemId,ctx)then return {kind="invalid",text="",button=nil}end
- local more=if ctx.closet==true then Shop.closetCopy("more")else ""
+ -- An egg-only base with no colours (Angel Wings) has no "more colours" line.
+ local more=if ctx.closet==true and not(item.egg==true and item.variant~=true and #Catalog.family(petId,item.id)<2)then Shop.closetCopy("more")else ""
  if owned and Catalog.equippedIn(petId,row.equipped,item.slot)==itemId then return {kind="equipped",text=more,button=UICopy.get("r4.equipped"),enabled=false}end
  if owned then return {kind="owned",text=more,button="Wear",enabled=true}end
  local wallet=ctx.wallet or 0
@@ -179,8 +191,7 @@ function Shop.tabsFor(petId,owned,week,closet)
  local list={}
  if petId then
   for _,tab in ipairs(Catalog.Tabs)do
-   local cards=if closet==true then Catalog.closetTab(petId,tab.slot,owned)else Catalog.shopTab(petId,tab.slot,owned)
-   if #cards>0 then table.insert(list,tab)end
+   if #Shop.slotCards(petId,tab.slot,owned,closet)>0 then table.insert(list,tab)end
   end
   -- This week: its own tab, last in line so the Wardrobe never opens on a sale item (only while the switch is on and
   -- this pet's rig sells the pick).
@@ -197,6 +208,7 @@ end
 -- A tab's label: the UICopy string for the new tabs, the catalogue's label otherwise.
 function Shop.tabLabel(tab)
  if tab.copy then return UICopy.get(tab.copy)end
+ if tab.slot=="Back"then return Shop.closetCopy("wingsTab")end
  local key="variants.tab."..tostring(tab.id)
  return if UICopy.has(key)then UICopy.get(key)else tab.label
 end
@@ -258,6 +270,7 @@ function Shop.note(petId,itemId,stages)
  if item.slot=="Hat"and item.flags.openCrown then return if horns then "Open crown: your horns stay visible"else "Open crown: horns stay visible"end
  if item.slot=="Hat"and item.flags.coversHorns and horns then return "Hides your horns while worn"end
  if item.slot=="Mouth"and item.flags.neutralOnly then return "Shows on the neutral face; other moods keep their mouth"end
+ if item.slot=="Back"and(stages and stages.wings or 0)>0 then return Shop.closetCopy("wingsNote")end
  -- Slice B: a recolour says which item it recolours; the new slots' notes are UICopy strings.
  if item.variant==true and type(item.base)=="string"then
   local base=Catalog.item(petId,item.base)
@@ -298,7 +311,16 @@ Shop.HeadSlots=table.freeze({Hat=true,Eyes=true,Mouth=true,EarPiercing=true,Eyew
 function Shop.cardFraming(slot)
  if Shop.HeadSlots[slot]then return "head",.62 end
  if slot=="Tail"then return "tail",.85 end
+ -- Back (Angel Wings): the camera 15% further back so both wings and the halo fit the card.
+ if slot=="Back"then return "body",.9*Wings.Preview.pull end
  return "body",.9
+end
+-- Pure: the preview pet's turn for a slot tab: the tail faces the viewer; Back turns 35 degrees so the wings read from
+-- the front; everything else the slight turn (`default`: the pane -.25, a card -.35).
+function Shop.slotYaw(slot,default)
+ if slot=="Tail"then return math.pi*.8 end
+ if slot=="Back"then return Wings.Preview.yaw end
+ return default
 end
 -- Pure: the cache key (a tinted item renders in the pet's own palette colour).
 function Shop.cardKey(petId,itemId,tint)return petId..":"..itemId..":"..(if tint then tint:ToHex()else "")end
@@ -782,7 +804,7 @@ function Shop:livePreviews()
 end
 function Shop:poseCard(entry)
  local v=entry.visual;if not v or v.destroyed then return end
- v.yaw=if entry.slot=="Tail"then math.pi*.8 else -.35
+ v.yaw=Shop.slotYaw(entry.slot,-.35)
  v.reducedEffects=true;v.poseDirty=true;v:update(0)
  entry.rig=v.rigRevision
  local box,size=Bounds.get(v)
@@ -910,7 +932,7 @@ function Shop:paintPreview()
  end
  local slot=self:slot()
  -- The tail tab turns the pet round so the tail faces the viewer.
- self.visual.yaw=if slot=="Tail"then math.pi*.8 else -.25
+ self.visual.yaw=Shop.slotYaw(slot,-.25)
  self.visual.reducedEffects=GuiService.ReducedMotionEnabled
  if self.visual.applyAppearance then self.visual:applyAppearance(base)end
  self.visual.poseDirty=true;self.visual:update(0)
@@ -923,7 +945,7 @@ function Shop:fitCamera()
  if self.cameraKey==key then return end;self.cameraKey=key
  local box,size=Bounds.get(v);local a=math.max(.1,self.viewport.AbsoluteSize.X/math.max(1,self.viewport.AbsoluteSize.Y));local half=math.tan(math.rad(self.camera.FieldOfView/2))
  local slot=self:slot()
- local zoom=if Shop.HeadSlots[slot]then .78 else 1
+ local zoom=if Shop.HeadSlots[slot]then .78 elseif slot=="Back"then Wings.Preview.pull else 1
  local distance=(math.max(size.Y*.5/half,size.X*.5/(half*a))+size.Z*.5+.3)*zoom
  local center=box.Position+(if zoom<1 then Vector3.new(0,size.Y*.18,0)else Vector3.zero)
  self.camera.CFrame=CFrame.lookAt(center+Vector3.new(0,.12,distance*1.10),center)
