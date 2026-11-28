@@ -109,16 +109,23 @@ function Light.sunGain(look,gate)
 end
 -- Pure: the lanterns lit (DriftLanterns' night: daylight under .3).
 function Light.lanternsLit(daylight)return Lanterns.lit(daylight)end
--- Pure: a point on a closed path (a list of Vector3) at t seconds, one loop a period, starting `phase` (0..1) round.
-function Light.pathPoint(path,period,t,phase)
+-- Pure: a closed path's leg lengths (leg i from point i to the next, the last back to the first) and their total.
+function Light.pathLengths(path)
 	local n=#path
-	if n==0 then return nil end
-	if n==1 then return path[1]end
 	local lengths,total={},0
 	for i=1,n do
 		local d=(path[i%n+1]-path[i]).Magnitude
 		lengths[i]=d;total+=d
 	end
+	return lengths,total
+end
+-- Pure: a point on a closed path (a list of Vector3) at t seconds, one loop a period, starting `phase` (0..1) round.
+-- lengths, total: Light.pathLengths(path), when the caller keeps them (the bubbles do: built once, read at 20 Hz).
+function Light.pathPoint(path,period,t,phase,lengths,total)
+	local n=#path
+	if n==0 then return nil end
+	if n==1 then return path[1]end
+	if not lengths then lengths,total=Light.pathLengths(path)end
 	if total<=0 then return path[1]end
 	local at=((t/period+(phase or 0))%1)*total
 	for i=1,n do
@@ -208,7 +215,9 @@ function Light.build(options)
 		ball.Material=Light.Bubble.material
 		ball.Color,ball.Reflectance=Light.Bubble.look.Color,Light.Bubble.look.Reflectance
 		ball.Transparency=1
-		table.insert(self.bubbles,{part=ball,path=path,period=bubble.period,phase=(index-1)/math.max(#data.bubbles,1),shown=false})
+		local lengths,total=Light.pathLengths(path)
+		table.insert(self.bubbles,{part=ball,path=path,lengths=lengths,total=total,period=bubble.period,
+			phase=(index-1)/math.max(#data.bubbles,1),shown=false})
 	end
 
 	local function rayLook()
@@ -235,10 +244,18 @@ function Light.build(options)
 		for _,index in ipairs(Light.rayChoice(data.rays,self.level,self.phone))do shown[index]=true end
 		local visible=look.weight>.02
 		local clear=Light.rayClear(look.weight)
-		local edge=Light.Ray.edge
-		local sequence=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(edge,clear),
-			NumberSequenceKeypoint.new(1-edge,clear),NumberSequenceKeypoint.new(1,1)})
-		local colour=ColorSequence.new(Light.rayColour(look.night))
+		-- The sequences are made only when the clear value or the night flag changes (this runs every .5 s).
+		if self.sequenceClear~=clear then
+			local edge=Light.Ray.edge
+			self.sequenceClear=clear
+			self.sequence=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(edge,clear),
+				NumberSequenceKeypoint.new(1-edge,clear),NumberSequenceKeypoint.new(1,1)})
+		end
+		if self.colourNight~=look.night or self.colour==nil then
+			self.colourNight=look.night
+			self.colour=ColorSequence.new(Light.rayColour(look.night))
+		end
+		local sequence,colour=self.sequence,self.colour
 		local speed=if Light.rayMoves(self.reduced)then Light.Ray.speed else 0
 		local motes=Light.motesOn(self.level,self.reduced)
 		for _,ray in ipairs(self.rays)do
@@ -277,7 +294,7 @@ function Light.build(options)
 		local on=Light.bubblesOn(self.level,self.reduced)
 		for _,bubble in ipairs(self.bubbles)do
 			if on then
-				local at=Light.pathPoint(bubble.path,bubble.period,now,bubble.phase)
+				local at=Light.pathPoint(bubble.path,bubble.period,now,bubble.phase,bubble.lengths,bubble.total)
 				bubble.part.CFrame=CFrame.new(at)
 				if not bubble.shown then bubble.shown=true;bubble.part.Transparency=Light.Bubble.look.Transparency end
 			elseif bubble.shown then

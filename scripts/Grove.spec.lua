@@ -407,6 +407,23 @@ return function(client,offline)
 		local path={Vector3.new(0,0,0),Vector3.new(10,0,0)}
 		assert(near(Light.pathPoint(path,10,0,0).X,0)and near(Light.pathPoint(path,10,2.5,0).X,5)and near(Light.pathPoint(path,10,7.5,0).X,5))
 		assert(near(Light.pathPoint(path,10,10,0).X,0),"one loop a period")
+		local square={Vector3.new(0,0,0),Vector3.new(4,0,0),Vector3.new(4,0,4),Vector3.new(0,0,4)}
+		local lengths,total=Light.pathLengths(square)
+		assert(total==16 and #lengths==4)
+		for _,t in ipairs({0,1.3,5,9.9})do
+			assert((Light.pathPoint(square,10,t,.2,lengths,total)-Light.pathPoint(square,10,t,.2)).Magnitude<1e-6,"kept lengths: the same point")
+		end
+		local cached=Light.build({parent=Instance.new("Folder"),data=Fixture,level=0,daylight=function()return .9 end,now=function()return 0 end})
+		assert(cached.bubbles[1].lengths and cached.bubbles[1].total>0,"a bubble keeps its path's lengths")
+		cached.paintRays({weight=1,night=false})
+		local sequence,colour=cached.sequence,cached.colour
+		cached.paintRays({weight=1,night=false})
+		assert(rawequal(cached.sequence,sequence)and rawequal(cached.colour,colour),"same look: no new sequences")
+		cached.paintRays({weight=.5,night=false})
+		assert(not rawequal(cached.sequence,sequence)and rawequal(cached.colour,colour),"a new clear: a new NumberSequence only")
+		cached.paintRays({weight=.5,night=true})
+		assert(not rawequal(cached.colour,colour),"night: a new ColorSequence")
+		cached.destroy()
 	end)
 
 	test("Sky Falls is cut at the moat (not extended); without a grove it keeps its full drop",function()
@@ -421,7 +438,7 @@ return function(client,offline)
 		assert(Falls.cut(fall,nil)==fall and Falls.cut(fall,-80)==fall and Falls.cut(fall,10)==fall)
 	end)
 
-	test("WorldMotion: a part or emitter the grove hides stops stepping",function()
+	test("WorldMotion: a part or emitter the grove hides stops stepping (read after the range check)",function()
 		local m=Motion.new(workspace)
 		m.reduced=function()return false end
 		m.sceneOn=function()return false end
@@ -443,6 +460,32 @@ return function(client,offline)
 		assert(e1.Enabled==true and e2.Enabled==false,"the hidden emitter stays off")
 	end)
 
+	test("backdrop records: hidden parts stop colliding and being queried, what left is pruned, emitters settle",function()
+		local records={}
+		local function set(r,item,key,value)
+			r[item]=r[item]or{was={}}
+			if r[item].was[key]==nil then r[item].was[key]=item[key]end
+			item[key]=value
+		end
+		local meshes,flow=Instance.new("Folder"),Instance.new("Folder")
+		local p=Instance.new("BasePart");p.Name="W7_Backdrop__cloud_1";p.CanCollide,p.CanQuery=true,true;p.Parent=meshes
+		local e=Instance.new("ParticleEmitter");e.Name="Water_SkyFalls";e.Enabled=true;e.Parent=flow
+		local b=Instance.new("Beam");b.Name="Water_SkyFalls";b.Enabled=true;b.Parent=flow
+		GroveWorld.hideBackdrop(set,records,{World=meshes,WaterFlow=flow},{"W7_Backdrop__cloud_1","Water_SkyFalls"})
+		assert(p.CanCollide==false and p.CanQuery==false and records[p].was.CanCollide==true and records[p].was.CanQuery==true)
+		assert(e.Enabled==false and b.Enabled==false)
+		GroveWorld.settleBackdrop(records,true)
+		assert(records[e].was.Enabled==false and records[b].was.Enabled==true,"reduced: the emitter returns off, the beam its own")
+		GroveWorld.settleBackdrop(records,false)
+		assert(records[e].was.Enabled==true)
+		local restored={}
+		p.Parent=nil
+		local gone=GroveWorld.prune(records,function(item)return item:IsDescendantOf(meshes)or item:IsDescendantOf(flow)end,
+			function(_,item)table.insert(restored,item)end)
+		assert(gone==1 and records[p]==nil and restored[1]==p and records[e]~=nil and records[b]~=nil,"only what left")
+		assert(GroveWorld.prune(records,function()error("boom")end)==2 and next(records)==nil,"an item it cannot place is let go")
+	end)
+
 	test("AeroWorld: the grove stands after its preload, hides the backdrop in its own records, gives it all back",function()
 		if not offline then return end -- the room fixtures are offline mocks
 		local AeroWorld=require(client.AeroWorld)
@@ -454,7 +497,8 @@ return function(client,offline)
 		local flow=Instance.new("Folder");flow.Name="WaterFlow";flow.DescendantAdded=signal();flow.DescendantRemoving=signal()
 		meshes.Parent=room;flow.Parent=room
 		local function backdrop(name)
-			local p=Instance.new("BasePart");p.Name=name;p.LocalTransparencyModifier=0;p.Transparency=0;p.Parent=meshes
+			local p=Instance.new("BasePart");p.Name=name;p.LocalTransparencyModifier=0;p.Transparency=0
+			p.CanCollide,p.CanQuery=true,true;p.Parent=meshes
 			return p
 		end
 		local cloud=backdrop("W7_Backdrop__cloud_1")
@@ -462,9 +506,12 @@ return function(client,offline)
 		local skin=Instance.new("Texture");skin.Name="Skin";skin.LocalTransparencyModifier=0;skin.Parent=foam
 		local keep=backdrop("W7_Underside__cliff_rock")
 		local crystals=backdrop("W7_Crystals__glow_aqua")
+		crystals.CanCollide=false -- its own: never collides, still queried
 		local skyMesh=backdrop("W7_Water__waterfall_sky")
 		local anchor=Instance.new("Part");anchor.Parent=flow
 		local sheet=Instance.new("Beam");sheet.Name="Water_SkyFalls";sheet.Enabled=true;sheet.Parent=anchor
+		local spray=Instance.new("ParticleEmitter");spray.Name="Water_SkyFalls";spray.Enabled=true;spray.Parent=anchor
+		local motionReduced=false
 		room.Parent=world
 		local on,changed=true,signal()
 		local builds={}
@@ -482,7 +529,8 @@ return function(client,offline)
 				return{still=function()end,destroy=function()end}
 			end},
 			groveOn=function()return on end,groveChanged=function()return changed end,groveData=function()return Fixture end,
-			groveTemplates=function()return templates(Fixture)end,groveCamera=function()return nil end,phone=function()return false end})
+			groveTemplates=function()return templates(Fixture)end,groveCamera=function()return nil end,phone=function()return false end,
+			motionReduced=function()return motionReduced end})
 		-- The placeholder: nothing built, nothing said.
 		local quiet=AeroWorld.new({world=Instance.new("Folder"),lighting=lighting,data=V7,groveData=function()return Placeholder end,
 			groveOn=function()return true end,groveTemplates=function()return templates(Fixture)end,spawn=function(fn)fn()end,
@@ -497,6 +545,10 @@ return function(client,offline)
 		assert(self.grove.folder.Parent~=room)
 		assert(cloud.LocalTransparencyModifier==1 and cloud:GetAttribute("GroveHidden")==true,"the backdrop hidden")
 		assert(cloud.Transparency==0,"Transparency is never the grove's")
+		assert(cloud.CanCollide==false and cloud.CanQuery==false,"hidden is not there: no camera pop, raycast or Dash hit")
+		assert(crystals.CanCollide==false and crystals.CanQuery==false)
+		assert(keep.CanCollide==true and keep.CanQuery==true,"what stays still collides")
+		assert(spray.Enabled==false and spray:GetAttribute("GroveHidden")==true,"Sky Falls' spray off")
 		assert(foam.LocalTransparencyModifier==1 and skin.LocalTransparencyModifier==1,"Sky Falls' cloud foam and its skin")
 		assert(sheet.Enabled==false and sheet:GetAttribute("GroveHidden")==true,"Sky Falls' server sheet off")
 		assert(keep.LocalTransparencyModifier==0,"the underside stays")
@@ -507,7 +559,17 @@ return function(client,offline)
 		-- Streaming: a backdrop piece that comes back later is hidden too.
 		local late=Instance.new("BasePart");late.Name="W7_IsletsA__bark";late.LocalTransparencyModifier=0;late.Parent=meshes
 		meshes.DescendantAdded:Fire(late)
-		assert(late.LocalTransparencyModifier==1,"the late pass")
+		assert(late.LocalTransparencyModifier==1 and late.CanCollide==false,"the late pass")
+		-- Streamed out: its record is given back and let go on the next pass, so the records never grow.
+		assert(self.groveHidden[late]~=nil)
+		late.Parent=nil
+		meshes.DescendantRemoving:Fire(late)
+		assert(self.groveHidden[late]==nil and late.LocalTransparencyModifier==0,"pruned")
+		assert(self.groveHidden[cloud]~=nil and self.groveHidden[skin]~=nil,"what is still there stays on record")
+		late.Parent=meshes;meshes.DescendantAdded:Fire(late)
+		assert(late.LocalTransparencyModifier==1,"streamed back in: hidden again")
+		-- Reduced Motion turns on while the spray is hidden: it comes back off (the state now, not the one it was hidden in).
+		motionReduced=true
 		-- The sun gate's gain goes through the look.
 		self.look.setSunRays(2)
 		assert(near(rays.Intensity,.06),"SunRays x2: "..tostring(rays.Intensity))
@@ -520,14 +582,20 @@ return function(client,offline)
 		assert(cloud.LocalTransparencyModifier==0 and cloud:GetAttribute("GroveHidden")==nil and crystals.LocalTransparencyModifier==0)
 		assert(foam.LocalTransparencyModifier==0 and skin.LocalTransparencyModifier==0 and late.LocalTransparencyModifier==0)
 		assert(sheet.Enabled==true and sheet:GetAttribute("GroveHidden")==nil)
+		assert(cloud.CanCollide==true and cloud.CanQuery==true,"collides and is queried again")
+		assert(crystals.CanCollide==false and crystals.CanQuery==true,"its own values exactly")
+		assert(spray.Enabled==false and spray:GetAttribute("GroveHidden")==nil,"Reduced Motion now: the spray stays off")
 		assert(next(self.groveHidden)==nil,"no records left")
 		assert(builds[#builds]==false,"the additions rebuilt without the moat")
 		-- On again, then the whole layer off: the same.
 		on=true;changed:Fire()
 		assert(self.grove and cloud.LocalTransparencyModifier==1)
 		folder=self.grove.folder
+		-- Hidden while reduced, Reduced Motion off since: it comes back on (WorldMotion skipped it at its switch).
+		motionReduced=false
 		self:disable()
 		assert(self.grove==nil and folder.Parent==nil and cloud.LocalTransparencyModifier==0 and sheet.Enabled==true)
+		assert(spray.Enabled==true and cloud.CanCollide==true,"motion on now: the spray back on")
 		assert(#warned==0,"no warnings: "..table.concat(warned," | "))
 	end)
 
@@ -545,7 +613,10 @@ return function(client,offline)
 			end
 			return self
 		end
-		local from,to=store({"AeroKit","GroveKit"}),store({})
+		local from,to=store({"AeroKit","GroveKit","AeroTrunks"}),store({})
+		local guarded=store({})
+		AeroConfig.mountKit({ceiling=function()return true end,groveCeiling=function()error("no Alive")end,from=from,to=guarded})
+		assert(guarded.kids.AeroTrunks and guarded.kids.AeroKit and not guarded.kids.GroveKit,"a throwing grove ceiling: trunks still go")
 		AeroConfig.mountKit({ceiling=function()return true end,groveCeiling=function()return false end,from=from,to=to})
 		assert(to.kids.AeroKit and not to.kids.GroveKit,"no grove ceiling: not copied")
 		AeroConfig.mountKit({ceiling=function()return true end,groveCeiling=function()return true end,from=from,to=to})

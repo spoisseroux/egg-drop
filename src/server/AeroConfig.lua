@@ -62,7 +62,9 @@ function Config.mountKit(deps)
 		return require(game:GetService("ReplicatedStorage").Shared.Alive).ceiling("grove")
 	end
 	local grove=from:FindFirstChild("GroveKit")
-	if grove and groveCeiling()and not to:FindFirstChild("GroveKit")then grove:Clone().Parent=to end
+	-- Guarded: a grove ceiling that throws keeps the grove's templates back, never the trunk pack below.
+	local okGrove,groveOn=pcall(groveCeiling)
+	if grove and okGrove and groveOn==true and not to:FindFirstChild("GroveKit")then grove:Clone().Parent=to end
 	-- Beta 38: the tree grades' trunk pack (assets/world/AeroTrunks.rbxmx) goes with it, the same way (an empty
 	-- placeholder folder until its upload is confirmed: the clients then keep today's trunks).
 	local trunks=from:FindFirstChild("AeroTrunks")

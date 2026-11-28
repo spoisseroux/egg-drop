@@ -17,8 +17,10 @@
 --   * the backdrop: what the grove replaces (Shared.Grove.hides: the data's hides plus Sky Falls' server sheet and cloud
 --     foam) is hidden in GroveWorld's own records on AeroWorld's writer, never in the kit's (dropKit restores all of its
 --     own): parts and their Texture and Decal children by LocalTransparencyModifier 1 (Transparency has three writers),
---     WaterFlow beams and emitters by Enabled false, and the part attribute GroveHidden so WorldMotion stops stepping it.
---     Re-applied in AeroWorld's late pass (streaming re-creates parts) and put back exactly when the grove goes.
+--     parts also CanCollide and CanQuery false (client side only), WaterFlow beams and emitters by Enabled false, and the
+--     part attribute GroveHidden so WorldMotion stops stepping it. Re-applied in AeroWorld's late pass (streaming
+--     re-creates parts; records of what left are pruned first) and put back exactly when the grove goes (an emitter in
+--     the current Reduced Motion state).
 -- The data contract and its rules are Shared.Grove's; this refuses to build (and the backdrop stays) on any problem.
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Rules=require(Shared:WaitForChild("Grove"))
@@ -226,6 +228,11 @@ function GroveWorld.hideBackdrop(set,records,folders,names)
 		local part=meshes and meshes:FindFirstChild(name)
 		if part and part:IsA("BasePart")then
 			set(records,part,"LocalTransparencyModifier",1)
+			-- Invisible is not gone: the camera's occlusion (Poppercam reads Transparency, not the modifier), route raycasts
+			-- and Dash would still hit a hidden islet or drift rock. Client side only (the server's copy still collides),
+			-- recorded and put back exactly like the modifier. CanCollide first: CanQuery only takes while it is off.
+			set(records,part,"CanCollide",false)
+			set(records,part,"CanQuery",false)
 			set(records,part,"@"..GroveWorld.Hidden,true)
 			count+=1
 			for _,child in ipairs(part:GetChildren())do
@@ -242,5 +249,30 @@ function GroveWorld.hideBackdrop(set,records,folders,names)
 		end
 	end
 	return count
+end
+-- Streaming re-creates parts: a record whose item has left the room (inside(item) false: its part's Parent is nil, or
+-- the item went with it) is given back (restore, best effort) and dropped, so the records never grow. Returns how many.
+function GroveWorld.prune(records,inside,restore)
+	local gone={}
+	for item in pairs(records)do
+		local ok,kept=pcall(inside,item)
+		if not(ok and kept)then table.insert(gone,item)end
+	end
+	for _,item in ipairs(gone)do
+		if restore then pcall(restore,records,item)end
+		records[item]=nil
+	end
+	return #gone
+end
+-- Before the backdrop is given back: a hidden emitter returns in the CURRENT Reduced Motion state (WorldMotion owns
+-- them: on unless reduced), not the Enabled it had when hidden (Reduced Motion may have changed since; WorldMotion
+-- skips a hidden one at its switch). Beams keep their own (WorldMotion never switches them).
+function GroveWorld.settleBackdrop(records,reduced)
+	for item,record in pairs(records)do
+		if record.was and record.was.Enabled~=nil then
+			local ok,emitter=pcall(function()return item:IsA("ParticleEmitter")end)
+			if ok and emitter then record.was.Enabled=not reduced end
+		end
+	end
 end
 return GroveWorld

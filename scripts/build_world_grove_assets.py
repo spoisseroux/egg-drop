@@ -367,8 +367,9 @@ def xml_part(index, mesh, mesh_id, raw, textures):
         "        <bool name=\"CastShadow\">false</bool>",
         f"        <bool name=\"DoubleSided\">{'true' if mesh.get('doubleSided') else 'false'}</bool>",
         "        <token name=\"CollisionFidelity\">2</token>",  # Box
-        # Far band Performance (beyond 150 studs, not scriptable at runtime); the rest keep full detail (Precise).
-        f"        <token name=\"RenderFidelity\">{2 if far else 1}</token>",
+        # Enum.RenderFidelity: Automatic 0, Precise 1, Performance 2 (not scriptable at runtime). The far band Automatic
+        # (the engine's distance LODs; Performance held its lowest LOD even up close); the rest keep full detail (Precise).
+        f"        <token name=\"RenderFidelity\">{0 if far else 1}</token>",
         f"        <token name=\"Material\">{material}</token>",
         f"        <Color3uint8 name=\"Color3uint8\">{(0xFF << 24) | 0xFFFFFF}</Color3uint8>",
         f"        <float name=\"Reflectance\">{reflectance!r}</float>",

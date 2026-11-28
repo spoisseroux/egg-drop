@@ -77,7 +77,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
-        <token name="RenderFidelity">2</token>
+        <token name="RenderFidelity">0</token>
         <token name="Material">256</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Reflectance">0.0</float>
@@ -97,7 +97,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
-        <token name="RenderFidelity">2</token>
+        <token name="RenderFidelity">0</token>
         <token name="Material">256</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Reflectance">0.0</float>
@@ -117,7 +117,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
-        <token name="RenderFidelity">2</token>
+        <token name="RenderFidelity">0</token>
         <token name="Material">256</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Reflectance">0.0</float>
@@ -137,7 +137,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
-        <token name="RenderFidelity">2</token>
+        <token name="RenderFidelity">0</token>
         <token name="Material">256</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Reflectance">0.0</float>
@@ -157,7 +157,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
-        <token name="RenderFidelity">2</token>
+        <token name="RenderFidelity">0</token>
         <token name="Material">256</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Reflectance">0.0</float>
@@ -177,7 +177,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
-        <token name="RenderFidelity">2</token>
+        <token name="RenderFidelity">0</token>
         <token name="Material">256</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Reflectance">0.0</float>
@@ -197,7 +197,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
-        <token name="RenderFidelity">2</token>
+        <token name="RenderFidelity">0</token>
         <token name="Material">256</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Reflectance">0.0</float>
@@ -217,7 +217,7 @@
         <bool name="CastShadow">false</bool>
         <bool name="DoubleSided">false</bool>
         <token name="CollisionFidelity">2</token>
-        <token name="RenderFidelity">2</token>
+        <token name="RenderFidelity">0</token>
         <token name="Material">256</token>
         <Color3uint8 name="Color3uint8">4294967295</Color3uint8>
         <float name="Reflectance">0.0</float>
