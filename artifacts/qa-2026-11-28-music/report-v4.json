@@ -1,0 +1,293 @@
+{
+  "version": "v4",
+  "pads": false,
+  "brief": "artifacts/qa-2026-11-28-music/MUSIC-BRIEF.md",
+  "feedback": "Spencer: less dense day/night, more background ambience; Pocket Deck more exciting",
+  "seed": 20261128,
+  "disabled_samples": [
+    "boing",
+    "la-chop"
+  ],
+  "targets": {
+    "lufs": {
+      "garden-day-v3": -18.6,
+      "garden-night-v3": -21.6,
+      "pocket-deck-v3": -17.5,
+      "pocket-deck-lite-v3": -21.9
+    },
+    "true_peak": {
+      "garden-day-v3": -1.5,
+      "garden-night-v3": -6.0,
+      "pocket-deck-v3": -1.5,
+      "pocket-deck-lite-v3": -1.5
+    }
+  },
+  "stem_offset_frames": 2257,
+  "garden_pad_notes_bars_1_8": [
+    [
+      "G3",
+      "A3",
+      "C4",
+      "E4"
+    ],
+    [
+      "A3",
+      "C4",
+      "D4"
+    ],
+    [
+      "G3",
+      "A3",
+      "B3",
+      "C4"
+    ],
+    [
+      "F\u266f3",
+      "A3",
+      "B3",
+      "C4"
+    ],
+    [
+      "G3",
+      "A3",
+      "C4",
+      "E4"
+    ],
+    [
+      "A3",
+      "C4",
+      "D4"
+    ],
+    [
+      "G3",
+      "B3",
+      "D4",
+      "E4"
+    ],
+    [
+      "F\u266f3",
+      "A3",
+      "B3",
+      "C\u266f4"
+    ]
+  ],
+  "glue": {
+    "day": {
+      "threshold_db": -22.0,
+      "loudness_reduction_db": 1.28
+    },
+    "night": {
+      "threshold_db": -25.0,
+      "loudness_reduction_db": 1.05
+    }
+  },
+  "event_counts": {
+    "day": {
+      "brush": 48,
+      "eep": 1,
+      "kalimba": 16,
+      "music-box": 12,
+      "pip": 4,
+      "plip": 4,
+      "shaker": 384,
+      "swell": 2
+    },
+    "night": {
+      "crickets": 8,
+      "music-box": 28,
+      "owl-hoo": 2,
+      "plip": 1,
+      "ribbit": 1
+    }
+  },
+  "sample_vs_bed_db": {
+    "day": {
+      "brush": -13.9,
+      "eep": -13.4,
+      "kalimba": -1.4,
+      "music-box": 4.3,
+      "pip": -3.3,
+      "plip": -5.6,
+      "shaker": -16.3,
+      "swell": -3.4
+    },
+    "night": {
+      "crickets": -5.3,
+      "music-box": 12.8,
+      "owl-hoo": 5.0,
+      "plip": -1.1,
+      "ribbit": 0.4
+    }
+  },
+  "files": {
+    "garden-day-v4": {
+      "file": "garden-day-v4.wav",
+      "frames": 5789538,
+      "seconds": 131.282,
+      "integrated_lufs": -18.6,
+      "true_peak_dbtp": -6.13,
+      "sample_peak_dbfs": -6.14,
+      "loudness_range_lu": 3.33,
+      "mono_loss_db": -0.14,
+      "share_above_6k": 0.0003,
+      "seam": {
+        "rms_last50_db": -18.91,
+        "rms_first50_db": -34.17,
+        "wrap_step": [
+          71,
+          20
+        ],
+        "p99_step": [
+          614,
+          591
+        ],
+        "wrap_step_ratio_p99": 0.116,
+        "wrap_curvature_ratio_p99": 0.05,
+        "hf_seam_vs_median_barline_db": -30.41,
+        "hf_seam_vs_loudest_barline_db": -32.28,
+        "slope_last4ms_vs_first4ms": [
+          6.83,
+          -2.38
+        ]
+      },
+      "ogg": {
+        "bytes": 2542962,
+        "sha256": "1c3774e60dd89cef081b92942f29aad8881637ef2c50c09829d757acc1b6e36b",
+        "decoded_frames": 5789538,
+        "frames_match": true,
+        "seam": {
+          "rms_last50_db": -18.82,
+          "rms_first50_db": -34.16,
+          "wrap_step": [
+            30,
+            50
+          ],
+          "p99_step": [
+            606,
+            582
+          ],
+          "wrap_step_ratio_p99": 0.085,
+          "wrap_curvature_ratio_p99": 0.109,
+          "hf_seam_vs_median_barline_db": -30.15,
+          "hf_seam_vs_loudest_barline_db": -32.21,
+          "slope_last4ms_vs_first4ms": [
+            6.65,
+            -2.38
+          ]
+        },
+        "true_peak_dbtp": -6.11
+      },
+      "wav_sha256": "67d2f7b1b29cc0a57a614b77ecba650c40fe4e563123015e49e772c35a9f983b"
+    },
+    "garden-night-v4": {
+      "file": "garden-night-v4.wav",
+      "frames": 5789538,
+      "seconds": 131.282,
+      "integrated_lufs": -21.6,
+      "true_peak_dbtp": -9.67,
+      "sample_peak_dbfs": -9.68,
+      "loudness_range_lu": 3.73,
+      "mono_loss_db": -0.12,
+      "share_above_6k": 0.0,
+      "seam": {
+        "rms_last50_db": -21.49,
+        "rms_first50_db": -42.76,
+        "wrap_step": [
+          10,
+          8
+        ],
+        "p99_step": [
+          438,
+          379
+        ],
+        "wrap_step_ratio_p99": 0.023,
+        "wrap_curvature_ratio_p99": 0.028,
+        "hf_seam_vs_median_barline_db": -2.11,
+        "hf_seam_vs_loudest_barline_db": -32.09,
+        "slope_last4ms_vs_first4ms": [
+          0.76,
+          -1.39
+        ]
+      },
+      "ogg": {
+        "bytes": 2168284,
+        "sha256": "af8add5df3ab118c522dd35f49d6869be36cfa3bf98166d7b27a9ead3e9554d6",
+        "decoded_frames": 5789538,
+        "frames_match": true,
+        "seam": {
+          "rms_last50_db": -21.44,
+          "rms_first50_db": -42.74,
+          "wrap_step": [
+            39,
+            63
+          ],
+          "p99_step": [
+            440,
+            380
+          ],
+          "wrap_step_ratio_p99": 0.167,
+          "wrap_curvature_ratio_p99": 0.596,
+          "hf_seam_vs_median_barline_db": 6.97,
+          "hf_seam_vs_loudest_barline_db": -25.86,
+          "slope_last4ms_vs_first4ms": [
+            0.62,
+            -1.46
+          ]
+        },
+        "true_peak_dbtp": -9.63
+      },
+      "wav_sha256": "e1572c53be3bde59fcf9b6382c994e5ef67aad724b79f4bfe962d88e4f54a671"
+    }
+  },
+  "phone_lufs_mono_hp300": {
+    "garden-day-v4": -26.42,
+    "garden-day-v3": -24.48,
+    "garden-night-v4": -29.16,
+    "garden-night-v3": -26.72
+  },
+  "crossfade": {
+    "day_lufs": -18.6,
+    "night_lufs": -21.6,
+    "bump_equal_power_lu": 1.27,
+    "bump_exp1_5_lu": -0.23,
+    "exp1_5_within_1lu": true,
+    "loudness_vs_day_at_w_0_to_1_exp1_5": [
+      0.0,
+      0.15,
+      0.27,
+      0.25,
+      0.08,
+      -0.23,
+      -0.67,
+      -1.23,
+      -1.87,
+      -2.52,
+      -3.0
+    ],
+    "exponent_for_flat_midpoint": 1.4,
+    "midpoint_at_that_exponent_lu": 0.07,
+    "midpoint_by_exponent": {
+      "1.0": 1.27,
+      "1.1": 0.97,
+      "1.2": 0.67,
+      "1.3": 0.37,
+      "1.4": 0.07,
+      "1.5": -0.23,
+      "1.6": -0.53,
+      "1.7": -0.84,
+      "1.8": -1.14,
+      "1.9": -1.44,
+      "2.0": -1.74,
+      "2.1": -2.04,
+      "2.2": -2.34,
+      "2.3": -2.64,
+      "2.4": -2.94,
+      "2.5": -3.24,
+      "2.6": -3.54,
+      "2.7": -3.85,
+      "2.8": -4.15,
+      "2.9": -4.45,
+      "3.0": -4.75
+    }
+  }
+}
