@@ -192,8 +192,10 @@ do
 end
 -- Onboarding v2 step 2 (FirstHatchStory.Sounds, ONBOARDING-V2.md): the stork's soft cloth whooshes, its two woody beak
 -- clicks and the blanket's rustle, to synthesise with scripts/synth_asmr.py. EMPTY SLOTS: 0 = not made or uploaded yet =
--- no voice (play() answers false, quietly). Put each uploaded asset id here.
-Audio.StorkIds=table.freeze({stork_flap_a=0,stork_flap_b=0,stork_flap_c=0,stork_clack=0,blanket_rustle=0,
+-- no voice (play() answers false, quietly). Put each uploaded asset id here. Beta 42 note 12 (POINTER-STORK-BRIEF 2b):
+-- the recipes are in scripts/synth_asmr.py (assets/audio/custom/stork_*.wav, blanket_rustle.wav), plus the coo
+-- (stork_coo: "hoo-roo", once as the glide ends and again at the nod).
+Audio.StorkIds=table.freeze({stork_flap_a=0,stork_flap_b=0,stork_flap_c=0,stork_clack=0,blanket_rustle=0,stork_coo=0,
  -- Fable's cathartic crack (AERO-JUICE-BRIEF 4, FirstHatchStory.Takes): new takes, EMPTY SLOTS until synthesised and
  -- uploaded. tap_knuckle (dry fingernail on shell, 40 ms), shell_scatter (a dry clatter tail, 0.6 s), crumb_bounce,
  -- asmr_crack3 (thicker, stage 3).

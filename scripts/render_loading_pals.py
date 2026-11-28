@@ -14,8 +14,13 @@ a white sticker outline and a transparent gutter so a downscaled cell never pick
 LoadingScreen.client.lua reads the same layout (Sheet, column = pal index - 1, row = frame).
 
 Art direction: Fable, 2026-11-25 (five pals, two wave frames, 8 deg camera, matte stage light).
+
+Beta 42 note 9 ("the hat on the green bear ... is clipping into its head"): the game lifts some wearables onto the
+crown (WearableCatalog.Fit: the sun hat +0.03, the beanie +0.015, the blep back 0.003) and the renders did not. Every
+render now applies the same per-item lifts, read from src/shared/WearableCatalog.lua (`python
+scripts/render_loading_pals.py --fits` lists the pals they touch; LOADING_PALS_ONLY=<ids> re-renders just those).
 """
-import math, os, sys
+import math, os, re, sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -55,6 +60,37 @@ TILT = {"out": 0.0, "in": 4.0}
 CAM_ELEVATION = 8.0
 ORTHO = 2.55          # world units across the frame (the Bunny's ears and the party hat fit)
 TARGET_Z = 0.98
+
+
+def catalog_fit():
+    """WearableCatalog.Fit as {rig id: {item: (x, y, z)}} in Roblox rig axes (Y up, Z the front)."""
+    text = (REPO / "src" / "shared" / "WearableCatalog.lua").read_text(encoding="utf-8")
+    head = "Catalog.Fit=table.freeze({"
+    start = text.index(head) + len(head)
+    block = text[start:text.index("function Catalog.fitOffset", start)]
+    fits = {}
+    for rig, body in re.findall(r"(\w+)=table\.freeze\(\{(.*?)\}\)", block, re.S):
+        fits[rig] = {item: (float(x), float(y), float(z))
+                     for item, x, y, z in re.findall(r"(\w+)=Vector3\.new\(([-\d.]+),([-\d.]+),([-\d.]+)\)", body)}
+    return fits
+
+
+def fit_blender(offset):
+    """A Roblox rig offset (x, y up, z front) in the pet's Blender axes (z up, -y front): (x, -z, y)."""
+    x, y, z = offset
+    return (x, -z, y)
+
+
+def fitted_pals():
+    """{pal id: {item: offset}} for every pal wearing an item the game lifts."""
+    fits = catalog_fit()
+    out = {}
+    for pal in PALS:
+        rig = fits.get(pal["pet"].lower(), {})
+        hit = {item: rig[item] for item in pal["outfit"].values() if item in rig}
+        if hit:
+            out[pal["id"]] = hit
+    return out
 
 
 def lin(hexcode):
@@ -108,6 +144,8 @@ def blender_main():
     SWAPS = {"Eyes": [pre + "EyeL", pre + "EyeR"], "Mouth": [pre + "Mouth"], "Tail": [pre + "Tail"]}
 
     base_root = root.matrix_world.copy()
+    root_rot = base_root.to_3x3()
+    rig_fit = catalog_fit().get(pet.lower(), {})
     names = ["Hand" + s for s in "LR"] + ["Wrist" + s for s in "LR"] + list(HEAD_ANCHORS)
     anchors = {n: D.get(pre + "Anchor_" + n) for n in names}
     rest = {n: (a.matrix_world.copy() if a else None) for n, a in anchors.items()}
@@ -127,6 +165,18 @@ def blender_main():
         outfit = pal["outfit"]
         for o in wear:
             o.hide_render = outfit.get(o["slot"]) != o["item"]
+        # Beta 42 note 9: the game's per-item lift (WearableCatalog.Fit), in the pet's own axes at rest, carried into
+        # each piece's parent (anchor) space so it rides the head tilt like the piece; put back after this pal.
+        lifted = []
+        for o in wear:
+            offset = rig_fit.get(o["item"]) if not o.hide_render else None
+            if offset:
+                delta = root_rot @ Vector(fit_blender(offset))
+                if o.parent is not None:
+                    delta = (o.parent.matrix_world @ o.matrix_parent_inverse).to_3x3().inverted() @ delta
+                lifted.append((o, o.location.copy()))
+                o.location = o.location + delta
+                print("FIT", pal["id"], o.name, tuple(round(v, 4) for v in offset))
         for slot, objs in SWAPS.items():
             for n in objs:
                 if n in D:
@@ -170,6 +220,8 @@ def blender_main():
         for n, a in anchors.items():
             if a is not None:
                 a.matrix_world = rest[n]
+        for o, location in lifted:
+            o.location = location
 
 
 def pack_main():
@@ -211,6 +263,12 @@ def pack_main():
 
 try:
     import bpy  # noqa: F401
-    blender_main()
 except ImportError:
+    bpy = None
+if bpy is not None:
+    blender_main()
+elif "--fits" in sys.argv:
+    for pal_id, items in fitted_pals().items():
+        print(pal_id, items)
+else:
     pack_main()

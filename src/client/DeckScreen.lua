@@ -2110,10 +2110,15 @@ function Screen:applyCalm(h)
  -- The First Hatch: the shorter NEXT card shows its one ball at the right, centred, inside the card.
  local ball=plan.next and h.next and h.next[1]and h.next[1].ball
  if ball then
+  -- Beta 42 note 10 (C10): save the ball's true rest, not a bobbed frame, and move the feel's bob base with it (its
+  -- stepNext wrote the HUD-build rest back every frame, under the cut card's foot).
+  local rest=self.feel and self.feel.nextBase and self.feel.nextBase[1]
+  if rest then ball.Position=rest end
   keep(ball,"Position");keep(ball,"Size")
   local side=math.min(ball.Size.X.Offset,plan.next.h-16)
   ball.Size=UDim2.fromOffset(side,side)
   ball.Position=UDim2.fromOffset(plan.next.w-side-14,math.floor((plan.next.h-side)/2))
+  if self.feel then self.feel:rebase(1,ball.Position)end
  end
  if h.status then keep(h.status,"TextSize");h.status.TextSize=Calm.textSize(h.phone==true)end
  h.calm={saved=saved}
@@ -2124,6 +2129,10 @@ function Screen:restoreCalm(h)
  for object,props in pairs(calm.saved)do
   if object.Parent then for property,value in pairs(props)do object[property]=value end end
  end
+ -- C10: NEXT's first ball bobs about its own rest again.
+ local ball=h.next and h.next[1]and h.next[1].ball
+ local was=ball and calm.saved[ball]and calm.saved[ball].Position
+ if was and self.feel then self.feel:rebase(1,was)end
  -- The compact HUD re-applies the coach card's own height on its next paint.
  h.cardH=nil
 end

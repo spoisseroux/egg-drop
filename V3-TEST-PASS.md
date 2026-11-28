@@ -81,6 +81,7 @@ Beta (33), 2026-11-26: player scale (row 60). Beta (32), 2026-11-26: the first e
 
 | # | What | Beta | Try | Switch |
 |---|---|---|---|---|
+| B42 C | **Beta (42) notes 9-12: the loading pals' hats, the Welcome deck's NEXT ball and egg pips, the stork's push-in and sounds** (`artifacts/qa-2026-11-27-beta42/DIAGNOSIS.md` C9-C11, `POINTER-STORK-BRIEF.md` 2) | - | Join: the green bear's sun hat sits on its crown (new sheet, once uploaded). `/freshsave`: NEXT's one ball sits centred inside its cut card; the three pips under the egg are solid navy eggs with no oval outline. The stork: the camera pushes in on the bundle (the egg about a third of the screen) from 1.1 s, holds close while it lowers and settles, pulls back for the thank-you nod, then glides onto the crack frame with no second move; 5.0 s in all. Sounds once the ids are in: wing flaps, two bill clacks, the blanket rustle, a coo at the hover and at the nod. Reduced Motion: one still close frame. | `/onboard stork|deck2` |
 
 ## Scoped, not built
 

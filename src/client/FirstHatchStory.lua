@@ -30,8 +30,8 @@ local K=Enum.KeyCode
 Story.Keys=table.freeze({K.Space,K.E,K.ButtonA,K.ButtonB,K.Escape,K.Backspace,K.Return,K.KeypadEnter,K.W,K.A,K.S,K.D,K.Q,
 	K.Up,K.Down,K.Left,K.Right,K.ButtonX,K.ButtonY,K.ButtonL2,K.G})
 -- The new synthesised sounds (scripts/synth_asmr.py): empty slots until uploaded (BoardAudio.StorkIds). Playing an
--- empty slot is quiet.
-Story.Sounds=table.freeze({flap={"stork_flap_a","stork_flap_b","stork_flap_c"},clack="stork_clack",rustle="blanket_rustle"})
+-- empty slot is quiet. Beta 42 note 12: the coo (once as the glide ends, again at the nod).
+Story.Sounds=table.freeze({flap={"stork_flap_a","stork_flap_b","stork_flap_c"},clack="stork_clack",rustle="blanket_rustle",coo="stork_coo"})
 
 local function node(class,parent,props)
 	local n=Instance.new(class)
@@ -399,10 +399,14 @@ function Story:stepStork(dt)
 		for i,at in ipairs(L.clacks)do
 			if not self["clack"..i]and after>=at then self["clack"..i]=true;self:play(Story.Sounds.clack,1+.06*i,.5)end
 		end
+		-- beta 42 note 12: the coo again with the nod, a little higher
+		if not self.cooNod and after>=L.nod then self.cooNod=true;self:play(Story.Sounds.coo,V2.StorkCoo.nodSpeed,V2.StorkCoo.gain)end
 	else
 		root=hoverRoot
 		opts.legs=.6
 	end
+	-- beta 42 note 12 ("can the stork make a sound too?"): a coo as the glide ends and it hangs over the landing
+	if not self.cooGlide and t>=S.glide then self.cooGlide=true;self:play(Story.Sounds.coo,1,V2.StorkCoo.gain)end
 	-- The wing beats' soft whoosh, once a downstroke (empty slots until uploaded).
 	local beat=math.floor(((t<=S.glide)and(S.flapFast*t+.5*((S.flapSlow-S.flapFast)/S.glide)*t*t)or(S.flapFast*S.glide+.5*(S.flapSlow-S.flapFast)*S.glide+S.flapSlow*(t-S.glide))))
 	if beat~=self.lastBeat then self.lastBeat=beat;local list=Story.Sounds.flap;self:play(list[beat%#list+1],1,.35)end
@@ -414,8 +418,10 @@ function Story:stepStork(dt)
 	if t<S.hover then
 		local drop=V2.lower(t)*math.max(0,(hoverKnot.Y-self.land.Y)-1.55)
 		local center=self.blanket:hang(knot,drop,facing)
+		self.bundleAt=center -- the camera's push-in looks here (V2.storkCamera)
 		self.egg:pose(CFrame.new(center-Vector3.new(0,.62,0))*facing,0,1,nil,0)
 	else
+		self.bundleAt=nil
 		if not self.setDown then
 			self.setDown=true
 			self:play(Story.Sounds.rustle,1,.45)
@@ -476,23 +482,26 @@ function Story:skipStork()
 	self:toCrack()
 	return true
 end
--- The camera: behind the player, framing the stork and the landing (FOV 55); close on the egg for the crack (FOV 40).
+-- The camera: the stork's five beats (V2.storkCamera, beta 42 note 12: arrive, push in on the bundle, close on the egg,
+-- thank you, hand-off onto the crack frame; Reduced Motion: the close frame, still); close on the egg for the crack
+-- (FOV 40). focus: the stork's root.
 function Story:aimCamera(dt,mode,focus)
 	local camera=self.camera;if not camera then return end
 	local land=self.land
 	local want,fov
+	local pin=0
 	if mode=="stork"then
-		local eye=land+self.toPlayer*(V2.Stork.land+7)+Vector3.new(0,3.6,0)-self.right*1.5
-		local look=land:Lerp(focus or land,.35)+Vector3.new(0,1.2,0)
-		want,fov=CFrame.lookAt(eye,look),V2.Stork.fov
+		local eye,look,f,p=V2.storkCamera(self.since,land,self.toPlayer,self.right,focus,self.bundleAt,self.reducedStart==true)
+		want,fov,pin=CFrame.lookAt(eye,look),f,p
 	else
 		local C=V2.Crack
-		local centre=land+Vector3.new(0,.8,0)
+		local centre=land+Vector3.new(0,V2.CrackCentre,0)
 		local eye=centre+self.toPlayer*C.dist+Vector3.new(0,C.up,0)
 		want,fov=CFrame.lookAt(eye,centre),C.fov
 	end
 	if dt<=0 then camera.CFrame=want;camera.FieldOfView=fov;self.cameraAt=want;return end
-	local k=1-math.exp(-5*dt)
+	-- the hand-off pins the follow onto its target by the end (pin 1: exactly the crack frame)
+	local k=V2.followGain(dt,pin)
 	self.cameraAt=self.cameraAt:Lerp(want,k)
 	camera.CFrame=self.cameraAt
 	camera.FieldOfView=camera.FieldOfView+(fov-camera.FieldOfView)*k
@@ -908,6 +917,7 @@ function Story:cleanup()
 	self.ritual,self.popAt,self.creakAt,self.setDown,self.greeted,self.asked=nil,nil,nil,nil,nil,nil
 	self.crack3D,self.crack2D,self.silentAt,self.closer,self.route=nil,nil,nil,0,nil
 	self.clack1,self.clack2,self.lastBeat,self.heldSince=nil,nil,nil,nil
+	self.cooGlide,self.cooNod,self.bundleAt=nil,nil,nil
 	self.replaying=false;self.planToken=nil;self.planned=false;self.planError=nil
 end
 function Story:destroy()

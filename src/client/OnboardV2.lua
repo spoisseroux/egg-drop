@@ -118,8 +118,9 @@ V2.Deck2=table.freeze({
 	eggTop=hex("#C9F1FF"),eggBottom=hex("#58B8F2"),grass=.18,shadowAlpha=.25,shadowWidth=.6,shadowAspect=.28,shadowPeak=229/255,
 	-- the knock from inside: a 5 degree twitch and a quiet tap every 4 s, then 2.5 s, then 1.2 s as combos land
 	knockEvery={4,2.5,1.2},knockDeg=5,knockTime=.32,knock=table.freeze({cue="egg_wobble",pitch=1.3,gain=.15}),
-	-- the pips: three eggs, 26 px tall; empty white at 25% with a 2 px ring, filled gold with a white glint
-	pipW=21,pipH=26,pipGap=10,pipPad=6,pipEmptyAlpha=.75,pipRing=hex("#9FC4FF"),pipFilled=hex("#FFD86B"),
+	-- the pips: three eggs, 26 px tall; filled gold with a white glint. Beta 42 note 11 (C11): empty is a solid navy egg
+	-- (the egg3d deck's pipEmpty) at 10% see-through, no outline (the old ring floated outside the faded body)
+	pipW=21,pipH=26,pipGap=10,pipPad=6,pipEmpty=hex("#2B4C7E"),pipEmptyAlpha=.1,pipFilled=hex("#FFD86B"),
 	breathe=.12,breatheHz=1,                               -- the next pip to fill breathes 1.0 -> 1.12 at 1 Hz
 	-- the combo moment
 	arc=.35,beads=4,beadGap=.045,arcLift=50,spark=16,      -- the spark to its pip: 0.35 s, 4 beads behind it
@@ -381,8 +382,9 @@ end
 -- ── Step 2: the stork ────────────────────────────────────────────────────────────────────────────────────────────────
 V2.Stork=table.freeze({
 	-- the onboarding fun pass (ONBOARDING-FUN-PASS section 1): 4.6 s, was 6.0 (glide 3.0, hover 3.8, release 4.3);
-	-- the bundle's lowering and let-go keep their length, the glide loses 1 s and the leave 0.4 s (V2.Leave)
-	glide=2.0,hover=2.8,release=3.3,total=4.6,             -- seconds: glide in, lower the bundle, let go, fly off
+	-- the glide lost 1 s and the leave 0.4 s (V2.Leave). Beta 42 note 12 (POINTER-STORK-BRIEF 2a): 5.0 s, the lowering
+	-- and the settle longer (was hover 2.8, release 3.3, total 4.6) so the egg is close and readable from 1.9 to 3.7 s
+	glide=2.0,hover=3.1,release=3.7,total=5.0,             -- seconds: glide in, lower the bundle, let go, fly off
 	out=40,up=18,land=6,hoverUp=4.2,                       -- studs: the start (out, up, to the player's right), the drop
 	flapDeg=35,flapFast=3,flapSlow=1.5,                    -- wings
 	open=1.2,rockDeg=6,clacks=2,                           -- the blanket's radius, the egg's settle rock
@@ -437,6 +439,77 @@ end
 -- The two beak clacks and the nod in the leave phase (seconds after the release): {clacks}, nodAt, flyAt.
 -- The fun pass: the leave is 1.3 s (was 1.7): the clacks, the nod and the fly-off come a little sooner.
 V2.Leave=table.freeze({clacks={.12,.34},nod=.55,fly=.75})
+-- Beta 42 note 12 ("Can we get a better look of the egg when the stork is delivering it?"; POINTER-STORK-BRIEF 2a).
+-- One frame 13 studs back left the 1.3-stud egg at about 10% of the screen. Five beats, eye = land + toPlayer*dist +
+-- (0, up, 0) - right*side, followed with 1-exp(-5 dt):
+--   Arrive    0 to 1.1          13 / 3.6 / 2.4, FOV 55, look land:Lerp(stork, .6) + (0, 1.2, 0)
+--   Push in   1.1 to 1.9        to 5.2 / 2.2 / 2.4, to FOV 42, look to the bundle (smoothstep)
+--   Close     1.9 to release    5.2 / 2.2 / 2.4, FOV 42, the bundle, then the egg on the ground + (0, .65, 0) as it
+--                               lowers (the egg is about 32% of the screen height here)
+--   Thank you release to +.75   8 / 2.6 / 2.0, FOV 48, look land + (0, 2.6, 0) (the egg and the nodding stork)
+--   Hand-off  +.75 to total     to the crack frame (V2.Crack: dist 5, 1.6 over the egg's centre, no side, FOV 40) and
+--                               the follow pinned onto it by the end, so toCrack has nothing to tween
+-- Reduced Motion: the Close frame, still, on the egg on the ground.
+V2.StorkCam=table.freeze({
+	arrive=table.freeze({dist=13,up=3.6,side=2.4,fov=55}),
+	close=table.freeze({dist=5.2,up=2.2,side=2.4,fov=42}),
+	thanks=table.freeze({dist=8,up=2.6,side=2,fov=48}),
+	pushAt=1.1,closeAt=1.9,thanksFor=.75,thanksBlend=.35,  -- s
+	arriveLook=.6,arriveUp=1.2,eggUp=.65,thanksUp=2.6,      -- the look points
+	follow=5,pinPower=4,                                    -- the follow's rate (1-exp(-follow*dt)); how late the pin bites
+})
+-- Pure: the follow's lerp gain this frame: 1-exp(-follow*dt), pulled up to 1 as pin goes 0 -> 1 (late, pin^4, so the
+-- hand-off eases onto the crack frame instead of snapping to its moving target).
+function V2.followGain(dt,pin)
+	local K=V2.StorkCam
+	local k=1-math.exp(-K.follow*math.max(0,tonumber(dt)or 0))
+	local p=math.clamp(tonumber(pin)or 0,0,1)^K.pinPower
+	return k+(1-k)*p
+end
+-- Pure: the crack's own frame as a shot (its centre is .8 over the landing; V2.Crack's up is over that centre).
+V2.CrackCentre=.8
+function V2.crackShot()
+	local C=V2.Crack
+	return{dist=C.dist,up=C.up+V2.CrackCentre,side=0,fov=C.fov}
+end
+local function mixShot(a,b,u)
+	return{dist=a.dist+(b.dist-a.dist)*u,up=a.up+(b.up-a.up)*u,side=a.side+(b.side-a.side)*u,fov=a.fov+(b.fov-a.fov)*u}
+end
+-- Pure: the stork camera's shot at t: {dist, up, side, fov}, the beat's name, and pin (0 = the usual follow, 1 = sit
+-- exactly on the target).
+function V2.storkShot(t,reduced)
+	local S,K=V2.Stork,V2.StorkCam
+	if reduced then return table.clone(K.close),"close",1 end
+	t=tonumber(t)or 0
+	if t<K.pushAt then return table.clone(K.arrive),"arrive",0 end
+	if t<K.closeAt then return mixShot(K.arrive,K.close,smooth((t-K.pushAt)/(K.closeAt-K.pushAt))),"push",0 end
+	if t<S.release then return table.clone(K.close),"close",0 end
+	local off=S.release+K.thanksFor
+	if t<off then return mixShot(K.close,K.thanks,smooth((t-S.release)/K.thanksBlend)),"thanks",0 end
+	local u=smooth((t-off)/math.max(.01,S.total-off))
+	return mixShot(K.thanks,V2.crackShot(),u),"handoff",u
+end
+-- Pure: the stork camera at t. land: the landing; toPlayer, right: flat unit vectors (the player's right); stork: the
+-- stork's root position; bundle: the hanging bundle's centre (nil once it is down). Returns eye, look, fov, pin.
+function V2.storkCamera(t,land,toPlayer,right,stork,bundle,reduced)
+	local S,K=V2.Stork,V2.StorkCam
+	local shot,beat,pin=V2.storkShot(t,reduced)
+	local eye=land+toPlayer*shot.dist+Vector3.new(0,shot.up,0)-right*shot.side
+	local onGround=land+Vector3.new(0,K.eggUp,0)
+	local egg=if bundle then bundle:Lerp(onGround,V2.lower(t))else onGround
+	local look
+	if reduced then look=onGround
+	elseif beat=="arrive"or beat=="push"then
+		local arrive=land:Lerp(stork or land,K.arriveLook)+Vector3.new(0,K.arriveUp,0)
+		look=if beat=="arrive"then arrive else arrive:Lerp(egg,smooth((t-K.pushAt)/(K.closeAt-K.pushAt)))
+	elseif beat=="close"then look=egg
+	elseif beat=="thanks"then look=onGround:Lerp(land+Vector3.new(0,K.thanksUp,0),smooth((t-S.release)/K.thanksBlend))
+	else look=(land+Vector3.new(0,K.thanksUp,0)):Lerp(land+Vector3.new(0,V2.CrackCentre,0),pin)end
+	return eye,look,shot.fov,pin
+end
+-- Beta 42 note 12: the stork's coo ("hoo-roo", scripts/synth_asmr.py stork_coo): once as the glide ends, again at the
+-- nod a little higher. Empty slot until uploaded (BoardAudio.StorkIds): quiet.
+V2.StorkCoo=table.freeze({gain=.4,nodSpeed=1.12})
 
 -- Beta (36), Spencer: "the stork flies thru the arch mesh". The flight is chosen against the world before it starts:
 -- candidate approaches (a heading round the landing and a height) are sampled along the same curve the stork flies,

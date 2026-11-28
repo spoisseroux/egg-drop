@@ -105,10 +105,10 @@ return function(client)
 		assert(near(g0,V2.glow(3))and near(g1,V2.Deck.lightFinal)and l0==0 and near(l1,.2)and f0==0 and f1==1,"combo 3: the light rises, lift 20%, fade")
 		assert(select(2,V2.finale(.5,true))==0,"no lift under Reduced Motion")
 	end)
-	test("step 2 (the onboarding fun pass): 4.6 s: glide 2, lower to 2.8, let go to 3.3, off by 4.6; wings 35 degrees, 3 Hz slowing to 1.5",function()
-		assert(V2.Stork.glide==2 and V2.Stork.hover==2.8 and V2.Stork.release==3.3 and V2.Stork.total==4.6)
-		assert(V2.storkPhase(0)=="glide"and V2.storkPhase(1.99)=="glide"and V2.storkPhase(2.2)=="hover"and V2.storkPhase(3)=="release"
-			and V2.storkPhase(4)=="leave"and V2.storkPhase(4.6)=="gone")
+	test("step 2 (beta 42 note 12): 5.0 s: glide 2, lower to 3.1, let go to 3.7, off by 5.0; wings 35 degrees, 3 Hz slowing to 1.5",function()
+		assert(V2.Stork.glide==2 and V2.Stork.hover==3.1 and V2.Stork.release==3.7 and V2.Stork.total==5.0)
+		assert(V2.storkPhase(0)=="glide"and V2.storkPhase(1.99)=="glide"and V2.storkPhase(2.2)=="hover"and V2.storkPhase(3)=="hover"
+			and V2.storkPhase(3.4)=="release"and V2.storkPhase(4)=="leave"and V2.storkPhase(4.99)=="leave"and V2.storkPhase(5)=="gone")
 		-- the leave's beats fit its 1.3 s, with time left to fly off
 		local L=V2.Leave
 		assert(L.clacks[2]<L.nod and L.nod+.35<=L.fly+.2 and V2.Stork.total-V2.Stork.release-L.fly>=.5)
@@ -123,13 +123,74 @@ return function(client)
 		end
 		assert(crossings(0,.5)>=2 and crossings(3,4)>=2 and crossings(3,4)<=4,"slower after the glide")
 		assert(near(V2.flap(2)-V2.flap(2-1e-6),0,1e-3),"no jump at the end of the glide")
-		assert(V2.lower(1.5)==0 and V2.lower(2.8)==1 and V2.lower(2.4)>0 and V2.lower(2.4)<1)
-		assert(V2.rock(-1)==0 and V2.rock(.6)==0 and math.abs(V2.rock(.1))<=6)
+		assert(V2.lower(1.5)==0 and V2.lower(3.1)==1 and V2.lower(2.4)>0 and V2.lower(2.4)<1)
+		assert(V2.rock(-1)==0 and near(V2.rock(.6),0)and V2.rock(.7)==0 and math.abs(V2.rock(.1))<=6 and V2.rock(.55)~=0,"the settle rock runs the longer 0.6 s")
 		local a,b=Vector3.new(0,0,0),Vector3.new(10,0,0)
 		assert(V2.curve(a,b,Vector3.new(0,4,0),0)==a and V2.curve(a,b,Vector3.new(0,4,0),1)==b and V2.curve(a,b,Vector3.new(0,4,0),.5).Y==2)
 		assert(V2.Stork.out==40 and V2.Stork.up==18 and V2.Stork.land==6 and V2.Stork.skipAt==.5 and V2.Stork.skipH==44 and V2.Stork.fov==55,"Skip at 0.5 s")
 		assert(instruction("onb2.stork.delivery")=="A delivery!")
 		instruction("onb2.stork.skip")
+	end)
+	test("beta 42 note 12: the stork camera's five beats push in on the egg and end exactly on the crack frame",function()
+		local S,K,C=V2.Stork,V2.StorkCam,V2.Crack
+		local land=Vector3.new(10,2,-4)
+		local toPlayer=Vector3.new(0,0,1)
+		local right=Vector3.new(1,0,0)
+		local stork=land+Vector3.new(0,5,-1)
+		local function same(a,b,eps)return(a-b).Magnitude<=(eps or 1e-6)end
+		local function shotIs(s,want)return near(s.dist,want.dist)and near(s.up,want.up)and near(s.side,want.side)and near(s.fov,want.fov)end
+		-- the beats (Fable's table)
+		assert(K.arrive.dist==13 and K.arrive.up==3.6 and K.arrive.side==2.4 and K.arrive.fov==55)
+		assert(K.close.dist==5.2 and K.close.up==2.2 and K.close.side==2.4 and K.close.fov==42)
+		assert(K.thanks.dist==8 and K.thanks.up==2.6 and K.thanks.side==2 and K.thanks.fov==48)
+		assert(K.pushAt==1.1 and K.closeAt==1.9 and K.thanksFor==.75)
+		local s,beat,pin=V2.storkShot(.5);assert(beat=="arrive"and pin==0 and shotIs(s,K.arrive),"arrive")
+		s,beat=V2.storkShot(1.5);assert(beat=="push"and s.dist<13 and s.dist>5.2 and s.fov<55 and s.fov>42,"pushing in")
+		s,beat=V2.storkShot(1.9);assert(beat=="close"and shotIs(s,K.close),"close from 1.9")
+		s,beat=V2.storkShot(S.release-.01);assert(beat=="close"and shotIs(s,K.close),"close until the release")
+		s,beat=V2.storkShot(S.release+.5);assert(beat=="thanks"and shotIs(s,K.thanks),"thank you")
+		s,beat,pin=V2.storkShot(S.release+K.thanksFor+.1);assert(beat=="handoff"and pin>0 and pin<1,"handing off")
+		-- the eye: land + toPlayer*dist + up - right*side
+		local eye,look,fov=V2.storkCamera(0,land,toPlayer,right,stork,nil,false)
+		assert(same(eye,land+toPlayer*13+Vector3.new(0,3.6,0)-right*2.4)and fov==55)
+		assert(same(look,land:Lerp(stork,.6)+Vector3.new(0,1.2,0)),"arrive looks between the landing and the stork")
+		-- close: the hanging bundle, then the egg on the ground as it lowers
+		local bundle=land+Vector3.new(0,2.5,0)
+		_,look=V2.storkCamera(1.95,land,toPlayer,right,stork,bundle,false)
+		assert(same(look,bundle:Lerp(land+Vector3.new(0,.65,0),V2.lower(1.95))),"on the bundle")
+		_,look=V2.storkCamera(S.hover+.1,land,toPlayer,right,stork,nil,false)
+		assert(same(look,land+Vector3.new(0,.65,0)),"on the egg on the ground")
+		-- the egg reads: about a third of the screen height from 1.9 s to the release (1.3 studs tall)
+		eye,look,fov=V2.storkCamera(2.5,land,toPlayer,right,stork,nil,false)
+		local d=(eye-(land+Vector3.new(0,.65,0))).Magnitude
+		local share=1.3/(2*d*math.tan(math.rad(fov)/2))
+		assert(share>=.27 and share<=.36,"egg share "..share)
+		assert(S.release-K.closeAt>=1.8-1e-9,"close and readable for 1.8 s")
+		-- thank you: the egg and the nodding stork
+		_,look,fov=V2.storkCamera(S.release+.6,land,toPlayer,right,stork,nil,false)
+		assert(same(look,land+Vector3.new(0,2.6,0))and fov==48)
+		-- the end is exactly the crack frame, and the follow sits on it
+		eye,look,fov,pin=V2.storkCamera(S.total,land,toPlayer,right,stork,nil,false)
+		local centre=land+Vector3.new(0,V2.CrackCentre,0)
+		assert(same(eye,centre+toPlayer*C.dist+Vector3.new(0,C.up,0),1e-5)and same(look,centre)and fov==C.fov and pin==1,"the crack frame")
+		assert(V2.followGain(1/60,1)==1 and near(V2.followGain(1/60,0),1-math.exp(-5/60))and V2.followGain(1/60,.5)<.2,"pinned only at the end")
+		-- no jumps: every beat blends into the next (a moving bundle, then none)
+		local lastEye,lastLook,lastFov
+		for i=0,500 do
+			local t=i/100
+			local b=if t<S.hover then land+Vector3.new(0,3-V2.lower(t)*2.2,0)else nil
+			local e,l,f=V2.storkCamera(t,land,toPlayer,right,stork,b,false)
+			if lastEye then
+				assert((e-lastEye).Magnitude<.25 and(l-lastLook).Magnitude<.25 and math.abs(f-lastFov)<1,"a jump at "..t)
+			end
+			lastEye,lastLook,lastFov=e,l,f
+		end
+		-- Reduced Motion: the close frame, still, on the egg on the ground
+		for _,t in ipairs({0,1,2.5,4.5})do
+			local e,l,f,p=V2.storkCamera(t,land,toPlayer,right,stork,bundle,true)
+			assert(same(e,land+toPlayer*5.2+Vector3.new(0,2.2,0)-right*2.4)and same(l,land+Vector3.new(0,.65,0))and f==42 and p==1,"still at "..t)
+		end
+		assert(V2.StorkCoo.gain==.4 and V2.StorkCoo.nodSpeed==1.12,"the coo: vol .4, the nod's 1.12")
 	end)
 	test("step 3: three taps (rock 10, 14, then the creak and pop), the middle 60% of the screen, opens itself within about 22 s",function()
 		assert(#V2.Taps==3 and V2.Taps[1].rock==10 and V2.Taps[2].rock==14 and V2.Taps[3].pop==true)
