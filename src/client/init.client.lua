@@ -6345,7 +6345,11 @@ do
       local hue=Hue.ById[record.item]
       -- a pot the pet already wears: "Deeper {colour}!" and the wipe at 60% length
       local deeper=record.kind=="paint"and type(appearance)=="table"and appearance.body==record.item
-      Reveal.show(playerGui,record,{text=function(key,vars)vars=vars or {};vars.pet=vars.pet or petName();return Copy.get(key,vars)end,
+      -- Beta 42 note 5 (DIAGNOSIS A5): the gift plays on the regular full-screen hatch stage (GiftStage: HueItemReveal ->
+      -- HatchCinematic -> HatchItemStage; the Toy Egg's own reveal for a toy), its sticker "A gift from {pet}!", its keys
+      -- Paint {pet}! / Later on these same callbacks. GiftReveal's card only when the stage cannot open.
+      local opts={text=function(key,vars)vars=vars or {};vars.pet=vars.pet or petName();return Copy.get(key,vars)end,
+       audio=audio,reduceEffects=reducedNow,
        pet=petName(),petId=id,appearance=appearance,deeper=deeper,color=hue and hue.color or nil,
        itemName=if record.kind=="paint"then(hue and hue.name or record.item)else(ToyCatalog.ById[record.item]and ToyCatalog.ById[record.item].name or record.item),
        poolSize=pool,play=function(name,speed,volume)return audio:play(name,speed,volume)end,haptic=haptic,reduced=reducedNow,petScreen=petScreen,
@@ -6392,11 +6396,12 @@ do
          -- the card is the gift shot's owner: its close gives the camera back (ARCH-REVIEW-P2 3)
          pcall(m.revealClosed,m,"gift")
         end
-       end})
+       end}
+      if not require(script.GiftStage).show(playerGui,record,opts)then Reveal.show(playerGui,record,opts)end
      end
      local machine=clientUI.eggMachine
      -- ARCH-REVIEW-P2 3: the card is the shot's owner, so the machine's watch knows when it is up and never keeps the
-     -- camera for good if it never opens.
+     -- camera for good if it never opens. Beta 42: Reveal.isOpen covers the gift's full-screen stage too (GiftStage).
      local took=machine~=nil and select(2,pcall(machine.deliver,machine,drop[record.kind]or "Hue",open,{isOpen=Reveal.isOpen}))==true
      if not took then open()end
     end
@@ -6550,16 +6555,22 @@ do
       p.ActionText=p:GetAttribute("GiftActionText");p:SetAttribute("GiftActionText",nil)
      end
     end
-    -- The shop's tile wears the pointer while it is in gift mode (TeachPointer; the hand on the FREE tile).
+    -- The shop wears the pointer while it is in gift mode (TeachPointer): the FREE tile, then (beta 42 note 4) once the
+    -- tile is picked, Hatch free! (GiftShop.aim; the pointer glides there and taps on landing; the gamepad's focus follows).
     local shopPointer=require(script.TeachPointer).new({reduced=reducedNow,input=function()return require(script.HintGlyphs).kindOf(UserInputService:GetLastInputType())end})
     local function stepShopPointer(dt)
      local kind=nurseryView:isOpen()and nurseryView.gift or nil
-     local tile=nil
+     local node=nil
      if kind and not nurseryView.giftLatch then
-      local column=nurseryView.body and nurseryView.body:FindFirstChild("EggColumn")
-      tile=column and column:FindFirstChild("Recipe_"..require(script.EggHatchView).GiftTile[kind])
+      local aim=require(script.GiftShop).aim({gift=kind,latch=nurseryView.giftLatch,lastHatch=nurseryView.state and nurseryView.state.lastHatch,
+       selected=nurseryView.selected,picked=nurseryView.giftPicked})
+      if aim=="hatch"then node=nurseryView.hatchButton
+      elseif aim=="tile"then
+       local column=nurseryView.body and nurseryView.body:FindFirstChild("EggColumn")
+       node=column and column:FindFirstChild("Recipe_"..require(script.EggHatchView).GiftTile[kind])
+      end
      end
-     if tile then shopPointer:show(tile,Copy.get("onbGift.shop.hatch"),{noLabel=true});shopPointer:step(dt)else shopPointer:hide()end
+     if node then shopPointer:show(node,Copy.get("onbGift.shop.hatch"),{noLabel=true});shopPointer:step(dt)else shopPointer:hide()end
     end
     local nextLook=0
     local beatGifts=RunService.Heartbeat:Connect(function(dt)

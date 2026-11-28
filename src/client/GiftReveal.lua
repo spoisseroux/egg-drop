@@ -1,3 +1,5 @@
+-- Beta 42 note 5: the gift now plays on the regular full-screen hatch stage (GiftStage); this card is its fallback (the
+-- stage could not open). Its words, callbacks and rules are the same.
 -- The gift chain's card (GiftChain; ONBOARDING-FUN-PASS section 2, Onboard "gifts"): what the free Paint or Toy Egg gave,
 -- opened only by the egg machine's deliver once the egg is in the cup (the standing rule: every egg cranks and emerges
 -- before any reveal). Its odds are the egg's own ("Each colour: 1 in 4"). One tap does the thing and closes into the
@@ -51,7 +53,14 @@ function Reveal.words(record,options)
 	w.secondary=text("onbGift.card.later")
 	return w
 end
-function Reveal.isOpen()return open~=nil end
+-- Is a gift reveal up? This card, or (beta 42 note 5) the gift on the regular full-screen stage (GiftStage), which is
+-- the reveal now; this card is its fallback. Every caller that waits on "a gift card is up" (the machine's shot owner,
+-- GiftChain's reveal phase, AlreadyGranted's second card, the lessons' gate) hears both.
+function Reveal.isOpen()
+	if open~=nil then return true end
+	local ok,GiftStage=pcall(require,script.Parent:FindFirstChild("GiftStage"))
+	return ok and type(GiftStage)=="table"and GiftStage.isOpen()==true
+end
 
 local function itemArt(holder,record)
 	if record.kind=="paint"then

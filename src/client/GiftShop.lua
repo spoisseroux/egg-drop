@@ -3,7 +3,12 @@
 --   mode(kind, state, order)  the gift the screen offers on this snapshot: the chain's offer, still ready in the snapshot,
 --                             never given, no unseen card waiting, its tile on the list; else nil
 --   route(ctx)                what the one primary press does: "latched" (an ask is out: nothing), "gift" (the gift's
---                             tile is selected: the gift ask, never a send or a buy page) or "normal" (today's press)
+--                             tile is selected: the gift ask, never a send or a buy page) or "normal" (today's press).
+--                             Beta 42 note 4: a tap on the gift's own tile (ctx.tile) that is not yet picked
+--                             (ctx.picked) is "pick": it only marks the tile picked (a bounce); the pointer then moves to
+--                             Hatch free!, whose press (or a second tap on the tile) is the gift ask
+--   aim(ctx)                  where the shop's pointer goes: "tile" (the gift's tile) until it is picked and selected,
+--                             then "hatch" (the pane's Hatch free!); nil with no gift, a hatch result up or the ask out
 --   held(latch, state, now)   does an ask's latch still hold? Until the chain's done; the switch going off (no `gifts`)
 --                             or Latch s with no answer lets it go
 local Shop={}
@@ -19,8 +24,16 @@ function Shop.mode(kind,state,order)
 end
 function Shop.route(ctx)
 	if ctx.latch then return "latched"end
-	if ctx.gift and not ctx.lastHatch and ctx.selected==Shop.Tile[ctx.gift]then return "gift"end
+	if ctx.gift and not ctx.lastHatch and ctx.selected==Shop.Tile[ctx.gift]then
+		if ctx.tile and not ctx.picked then return "pick"end
+		return "gift"
+	end
 	return "normal"
+end
+function Shop.aim(ctx)
+	if not ctx.gift or ctx.latch or ctx.lastHatch or not Shop.Tile[ctx.gift]then return nil end
+	if ctx.picked and ctx.selected==Shop.Tile[ctx.gift]then return "hatch"end
+	return "tile"
 end
 function Shop.held(latch,state,now)
 	if not latch then return false end

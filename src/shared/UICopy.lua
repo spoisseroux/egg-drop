@@ -321,8 +321,9 @@ local Table={
  -- The gift chain (ONBOARDING-FUN-PASS section 2, Onboard "gifts"): the pet asks (its own voice), a headline of 16
  -- characters or fewer and a sub-line of 28 or fewer; the gift card, the Things row and the parked lines.
  onbGift={
-  paint="A gift for you!",paintSub="A free Paint Egg",toy="A toy for me?",toySub="A free Toy Egg",
-  snack="A snack for me?",snackSub="A free Snack Egg",pull="You can hatch one!",pullSub="Turn the crank",
+  -- Beta 42 note 2: the sub-line says where to go ("it says free egg above the bear, but not go to the egg machine").
+  paint="A gift for you!",paintSub="Free egg at the machine!",toy="A toy for me?",toySub="Toy Egg at the machine!",
+  snack="A snack for me?",snackSub="Snack Egg at the machine!",pull="You can hatch one!",pullSub="Turn the crank",
   park="Let's go play!",parkSub="The Pet Park is open",dash="Race time!",dashSub="Try the Garden Dash",
   nest="It's hatching!",nestSub="Come and see",waiting="Gift waiting!",waitingSub="At the egg machine",
   -- Onboarding part 2 (ONBOARDING-P2-BRIEF 1): at the machine the bubble says tap it (the shop opens on the free egg);

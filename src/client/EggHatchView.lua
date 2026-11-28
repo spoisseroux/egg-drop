@@ -63,8 +63,11 @@ local View = {}
 View.shellOf=shellOf
 View.__index = View
 -- ── Gift mode (ONBOARDING-P2-BRIEF section 1, ARCH-REVIEW-P2 2; Onboard "gifts") ─────────────────────────────
--- The gift chain's free egg comes out of this screen: the gift's tile is selected and lit (a pink ring, a FREE sticker
--- in place of its price), the other tiles sit dimmed but still select and buy, and the pane's button reads "Hatch free!".
+-- The gift chain's free egg comes out of this screen: the gift's tile is selected and lit (the lesson pointer's ring and
+-- hand, TeachPointer, from init; a FREE sticker in place of its price), the other tiles sit dimmed but still select and
+-- buy, and the pane's button reads "Hatch free!". Beta 42 note 4: the first tap on the gift's tile only picks it (a
+-- bounce, self.giftPicked; GiftShop.route "pick"), and the pointer glides to Hatch free! (GiftShop.aim); cleared on
+-- every open.
 -- That press is the gift branch, first in actPrimary: it never sends a buy and never opens a buy page (onOpen*). It
 -- calls onGift(kind, done) (the chain's shopCrank, the same ask the chip sent) and stays latched until done.
 -- view.giftSource() -> the kind the chain offers now (GiftChain:shopGift) is asked on every update; the snapshot must
@@ -82,6 +85,8 @@ end
 -- Every update: gift mode from the chain's offer and the snapshot. While latched (the ask is out) the mode holds on the
 -- snapshot alone (the chain is cranking then); the switch going off (no `gifts`) drops the mode and the latch.
 function View:refreshGift()
+ -- the pick is this open's (beta 42 note 4)
+ if self.giftPickSerial~=self.openSerial then self.giftPickSerial=self.openSerial;self.giftPicked=nil end
  local latch=self.giftLatch
  if latch and not GiftShop.held({at=self.giftLatchAt},self.state,os.clock())then self.giftLatch=nil;latch=nil end
  local asked=latch
@@ -96,6 +101,16 @@ function View:refreshGift()
   if self.selected~=tile and not self.pending then self.selected=tile;self.refocusRecipeId=tile end
  end
  return was~=mode
+end
+-- A tap on a tile: on the gift's own tile, not yet picked, it only picks it (selects it, a bounce; the pointer moves to
+-- Hatch free!). True when the tap was that pick.
+function View:pickGift(id,tile)
+ if not self.gift or View.GiftTile[self.gift]~=id then return false end
+ if GiftShop.route({latch=self.giftLatch,gift=self.gift,lastHatch=self.state.lastHatch,selected=id,tile=true,picked=self.giftPicked})~="pick"then return false end
+ self.giftPicked=true
+ if self.selected~=id then self:selectRecipe(id)end
+ if tile then Kit.boing(tile)end
+ return true
 end
 -- The gift press: latched until the chain's done (never a second ask, never a paid buy while it is out).
 function View:hatchGift()
@@ -1195,6 +1210,7 @@ function View:renderBody()
    n=Kit.tile(left,"Recipe_"..id,{radius=12,compact=phone,selectable=true})
    n.Activated:Connect(function()
     if not liveShopTarget(n,self.shade)then return end
+    if self:pickGift(id,n)then return end
     if self.selected==id then self:actPrimary()else self:selectRecipe(id);Kit.boing(n)end
    end)
    n.SelectionGained:Connect(function()if self.selected~=id and liveShopTarget(n,self.shade)then self:selectRecipe(id)end end)
@@ -1247,8 +1263,10 @@ function View:renderBody()
  self:restoreBodyFocus(previous,action,owner)
  if GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(left)then self:queueSelectedRecipe()end
 end
--- Gift mode on one tile: the gift's tile wears a 3 px pink ring and a FREE sticker (with a small bow) in place of its
--- "★ 12"; every other tile sits under a 60% veil that never takes a tap. Off: nothing extra, the price as before.
+-- Gift mode on one tile: the gift's tile wears a FREE sticker (with a small bow) in place of its "★ 12"; every other
+-- tile sits under a 60% veil that never takes a tap. Off: nothing extra, the price as before. Beta 42 note 3: the veil
+-- has the tile's own corner (one UICorner, Kit.Radius.tile; radius 999 was a pill), and there is no static ring: the
+-- pointer's ring is the only one.
 function View:paintGiftTile(n,id,w,h)
  local giftTile=self.gift and View.GiftTile[self.gift]or nil
  local mine=giftTile==id
@@ -1259,11 +1277,7 @@ function View:paintGiftTile(n,id,w,h)
  n:SetAttribute("Gift",mine or nil)
  if cost then cost.Visible=not mine end
  if mine then
-  if not ring then
-   ring=Kit.frame(n,"GiftRing",nil,UDim2.new(),UDim2.fromScale(1,1),999);ring.BackgroundTransparency=1;ring.Active=false;ring.ZIndex=n.ZIndex+6
-   Kit.node("UICorner",ring,{CornerRadius=UDim.new(0,12)})
-   Kit.node("UIStroke",ring,{Color=View.GiftPink,Thickness=3,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
-  end
+  if ring then ring:Destroy()end
   if not sticker then
    local chip=Kit.chip(n,UICopy.get("onbGift.shop.free"),"sticker",24)
    chip.root.Name="GiftFree";chip.set(UICopy.get("onbGift.shop.free"),"sticker",View.GiftPink)
@@ -1278,8 +1292,7 @@ function View:paintGiftTile(n,id,w,h)
  end
  local dim=giftTile~=nil and not mine
  if dim and not veil then
-  veil=Kit.frame(n,"GiftVeil",nil,UDim2.new(),UDim2.fromScale(1,1),999);veil.Active=false;veil.ZIndex=n.ZIndex+8
-  Kit.node("UICorner",veil,{CornerRadius=UDim.new(0,12)})
+  veil=Kit.frame(n,"GiftVeil",nil,UDim2.new(),UDim2.fromScale(1,1),Kit.Radius.tile);veil.Active=false;veil.ZIndex=n.ZIndex+8
   veil.BackgroundTransparency=1-View.GiftDim;Kit.paint(veil,"BackgroundColor3","panel")
  elseif not dim and veil then veil:Destroy()end
 end
@@ -1418,13 +1431,9 @@ function View:paintEggPane()
  self.needLine.Position=UDim2.fromOffset(self.oddsX,self.buttonY-20)
  local text=if self.pending or self.giftLatch then "Saving…"else a.text
  Kit.setText(self.hatchButton,text)
- -- the gift's button: gift pink, ringed (the ring is the pane's own, under the pointer)
+ -- the gift's button: no static ring (beta 42 note 3); the pointer rings it once the tile is picked
  local giftRing=self.hatchButton:FindFirstChild("GiftButtonRing")
- if gift and not giftRing then
-  giftRing=Kit.frame(self.hatchButton,"GiftButtonRing",nil,UDim2.fromOffset(-4,-4),UDim2.new(1,8,1,8),999);giftRing.BackgroundTransparency=1;giftRing.Active=false
-  giftRing.ZIndex=self.hatchButton.ZIndex+6;Kit.node("UICorner",giftRing,{CornerRadius=UDim.new(0,14)})
-  Kit.node("UIStroke",giftRing,{Color=View.GiftPink,Thickness=3,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
- elseif not gift and giftRing then giftRing:Destroy()end
+ if giftRing then giftRing:Destroy()end
  self.hatchButton:SetAttribute("Gift",gift or nil)
  Kit.setEnabled(self.hatchButton,self.action.Interactable and not self.actionShort)
  Kit.setTappable(self.hatchButton,self.actionShort==true)

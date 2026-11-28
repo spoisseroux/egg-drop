@@ -224,6 +224,35 @@ return function(client)
 		assert(Chain.next(Chain.facts(dash,{returned=false,teach=true}))=="dash","teach: the same session")
 	end)
 
+	-- Beta 42 note 5 (DIAGNOSIS A5): the gift's reveal is the regular full-screen stage (GiftStage). Its callbacks are
+	-- the card's: the chain holds through it and its close ends the step; while it is up a second ask shows nothing.
+	test("beta 42: the reveal through the stage holds the chain until its close; AlreadyGranted shows no second card",function()
+		local Stage=require(client.GiftStage)
+		local r=rig(snapshot({gifts={owed=true,granted={},ready="paint"}}))
+		local up=false
+		r.chain.d.revealOpen=function()return up end
+		assert(r.chain:shopCrank("paint"));r.cranks[1].done("Saved")
+		local rec={kind="paint",item="rose",id="g9"}
+		local presented={[Chain.recordKey(rec)]=true}
+		-- what init's present() hands the stage: closed() is the chain's revealed() (and the machine's camera)
+		local log={}
+		local flow=Stage.flow(rec,{act=function()table.insert(log,"act")end,seen=function()table.insert(log,"seen")end,
+			closed=function()table.insert(log,"closed");r.chain:revealed()end},function()end)
+		up=true;r.run(1)
+		assert(r.chain:holds()and r.chain.active.phase=="reveal","the stage is up: the garden's prompts wait")
+		assert(not Chain.showCard({status="Saved",reason="AlreadyGranted",gift=rec},presented,up),"a second ask: no second card")
+		assert(not Chain.showCard({status="Saved",reason="AlreadyGranted",gift=rec},{},up),"never shown here, but one is up: none")
+		assert(flow.choose(true)and log[1]=="act")
+		up=false;flow.finish()
+		assert(not r.chain:holds()and r.chain.session.lastReveal==r.now and table.concat(log,",")=="act,seen,closed","closed: the step is done")
+		r.run(1);assert(not r.chain:holds())
+		-- a stage lost before a choice: closed still ends the step (never held to the stuck timeout)
+		local l=rig(snapshot({gifts={owed=true,granted={},ready="paint"}}))
+		l.chain:shopCrank("paint");l.cranks[1].done("Saved")
+		Stage.flow(rec,{closed=function()l.chain:revealed()end},function()end).finish("lost")
+		assert(not l.chain:holds())
+	end)
+
 	-- Beta 41 code review.
 	test("beta 41 review: a Saved answer whose card is suppressed ends the step at once, never held to the stuck timeout",function()
 		local r=rig(snapshot({gifts={owed=true,granted={},ready="paint"}}))
