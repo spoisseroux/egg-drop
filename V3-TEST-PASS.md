@@ -109,7 +109,7 @@ Sparkle and pop sound are placeholders; the glow steps' `pat` tick is the `desc_
 
 ## Before any of this goes live (not yours to test; listed so nothing is forgotten)
 
-Daily rotation: decide how to keep the charm promise for players partway to a guaranteed charm before `look_nopity` goes live; remove the "charm in N" copy; review the odds text; restricted players keep the fixed charm every 12th; cache Rack.view per (pet, day) (code review); `FeatureFlags.DailyRack` opens on the beta place and Studio only. Move each beta ceiling to the live place: `Alive.PlaceId`, `Levels.PlaceId`, `Dash`, `Aero`, `Things.PlaceId`, `Finds.PlaceId` (and the bounds and garden-hour ones when built); set each remote key in the live config first; translations sync; store listing audit.
+Daily rotation: no charm grandfathering (Spencer 2026-11-28: "just cut it"), so `look_nopity` drops the pity count for everyone; remove the "charm in N" copy; review the odds text; restricted players keep the fixed charm every 12th; cache Rack.view per (pet, day) (code review); `FeatureFlags.DailyRack` opens on the beta place and Studio only. Move each beta ceiling to the live place: `Alive.PlaceId`, `Levels.PlaceId`, `Dash`, `Aero`, `Things.PlaceId`, `Finds.PlaceId` (and the bounds and garden-hour ones when built); set each remote key in the live config first; translations sync; store listing audit.
 
 ## Results
 
