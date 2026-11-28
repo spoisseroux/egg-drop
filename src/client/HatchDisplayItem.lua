@@ -33,11 +33,23 @@ end
 -- QA R2 (2026-11-15): a finish is shown worn, on a Bear in the garden's own renderer (the
 -- starter every player owns), instead of a sample sphere on a slate tile. It is a display
 -- model only: `result` is never read for ownership and no pet is awarded.
+local posedPet
 local function finishBear(world,result,height)
  local Shared=game:GetService("ReplicatedStorage").Shared
  local Pets=require(Shared.PetCatalog)
  if not Pets.byId.pip or not require(Shared.MaterialCatalog).known(result.finishId)then return nil end
- local ok,visual=pcall(require(script.Parent.PetFactory).new,world,Vector3.zero,Pets.byId.pip,nil,{finish=result.finishId},{emissionEnabled=false})
+ return posedPet(world,Pets.byId.pip,{finish=result.finishId},height)
+end
+-- The daily rack (ROTATION-BRIEF 3): an Outfit Egg item is shown worn, on the pet it was hatched for, in its look with
+-- the item on (result.wearAppearance, RackShop.wearing). A display model only, like the finish's Bear.
+local function wearPet(world,result,height)
+ local Pets=require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
+ local pet=Pets.byId[result.wearPet or "pip"]or Pets.byId.pip
+ if not pet or type(result.wearAppearance)~="table"then return nil end
+ return posedPet(world,pet,result.wearAppearance,height)
+end
+function posedPet(world,pet,appearance,height)
+ local ok,visual=pcall(require(script.Parent.PetFactory).new,world,Vector3.zero,pet,nil,appearance,{emissionEnabled=false})
  if not ok or not visual then return nil end
  visual.idleMotionFrozen=true;visual.expression="neutral";visual.greeting=2;visual.poseCadence=0
  local self={visual=visual,model=visual.model,mode="PetFinish",entries={},fit=1,extent=.74}
@@ -80,6 +92,10 @@ local function finishBear(world,result,height)
  return self
 end
 function Item.create(world,gui,result,builder,height,reduced)
+ if result.wearableId then
+  local pet=wearPet(world,result,height)
+  if pet then return pet end
+ end
  if result.finishId and not result.toyId and not result.featureId then
   local bear=finishBear(world,result,height)
   if bear then return bear end

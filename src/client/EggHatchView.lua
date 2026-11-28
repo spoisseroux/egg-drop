@@ -44,10 +44,14 @@ local StatEggCatalog=require(game:GetService("ReplicatedStorage").Shared.StatEgg
 local StatOdds=require(script.Parent.StatEggOdds)
 if StatEggCatalog.Enabled then table.insert(liveOrder,"stat")end
 -- The art each egg borrows until its own shell exists.
-local function artOf(id)return if id=="look"then "hue"elseif id=="stat"then "feature"else id end
+local function artOf(id)return if id=="look"or id=="outfit"then "hue"elseif id=="stat"then "feature"else id end
 -- Round 3: the 3D shell type for an egg (the Stat Egg has its own; the 2D art still borrows Feature's).
 local function shellOf(id)return if id=="stat"then "stat"else artOf(id)end
+-- The daily rack (ROTATION-BRIEF 3, switch daily_rack): the Outfit Egg's tile joins the list (above the Paint Egg)
+-- only while the snapshot carries `rack`; its pane, odds rows and sheet are RackShop's and RackPicks'. Off: no tile.
+local RackShop=require(script.Parent.RackShop)
 local function shopRecipe(id)
+ if id=="outfit"then return {id="outfit",name=UICopy.get("hatch.egg.outfit.name"),cost=require(ReplicatedStorage.Shared.DailyRack).Price}end
  if id=="stat"then return {id="stat",name=UICopy.get("hatch.egg.stat.name"),cost=StatEggCatalog.Price}end
  if id=="hue"then return {id="hue",name="Hue Egg",cost=HueCatalog.Cost}end
  if id=="look"then return {id="look",name=UICopy.get("hatch.egg.look.name"),cost=LookEgg.Price}end
@@ -77,7 +81,15 @@ local GiftShop=require(script.Parent.GiftShop)
 View.GiftTile=GiftShop.Tile
 View.GiftPink=Color3.fromHex("#FF6FA8")
 View.GiftDim=.4   -- the other tiles at 60%: a veil of the panel over them (never blocking a tap)
-function View.giftMode(kind,state)return GiftShop.mode(kind,state,liveOrder)end
+-- The eggs on the list for this snapshot: liveOrder, with the Outfit Egg before the Paint Egg while `rack` is there.
+function View.orderFor(state)
+ if not RackShop.on(state)then return liveOrder end
+ local order=table.clone(liveOrder)
+ table.insert(order,table.find(order,"look")or #order+1,RackShop.Tile)
+ return order
+end
+function View:eggOrder()return View.orderFor(self.state)end
+function View.giftMode(kind,state)return GiftShop.mode(kind,state,View.orderFor(state))end
 -- Is the selected tile the gift's?
 function View:giftSelected()
  return GiftShop.route({gift=self.gift,lastHatch=self.state.lastHatch,selected=self.selected})=="gift"
@@ -86,7 +98,7 @@ end
 -- snapshot alone (the chain is cranking then); the switch going off (no `gifts`) drops the mode and the latch.
 function View:refreshGift()
  -- the pick is this open's (beta 42 note 4)
- if self.giftPickSerial~=self.openSerial then self.giftPickSerial=self.openSerial;self.giftPicked=nil end
+ if self.giftPickSerial~=self.openSerial then self.giftPickSerial=self.openSerial;self.giftPicked=nil;self.giftOddsDone=nil end
  local latch=self.giftLatch
  if latch and not GiftShop.held({at=self.giftLatchAt},self.state,os.clock())then self.giftLatch=nil;latch=nil end
  local asked=latch
@@ -129,6 +141,78 @@ function View:hatchGift()
  if not ok or sent~=true then done();return false end
  if self.onAccepted then self.onAccepted("confirm")end
  return true
+end
+
+-- ── The Outfit Egg and the Today's picks sheet (ROTATION-BRIEF 3, switch daily_rack) ───────────────────────────
+-- The press goes to self.onRackEgg(done) (RackShop.mount: a fresh request id per press, a retry reuses it); the button
+-- reads "Saving…" until done(outcome). A kind line (self.rackNote) under the odds says what the server answered; a
+-- reveal closes the screen (the egg comes out of the machine, then its card).
+function View:hatchOutfit()
+ if self.rackLatch or self.pending then return false end
+ local a=RackShop.action(self.state)
+ if a.short then self:askStars(shopRecipe(RackShop.Tile));return false end
+ if not a.enabled then if a.note then self.rackNote=a.note;self:refreshFooter()end;return false end
+ if not self.onRackEgg then return false end
+ self.rackLatch=os.clock();self.rackNote=nil
+ local finished=false
+ local ok,sent=pcall(self.onRackEgg,function(outcome)
+  if finished then return end
+  finished=true
+  self.rackLatch=nil
+  self.rackNote=type(outcome)=="table"and outcome.text or nil
+  if not self.destroyed and self.shade.Visible then self:update(self.state)end
+ end)
+ if not ok or sent~=true then self.rackLatch=nil;self:refreshFooter();return false end
+ Peek.hop()
+ if self.onAccepted then self.onAccepted("confirm")end
+ self:refreshFooter()
+ return true
+end
+-- The rack's pet (the one out) and its look, for the sheet's previews.
+function View:rackPet()
+ local view=RackShop.view(self.state)
+ return view and view.pet or "pip"
+end
+-- Tap an odds row: the sheet on it (the Outfit Egg's picks, the gift pinned first in gift mode; the Paint Egg's pots).
+function View:openPicks(rowId)
+ if self.picks or not self.shopPanel then return false end
+ local phone=self.shopGeom~=nil and self.shopGeom.phone
+ local model
+ if self.selected==RackShop.Tile then
+  local gift=if self:giftSelected()and self.gift=="outfit"then View.outfitGift(self.state)else nil
+  model=RackShop.sheet(RackShop.view(self.state),{gift=gift,focus=rowId,phone=phone,petId=self:rackPet()})
+ elseif self.selected=="look"then
+  model=RackShop.paintSheet(View.lookOdds(self.state).rows,self.state,{focus=rowId,phone=phone,petId=self:rackPet()})
+ else return false end
+ local petId=model.petId or self:rackPet()
+ local ok,sheet=pcall(function()
+  return require(script.Parent.RackPicks).open(self.shopPanel,model,{petId=petId,phone=phone,reduced=function()return self:eggReduced()end,
+   appearance=function()return if self.appearanceFor then self.appearanceFor(petId)else {}end,
+   onClose=function()
+    self.picks=nil
+    if self.gift=="outfit"and self:giftSelected()then self.giftOddsDone=true end
+    if not self.destroyed and self.shade.Visible then self:refreshFooter()end
+   end})
+ end)
+ if not ok then warn("[RackPicks] "..tostring(sheet));return false end
+ self.picks=sheet
+ return true
+end
+function View:closePicks()if self.picks then local s=self.picks;self.picks=nil;pcall(s.close,s)end end
+-- The pointer's targets (GiftShop.aim "odds" and "sheet").
+function View:oddsTarget()
+ local holder=self.oddsHolder;if not holder then return nil end
+ for _,row in ipairs(holder:GetChildren())do
+  local tap=row:FindFirstChild("Tap")
+  if tap and row:GetAttribute("Order")==1 then return tap end
+ end
+ return nil
+end
+function View:picksTarget()return self.picks and self.picks.button or nil end
+-- The Outfit gift's hat (the server's `gifts.outfit`), or nil.
+function View.outfitGift(state)
+ local g=type(state)=="table"and state.gifts or nil
+ return if type(g)=="table"and type(g.outfit)=="string"then g.outfit else nil
 end
 
 local function frame(parent, name, color, position, size, z)
@@ -289,8 +373,10 @@ function View:actPrimary()
 		local route=GiftShop.route({latch=self.giftLatch,gift=self.gift,lastHatch=self.state.lastHatch,selected=self.selected})
 		if route=="latched"then return end
 		if route=="gift"then self:hatchGift();return end
-		if not self.action.Interactable then return end
 		local current = self.state
+		-- The Outfit Egg (daily rack): its own press (RackShop's buyer); short of Stars, the card.
+		if self.selected==RackShop.Tile and not current.lastHatch then self:hatchOutfit();return end
+		if not self.action.Interactable then return end
 		if self.selected=="stat"and not current.lastHatch then
 			local a=StatOdds.action(current,self.statPet and self.statPet())
 			if a.enabled and self.onOpenStat then Peek.hop();self.onOpenStat(a.free==true)
@@ -712,7 +798,8 @@ function View:refreshFooter()
 		self.meetButton.Text = if self.pending then "Saving…" elseif self.shade.AbsoluteSize.Y<200 or self.card.Size.X.Offset<400 then "Meet" else "Meet " .. (if pet then pet.name else "friend")
 	else
 		local planned = View.hatchAction(self.selected, state, self.statPet and self.statPet())
-		if self:giftSelected() then planned = {text=UICopy.get("onbGift.shop.hatch"), enabled=self.giftLatch==nil} end
+		if self:giftSelected() then planned = {text=UICopy.get("onbGift.shop.hatch"), enabled=self.giftLatch==nil}
+		elseif self.selected==RackShop.Tile and self.rackLatch then planned = {text="Saving…", enabled=false} end
 		textValue, canAct = planned.text, planned.enabled
 		shortTap = type(planned.need)=="string" and planned.need~=""
 	end
@@ -806,7 +893,17 @@ function View.oddsRows(id,state,petId)
  state=state or {}
  if id=="stat"then return StatOdds.rows(state,petId)end
  if id=="material"and(state.materialPoolVersion or MaterialCatalog.PoolVersion)==4 then return require(script.Parent.MaterialDisclosure).rows(state)end
- if id=="look"then return View.lookOdds(state)end
+ if id=="look"then
+  local odds=View.lookOdds(state)
+  -- the daily rack: the Paint Egg's rows open the same sheet (today's pots on the pet)
+  if RackShop.on(state)and not odds.restricted then odds.tappable=true end
+  return odds
+ end
+ if id==RackShop.Tile then
+  local odds=RackShop.rows(RackShop.view(state))
+  odds.tappable=true;odds.calm=true
+  return odds
+ end
  if NextItem.restricted(state)then
   local notReady=id=="material"and not state.materialAvailable and NextItem.itemId("material",state)~=nil
   return{rows={{id="next",name=NextItem.line(id,state),value=""}},per=(View.EggCopy[id]or {}).per or "",
@@ -857,21 +954,28 @@ function View.lookOdds(state)
   return{rows=rows,per=per,empty=empty,restricted=true,note=UICopy.get("hatch.look.promise.fixed")}
  end
  local rows,charmTotal,shapes={},0,{}
+ -- The daily rack's Paint switches (RackShop.lookTable, ARCH-REVIEW-ROTATION 7): `lookDay` (look_daily) shows that
+ -- day's splash table, `lookNoPity` (look_nopity) never a guaranteed charm and no "charm in N". Off: today's egg.
+ local t=RackShop.lookTable(state)
  -- The pity egg (LISTING.md section 7): this egg is always a charm, so the jars read 0% and the
  -- charm row 100%, split evenly over the missing shapes (100% / missing each).
- local due=LookEgg.pityDue(missing,misses)
- for _,row in ipairs(LookEgg.odds(missing)or {})do
+ local due=t.due
+ for _,row in ipairs(t.rows)do
   if LookEgg.kind(row.id)=="charm"then charmTotal+=row.percent;table.insert(shapes,Charms.ById[LookEgg.shape(row.id)].name)
   else table.insert(rows,{id=row.id,name=lookName(row.id),value=if due then "0%"else row.percent.."%"})end
  end
- local each=if due then(OddsText.equalShare(math.max(1,#missing)))else LookEgg.Tables[#missing].charm.."%"
+ local each=if due then(OddsText.equalShare(math.max(1,#missing)))else t.charm.."%"
  if #missing>0 then
   table.insert(rows,{id="charm",name=UICopy.get("hatch.look.charmName"),value=if due then "100%"else charmTotal.."%",
    label=UICopy.get("hatch.look.charmRow",{each=each,shapes=table.concat(shapes,", ")})})
  end
- local left=LookEgg.pityLeft(missing,misses)
- local note=if not left then UICopy.get("hatch.look.allCharms")elseif left<=1 then UICopy.get("hatch.look.pityOne")else UICopy.get("hatch.look.pity",{count=left})
- local short=if not left then UICopy.get("hatch.look.allCharmsShort")elseif left<=1 then UICopy.get("hatch.look.pityOne")else UICopy.get("hatch.look.pityShort",{count=left})
+ local left=t.left
+ local note,short
+ if t.noPity and #missing>0 then note,short=UICopy.get("rack.look.noPity"),UICopy.get("rack.look.noPityShort")
+ else
+  note=if not left then UICopy.get("hatch.look.allCharms")elseif left<=1 then UICopy.get("hatch.look.pityOne")else UICopy.get("hatch.look.pity",{count=left})
+  short=if not left then UICopy.get("hatch.look.allCharmsShort")elseif left<=1 then UICopy.get("hatch.look.pityOne")else UICopy.get("hatch.look.pityShort",{count=left})
+ end
  -- The pity line is a row of its own (disclosed beside the odds); the missing shapes are named
  -- under the egg's description (`shapes`).
  table.insert(rows,{id="pity",name=short,label=note,value="",info=true})
@@ -890,6 +994,17 @@ local fieldKind={pendingHueResult="look",pendingToyResult="toy",pendingFeatureRe
 -- Snack gift is the Stat Egg's own pool (its normal rows).
 function View.giftOdds(kind,state)
  if kind=="snack"then return View.oddsRows("stat",state,nil)end
+ -- The Outfit gift (daily rack): not random and says so: "Your gift", its hat at 100%; a tap shows today's picks.
+ if kind=="outfit"then
+  local item=View.outfitGift(state)
+  local view=RackShop.view(state)
+  local petId=view and view.pet or "pip"
+  local rows={}
+  if item then table.insert(rows,{id=item,name=RackShop.name(petId,item),value="100%",tap=true,pill=UICopy.get("rack.gift"),
+   color=RackShop.color(petId,{id=item,rarity="common"})})end
+  return {rows=rows,per=UICopy.get("rack.gift.per"),label=UICopy.get("rack.gift"),restricted=false,tappable=true,calm=true,
+   empty=if #rows==0 then UICopy.get("onbGift.card.free")else nil}
+ end
  local Gifts=require(ReplicatedStorage.Shared.GiftEggs)
  local rows={}
  for _,r in ipairs(Gifts.odds(kind,state))do
@@ -913,6 +1028,11 @@ end
 function View.hatchAction(id,state,petId)
  state=state or {}
  if id=="stat"then return StatOdds.action(state,petId)end
+ if id==RackShop.Tile then
+  local a=RackShop.action(state)
+  if a.short then return{text=a.text,enabled=false,need=require(script.Parent.ShopPriceState).need(state.rack.price,state.nectar)}end
+  return{text=a.text,enabled=a.enabled,need=nil,note=a.note}
+ end
  local own,ownKind=View.ownPending(id,state)
  if own and(ownKind=="look"or ownKind=="hue")then
   local kind=LookEgg.kind(own.itemId)
@@ -1180,7 +1300,8 @@ function View:renderBody()
  for _,child in ipairs(self.body:GetChildren())do if child~=left then child:Destroy()end end
  left=left or Kit.frame(self.body,"EggColumn",nil,UDim2.fromOffset(0,0),UDim2.fromOffset(100,100))
  local keep={GetStars=true,NestRow=true}
- for _,id in ipairs(liveOrder)do keep["Recipe_"..id]=true end
+ local order=self:eggOrder()
+ for _,id in ipairs(order)do keep["Recipe_"..id]=true end
  -- Paint, Shine, Dress (PAINT-SHINE-DRESS-PLAN): with the `paint` switch on, a "Looks" heading over the Paint Egg and
  -- a "Snacks" heading over the Snack Egg. Off: neither exists. No pot strip: pots come only from the Paint Egg
  -- (Spencer, beta 38: "we want a gacha focused game").
@@ -1196,14 +1317,16 @@ function View:renderBody()
  local rowH,rowGap,noteH,tail=g.rowH,g.rowGap,28,8
  if phone then
   rowGap,noteH,tail=6,22,2
-  local fixed=3+#liveOrder*rowGap+noteH+(if self.store then 44+tail else 0)+4+(if paint then 2*20 else 0)
-  rowH=math.clamp(math.floor((View.listWindow(self.body)-fixed-(if self:nestRowModel()then 44+rowGap else 0))/math.max(1,#liveOrder)),44,g.rowH)
+  local fixed=3+#order*rowGap+noteH+(if self.store then 44+tail else 0)+4+(if paint then 2*20 else 0)
+  rowH=math.clamp(math.floor((View.listWindow(self.body)-fixed-(if self:nestRowModel()then 44+rowGap else 0))/math.max(1,#order)),44,g.rowH)
  end
  y=self:layoutNestRow(left,y,w,phone,rowGap)
- for _,id in ipairs(liveOrder)do
+ -- the "Looks" heading sits over the first looks egg: the Outfit Egg while the rack is on, else the Paint Egg
+ local looksFirst=if table.find(order,RackShop.Tile)then RackShop.Tile else "look"
+ for _,id in ipairs(order)do
   local recipe=shopRecipe(id);local copy=View.EggCopy[id]or {}
-  if paint and(id=="look"or id=="stat")then y=self:paintHeading(left,if id=="look"then "PaintHeadLooks"else "PaintHeadSnacks",
-   UICopy.get(if id=="look"then "paint.shop.looks"else "paint.shop.snacks"),y,w,phone)end
+  if paint and(id==looksFirst or id=="stat")then y=self:paintHeading(left,if id=="stat"then "PaintHeadSnacks"else "PaintHeadLooks",
+   UICopy.get(if id=="stat"then "paint.shop.snacks"else "paint.shop.looks"),y,w,phone)end
   local n=left:FindFirstChild("Recipe_"..id)
   if not n then
    -- T2: a pressable tile with a lip (4 px, 3 on phones) inside the 12 / 8 px row gap.
@@ -1398,16 +1521,18 @@ function View:paintEggPane()
  if id=="look"then local shapes=View.lookOdds(self.state).shapes;if shapes then self.eggDescription.Text..=" "..shapes end end
  if id=="stat"then self.eggDescription.Text..=" "..StatOdds.stockLine(self.state)end
  local odds=if gift then View.giftOdds(self.gift,self.state)else View.oddsRows(id,self.state,statPet)
- self.oddsPer.Text=string.upper(odds.per)
- self.oddsLabel.Text=string.upper(if odds.restricted then UICopy.get("hatch.next.label")else "Odds")
+ -- the Outfit Egg's calm line ("New picks every day") keeps its own case; TODAY'S PICKS is its label
+ self.oddsPer.Text=if odds.calm then odds.per else string.upper(odds.per)
+ self.oddsLabel.Text=string.upper(odds.label or(if odds.restricted then UICopy.get("hatch.next.label")else "Odds"))
  for _,child in ipairs(self.oddsHolder:GetChildren())do child:Destroy()end
  local a=View.hatchAction(id,self.state,statPet)
  if gift then a={text=UICopy.get("onbGift.shop.hatch"),enabled=self.giftLatch==nil,need=nil}end
- local need=if self.statusText then self.statusText else a.need
+ local rackLine=if id==RackShop.Tile and not gift then(self.rackNote or a.note or odds.note)else nil
+ local need=self.statusText or rackLine or a.need
  -- Beta 43 note: the gift line above Hatch free! sat under the pointer's ring; the pane's footer already says "A gift
  -- from {pet}!", so the gift has no line here (a status, e.g. Busy, still shows).
  self.needLine.Text=need or "";self.needLine.Visible=need~=nil
- Kit.paint(self.needLine,"TextColor3",if a.need and not self.statusText and not gift then "dangerText"else "soft")
+ Kit.paint(self.needLine,"TextColor3",if a.need and not self.statusText and not rackLine and not gift then "dangerText"else "soft")
  local limit=self.buttonY-(if need then 22 else 6)
  local rows=odds.rows
  if odds.empty then rows={{id="empty",name=odds.empty,value=""}}end
@@ -1416,21 +1541,49 @@ function View:paintEggPane()
  local pitch=math.min(if phone then 18 else 28,math.floor((limit-self.oddsTop)/math.max(1,perCol)))
  local rowH=math.max(14,pitch-(if phone then 2 else 4))
  local cw=(self.oddsW-(cols-1)*8)/cols
+ local tapOrder=0
  for i,r in ipairs(rows)do
   local c,ri=math.floor((i-1)/perCol),(i-1)%perCol
   local row=Kit.frame(self.oddsHolder,"Odds_"..r.id,if phone then nil else "well",UDim2.fromOffset(c*(cw+8),ri*pitch),UDim2.fromOffset(cw,rowH),6)
   if not phone then row.BackgroundTransparency=0 end
   local textSize=if phone then 13 else 15;local inset=if phone then 0 else 12
   local valueWidth=math.max(70,math.ceil(Kit.measure(r.value,"Counter",textSize).X)+4)
-  Kit.text(row,"Body",r.name,"text",{Name="Name",Position=UDim2.fromOffset(inset,0),Size=UDim2.fromOffset(if odds.restricted then cw-inset*2 else math.max(12,cw-inset*2-valueWidth-8),rowH),TextSize=textSize,TextTruncate=Enum.TextTruncate.AtEnd})
+  -- the daily rack: a colour dot before the name and a rarity pill before the odds (the rows are buttons)
+  local dotW=if r.color then rowH*.5+6 else 0
+  local pillW=if r.pill and not odds.restricted then math.ceil(Kit.measure(r.pill,"Small",if phone then 10 else 12).X)+12 else 0
+  local nameW=if odds.restricted then cw-inset*2-dotW else math.max(12,cw-inset*2-valueWidth-8-dotW-(if pillW>0 then pillW+6 else 0))
+  Kit.text(row,"Body",r.name,"text",{Name="Name",Position=UDim2.fromOffset(inset+dotW,0),Size=UDim2.fromOffset(nameW,rowH),TextSize=textSize,TextTruncate=Enum.TextTruncate.AtEnd})
   Kit.text(row,"Counter",r.value,"text",{Name="Value",Position=UDim2.fromOffset(cw-inset-valueWidth,0),Size=UDim2.fromOffset(valueWidth,rowH),TextSize=textSize,TextXAlignment=Enum.TextXAlignment.Right})
+  if r.color then
+   local ok,color=pcall(Color3.fromHex,r.color)
+   local dot=Kit.frame(row,"Dot",nil,UDim2.new(0,inset,.5,0),UDim2.fromOffset(rowH*.5,rowH*.5),999)
+   dot.AnchorPoint=Vector2.new(0,.5);dot.BackgroundTransparency=0;dot.BackgroundColor3=if ok then color else Color3.new(1,1,1)
+  end
+  if pillW>0 then
+   local ok,color=pcall(Color3.fromHex,RackShop.Pill[r.rarity or ""]or RackShop.Pill.legendary)
+   local pill=Kit.frame(row,"Rarity",nil,UDim2.new(0,cw-inset-valueWidth-6-pillW,.5,0),UDim2.fromOffset(pillW,math.max(12,rowH-6)),999)
+   pill.AnchorPoint=Vector2.new(0,.5);pill.BackgroundTransparency=0;pill.BackgroundColor3=if ok then color else Color3.new(1,1,1)
+   local word=Kit.text(pill,"Small",r.pill,"text",{Name="Word",Size=UDim2.fromScale(1,1),TextSize=if phone then 10 else 12,TextXAlignment=Enum.TextXAlignment.Center})
+   Kit.paint(word,"TextColor3",function()return Color3.new(1,1,1)end)
+  end
   row:SetAttribute("OddsText",r.value)
   row:SetAttribute("AccessibleLabel",(r.label or r.name).." "..r.value)
   if r.info then row:FindFirstChild("Name").Size=UDim2.fromOffset(cw-inset*2,rowH)end
+  -- Tap a row: the Today's picks sheet on it (gamepad A on the focused row the same)
+  if odds.tappable and not r.info and r.id~="empty"then
+   tapOrder+=1
+   row:SetAttribute("Order",tapOrder)
+   local tap=Instance.new("TextButton");tap.Name="Tap";tap.Text="";tap.BackgroundTransparency=1;tap.Size=UDim2.fromScale(1,1)
+   tap.ZIndex=row.ZIndex+5;tap.Selectable=true;tap.AutoButtonColor=false
+   tap:SetAttribute("AccessibleLabel",(r.label or r.name).." "..r.value)
+   local rowId=r.id
+   tap.Activated:Connect(function()if liveShopTarget(tap,self.shade)then self:openPicks(rowId)end end)
+   tap.Parent=row
+  end
  end
  self.oddsHolder.Size=UDim2.fromOffset(self.oddsW,perCol*pitch)
  self.needLine.Position=UDim2.fromOffset(self.oddsX,self.buttonY-20)
- local text=if self.pending or self.giftLatch then "Saving…"else a.text
+ local text=if self.pending or self.giftLatch or(id==RackShop.Tile and self.rackLatch)then "Saving…"else a.text
  Kit.setText(self.hatchButton,text)
  -- the gift's button: no static ring (beta 42 note 3); the pointer rings it once the tile is picked
  local giftRing=self.hatchButton:FindFirstChild("GiftButtonRing")
@@ -1499,16 +1652,18 @@ end
 -- Keyboard: W / S / Up / Down move the list selection (gamepad uses native selection).
 function View:moveRecipe(delta)
 	if not self.shade.Visible or self.state.lastHatch or self:isStoreOpen() then return false end
-	local at=table.find(liveOrder,self.selected)or 1
-	local nextIndex=math.clamp(at+delta,1,#liveOrder)
+	local order=self:eggOrder()
+	local at=table.find(order,self.selected)or 1
+	local nextIndex=math.clamp(at+delta,1,#order)
 	if nextIndex==at then return false end
-	local ok=self:selectRecipe(liveOrder[nextIndex])
+	local ok=self:selectRecipe(order[nextIndex])
 	local column=self.body:FindFirstChild("EggColumn");local row=column and column:FindFirstChild("Recipe_"..self.selected)
 	if ok and row and GuiService.SelectedObject and GuiService.SelectedObject:IsDescendantOf(self.shade)then GuiService.SelectedObject=row end
 	return ok
 end
 function View:selectRecipe(id)
-	if self.pending or self.state.lastHatch or not table.find(liveOrder,id) then return false end
+	if self.pending or self.state.lastHatch or not table.find(self:eggOrder(),id) then return false end
+	if id~=self.selected then self.rackNote=nil;self:closePicks()end
  if self.onRouteChanged then self.onRouteChanged("recipe")end
  if id==self.selected then return true end
 	self.bodyFocusFallback=false
@@ -1527,6 +1682,8 @@ function View:update(state)
 	if self.destroyed or not self.shade.Parent then return end
 	local wasResult=self.state.lastHatch~=nil
 	self.state = state or {}
+	-- the daily rack switched off under the Outfit Egg's tile: back to the first egg (its sheet goes with it)
+	if not table.find(self:eggOrder(),self.selected)then self:closePicks();self.selected=liveOrder[1];self.rackNote=nil end
 	if self.store then
 		self.store:setBalance(self.state.nectar or 0)
 		if self.state.lastHatch and self.store:isOpen() then self.store:close("forced") end
@@ -1722,6 +1879,7 @@ function View:close(reason, choice)
 	self.storeReturn = nil
 	if self.shade.Visible then self:bumpControllerEpoch()end
 	if not self.shade.Visible then return end
+ self:closePicks();self.rackNote=nil
  if self.onRouteChanged then self.onRouteChanged("close",reason)end
  if (reason==nil or reason=="close"or reason=="earn")and self.onAccepted then self.onAccepted(if reason=="earn"then "confirm"else "back")end
 	self:revokeIntent()

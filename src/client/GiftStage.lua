@@ -27,19 +27,44 @@ Stage.Action="EggDropGiftStage"
 local current=nil -- the open stage's entry
 
 function Stage.isOpen()return current~=nil end
+-- The daily rack (ROTATION-BRIEF 3 and 4, switch daily_rack): two wearable records play here too, on the Customization
+-- Egg's shell (the machine drops it as "Hue") with the pet wearing the item (HatchDisplayItem's wearable pet, tier from
+-- its rarity): `outfit` (the Outfit gift: worn by the server already, one key "So cute!") and `rack` (a paid Outfit Egg
+-- from RackShop: the sticker is its rarity, the line its odds, keys "Wear it!" and "Later"). options.wearAppearance is the
+-- pet's look with the item on; options.rarity the item's.
+Stage.Wearables=table.freeze({outfit=true,rack=true})
 -- Pure: the hatch result the stage plays for a gift record, and its recipe ("hue" | "toy"); nil for any other gift.
-function Stage.result(record)
+function Stage.result(record,options)
 	if type(record)~="table"or type(record.item)~="string"or record.item==""then return nil end
 	local id="gift:"..(if record.id~=nil then tostring(record.id)else tostring(record.kind)..":"..record.item)
 	if record.kind=="paint"then return {id=id,itemId=record.item},"hue"end
 	if record.kind=="toy"then return {id=id,toyId=record.item},"toy"end
+	if Stage.Wearables[record.kind]then
+		options=options or {}
+		return {id=id,itemId=record.item,wearableId=record.item,wearPet=record.pet or options.petId,
+			wearAppearance=options.wearAppearance,rarity=record.rarity or options.rarity or "common"},"hue"
+	end
 	return nil
 end
--- Pure: the stage's words. -> {sticker, name, detail, primary, secondary}
+-- Pure: the stage's words. -> {sticker, name, detail, primary, secondary (nil: one key), description?}
 function Stage.words(record,options)
 	local text=options.text
 	local w={sticker=text("onbGift.card.from",{pet=options.pet}),secondary=text("onbGift.card.later")}
-	if record.kind=="paint"then
+	if record.kind=="outfit"then
+		w.name=options.itemName or record.item
+		w.detail=text("rack.gift.per")
+		w.description=text("rack.gift.description")
+		w.primary=text("rack.gift.cute")
+		w.secondary=nil
+	elseif record.kind=="rack"then
+		local rarity=if type(record.rarity)=="string"then record.rarity else "common"
+		w.sticker=text("rack.sticker."..rarity)
+		w.name=options.itemName or record.item
+		w.detail=options.detail or text("rack.rarity."..rarity)
+		w.description=text("rack.reveal.description")
+		w.primary=text("rack.reveal.wear")
+		w.secondary=text("rack.reveal.later")
+	elseif record.kind=="paint"then
 		local name=options.itemName or record.item
 		w.name=if options.deeper then text("onbGift.card.deeper",{name=name})else text("onbGift.card.pot",{name=name})
 		w.detail=text("onbGift.card.potOdds")
@@ -94,7 +119,7 @@ local function node(class,parent,props)
 	return n
 end
 function Stage.show(playerGui,record,options)
-	local result,recipe=Stage.result(record)
+	local result,recipe=Stage.result(record,options)
 	if not result or typeof(playerGui)~="Instance"then return false end
 	if current then current.lose("replaced")end -- the old one finishes first (chosen or not), then this one takes over
 	local entry={}
@@ -142,12 +167,27 @@ function Stage.show(playerGui,record,options)
 		if recipe=="toy"then
 			local ItemArt=require(script.Parent:WaitForChild("RewardItemArt"))
 			builder=function(parent,r,position,size,z)return ItemArt.create(parent,r,position,size,z)end
+		elseif result.wearableId then
+			-- the 2D fallback (the native 3D pet is HatchDisplayItem's): the pet wearing it in a still viewport
+			builder=function(parent,r,position,size,z)
+				local Pets=require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
+				local entry=require(script.Parent:WaitForChild("CardPreviewCache")).buildPet(Pets.byId[r.wearPet or "pip"],r.wearAppearance,.9)
+				if not entry then return nil end
+				entry.viewport.Position,entry.viewport.Size,entry.viewport.ZIndex=position,size,z
+				entry.viewport.Parent=parent
+				return entry.viewport
+			end
 		end
 		reveal=ItemReveal.new(art,{audio=options.audio,reduceEffects=options.reduceEffects or reduced,recipeId=recipe,resultBuilder=builder,owns=owns})
 		reveal.options.stage={parent=host,owns=owns,zIndex=20,
 			name=function()return words.name end,detail=function()return words.detail end,sticker=function()return words.sticker end,
-			actions=function()return {{text=words.secondary,primary=false,act=function()flow.choose(false)end},
-				{text=words.primary,primary=true,act=function()flow.choose(true)end}}end,
+			description=if words.description then function()return words.description end else nil,
+			actions=function()
+				local list={}
+				if words.secondary then table.insert(list,{text=words.secondary,primary=false,act=function()flow.choose(false)end})end
+				table.insert(list,{text=words.primary,primary=true,act=function()flow.choose(true)end})
+				return list
+			end,
 			close=function()flow.choose(false)end,gone=function()end}
 		current=entry
 		reveal:show(result,true)

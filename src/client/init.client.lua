@@ -6403,7 +6403,9 @@ do
      return if visible then Vector2.new(at.X,at.Y)else nil
     end
     local drop={paint="Hue",toy="Toy"}
-    local pressAction={paint="giftPaintBuy",toy="giftToyBuy"}
+    -- the daily rack's Outfit gift drops the Customization Egg's shell ("Hue") and arms its crank the same way
+    local pressAction={paint="giftPaintBuy",toy="giftToyBuy",outfit="giftPaintBuy"}
+    local Rack=require(script.RackShop)
     local function petId()local shown=roomView.shownPet;return shown and shown.id or "pip"end
     -- the card, opened by the machine once the egg is in the cup (the standing rule), or at once with the corner off
     local presented={} -- the gift cards shown this session, by record (AlreadyGranted never shows a second: GiftChain.showCard)
@@ -6423,7 +6425,10 @@ do
       local opts={text=function(key,vars)vars=vars or {};vars.pet=vars.pet or petName();return Copy.get(key,vars)end,
        audio=audio,reduceEffects=reducedNow,
        pet=petName(),petId=id,appearance=appearance,deeper=deeper,color=hue and hue.color or nil,
-       itemName=if record.kind=="paint"then(hue and hue.name or record.item)else(ToyCatalog.ById[record.item]and ToyCatalog.ById[record.item].name or record.item),
+       itemName=if record.kind=="paint"then(hue and hue.name or record.item)elseif record.kind=="outfit"then Rack.name(record.pet or id,record.item)
+        else(ToyCatalog.ById[record.item]and ToyCatalog.ById[record.item].name or record.item),
+       -- the Outfit gift: the pet it went to, wearing it (already worn by the server)
+       wearAppearance=if record.kind=="outfit"then Rack.wearing(appearance,record.pet or id,record.item)else nil,rarity="common",
        poolSize=pool,play=function(name,speed,volume)return audio:play(name,speed,volume)end,haptic=haptic,reduced=reducedNow,petScreen=petScreen,
        act=function(r)
         acted=true
@@ -6433,10 +6438,10 @@ do
          -- Paint; the pot is used there. Off (or the screen cannot open: the fallback below): today's one tap.
          if clientUI.teach and teachOn()then lessonA={pot=r.item,hue=hue,deeper=deeper};return end
          clientUI.hueIntent:use(petId(),"main",r.item,nil)
-        else
+        elseif r.kind=="toy"then
          clientUI.toyIntent:equip(petId(),r.item,nil)
          haptic("settle")
-        end
+        else haptic("settle")end -- the Outfit gift is worn already
        end,
        landed=function(r)
         if r.kind=="paint"and not lessonA then pcall(wipe.start,wipe,{pot=hue and hue.color or nil,colour=hue and hue.name or r.item,pet=petName(),duplicate=deeper})end
@@ -6451,6 +6456,8 @@ do
         local m=clientUI.eggMachine
         -- "Later" on the Paint card: the pot is kept and the deck lesson comes next (part 2)
         if record.kind=="paint"and not acted and clientUI.teach then clientUI.teach:skip("dress")end
+        -- the Outfit gift's one line after its reveal (ROTATION-BRIEF 4), no clock
+        if record.kind=="outfit"and how~="replaced"then toast("rack.gift.note")end
         local lesson=lessonA;lessonA=nil
         if how=="replaced"then
          -- Code review (beta 43): a newer gift's stage is taking over and its shot owns the camera now: nothing here hands
@@ -6654,7 +6661,13 @@ do
      local node=nil
      if kind and not nurseryView.giftLatch then
       local aim=require(script.GiftShop).aim({gift=kind,latch=nurseryView.giftLatch,lastHatch=nurseryView.state and nurseryView.state.lastHatch,
-       selected=nurseryView.selected,picked=nurseryView.giftPicked})
+       selected=nurseryView.selected,picked=nurseryView.giftPicked,oddsDone=nurseryView.giftOddsDone,sheetOpen=nurseryView.picks~=nil})
+      -- the Outfit gift (daily rack): an odds row "Tap to see today's picks!", then the sheet's own button
+      if aim=="odds"then
+       local tap=nurseryView:oddsTarget()
+       if tap then shopPointer:show(tap,Copy.get("rack.teach.odds"));shopPointer:step(dt);return end
+       aim="hatch"
+      elseif aim=="sheet"then node=nurseryView:picksTarget()end
       if aim=="hatch"then node=nurseryView.hatchButton
       elseif aim=="tile"then
        local column=nurseryView.body and nurseryView.body:FindFirstChild("EggColumn")
@@ -6680,6 +6693,36 @@ do
     gui.Destroying:Connect(function()beatGifts:Disconnect();giftBubble:destroy();shopPointer:destroy()end)
    end)
    if not okGifts then warn("[Gift] not mounted: "..tostring(giftsProblem))end
+   -- The daily rack's Outfit Egg (RackShop; ROTATION-BRIEF 3, switch daily_rack): the press (a fresh request id each,
+   -- a retry reuses it), the answers on WearableResult, the egg out of the machine, then its card on the regular hatch
+   -- stage (GiftStage) with "Wear it!". Off (no `rack` in the snapshot): no tile, nothing sent.
+   local okRack,rackProblem=pcall(function()
+    local playerGui=player:WaitForChild("PlayerGui")
+    local reducedNow=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end
+    local toaster
+    local rack=require(script.RackShop).mount({view=nurseryView,state=function()return nurseryState end,
+     id=function()return HttpService:GenerateGUID(false)end,clock=os.clock,result=remotes:WaitForChild("WearableResult"),
+     send=function(request)nurseryRequest:FireServer("rackEgg",request,nurseryState and nurseryState.revision or 0)end,
+     arm=function(id)pcall(clientUI.eggPressed,"lookBuy",{id=id})end,
+     snapshot=function()nurseryRequest:FireServer("snapshot")end,
+     refuse=function()local m=clientUI.eggMachine;if m then pcall(m.refuse,m)end end,
+     deliver=function(open)
+      local m=clientUI.eggMachine
+      local Stage=require(script.GiftStage)
+      return m~=nil and select(2,pcall(m.deliver,m,"Hue",open,{isOpen=Stage.isOpen}))==true
+     end,
+     show=function(record,options)return require(script.GiftStage).show(playerGui,record,options)end,
+     closed=function()local m=clientUI.eggMachine;if m then pcall(m.revealClosed,m,"gift")end end,
+     equip=function(petId,slot,itemId)
+      nurseryRequest:FireServer("wearableEquip",{id=HttpService:GenerateGUID(false),petId=petId,slot=slot,itemId=itemId},nurseryState and nurseryState.revision or 0)
+     end,
+     toast=function(text)toaster=toaster or require(script.DeckKit).toaster(overlayGui);toaster.show(text)end,
+     appearance=function(petId)return nurseryView.appearanceFor and nurseryView.appearanceFor(petId)or {}end,
+     audio=audio,reduced=reducedNow,defer=task.delay})
+    local beat=RunService.Heartbeat:Connect(function()pcall(rack.step)end)
+    gui.Destroying:Connect(function()beat:Disconnect();rack.destroy()end)
+   end)
+   if not okRack then warn("[DailyRack] not mounted: "..tostring(rackProblem))end
    -- Onboarding part 2 (artifacts/qa-2026-11-27-beta40/ONBOARDING-P2-BRIEF.md section 2, Onboard "teach"): five small
    -- lessons on the real buttons (TeachLessons, one TeachPointer at a time). Off: nothing drawn, a look each frame.
    local okTeach,teachProblem=pcall(function()

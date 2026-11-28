@@ -73,6 +73,8 @@ function Lessons.facts(state,live)
 		graduated=latched.done==true,
 		latched=latched,teachMask=teach,
 		paintSeen=granted.paint==true and not(unseen and unseen.kind=="paint"),
+		-- the daily rack (ROTATION-BRIEF 4): the Outfit gift comes first, so the deck lesson may follow it
+		outfitSeen=granted.outfit==true and not(unseen and unseen.kind=="outfit"),
 		painted=painted(state),
 		rounds=tonumber(stats.rounds)or 0,
 		menuSeen=Coach.has(mask,"menuSeen"),
@@ -109,7 +111,9 @@ function Lessons.ready(id,f,session)
 	local asked=session.asked or {}
 	if id=="dress"then return f.paintSeen==true end
 	if id=="reset"then return Lessons.done("dress",f)and f.wipe~=true end
-	if id=="deck"then return Lessons.done("dress",f)or skipped.dress==true or asked.deck==true end
+	-- the daily rack: the Outfit gift seen opens the deck lesson too (the Paint gift then waits for two rounds, which need
+	-- the deck: without this the course would wait for a later day)
+	if id=="deck"then return Lessons.done("dress",f)or skipped.dress==true or asked.deck==true or f.outfitSeen==true end
 	if id=="menu"then return Lessons.done("deck",f)or asked.menu==true end
 	if id=="quests"then return(f.rounds or 0)>=1 and Lessons.done("level",f)end
 	if id=="park"then return f.parkOn~=false and f.toyDone==true end
