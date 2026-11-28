@@ -228,11 +228,17 @@ return function(server)
 
 	test("teach more (ARCH-REVIEW-TEACH 4): a graduated save gets no teaching card; the four news cards stay",function()
 		local ctx={mask=0,totalWins=0,owned=1,graduated=true}
-		for _,id in ipairs({"fillLine","gardenIntro","hatch","item","parkInvite","tipHatch","needHi"})do
+		for _,id in ipairs({"gardenIntro","parkInvite","needHi","menuSeen"})do
 			assert(not Coach.wants(id,ctx),"graduated: "..id)
 			assert(Coach.wants(id,{mask=0,totalWins=0,owned=1}),"in the course: "..id)
 		end
 		for _,id in ipairs({"petArrived","questDone","weekDone","nestIntro"})do assert(Coach.wants(id,ctx),"kept: "..id)end
+		-- beta 44 (ARCH-REVIEW-SIMPLIFY 7): graduation is at about minute 5 now; a screen's first-use cards stay after it
+		for _,id in ipairs({"fillLine","item","hatch","style","companions","quests","book","park","tipHatch","tipStyle","tipCompanions","tipPark","tipNest"})do
+			assert(Coach.wants(id,ctx),"kept after graduation: "..id)
+			assert(not Coach.wants(id,{mask=Coach.bit(id),totalWins=0,owned=1,graduated=true}),"still once: "..id)
+		end
+		assert(not Coach.wants("hatch",{mask=0,totalWins=9,owned=1,graduated=true}),"a veteran: still none")
 		assert(Coach.stage({owned=1,graduated=true,mask=0})=="free","graduated: no garden step")
 	end)
 

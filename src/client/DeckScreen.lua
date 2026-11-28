@@ -1532,6 +1532,9 @@ function Screen:buildHud(g)
    local count=txt(row,"Counter","","soft",col-62,r.barY-7,48,20,{TextSize=13,TextXAlignment=Enum.TextXAlignment.Right})
    h.goals[index]={row=row,check=check,text=text,bar=bar,count=count}
   end
+  -- Beta 44 note 7 (ONBOARD-SIMPLIFY-BRIEF 3, Alive deckfeel): the target ball beside the words, a 20 px check, 15 px
+  -- text, fixed 12 px gaps with a hairline between rows, the block centred (Screen.GoalRows2).
+  if require(script.Parent.DeckFeel).switch()then self:buildGoals2(goals,col)end
   local daily=card(host,"DailyQuests",{leftX,456,col,140},"DAILY QUESTS",pad,Screen.HudTint);h.quests=daily
   -- Beta 34 QA ("theres no quests button anymore?"): the card opens the quest log (bindQuestTarget) and says so
   -- with an Open key in its header (QA Q5 had taken the card's chevron away, so it read as progress only).
@@ -1663,11 +1666,152 @@ function Screen:placeGoalRows()
   end
  end
 end
+-- ── Beta 44 Goals card (note 7, shot-75; ONBOARD-SIMPLIFY-BRIEF 3; Alive deckfeel) ────────────────────────────────────
+-- Regular card (244 high): check 20 at x 14, 10, the target ball 22 (the real ball, as on Next), 8, the words (15 px,
+-- line 19, one line preferred, two at most). Rows 34 (one line) or 44 (two), taller by the bar (6 px, 4 under the
+-- words) only on a goal that counts above 1; a fixed 12 gap with a 1 px hairline at 12% white in its middle; the block
+-- centred between y 40 and 230, never stretched. A goal with no ball (merges, chains) starts its words at the ball's x.
+Screen.GoalRows2=table.freeze({top=40,bottom=230,check=20,checkX=14,ball=22,ballX=44,textX=74,size=15,line=19,one=34,two=44,
+ gap=12,bar=6,barGap=4,right=14,divider=.88})
+-- Pure: rows = {{lines = 1|2, bar = bool}}; -> placed rows {y, h, textY, textH, checkY, ballY, barY}, divider ys.
+function Screen.goalRows2(rows)
+ local G=Screen.GoalRows2
+ local out,sum={},0
+ for index,r in ipairs(rows)do
+  local textH=math.clamp(r.lines or 1,1,2)*G.line
+  local h=if(r.lines or 1)>=2 then G.two else G.one
+  if r.bar then h=math.max(h,textH+G.barGap+G.bar+8)end
+  local block=textH+(if r.bar then G.barGap+G.bar else 0)
+  local textY=math.floor((h-block)/2+.5)
+  out[index]={h=h,textH=textH,textY=textY,checkY=math.floor((h-G.check)/2+.5),ballY=math.floor((h-G.ball)/2+.5),
+   barY=if r.bar then textY+textH+G.barGap else nil}
+  sum+=h
+ end
+ local n=#out
+ local total=sum+math.max(0,n-1)*G.gap
+ local y=G.top+math.max(0,math.floor((G.bottom-G.top-total)/2))
+ local dividers={}
+ for index,r in ipairs(out)do
+  r.y=y;y+=r.h
+  if index<n then table.insert(dividers,y+math.floor(G.gap/2));y+=G.gap end
+ end
+ return out,dividers,total
+end
+function Screen:buildGoals2(goals,col)
+ local h=self.hud
+ local G=Screen.GoalRows2
+ h.goals2=true;h.goalCol=col
+ h.dividers={}
+ for index=1,2 do
+  local line=Kit.frame(goals,"Divider"..index,nil,UDim2.fromOffset(G.checkX,0),UDim2.fromOffset(col-2*G.checkX,1))
+  line.BackgroundTransparency=G.divider;line.BackgroundColor3=Color3.new(1,1,1);line.Visible=false
+  h.dividers[index]=line
+ end
+ for _,slot in ipairs(h.goals)do
+  slot.check.root:Destroy()
+  slot.check=Kit.check(slot.row,G.check)
+  slot.ball=egg(slot.row,G.ball);slot.ball.ball.Visible=false
+  slot.text.TextSize=G.size;slot.text.TextWrapped=true;slot.text.TextYAlignment=Enum.TextYAlignment.Top
+ end
+end
+-- One goal's words for the restyled row: the ball variant when the goal has a ball, else its usual lines.
+function Screen.goalWords2(goal)
+ if type(goal)=="table"and type(goal.ball)=="table"and type(goal.ball.words)=="table"then return goal.ball.words,goal.ball.tier end
+ return nil,nil
+end
+function Screen:paintGoals2(goals,hidden)
+ local h=self.hud
+ local G=Screen.GoalRows2
+ local col=h.goalCol
+ local specs,lines={},{}
+ for index,slot in ipairs(h.goals)do
+  local goal=goals[index]
+  slot.row.Visible=goal~=nil and not hidden
+  if goal and not hidden then
+   local words,tier=Screen.goalWords2(goal)
+   local x=if tier then G.textX else G.ballX
+   local width=col-x-G.right
+   local text
+   if words then
+    text=GoalWords.pick(words,function(line)return Kit.measure(line,"BodyMedium",G.size,width).Y<=G.size*2.6 end)
+    slot.text.RichText=false
+   else
+    text=Screen.evenCircles(Screen.goalLine(goal,2,width,G.size,measureBody),G.size);slot.text.RichText=true
+   end
+   slot.text.Text=text
+   if slot.text.RichText then Kit.localizeRich(slot.text)end
+   slot.text:SetAttribute("AccessibleLabel",goal.spoken or goal.text)
+   local plain=BallThemes.strip(text)
+   local two=Kit.measure(plain,"BodyMedium",G.size,width-4).Y>G.size*1.6
+   local counted=(goal.target or 1)>1
+   specs[index]={x=x,width=width,tier=tier,counted=counted}
+   table.insert(lines,{lines=if two then 2 else 1,bar=counted})
+   slot.check.set(goal.done)
+   slot.text.TextColor3=Kit.Color.text;slot.text.TextTransparency=if goal.done then .4 else 0
+   if tier and slot.ball.tier~=tier then
+    slot.ball.tier=tier;slot.ball.preview.set(BallThemes.current,tier,"idle",0,false)
+    slot.ball.ball:SetAttribute("AccessibleLabel",BallThemes.spoken(tier))
+   end
+   slot.ball.ball.Visible=tier~=nil
+   slot.bar.set(if goal.done then 1 else goal.progress or 0,if goal.done then 1 else math.max(1,goal.target or 1),false,true)
+   slot.count.Text=string.format("%d/%d",if goal.done then goal.target or 1 else goal.progress or 0,goal.target or 1)
+   slot.count.AutoLocalize=false;slot.count.TextColor3=Kit.Color.soft
+  end
+  self:popGoal(index,goal,slot.count or slot.text)
+ end
+ local placed,dividers=Screen.goalRows2(lines)
+ local at=0
+ for index,slot in ipairs(h.goals)do
+  local s=specs[index]
+  if s then
+   at+=1
+   local r=placed[at]
+   slot.row.Position=UDim2.fromOffset(0,r.y);slot.row.Size=UDim2.fromOffset(col,r.h)
+   slot.check.root.Position=UDim2.fromOffset(G.checkX,r.checkY)
+   slot.ball.ball.Position=UDim2.fromOffset(G.ballX,r.ballY)
+   slot.text.Position=UDim2.fromOffset(s.x,r.textY);slot.text.Size=UDim2.fromOffset(s.width,r.textH)
+   slot.bar.root.Visible=s.counted;slot.count.Visible=s.counted
+   if r.barY then
+    local cw=40
+    slot.bar.root.Position=UDim2.fromOffset(s.x,r.barY);slot.bar.root.Size=UDim2.fromOffset(math.max(20,s.width-cw-6),G.bar)
+    slot.count.Position=UDim2.fromOffset(s.x+s.width-cw,r.barY-7);slot.count.Size=UDim2.fromOffset(cw,20)
+   end
+  end
+ end
+ for index,line in ipairs(h.dividers)do
+  local y=dividers[index]
+  line.Visible=y~=nil and not hidden
+  if y then line.Position=UDim2.fromOffset(G.checkX,y)end
+ end
+end
 -- Small deck Goals rows (card 136: rows from 26). Three goals: 34 apart, one line each; two or fewer: 54 apart, two
 -- lines each, so the words fit without the old arrow shorthand.
+-- Beta 44 (ONBOARD-SIMPLIFY-BRIEF 3, Alive deckfeel): check 18, two or fewer 44 apart, the block centred in the card.
+Screen.SmallGoals2=table.freeze({check=18,three=34,few=44,top=26,bottom=132})
+function Screen.smallPitch(n,restyled)
+ if not restyled then return if n<=2 then 54 else 34,26 end
+ local G=Screen.SmallGoals2
+ local pitch=if n<=2 then G.few else G.three
+ local block=math.max(1,n)*pitch
+ return pitch,G.top+math.max(0,math.floor((G.bottom-G.top-block)/2))
+end
 function Screen:pitchSmallGoals(n)
  local h=self.hud
- local pitch=if n<=2 then 54 else 34
+ local restyled=require(script.Parent.DeckFeel).switch()
+ local pitch,top=Screen.smallPitch(n,restyled)
+ if restyled then
+  if h.smallPitch==pitch and h.smallTop==top then return end
+  h.smallPitch,h.smallTop=pitch,top
+  for index,slot in ipairs(h.goals)do
+   slot.row.Position=UDim2.fromOffset(0,top+(index-1)*pitch);slot.row.Size=UDim2.fromOffset(slot.row.Size.X.Offset,pitch-2)
+   slot.text.Size=UDim2.fromOffset(slot.text.Size.X.Offset,pitch-6)
+   if slot.check.root.Size.X.Offset~=Screen.SmallGoals2.check then
+    slot.check.root:Destroy();slot.check=Kit.check(slot.row,Screen.SmallGoals2.check)
+   end
+   slot.check.root.Position=UDim2.fromOffset(8,math.floor((pitch-6-Screen.SmallGoals2.check)/2))
+  end
+  return
+ end
  if h.smallPitch==pitch then return end
  h.smallPitch=pitch
  for index,slot in ipairs(h.goals)do
@@ -1731,7 +1875,12 @@ function Screen:setHud(data)
  -- Beta 34 QA: the Small deck's rows get two lines each when there are two goals (54 apart in its 136 card).
  if compact then self:pitchSmallGoals(#goals)end
  local done=0
- for index,slot in ipairs(h.goals)do
+ if h.goals2 and not compact then
+  -- beta 44 note 7 (Alive deckfeel): the restyled Goals card
+  for _,goal in ipairs(goals)do if goal.done then done+=1 end end
+  self:paintGoals2(goals,h.status.Visible)
+ end
+ for index,slot in ipairs(if h.goals2 and not compact then {}else h.goals)do
   local goal=goals[index]
   slot.row.Visible=goal~=nil and not h.status.Visible
   if goal then
@@ -1753,7 +1902,7 @@ function Screen:setHud(data)
   end
   self:popGoal(index,goal,slot.count or slot.text)
  end
- if not compact and h.goalWidth then self:placeGoalRows()end
+ if not compact and h.goalWidth and not h.goals2 then self:placeGoalRows()end
  h.goalsCount.Text=if #goals>0 and not h.status.Visible then string.format("%d/%d",done,#goals)else ""
  if compact then h.goalsEyebrow.Text=if #goals>0 and not h.status.Visible then string.format("GOALS %d/%d",done,#goals)else "GOALS";h.goalsCount.Text=""end
  -- Status lines ("Falling", "Settling", save waits) replace the Goals label row.

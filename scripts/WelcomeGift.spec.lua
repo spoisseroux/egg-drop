@@ -92,6 +92,29 @@ return function(server)
 		local s=save();local nectar=10;s.nectar=nectar;assert(Gift.apply(s)==5 and s.nectar==15 and s.welcomeGift==5)
 	end)
 
+	test("beta 44 (ARCH-REVIEW-SIMPLIFY 6): the card is at the deck tour's end, so the tour stands in for a round played",function()
+		local Teach=require(Shared.TeachMarks)
+		local function save(over)
+			local s={welcomeGift=0,totalWins=0,coachMask=Coach.with(0,"needHi"),nest={tucked=true,n=0},stats={rounds=0}}
+			for k,v in pairs(over or {})do s[k]=v end
+			return s
+		end
+		assert(select(2,Gift.due(save(),true))=="NotDone","no round, no tour: not yet")
+		assert(Gift.due(save({teachMask=Teach.with(0,"deckTour")}),true),"the tour saved")
+		assert(Gift.due(save(),true,nil,Teach.with(0,"deckTour")),"the tour queued on the board (the server took it on the deck)")
+		assert(select(2,Gift.due(save(),true,nil,Teach.with(0,"level")))=="NotDone","another latch is not the tour")
+		assert(select(2,Gift.due(save({teachMask=Teach.with(0,"deckTour"),welcomeGift=5}),true))=="AlreadyGranted","still once")
+		assert(select(2,Gift.due(save({teachMask=Teach.with(0,"deckTour"),totalWins=Coach.VeteranWins}),true))=="Veteran")
+		-- the save path: HatchProgress.welcomeGift takes the board's queued teach latches (ctx.teach)
+		local h,db,c=fresh(true)
+		local ready=rejoin(h,db,c,{coachMask=Coach.with(0,"needHi"),nest={at=c.now,n=0,tucked=true,pet="pip"}})
+		local wallet=ready.state.nectar
+		local refused,why=H.welcomeGift(ready,{nest=true,mask=0})
+		assert(not refused and why=="NotDone","no tour yet")
+		local paid,reason=H.welcomeGift(ready,{nest=true,mask=0,teach=Teach.with(0,"deckTour")})
+		assert(paid and reason~="AlreadyGranted"and ready.state.nectar==wallet+Gift.Bonus and ready.state.welcomeGift==Gift.Bonus,"paid on the tour")
+	end)
+
 	test("the Bear's grant marks a new save owed only with the switch on; the field never fails a load",function()
 		local h,db=fresh(true)
 		assert(h.state.welcomeGift==0 and db.player_1.hatching.welcomeGift==0,"owed, saved with the Bear")

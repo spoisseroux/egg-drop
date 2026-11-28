@@ -2421,7 +2421,8 @@ function clientUI.deckGoals(view,stage)
   local tier=goal.tier or goal.minTier or 1
   local words={full,candidates[1]or full,candidates[2]or candidates[1]or full}
   goals[index]={text=full,short=words[2],tiny=words[3],words=words,spoken=(clientUI.FieldQuestText.goal(goal)),done=done,progress=if current then view.progress or 0 else 0,target=goal.target or 1,
-   icon={kind=goal.kind or "merge",tier=tier,plus=goal.minTier~=nil,zone=zone}}
+   icon={kind=goal.kind or "merge",tier=tier,plus=goal.minTier~=nil,zone=zone},
+   ball=require(ReplicatedStorage.Shared.GoalWords).ball(goal)} -- beta 44 note 7: the Goals card's ball and its words
  end
  return goals
 end
@@ -3112,6 +3113,7 @@ local function aimFromScreen(x)
 end
 
 local function dropEgg()
+ if clientUI.deck.tourHold then return end -- beta 44 (ARCH-REVIEW-SIMPLIFY 2): the deck tour holds every drop
  -- S5: with the ghost gate, a stale FieldReady=false right after our own drop is that
  -- drop's contact gate a round trip late; the ghost's touch-down (or the gate time) lets
  -- the next tap go. Budget, phase, round end and every other canPlay rule still hold.
@@ -3897,7 +3899,7 @@ function clientUI.itemsInRound()
  return board:GetAttribute("Mode")=="Board"and backdrop.Visible and not modal.Visible and not roomView.busy and not recap.visible
   and not isPickerOpen()and not journal.shade.Visible and not gameMenu.shade.Visible and not nurseryView:isOpen()and not clientUI.isHueOpen()
   and not clientUI.roundOver()and not clientUI.heatPicker.visible and not clientUI.questLog.visible
-  and not clientUI.pocketMenu.visible and not GuiService.MenuIsOpen
+  and not clientUI.pocketMenu.visible and not GuiService.MenuIsOpen and not clientUI.deck.tourHold -- beta 44: the tour holds items
 end
 function clientUI.openItems()
  if clientUI.items.isOpen or not clientUI.itemsInRound()then return false end
@@ -3919,6 +3921,7 @@ function clientUI.toggleItems()
  return clientUI.openItems()
 end
 function clientUI.useItem()
+ if clientUI.deck.tourHold then return false end -- beta 44 (ARCH-REVIEW-SIMPLIFY 2): never an item under the deck tour
  local id=clientUI.items:selected()
  if not id then return false end
  if clientUI.clientSim then
@@ -5887,9 +5890,15 @@ do
     local saved=type(state.finds)=="table"and state.finds or {}
     finds={waiting=finds.waiting,count=tonumber(saved.count)or 0,limit=tonumber(saved.limit)or Finds.DailyLimit}
    end
-   return{den=denNow()~=nil,park=Attract.parkAnchor()~=nil,playDate=state.playDate,finds=finds,dash=dashNow(),prizes=Dash.prizes(),saved=state.dash,new=things.new(),
+   -- beta 44 note 24: no Play Den row for now (den=false). Notes 13 and 14 (ONBOARD-SIMPLIFY-BRIEF 4, Onboard `teach`):
+   -- the learn rows (Customize, Dress up, Finish quests, the book, Deck style), ticked from saved facts.
+   local learn=nil
+   if Onboard.on("teach")then
+    learn=require(script.ThingsPage).learn(state,{teachMask=clientUI.teach and clientUI.teach.live and clientUI.teach.live(),coachMask=clientUI.coach.mask})
+   end
+   return{den=false,park=Attract.parkAnchor()~=nil,playDate=state.playDate,finds=finds,dash=dashNow(),prizes=Dash.prizes(),saved=state.dash,new=things.new(),
     gift=clientUI.giftRow, -- the gift chain's parked gift (GiftChain), nil without one
-    dashLesson=clientUI.teach~=nil and clientUI.teach:dashOpen()==true} -- teach more: the Dash row leads while its lesson waits
+    learn=learn}
   end
   function things.seen(id)
    if id=="dash"and Things.on()and not Coach.has(clientUI.coach.mask,"dashSeen")then clientUI.coach:mark("dashSeen")end
@@ -5919,17 +5928,16 @@ do
     if not(finds and finds.nearest)then return false end
     return trail:start({position=finds.nearest,name=Copy.get("finds.name")})
    end
-   local den=denNow()
-   if id=="den"then return den~=nil and trail:start({position=den.pin,name=Copy.get("things.den.name")})end
-   local race=dashNow()
-   if race==nil then return false end
-   -- The Play Den open: the race is picked at its gate, so Show me leads there, or to the meadow pad while one gathers.
-   if den and race.phase~="gather"then
-    local at=DenLayout.prompts(den).gate
-    if at then return trail:start({position=Vector3.new(at.X,den.floorY,at.Z),name=Copy.get("dash.title")})end
-   end
-   return trail:start({position=dashGate(),name=Copy.get("dash.title")})
-
+   if dashNow()==nil then return false end
+   -- Beta 44 note 23 (DIAGNOSIS 23): never into the Play Den's cave (no row for it now); the prints end at the waiting
+   -- pad's edge on the player's side (its centre sits on the start's props, so no path was found and only the pin
+   -- showed), and with no path at all a straight dry line is laid.
+   local pad=dashGate()
+   local edge=pad
+   local away=Vector3.new(from.X-pad.X,0,from.Z-pad.Z)
+   local r=Course.Pad.r/100
+   if away.Magnitude>r+1 then edge=pad+away.Unit*r end
+   return trail:start({position=edge,name=Copy.get("dash.title"),fallback={from,edge}})
   end
   function things.act(id)
    if not Things.on()or not closeMenu then return false end
@@ -5941,6 +5949,26 @@ do
    end
    -- Nothing waiting: no trail to lay, so the page stays.
    if id=="finds"then local finds=findsNow();if not(finds and finds.nearest)then return false end end
+   -- Beta 44 learn rows (ONBOARD-SIMPLIFY-BRIEF 4): quests, the book and Deck style open their screen from the hub the
+   -- page sits in (Back returns there); Customize and Dress up open the pet screen and ring the way (Show me).
+   if id=="quests"or id=="book"or id=="style"then
+    local opened=clientUI.openMachine(id)==true
+    if opened and clientUI.teach then clientUI.teach:opened(id)end
+    return opened
+   end
+   if id=="customize"or id=="dress"then
+    closeMenu()
+    -- the hub lets go of the camera over a few frames: ask the pet screen a few times
+    task.spawn(function()
+     for _=1,10 do
+      if board:GetAttribute("Mode")~="Room"or not roomView.shownPet then return end
+      local ok,opened=pcall(roomView.focusPet,roomView,true)
+      if ok and opened==true then if clientUI.teach then clientUI.teach:showMe(id)end;return end
+      task.wait(.2)
+     end
+    end)
+    return true
+   end
    closeMenu()
    if id~="deck"then things.show(id);return true end
    -- The Deck: as its own button in the garden (a race seat is asked about first).
@@ -6057,6 +6085,53 @@ do
    local petKeys=UserInputService.InputBegan:Connect(function(input)
     if input.KeyCode==Enum.KeyCode.E or input.KeyCode==Enum.KeyCode.ButtonX then petKeyAt=os.clock()end
    end)
+   -- "You're all set!" (the v3 brief section 3, Onboard "allset2"). tourEnd (beta 44, ONBOARD-SIMPLIFY-BRIEF 4): shown at the
+   -- deck tour's end; its sub-line points at Things to do, "What's next?" always opens it (no Hatch one!), and showing it
+   -- graduates (clientUI.teach:finish). -> true when the card opened.
+   clientUI.allSetCard=function(tourEnd)
+    local shown=roomView.shownPet
+    local card=require(script.AllSetCard).show(player:WaitForChild("PlayerGui"),{
+     copy=function(key,vars)
+      if tourEnd and key=="onbAllSet.sub"then return Copy.get("onbAllSet.things",vars)end
+      return Copy.get(key,vars)
+     end,
+     pet=petName(),petId=shown and shown.id or "pip",
+     play=function(name,speed,gain)return audio:play(name,speed,gain)end,haptic=function(name)require(script.Haptics).play(name)end,
+     reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
+     cheer=function()request:FireServer("petLead",{kind="cheer"})end,
+     next=function()clientUI.openThings()end,
+     -- the fun pass: "Hatch one!" when the Stars cover the cheapest egg (never on the tour's card: What's next? there)
+     canHatch=function()
+      if tourEnd then return false end
+      local cost=require(script.EggHatchView).cheapestCost()
+      return type(cost)=="number"and(nurseryState and nurseryState.nectar or 0)>=cost
+     end,
+     hatch=function()
+      local machine=clientUI.eggCornerPlace and clientUI.eggCornerPlace()
+      local entry=not machine and clientUI.attract and clientUI.attract.stations.Eggs
+      local at=machine or(entry and entry.base)
+      if typeof(at)~="Vector3"then clientUI.openThings();return end
+      trail:start({position=at,name=Copy.get("r5.station.Eggs.name")})
+     end,
+     -- the one-time welcome gift: asked once; shown only when this ask paid it (a refusal or no answer: no gift)
+     gift=function(arrived)
+      local remote=remotes:FindFirstChild("WelcomeGiftResult")
+      if not remote then return end
+      local link
+      link=remote.OnClientEvent:Connect(function(packet)
+       if link then link:Disconnect();link=nil end
+       -- AlreadyGranted (paid before, by an earlier ask or another server): nothing new, so no pill
+       if type(packet)=="table"and packet.status=="Saved"and packet.reason~="AlreadyGranted"and type(packet.stars)=="number"then arrived(packet.stars)end
+      end)
+      task.delay(30,function()if link then link:Disconnect();link=nil end end)
+      nurseryRequest:FireServer("welcomeGift")
+     end})
+    if tourEnd then
+     request:FireServer("onboardEvent","AllSetTour")
+     if clientUI.teach then clientUI.teach:finish()end
+    end
+    return card~=nil
+   end
    needs=Needs.new({bubble=bubble,clock=os.clock,state=function()return nurseryState end,owned=function()return board:GetAttribute("OwnedPets")or 0 end,
     mask=function()return clientUI.coach.mask end,mark=function(id)clientUI.coach:mark(id)end,finishIntro=function()clientUI.coach:finishGarden()end,
     teach=function()return Onboard.on("teach")end,teachMask=function()return clientUI.teach and clientUI.teach.live and clientUI.teach.live()end,
@@ -6173,44 +6248,14 @@ do
     firstPet=function()pcall(function()require(script.Haptics).play("settle")end)end,
     allSet=function()
      request:FireServer("onboardEvent","AllSet")
+     -- Beta 44 (ONBOARD-SIMPLIFY-BRIEF 4, notes 11 and 12): in the course (`teach` on, owed the chain, not graduated)
+     -- the card waits for the deck tour's end (TeachWiring); nothing latched here (the card's "done:finished" saves
+     -- `needs` with `done`).
+     if clientUI.teach and clientUI.teach:inCourse()then return end
      -- Teach more (ARCH-REVIEW-TEACH 3): the need bubbles are over for good (not graduation: the lessons go on)
      if clientUI.teach then clientUI.teach:latch("needs")end
      -- The v3 brief section 3 (Onboard "allset2"): the celebration card; off, the exhale card as before.
-     if needs and needs.allSet2 then
-      local shown=roomView.shownPet
-      require(script.AllSetCard).show(player:WaitForChild("PlayerGui"),{copy=Copy.get,pet=petName(),petId=shown and shown.id or "pip",
-       play=function(name,speed,gain)return audio:play(name,speed,gain)end,haptic=function(name)require(script.Haptics).play(name)end,
-       reduced=function()return reduceEffects()==true or GuiService.ReducedMotionEnabled end,
-       cheer=function()request:FireServer("petLead",{kind="cheer"})end,
-       -- Onboarding part 2 (lesson C): with `teach` on, "What's next?" only closes the card; the Menu button is lit
-       next=function()if clientUI.teach and clientUI.teach:ask("menu")then return end;clientUI.openThings()end,
-       -- the fun pass: "Hatch one!" when the Stars cover the cheapest egg; it lays the paw prints to the egg machine
-       canHatch=function()
-        local cost=require(script.EggHatchView).cheapestCost()
-        return type(cost)=="number"and(nurseryState and nurseryState.nectar or 0)>=cost
-       end,
-       hatch=function()
-        local machine=clientUI.eggCornerPlace and clientUI.eggCornerPlace()
-        local entry=not machine and clientUI.attract and clientUI.attract.stations.Eggs
-        local at=machine or(entry and entry.base)
-        if typeof(at)~="Vector3"then clientUI.openThings();return end
-        trail:start({position=at,name=Copy.get("r5.station.Eggs.name")})
-       end,
-       -- the one-time welcome gift: asked once; shown only when this ask paid it (a refusal or no answer: no gift)
-       gift=function(arrived)
-        local remote=remotes:FindFirstChild("WelcomeGiftResult")
-        if not remote then return end
-        local link
-        link=remote.OnClientEvent:Connect(function(packet)
-         if link then link:Disconnect();link=nil end
-         -- AlreadyGranted (paid before, by an earlier ask or another server): nothing new, so no pill
-         if type(packet)=="table"and packet.status=="Saved"and packet.reason~="AlreadyGranted"and type(packet.stars)=="number"then arrived(packet.stars)end
-        end)
-        task.delay(30,function()if link then link:Disconnect();link=nil end end)
-        nurseryRequest:FireServer("welcomeGift")
-       end})
-      return
-     end
+     if needs and needs.allSet2 then clientUI.allSetCard(false);return end
      require(script.GuideEndCard).show(player:WaitForChild("PlayerGui"),{copy=Copy.get,
       play=function(name,speed,gain)return audio:play(name,speed,gain)end,reduced=function()return reduceEffects()==true end})
     end,
@@ -6401,11 +6446,19 @@ do
          if m then pcall(m.returnCamera,m,true)end
          task.defer(function()
           RunService.Heartbeat:Wait()
-          if not(clientUI.teach and clientUI.teach:startDress(lesson))then
-           -- the fallback (the pet not out, a race seat, the Dress up door off): today's one-tap paint
-           clientUI.hueIntent:use(petId(),"main",lesson.pot,nil)
-           pcall(wipe.start,wipe,{pot=lesson.hue and lesson.hue.color or nil,colour=lesson.hue and lesson.hue.name or lesson.pot,pet=petName(),duplicate=lesson.deeper})
+          -- Beta 44 note 13 (DIAGNOSIS 13): the pet screen may not open at once (the camera coming back, the window
+          -- unfocused, a seat): try again a while instead of the one-tap paint. Still shut: the pot is kept and Dress up
+          -- lights the next time the pet screen opens; the deck lesson may come first.
+          local function door()return clientUI.teach~=nil and teachOn()and clientUI.DressUp~=nil and clientUI.DressUp.on()end
+          for _=1,12 do
+           if clientUI.teach and clientUI.teach:startDress(lesson)then return end
+           if not door()then break end
+           task.wait(.5)
           end
+          if door()then clientUI.teach:skip("dress");return end
+          -- `teach` or the Dress up door off: today's one-tap paint
+          clientUI.hueIntent:use(petId(),"main",lesson.pot,nil)
+          pcall(wipe.start,wipe,{pot=lesson.hue and lesson.hue.color or nil,colour=lesson.hue and lesson.hue.name or lesson.pot,pet=petName(),duplicate=lesson.deeper})
          end)
         elseif m then
          -- the card is the gift shot's owner: its close gives the camera back (ARCH-REVIEW-P2 3)
@@ -6488,7 +6541,14 @@ do
       return Reveal.isOpen()or(snacks~=nil and snacks.reveal~=nil and snacks.reveal:isOpen()==true)
      end,
      teach=teachOn,
+     -- beta 44 (ONBOARD-SIMPLIFY-BRIEF 1, ARCH-REVIEW-SIMPLIFY 8 and 10): this session's latches, the deck lesson next,
+     -- the window's focus (the bubble's clocks) and the shop open (note 3: no bubble over it)
+     teachMask=function()return clientUI.teach and clientUI.teach.live and clientUI.teach.live()end,
+     deckNext=function()return clientUI.teach~=nil and clientUI.teach:deckNext()==true end,
+     focused=function()return require(script.WindowFocus).focused()end,
+     shopOpen=function()return nurseryView:isOpen()end,
      lead=function(target)
+      if target=="Deck"then if not things.act("deck")then clientUI.playDeck()end;return end
       if target=="Eggs"then
        local at=clientUI.eggCornerPlace and clientUI.eggCornerPlace()
        if typeof(at)=="Vector3"then trail:start({position=at,name=Copy.get("r5.station.Eggs.name"),guide=true})end
@@ -6644,6 +6704,7 @@ do
      send=function(value)nurseryRequest:FireServer("teachMark",value)end,
      wipe=function()local w=clientUI.giftWipe;return w~=nil and w:running()end,
      visit=function()return wiring and wiring.visit or 0 end,
+     focused=function()return require(script.WindowFocus).focused()end, -- beta 44 note 13: alt-tab never parks a lesson
      target=function(id,f)
       if anyCard()then return nil end
       if id=="dress"then
@@ -6659,23 +6720,8 @@ do
       elseif id=="deck"then
        local button=roomView.controls and roomView.controls:FindFirstChild("OpenHandheld")
        return if gardenFree()and live(button)then button else nil,"deck"
-      elseif id=="menu"then
-       if gameMenu and gameMenu:isOpen()then
-        if gameMenu.pageOn then return nil end
-        local tile=gameMenu.body and gameMenu.body:FindFirstChild("Tile_things",true)
-        return if live(tile)then tile else nil,"things"
-       end
-       local button=roomView.controls and roomView.controls:FindFirstChild("Menu")
-       return if gardenFree()and live(button)then button else nil,"menu"
-      elseif id=="park"then
-       local gui=playerGui:FindFirstChild("EggDropParkThrow")
-       local button=gui and gui.Enabled and gui:FindFirstChild("Throw")
-       return if button and live(button)and not clientUI.anyModalOpen()then button else nil,"throw"
-      elseif id=="dash"then
-       local sheet=playerGui:FindFirstChild("EggDropDashGate")
-       local tile=sheet and sheet:FindFirstChild("Fun",true)
-       return if live(tile)then tile else nil,"go"
       end
+      -- beta 44 (ONBOARD-SIMPLIFY-BRIEF 4): menu, park and dash are Things to do rows now (no lesson pointer)
       if wiring then return wiring:target(id,f)end
       return nil
      end})
@@ -6683,9 +6729,27 @@ do
      playerGui=function()return playerGui end,text=function(key,vars)vars=vars or {};vars.pet=vars.pet or petName();return Copy.get(key,vars)end,
      live=live,picker=picker,event=function(name)request:FireServer("onboardEvent",name)end,
      pointer=require(script.TeachPointer).new({reduced=reducedNow,input=function()return Glyphs.kindOf(UserInputService:GetLastInputType())end}),
-     toast=function(key)require(script.DeckKit).toaster(overlayGui).show(Copy.get(key))end})
+     toast=function(key)require(script.DeckKit).toaster(overlayGui).show(Copy.get(key))end,
+     -- beta 44 (ONBOARD-SIMPLIFY-BRIEF 2 and 4, ARCH-REVIEW-SIMPLIFY 4 and 11): the tour's close, the all-set card's moment,
+     -- the Things rows' Show me ring (a pointer of its own) and the window's focus
+     close=function()return clientUI.leaveDeck()end,gardenFree=gardenFree,
+     allSet=function()return clientUI.allSetCard~=nil and clientUI.allSetCard(true)==true end,
+     focused=function()return require(script.WindowFocus).focused()end,
+     showPointer=require(script.TeachPointer).new({reduced=reducedNow,input=function()return Glyphs.kindOf(UserInputService:GetLastInputType())end})})
     local api={}
     function api:ask(id)return teachOn()and lessons:ask(id)end
+    -- beta 44: the lesson lit next ("deck": the gift chain's invite), the course still on, its end (the all-set card),
+    -- Show me from Things to do, a screen Things opened (book, style)
+    function api:next()if not teachOn()then return nil end;return lessons:current()end
+    -- the deck lesson may light now (the reset lesson ahead of it lives on the pet screen, never in the garden)
+    function api:deckNext()
+     if not teachOn()then return false end
+     return table.find(Lessons.candidates(lessons:read(),lessons.session),"deck")~=nil
+    end
+    function api:inCourse()if not teachOn()then return false end;local f=lessons:read();return f.on==true and not f.graduated end
+    function api:finish()return lessons:finish()end
+    function api:showMe(kind)return wiring~=nil and wiring:showMe(kind)end
+    function api:opened(id)if wiring then wiring:opened(id)end end
     function api:skip(id)lessons:skip(id)end
     -- teach more: a latch by name ("needs" from the all-set card), this session's latches, the Dash's Things row
     function api:latch(id)return lessons:latch(id)end
@@ -6725,7 +6789,20 @@ do
         end)
        else
         local open=roomView.focusing==true or roomView.focusTransitioning==true or(clientUI.hueView~=nil and clientUI.hueView.shade.Visible)
-        if open then d.wasOpen=true
+        local Focus=require(script.WindowFocus)
+        if open then d.wasOpen=true;d.reopened=nil
+        elseif d.wasOpen and not Focus.focused()then
+         -- beta 44 note 13: the pet screen shut because the window lost focus (the camera lets go), not by the
+         -- player: lesson A waits, and the pet screen opens again once the window is back (once)
+         d.wasOpen=false;d.awayExit=true
+        elseif d.awayExit and Focus.focused()then
+         d.awayExit=nil
+         local ok,again=false,false
+         if not d.reopened and board:GetAttribute("Mode")=="Room"then
+          d.reopened=true
+          ok,again=pcall(roomView.focusPet,roomView,true)
+         end
+         if not(ok and again==true)then dress=nil;lessons:skip("dress")end -- could not: as a Back (the pot is kept)
         elseif d.wasOpen then
          -- left both screens without painting: the pot is kept, the deck lesson may come (Dress up stays lit there)
          dress=nil;lessons:skip("dress")

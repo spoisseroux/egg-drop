@@ -90,7 +90,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # Onboarding part 2 (qa-2026-11-27-beta40, ARCH-REVIEW-P2 1): the coach mask with lesson C's menuSeen bit.
          "CoachMask",
          # Teach more (qa-2026-11-27-beta42, ARCH-REVIEW-TEACH): the lessons remembered (teachMask), and older builds keeping it.
-         "TeachMarks", "TeachMarksCrossVersion"]
+         "TeachMarks", "TeachMarksCrossVersion",
+         # Onboarding shorter (qa-2026-11-28-beta44, ARCH-REVIEW-SIMPLIFY Q1 and 1): the deck tour's untouched round.
+         "TourRound"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
@@ -172,7 +174,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           "CareIcons", "PetHop", "PetCuddleUI",
           # MUSIC-BRIEF 3 and 4 (qa-2026-11-28-music, switch music2): the ids, the night weight, the equal-power gains,
           # the sample sync, the deck's lite cross and the deck pair in AmbientAudio.
-          "MusicTracks"]
+          "MusicTracks",
+          # Onboarding shorter (qa-2026-11-28-beta44): Things to do's learn rows and ticks, Show me, the window focus.
+          "ThingsLearn"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -256,6 +260,8 @@ def client_modules():
                     "GiftChain.lua", "GiftEggArt.lua", "GiftRibbon.lua",
                     # Onboarding part 2: the shop's gift mode, the lessons and their pointer.
                     "GiftShop.lua", "TeachLessons.lua", "TeachPointer.lua", "DeckTour.lua",
+                    # Onboarding shorter (beta 44): the lessons' wiring (Show me, the all-set moment) and the window focus.
+                    "TeachWiring.lua", "WindowFocus.lua",
                     # Beta 42: the gift's full-screen stage (its pure parts; the stage is required only when it shows).
                     "GiftStage.lua",
                     # DECK-FEEL-BRIEF: the feel pass's pure rules, the body press and the fresh reopen gate.

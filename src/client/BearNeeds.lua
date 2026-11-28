@@ -59,14 +59,20 @@ function Needs.facts(state,live)
 		playDates=tonumber(playDate.count)or 0,parkOn=live.park~=false,saidHi=live.saidHi==true,deckDone=live.deckDone==true,inPark=live.inPark==true,
 		-- Teach more (ARCH-REVIEW-TEACH 3): the need bubbles are over for good (TeachMarks `needs`: "You're all set!", or
 		-- the server's load rules), read only with Onboard `teach` on (live.teach); a later build's new need never comes back.
-		needsOver=live.teach==true and Teach.has(Teach.merge(state.teachMask,live.teachMask),"needs")}
+		-- Beta 44 (ARCH-REVIEW-SIMPLIFY 5): graduation (`done`) ends them too (the server refuses every latch after it).
+		needsOver=live.teach==true and(Teach.has(Teach.merge(state.teachMask,live.teachMask),"needs")or Teach.has(Teach.merge(state.teachMask,live.teachMask),"done")),
+		-- Beta 44 (ARCH-REVIEW-SIMPLIFY 8): the deck tour closes "Play for Stars!" (no round is played in it), and while the
+		-- course still owes the tour the pet's own bubble ("Let's try playing a game!", GiftChain) asks instead.
+		deckTour=live.teach==true and Teach.has(Teach.merge(state.teachMask,live.teachMask),"deckTour"),
+		course=live.teach==true and type(state.gifts)=="table"and state.gifts.owed==true
+			and not Teach.has(Teach.merge(state.teachMask,live.teachMask),"done")}
 end
 -- Is this need done (its bit saved, or the thing itself already true)?
 function Needs.closed(id,f)
 	if Coach.has(f.mask,id)then return true end
 	if id=="needHi"then return f.saidHi end
 	if id=="needToy"then return f.toyGiven end
-	if id=="needDeck"then return f.deckDone or f.rounds>=Needs.Rounds end
+	if id=="needDeck"then return f.deckDone or f.rounds>=Needs.Rounds or f.deckTour==true end
 	if id=="needNest"then return f.nestTucked end
 	if id=="needPark"then return f.inPark or f.playDates>0 or Coach.has(f.mask,"park")end
 	return true
@@ -77,6 +83,8 @@ end
 function Needs.available(id,f)
 	if id=="needNest"then return f.nestShown==true and f.nestReady~=true end
 	if id=="needPark"then return f.parkOn~=false end
+	-- beta 44: with the course on, the deck is the gift chain's invite (never two bubbles asking for it)
+	if id=="needDeck"and f.course==true then return false end
 	return Needs.Icon[id]~=nil
 end
 -- The need open now, or nil. ctx: {on (the switch), returning, owned, order, skip (ids passed over this session)}.

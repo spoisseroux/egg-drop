@@ -26,7 +26,9 @@ Teach.Bits=table.freeze({
 })
 -- Every lesson the course holds, in order. Graduation "finished" is every one of these latched (or its feature off on that
 -- place): a lesson a later build adds reaches players still in the course only.
-Teach.Course=table.freeze({"dress","reset","deck","deckTour","level","menu","quests","park","dash","snacks","stats","wardrobe"})
+-- Beta 44 (ONBOARD-SIMPLIFY-BRIEF 4): the course is the deck tour; everything after it is a Things to do row. The other
+-- lessons' bits stay (never renumbered) and are still read where they were saved.
+Teach.Course=table.freeze({"deckTour"})
 -- The lessons that can be ignored (parked), each with its slot in teachParked (bits 2*slot and 2*slot+1). The tour and the
 -- level step never park (they wait for the player); tips never ask.
 Teach.Parkable=table.freeze({dress=0,reset=1,deck=2,menu=3,quests=4,park=5,dash=6,snacks=7,stats=8,wardrobe=9})
@@ -61,6 +63,12 @@ function Teach.covers(mask,bits)
 	bits=Teach.mask(bits)
 	return bit32.band(Teach.mask(mask),bits)==bits
 end
+-- Beta 44 (ARCH-REVIEW-SIMPLIFY 5): graduating with a reason ends the need bubbles in the same write (the server refuses
+-- every teachMark after `done`, so `needs` could never follow it).
+function Teach.doneBits()return bit32.bor(Teach.bit("done"),Teach.bit("needs"))end
+-- Latches the server takes only while the board is on the deck (ARCH-REVIEW-SIMPLIFY 6: the tour stands in for a round
+-- in the welcome gift).
+Teach.OnDeck=table.freeze({deckTour=true})
 -- A latch the client may ask for by name: a known id, never `done` (asked with a reason) or the reserved bit.
 function Teach.validId(id)
 	return type(id)=="string"and #id<=20 and Teach.Bits[id]~=nil and id~="done"and id~="parked1"

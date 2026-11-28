@@ -73,6 +73,8 @@ end
 function Boot:finish(skipped,ended)
  if not self.playing then return false end
  self.playing=false;self.epoch+=1
+ -- beta 44 (ARCH-REVIEW-SIMPLIFY 3): boots ended (played out or skipped), the deck tour's ready gate counts them
+ self.finishes=(self.finishes or 0)+1
  if self.connection then self.connection:Disconnect();self.connection=nil end
  if self.inputConnection then self.inputConnection:Disconnect();self.inputConnection=nil end
  if skipped and self.audio and self.audio.fadeCue then self.audio:fadeCue("deck_boot",.06)end

@@ -86,6 +86,7 @@ Beta (33), 2026-11-26: player scale (row 60). Beta (32), 2026-11-26: the first e
 
 | # | What | Beta | Try | Switch |
 |---|---|---|---|---|
+| 75 | Onboarding shorter (beta 44 notes 5-14, 21, 23, 24; ONBOARD-SIMPLIFY-BRIEF + ARCH-REVIEW-SIMPLIFY) | not yet | Fresh save: after lesson A the pet says "Let's try playing a game!" (no "You can hatch one!"); open the deck: no ring until the boot ends, then six steps (Goals, Balls left, Win pays + level, Score, Chain, quests clipboard), tap anywhere / Enter / Space / A / R1 goes on, drops never fall; after step 6 the deck closes itself, then "You're all set!" with "More to try in Things to do!" and +5 ★; Skip (pill, B, L1) keeps the deck open with the round live. Alt-tab during lesson A: nothing parks. Things to do: Customize / Dress up (Show me rings Dress up, then the tab), Finish quests, Collection book, Deck style with ticks; no Play Den row; Garden Dash Show me lays prints to the pad's edge. Results: 8 px between every button. Goals card (deckfeel): the ball beside "on the left" | `/onboard teach` (results gaps, idle fix: always; Goals card: `/alive deckfeel`) |
 
 ## Scoped, not built
 

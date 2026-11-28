@@ -2288,7 +2288,7 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 					local walletBefore=board.nursery.state.nectar
 					board.nurseryBusy=true
 					local okNest,nestOn=pcall(function()return require(ReplicatedStorage.Shared.Onboard).on("nest")end)
-					local called,granted,why=pcall(Nursery.welcomeGift,board.nursery,{nest=not okNest or nestOn==true,mask=board.coachPending})
+					local called,granted,why=pcall(Nursery.welcomeGift,board.nursery,{nest=not okNest or nestOn==true,mask=board.coachPending,teach=board.teachPending})
 					board.nurseryBusy=false -- always freed, even when the call threw
 					if not called then warn("[WelcomeGift] "..tostring(granted));return false,"Unavailable"end
 					local after=board.nursery.state.nectar
@@ -2342,7 +2342,10 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		else
 			local bit=TeachMarks.bit(request.id)
 			if TeachMarks.covers(mask,bit)then return end
-			if request.kind=="done"then board.teachReason=request.reason end
+			-- beta 44 (ARCH-REVIEW-SIMPLIFY 6): the tour is latched only from the deck (the gift takes it as a round played)
+			if TeachMarks.OnDeck[request.id]and board.mode~="Board"then return end
+			-- beta 44 (ARCH-REVIEW-SIMPLIFY 5): graduating ends the need bubbles in the same write
+			if request.kind=="done"then board.teachReason=request.reason;bit=TeachMarks.doneBits()end
 			board.teachPending=TeachMarks.merge(board.teachPending,bit)
 		end
 		board.coachQueuedAt=os.clock()

@@ -73,6 +73,7 @@ end
 function Bubble:reduced()return self.options.reduced~=nil and self.options.reduced()==true end
 function Bubble:set(visible,head,sub)
 	self.shown=visible==true
+	if not self.shown then self.gui.Enabled=false end -- beta 44 note 3: gone the moment it is told (Hatch free! pressed)
 	if self.shown then
 		local text=self.options.text or function(k)return k end
 		self.head.Text=text(head or "");self.sub.Text=if sub then text(sub)else ""

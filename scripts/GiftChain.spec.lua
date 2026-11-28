@@ -289,7 +289,9 @@ return function(client)
 		assert(not Chain.may({closed={},count=0},"dash",1e6,owedVet,false),"teach off: as before")
 		assert(not Chain.may({closed={},count=0},"dash",1e6,{veteran=true,granted={}},true),"an unowed veteran: still none")
 		local grad={on=true,graduated=true,granted={}}
-		assert(not Chain.may({closed={},count=0},"park",1e6,grad,true)and not Chain.may({closed={},count=0},"pull",1e6,grad,true),"graduated: no invites")
+		-- beta 44 (ARCH-REVIEW-SIMPLIFY 7): graduation at minute 5 ends only the deck invite; the others still come
+		assert(not Chain.may({closed={},count=0},"deck",1e6,grad,true),"graduated: no deck invite")
+		assert(Chain.may({closed={},count=0},"park",1e6,grad,true)and Chain.may({closed={},count=0},"pull",1e6,grad,true),"graduated: the other invites stay")
 		assert(Chain.may({closed={},count=0},"toy",1e6,grad,true)and Chain.may({closed={},count=0},"snack",0,grad,true),"gift bubbles stay")
 		assert(Chain.may({closed={},count=0},"unseen",0,{on=true,graduated=true,granted={},unseen={kind="toy"}},true),"an unseen gift stays")
 		local full={closed={},count=3,lastReveal=0}
@@ -297,6 +299,62 @@ return function(client)
 		assert(not Chain.may(full,"pull",1e6,{on=true,granted={}},true)and not Chain.may(full,"nest",1e6,{on=true,granted={}},true),"the other invites still count")
 		local f=Chain.facts({gifts={v=1},teachMask=2^16},{teach=true});assert(f.graduated==true)
 		assert(Chain.facts({gifts={v=1},teachMask=2^16},{teach=false}).graduated==false,"read only with teach on")
+	end)
+
+	test("beta 44 notes 5 and 11: the deck invite while the deck lesson is next; no You can hatch one! in the course",function()
+		local Teach=require(game:GetService("ReplicatedStorage").Shared.TeachMarks)
+		local rich=snapshot({nectar=50,gifts={owed=true,granted={paint=true}}})
+		local live={teach=true,deckNext=true}
+		local f=Chain.facts(rich,live)
+		assert(f.course==true and Chain.next(f)=="deck","the deck lesson next: the deck invite, before the pull")
+		assert(Chain.next(Chain.facts(rich,{teach=true,deckNext=false}))==nil,"in the course, the deck not next yet: no pull either")
+		assert(Chain.next(Chain.facts(rich,{teach=false}))=="pull","teach off: as built")
+		-- the order: unseen, a return's nest and the Paint gift first; the toy after
+		local paint=snapshot({nectar=50,gifts={owed=true,granted={},ready="paint"}})
+		assert(Chain.next(Chain.facts(paint,live))=="paint","the Paint gift before the invite")
+		local unseen=snapshot({nectar=50,gifts={owed=true,granted={paint=true},unseen={kind="paint",item="rose",id="u"}}})
+		assert(Chain.next(Chain.facts(unseen,live))=="unseen")
+		local toy=snapshot({nectar=50,gifts={owed=true,granted={paint=true},ready="toy"}})
+		assert(Chain.next(Chain.facts(toy,live))=="deck","the invite before the toy")
+		-- the course ends with the tour (saved or this session), its ignored latch or a round; then the pull is back
+		for _,over in ipairs({{teachMask=Teach.with(0,"deckTour")},{teachMask=Teach.with(0,"deck")},{stats={rounds=1}}})do
+			local s=snapshot({nectar=50,gifts={owed=true,granted={paint=true}}});for k,v in pairs(over)do s[k]=v end
+			local g=Chain.facts(s,live);assert(g.course==false and Chain.next(g)=="pull","the course over: You can hatch one! returns")
+		end
+		local g=Chain.facts(rich,{teach=true,deckNext=true,teachMask=Teach.with(0,"deckTour")})
+		assert(not g.course,"this session's latch counts at once")
+		-- exempt from the 90 s gap and the session's three
+		local full={closed={},count=3,lastReveal=0}
+		assert(Chain.may(full,"deck",1,{on=true,granted={}},true),"never counted, never waits for the gap")
+		assert(Chain.rules(true).exempt.deck==true)
+		assert(Chain.Steps.deck.head=="teach.deckInvite"and Chain.Steps.deck.sub==nil and Chain.Steps.deck.target=="Deck")
+	end)
+
+	test("beta 44: the invite's bubble, its tap opens the deck; nudge and park on focused time only (note 13)",function()
+		local r=rig(snapshot({nectar=50,gifts={owed=true,granted={paint=true}}}))
+		r.teach=true
+		local deckNext,focused=true,true
+		r.chain.d.deckNext=function()return deckNext end
+		r.chain.d.focused=function()return focused end
+		r.run(2);assert(r.shown and r.head=="teach.deckInvite","the pet asks")
+		focused=false;r.run(30);assert(r.shown and r.hops==0,"alt-tabbed away: the clocks stop")
+		focused=true;r.run(Chain.NudgeAfter+.25);assert(r.hops==1,"one nudge")
+		r.busy=true;r.run(20);r.busy=false;r.run(.25);assert(r.shown,"hidden under another prompt: its clock stops too")
+		r.chain:tap();assert(r.leads[#r.leads]=="Deck"and not r.shown,"a tap opens the deck")
+		local p=rig(snapshot({nectar=50,gifts={owed=true,granted={paint=true}}}))
+		p.teach=true;p.chain.d.deckNext=function()return true end
+		p.run(2);p.run(Chain.NudgeAfter+Chain.ParkAfter+.5);assert(not p.shown and p.chain.session.closed.deck,"ignored: parked for this session")
+	end)
+
+	test("beta 44 note 3: Hatch free! hides the bubble at once; the shop closed unpressed: leading again",function()
+		local r=rig(snapshot({gifts={owed=true,granted={},ready="paint"}}))
+		local shop=false
+		r.chain.d.shopOpen=function()return shop end
+		r.run(3);r.near=true;r.run(.25);assert(r.shown)
+		r.chain:tap();shop=true;r.run(.5);assert(not r.shown and r.chain.active.phase=="shop","the shop is open: no bubble")
+		shop=false;r.run(.5);assert(r.chain.active.phase=="leading","closed unpressed: leading (Tap the machine!)")
+		r.chain:tap();shop=true;r.run(.25)
+		r.shown=true;assert(r.chain:shopCrank("paint"));assert(not r.shown and #r.cranks==1,"pressed: the bubble goes at once")
 	end)
 
 	return {passed=#cases,cases=cases}

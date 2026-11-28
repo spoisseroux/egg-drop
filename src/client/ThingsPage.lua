@@ -10,6 +10,84 @@ local Page={};Page.__index=Page
 Page.Refresh=.5
 Page.Hit=44
 
+-- ── Beta 44 learn rows (ONBOARD-SIMPLIFY-BRIEF 4; ARCH-REVIEW-SIMPLIFY 9: ticked from a latch or a saved fact) ──────────
+Page.LearnOrder=table.freeze({"customize","dress","quests","book","style"})
+Page.Learn=table.freeze({
+	customize=table.freeze({icon="drop",tint="companions",button="things.show"}),
+	dress=table.freeze({icon="shirt",tint="companions",button="things.show"}),
+	quests=table.freeze({icon="quests",tint="quests",button="things.open"}),
+	book=table.freeze({icon="book",tint="book",button="things.open"}),
+	style=table.freeze({icon="faceplate",tint="style",button="things.open"}),
+})
+-- Pure: what each learn row says and whether it is ticked, from the owner snapshot. live = {teachMask (this session's
+-- latches), coachMask (the coach's, with bits sent this session)}.
+--   customize  the `dress` latch (lesson A), or paint on a pet, or a pot used
+--   dress      a wearable saved as equipped on a pet (the `wardrobe` latch is client-only and refused after `done`)
+--   quests     the `questDone` coach bit, or a quest claim saved; the line counts today's dailies
+--   book       the `book` coach bit (its first visit); the line is the book's found percent
+--   style      the `style` coach bit (its first visit); the line counts the plates owned
+function Page.learn(state,live)
+	state=type(state)=="table"and state or {}
+	live=live or {}
+	local Shared=game:GetService("ReplicatedStorage").Shared
+	local Teach=require(Shared.TeachMarks)
+	local Coach=require(Shared.CoachMarks)
+	local teach=Teach.merge(state.teachMask,live.teachMask)
+	local coach=Coach.merge(state.coachMask,live.coachMask)
+	local dressed=false
+	for _,row in pairs(type(state.petWearables)=="table"and state.petWearables or {})do
+		if type(row)=="table"and type(row.equipped)=="table"then
+			for _,item in pairs(row.equipped)do if type(item)=="string"and item~=""then dressed=true end end
+		end
+	end
+	local done,total=0,0
+	local quests=type(state.quests)=="table"and state.quests or {}
+	for _,q in ipairs(type(quests.daily)=="table"and quests.daily or {})do
+		if type(q)=="table"then total+=1;if q.ready==true or q.claimed==true then done+=1 end end
+	end
+	local percent=0
+	local okBook,progress=pcall(function()return require(Shared.BookCatalog).progress(state)end)
+	if okBook and type(progress)=="table"and type(progress.pages)=="table"and #progress.pages>0 then
+		local sum=0
+		for _,page in ipairs(progress.pages)do sum+=tonumber(page.percent)or 0 end
+		percent=math.floor(sum/#progress.pages+.5)
+	end
+	local owned,styles=0,0
+	local okThemes,Themes=pcall(function()return require(Shared.DeckThemes)end)
+	if okThemes then
+		local plates=type(state.faceplates)=="table"and state.faceplates or {}
+		local all=Themes.listed(plates)
+		for _,id in ipairs(Themes.BookOnly or {})do table.insert(all,id)end
+		styles=#all
+		for _,id in ipairs(all)do if table.find(plates,id)then owned+=1 end end
+	end
+	return{
+		customize={done=Teach.has(teach,"dress")or Teach.painted(state)or Teach.potUsed(state)},
+		dress={done=dressed},
+		quests={done=Coach.has(coach,"questDone")or state.lastQuestClaim~=nil,count=done,total=total},
+		book={done=Coach.has(coach,"book"),percent=percent},
+		style={done=Coach.has(coach,"style"),owned=owned,total=styles},
+	}
+end
+-- Pure: the learn rows from Page.learn's facts (nil: none), the undone first, each keeping its order.
+function Page.learnRows(learn)
+	if type(learn)~="table"then return {}end
+	local undone,done={},{}
+	for _,id in ipairs(Page.LearnOrder)do
+		local f=learn[id]
+		if type(f)=="table"then
+			local spec=Page.Learn[id]
+			local line=if id=="quests"then UICopy.get("things.quests.line",{done=f.count or 0,total=f.total or 0})
+				elseif id=="book"then UICopy.get("things.book.line",{percent=f.percent or 0})
+				elseif id=="style"then UICopy.get("things.style.line",{owned=f.owned or 0,total=f.total or 0})
+				else UICopy.get("things."..id..".line")
+			local row={id=id,icon=spec.icon,tint=spec.tint,name=UICopy.get("things."..id..".name"),line=line,button=UICopy.get(spec.button),tick=f.done==true}
+			table.insert(if f.done==true then done else undone,row)
+		end
+	end
+	for _,row in ipairs(done)do table.insert(undone,row)end
+	return undone
+end
 -- Pure: the rows, in order. ctx: {den (the Play Den is open), park, playDate={count,target}, finds={waiting,count,limit}, dash={phase,count}, prizes,
 -- saved={paid,limit}, new}. Nothing here says Stars unless the race prizes are on. The race stays the last row: paint()
 -- marks it seen only there.
@@ -21,11 +99,11 @@ function Page.rows(ctx)
 		table.insert(rows,{id="gift",icon="target",tint="garden",name=UICopy.get("onbGift.row.name"),
 			line=UICopy.get(if ctx.gift=="snack"then "onbGift.row.lineSnack"else "onbGift.row.line"),button=UICopy.get("things.show"),new=true})
 	end
-	-- The Play Den (PLAY-DEN-BUILD-PLAN): while it is open, a first row whose Show me leads to the cave mouth.
-	if ctx.den==true then
-		table.insert(rows,{id="den",icon="target",tint="garden",name=UICopy.get("things.den.name"),line=UICopy.get("things.den.line"),button=UICopy.get("things.show")})
-	end
+	-- The Play Den row is gone for now (beta 44 note 24: "we can remove the play den from things to do for now").
 	table.insert(rows,{id="deck",icon="faceplate",tint="style",name=UICopy.get("things.deck.name"),line=UICopy.get("things.deck.line"),button=UICopy.get("things.play")})
+	-- Beta 44 (ONBOARD-SIMPLIFY-BRIEF 4, notes 13 and 14): the learn rows, each with its tick; the done ones drop below the
+	-- undone ones and keep their button. Only with Onboard `teach` (ctx.learn from Page.learn).
+	for _,row in ipairs(Page.learnRows(ctx.learn))do table.insert(rows,row)end
 	if ctx.park then
 		local date=type(ctx.playDate)=="table"and ctx.playDate or {}
 		local target=tonumber(date.target)or 3
@@ -142,6 +220,15 @@ function Page:build(ctx)
 		disc.BackgroundTransparency=0;disc.BackgroundColor3=Kit.tintColor(row.tint)or Kit.Color.stars
 		local icon=Kit.icon(disc,row.icon,math.floor(L.disc*.55),"ink");icon.AnchorPoint=Vector2.new(.5,.5);icon.Position=UDim2.fromScale(.5,.5)
 		local view={id=row.id,card=card,help=row.help}
+		-- beta 44: a learn row's tick, a green disc on the icon's corner (shown by paint)
+		if row.tick~=nil then
+			local size=math.max(16,math.floor(L.disc*.42))
+			local tick=Kit.frame(card,"Tick",nil,UDim2.fromOffset(L.pad+L.disc-size+4,math.floor((r.h-L.disc)/2)+L.disc-size+4),UDim2.fromOffset(size,size),999)
+			tick.BackgroundTransparency=0;tick.BackgroundColor3=Kit.Color.good;tick.ZIndex=disc.ZIndex+3;tick.Visible=false
+			local mark=Kit.text(tick,"Name","✓","white",{TextSize=math.floor(size*.75),TextXAlignment=Enum.TextXAlignment.Center})
+			mark.Size=UDim2.fromScale(1,1);mark.ZIndex=tick.ZIndex+1
+			view.tick=tick
+		end
 		view.name=label(card,"Name","text",L.name,L.nameSize,"Name")
 		view.line=label(card,"Small","soft",L.line,L.lineSize,"Line")
 		local chip=Kit.chip(card,"","sticker",20)
@@ -173,6 +260,8 @@ function Page:paint(rows)
 		if view.name.Text~=row.name then view.name.Text=row.name end
 		if view.line.Text~=row.line then view.line.Text=row.line end
 		if view.off~=(row.off==true)then view.off=row.off==true;Kit.setEnabled(view.go,not view.off)end
+		if view.tick and view.tick.Visible~=(row.tick==true)then view.tick.Visible=row.tick==true end
+		view.card:SetAttribute("Ticked",row.tick)
 		if row.new~=view.new then
 			view.new=row.new
 			view.chip.root.Visible=row.new==true

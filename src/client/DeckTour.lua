@@ -1,121 +1,136 @@
--- The first full Pocket Deck round (artifacts/qa-2026-11-27-beta42/TEACH-MORE-BRIEF.md section 1, ARCH-REVIEW-TEACH 6 to
--- 8; Onboard "teach"; Spencer's beta 42 note 6: "after the egg when were playing a full game for the first time we need
--- onboarding for the game too: how to read the ui, how to switch difficulty, quests, etc").
---   The tour   rounds == 0, a field round (not Welcome, not guided), nothing dropped yet (the Difficulty card is still the
---              control, so the tour costs nothing): three pointers on the deck's own cards, the others dimmed through the
---              deck's calm path (DeckScreen:teachDim). 1 Goals "Tick these to win!", 2 Balls left "Your balls. Use them
---              well!", 3 the level card "Tap to change level!" with "Harder pays more ★" on Win pays. Each label carries
---              "1/3".
---   Next       a tap on any HUD card (read from UserInputService.InputBegan by position, never an Active or Modal frame),
---              Enter, or R1. Skip: the Skip pill under the label (a tap) or L1. The Skip pill alone is an Active button
---              (Tour.Pills), so its tap is consumed there and never reaches the board under it (a drop). A, Space, B and touch on the board stay
---              the round's own (drop, items): this binds none of them. No long-press, no countdown; untouched, it stays.
---   Ends       on Skip, past step 3, or the first drop (on any step): saves `deckTour`. Stepping the level on step 3 saves
---              `level`; without it, the round-two opener shows step 3 alone once and saves `level` whatever they do.
---   Tips       during a round, one quiet rail pill each, saved the moment it shows, at least 8 s apart, never with
---              another pill on the rail (the fill line) and never after the round ends: tipNext (the first drop
---              landed), tipChain (a chain of x2 or more), tipGoal (the first goal ticked).
--- Graduated (`done`) or a save never owed the chain: nothing. Pure rules first (DeckTour.spec), then the controller.
+-- The deck tour (Onboard "teach"). Beta 44 redesign: artifacts/qa-2026-11-28-beta44/ONBOARD-SIMPLIFY-BRIEF.md section 2 and
+-- ARCH-REVIEW-SIMPLIFY 2 to 4; Spencer's beta 44 notes 6, 8, 9 and 10 ("dont make the player finish a whole game then,
+-- just go thru the onboarding things there and close the pocket deck automatically and continue to the next thing").
+--   When      `deckTour` not latched, no field round played, a field round on the deck (not Welcome), nothing dropped,
+--             no layer up, and the deck READY: a boot finished (or skipped) since this deck opened and the boot's screen
+--             gone, then ReadyAfter s (a deck with no boot at all: NoBoot s after it opened). Nothing is drawn before.
+--   Holds     while the tour runs (and until the deck has closed after it) every drop and item is held: deck.tourHold,
+--             read where the drop and the item are sent (init.client). So a tap means Next everywhere.
+--   Steps     six, one line each, on the deck's own cards, the rest dimmed (DeckScreen:teachDim); a step whose card this
+--             layout does not have is left out when the tour starts (the "1/6" count is the real number):
+--               1 Goals "Do these to win!"   2 Balls left "Win before they run out!"
+--               3 Win pays, Difficulty lit with it "A win pays Stars ★" (+ "Harder pays more" on Difficulty, unguided)
+--               4 Score "Your high score. Goals win Stars!"   5 Chain "Merge fast for a chain!"
+--               6 the quest clipboard (or Daily quests) "Tap here for quests ★"
+--   Next      a tap anywhere, Enter, Space, gamepad A or R1. Skip: the Skip pill, B or L1. No timer: untouched, it stays.
+--   Ends      past step 6: latches deckTour, level, quests; the pointer goes and CloseAfter s later the deck closes by
+--             itself (deps.close, the normal Back path, retried until the board is in the garden). Skip: the same latches,
+--             the deck stays open with the round live (they chose to play); the hold lets go SkipGrace s later.
+--   Left      the deck left before the end: nothing saved, the tour waits for the next ready opener.
+-- The dealt round never gets a drop, so leaving it is the "fresh board" case (no award, no round counted:
+-- TourRound.spec). Graduated (`done`) or a save never owed the chain: nothing. Pure rules first (DeckTour.spec).
 local Tour={};Tour.__index=Tour
 Tour.Steps=table.freeze({
-	table.freeze({card="Goals",words="teach.tour1"}),
-	table.freeze({card="EggsLeft",words="teach.tour2"}),
-	table.freeze({card="Difficulty",words="teach.level",sub="WinPays",subWords="teach.levelSub"}),
+	table.freeze({id="goals",cards=table.freeze({"Goals"}),words="teach.tour1"}),
+	table.freeze({id="balls",cards=table.freeze({"EggsLeft"}),words="teach.tour2"}),
+	table.freeze({id="pays",cards=table.freeze({"WinPays"}),also="Difficulty",words="teach.tourPays",sub="Difficulty",subWords="teach.tourHarder"}),
+	table.freeze({id="score",cards=table.freeze({"Score"}),words="teach.tourScore"}),
+	table.freeze({id="chain",cards=table.freeze({"Chain"}),words="teach.tourChain"}),
+	table.freeze({id="quests",cards=table.freeze({"QuestHandle","DailyQuests"}),words="teach.tourQuests"}),
 })
-Tour.LevelStep=3
--- Keys by name (KeyCode names), bound only while a step shows. Never the round's own (Forbidden).
-Tour.KeyNames=table.freeze({next=table.freeze({"Return","KeypadEnter","ButtonR1"}),skip=table.freeze({"ButtonL1"})})
-Tour.Forbidden=table.freeze({"A","Space","B","Backspace","ButtonA","ButtonB","ButtonX","Left","Right","Up","Down","M","ButtonY"})
-Tour.Glyphs=table.freeze({key="ENTER",glyph="R1"})
-Tour.TipGap=8 -- s between two tips at least
-Tour.MissingGrace=1 -- s a step's card may be missing (the HUD rebuilding) before the tour moves past it
--- The two pills: Skip sinks its tap (a TextButton, Active), the Win pays line lets every tap through.
+-- Keys by name (KeyCode names), bound at High+900 only while a step shows (they sink: no drop, no item, no Back).
+Tour.KeyNames=table.freeze({next=table.freeze({"Return","KeypadEnter","Space","ButtonA","ButtonR1"}),skip=table.freeze({"ButtonB","ButtonL1"})})
+-- Never the tour's: aiming, the menu, the items' own keyboard key, leaving.
+Tour.Forbidden=table.freeze({"Left","Right","Up","Down","A","D","M","B","Backspace","Escape","ButtonX","ButtonY","ButtonSelect","ButtonStart","DPadLeft","DPadRight"})
+Tour.Glyphs=table.freeze({key="ENTER",glyph="A"})
+Tour.Saves=table.freeze({"deckTour","level","quests"})
+Tour.ReadyAfter=.4   -- s after the boot is done before the first ring
+Tour.NoBoot=4        -- s after the deck opened with no boot seen: ready anyway (never stuck waiting)
+Tour.CloseAfter=.5   -- s after the last Next before the deck closes itself
+Tour.CloseRetry=.25  -- s between two Back asks while the garden switch is busy
+Tour.CloseGiveUp=10  -- s of asking before the tour lets go of the hold (the player can still leave by hand)
+Tour.SkipGrace=.35   -- s the hold stays after Skip (the tap's own release never drops)
+Tour.MissingGrace=1  -- s a step's card may be missing (the HUD rebuilding) before the tour moves past it
+-- The Skip pill sinks its tap (a TextButton, Active); the Harder pays more line lets every tap through.
 Tour.Pills=table.freeze({skipPill=table.freeze({class="TextButton",active=true}),subPill=table.freeze({class="TextLabel",active=false})})
-Tour.TipOrder=table.freeze({"tipNext","tipChain","tipGoal"})
-Tour.TipWords=table.freeze({tipNext="teach.tipNext",tipChain="teach.tipChain",tipGoal="teach.tipGoal"})
 
 -- ── Pure ────────────────────────────────────────────────────────────────────────────────────────────────────────────
--- The round can carry a tour step now: a field round on the deck, not guided, nothing dropped, not over, no deck layer up.
--- ctx: {mode, phase, guided, drops, over, overlay}
+-- The round can carry the tour now: a field round on the deck, nothing dropped, not over, no deck layer up.
+-- ctx: {mode, phase, guided, drops, over, overlay, ready}
 function Tour.opener(ctx)
 	ctx=ctx or {}
-	-- Beta 43 Studio check: the first field rounds are guided (Easy, no level to pick), and the tour belongs on the very
-	-- first one, so a guided opener counts; it just skips the level step (Tour.last), which waits for an unguided one.
 	return ctx.mode=="Board"and ctx.phase~=nil and ctx.phase~="Welcome"and(ctx.drops or 0)==0
 		and ctx.over~=true and ctx.overlay~=true
 end
--- Which tour wants this opener: "tour" (the first field round), "level" (the round-two opener, step 3 alone) or nil.
--- f: TeachLessons facts (on, graduated, latched, rounds).
-function Tour.mode(f,ctx)
-	if type(f)~="table"or f.on~=true or f.graduated==true or not Tour.opener(ctx)then return nil end
-	local l=f.latched or {}
-	local rounds=f.rounds or 0
-	if rounds==0 and not l.deckTour then return "tour"end
-	-- the level step alone: the first unguided opener after the tour (guided rounds have no level to pick)
-	if rounds>=1 and not l.level and ctx.guided~=true then return "level"end
-	return nil
+-- Should the tour start on this opener? f: TeachLessons facts (on, graduated, latched, rounds); ctx.ready: the deck gate.
+function Tour.wants(f,ctx)
+	if type(f)~="table"or f.on~=true or f.graduated==true then return false end
+	if(f.rounds or 0)>=1 or(f.latched or {}).deckTour then return false end
+	return Tour.opener(ctx)and(ctx or {}).ready==true
 end
-function Tour.first(mode)return if mode=="level"then Tour.LevelStep elseif mode=="tour"then 1 else nil end
--- The step after `step` for an action ("next", "skip", "drop"); nil when the tour is over.
--- The tour's last step: the level card's, or the one before it on a guided round.
-function Tour.last(guided)return if guided==true then Tour.LevelStep-1 else #Tour.Steps end
-function Tour.after(mode,step,action,guided)
-	if action~="next"or mode~="tour"then return nil end
-	if step<Tour.last(guided)then return step+1 end
-	return nil
+-- The ready gate (ARCH-REVIEW-SIMPLIFY 3). g: {openedAt (the deck became visible), mark (boot finishes then), finishes,
+-- playing, showing (the boot's screen still up, its fade)}. `boot.playing == false` alone is also true before a boot starts.
+function Tour.bootDone(g,now)
+	if type(g)~="table"or g.openedAt==nil then return false end
+	if g.playing==true or g.showing==true then return false end
+	if(g.finishes or 0)>(g.mark or 0)then return true end
+	return now-g.openedAt>=Tour.NoBoot
 end
--- What the tour saves when it ends: the tour always (mode "tour"); `level` when it was stepped on step 3, and always in
--- the round-two opener.
-function Tour.saves(mode,stepped)
+-- The steps this layout has, in order (indices into Tour.Steps). has(name) -> the card is there.
+function Tour.plan(has)
 	local out={}
-	if mode=="tour"then table.insert(out,"deckTour")end
-	if mode=="level"or stepped==true then table.insert(out,"level")end
+	for index,s in ipairs(Tour.Steps)do
+		for _,name in ipairs(s.cards)do
+			if has(name)then table.insert(out,index);break end
+		end
+	end
 	return out
 end
--- The label's words for a step: the line, then "1/3" (the tour only; the opener's step 3 alone has no count).
-function Tour.label(line,mode,step,count)
-	if mode=="tour"and type(count)=="string"and count~=""then return line.."  "..count end
-	return line
-end
--- The next tip due now, or nil. ctx: {mode, phase, over, drops, chain, goalsDone, now, lastTip, railEmpty, touring}; f as
--- for mode(). Only a field round, only while it runs.
-function Tour.tip(f,ctx)
-	if type(f)~="table"or f.on~=true or f.graduated==true then return nil end
-	ctx=ctx or {}
-	if ctx.mode~="Board"or ctx.phase==nil or ctx.phase=="Welcome"or ctx.over==true or ctx.touring==true then return nil end
-	if ctx.railEmpty==false then return nil end
-	if ctx.lastTip and(ctx.now or 0)-ctx.lastTip<Tour.TipGap then return nil end
-	local l=f.latched or {}
-	local facts={tipNext=(ctx.drops or 0)>=1,tipChain=(ctx.chain or 0)>=2,tipGoal=(ctx.goalsDone or 0)>=1}
-	for _,id in ipairs(Tour.TipOrder)do
-		if facts[id]and not l[id]then return id end
-	end
+-- The position after `at` (1-based into the plan) for an action: the next position, or nil when the tour is over.
+function Tour.after(at,count,action)
+	if action~="next"then return nil end
+	if at<count then return at+1 end
 	return nil
 end
--- Never the round's own keys (ARCH-REVIEW-TEACH 6).
+-- "Do these to win!  1/6"
+function Tour.label(line,count)
+	if type(count)=="string"and count~=""then return line.."  "..count end
+	return line
+end
+-- The tour's keys never take the aim, the menu or leaving (ARCH-REVIEW-SIMPLIFY 2: it does take Space, A and B now:
+-- drops are held while it runs).
 function Tour.keysSafe()
 	for _,list in pairs(Tour.KeyNames)do
 		for _,name in ipairs(list)do if table.find(Tour.Forbidden,name)then return false end end
 	end
 	return true
 end
+-- What a key does in the tour: "next", "skip" or nil.
+function Tour.keyAction(name)
+	if table.find(Tour.KeyNames.next,name)then return "next"end
+	if table.find(Tour.KeyNames.skip,name)then return "skip"end
+	return nil
+end
+-- Is the Harder pays more line on this step? Only on step 3, only on an unguided round (a guided one has no level).
+function Tour.subOn(step,guided)return step~=nil and step.sub~=nil and guided~=true end
 
 -- ── The controller ─────────────────────────────────────────────────────────────────────────────────────────────────
--- deps: facts() (TeachLessons facts), ctx() (the round: mode, phase, guided, drops, over, overlay, chain, goalsDone),
---   deck() (DeckScreen: hudRoot, teachDim), latch(id), text(key, vars), pointer (a TeachPointer of its own),
---   picked() (the level stepper's last pick: any value that changes when the level is stepped), rail(id, text) (a quiet
---   pill; true when queued), railEmpty(), event(name), playerGui(); listen = false (specs) binds no keys or taps
+-- deps: facts() (TeachLessons facts), ctx() (the round: mode, phase, guided, drops, over, overlay), deck() (DeckScreen:
+--   hudRoot, teachDim, visible, boot, bootHost), latch(id), text(key, vars), pointer (a TeachPointer of its own),
+--   hold(on) (deck.tourHold), close() (the deck's Back path; false while the garden switch is busy), event(name),
+--   playerGui(); listen = false (specs) binds no keys or taps
 function Tour.new(deps)
-	return setmetatable({d=deps,active=nil,lastTip=nil,tipping=nil},Tour)
+	return setmetatable({d=deps,active=nil,gate=nil,readyAt=nil,closing=nil,releaseAt=nil},Tour)
 end
 local function cardOf(deck,name)
 	local host=deck and deck.hudRoot
 	local c=host and host:FindFirstChild(name)
 	return if c and c:IsA("GuiObject")and c.Visible then c else nil
 end
+local function stepCard(deck,s)
+	for _,name in ipairs(s.cards)do
+		local c=cardOf(deck,name)
+		if c then return c,name end
+	end
+	return nil
+end
 function Tour:dim(lit)
 	local deck=self.d.deck()
 	if deck and deck.teachDim then pcall(deck.teachDim,deck,lit)end
+end
+function Tour:hold(on)
+	self.holding=on==true
+	if self.d.hold then pcall(self.d.hold,on==true)end
 end
 function Tour:bind(on)
 	self.keysOn=on==true -- what the tour wants (specs read it); the binding below follows it
@@ -128,10 +143,7 @@ function Tour:bind(on)
 		for _,list in pairs(Tour.KeyNames)do for _,name in ipairs(list)do table.insert(keys,Enum.KeyCode[name])end end
 		pcall(CAS.BindActionAtPriority,CAS,"EggDropDeckTour",function(_,state,input)
 			if not self.active then return Enum.ContextActionResult.Pass end
-			if state==Enum.UserInputState.Begin then
-				local skip=table.find(Tour.KeyNames.skip,input.KeyCode.Name)~=nil
-				self:act(if skip then "skip"else "next")
-			end
+			if state==Enum.UserInputState.Begin then self:act(Tour.keyAction(input.KeyCode.Name)or "next")end
 			return Enum.ContextActionResult.Sink
 		end,false,Enum.ContextActionPriority.High.Value+900,table.unpack(keys))
 	elseif not on and self.bound then
@@ -139,33 +151,23 @@ function Tour:bind(on)
 		pcall(CAS.UnbindAction,CAS,"EggDropDeckTour")
 	end
 end
+-- A tap anywhere (ARCH-REVIEW-SIMPLIFY 2: the whole deck, the board's well included) is Next; the Skip pill is Skip.
 function Tour:listen()
 	if self.listening or self.d.listen==false then return end
 	self.listening=game:GetService("UserInputService").InputBegan:Connect(function(input)
-		local a=self.active
-		if not a then return end
+		if not self.active or not self.keysOn then return end
 		local kind=input.UserInputType
 		if kind~=Enum.UserInputType.MouseButton1 and kind~=Enum.UserInputType.Touch then return end
 		local gui=self.d.playerGui and self.d.playerGui()
-		if not gui then return end
-		local ok,hits=pcall(gui.GetGuiObjectsAtPosition,gui,input.Position.X,input.Position.Y)
-		if not ok then return end
-		local deck=self.d.deck()
-		local host=deck and deck.hudRoot
-		for _,hit in ipairs(hits)do
-			if self.skipPill and(hit==self.skipPill or hit:IsDescendantOf(self.skipPill))then self:act("skip");return end
-		end
-		for _,hit in ipairs(hits)do
-			if host and hit:IsDescendantOf(host)then
-				-- on the level step a tap on the level card is the stepper's own (its hit button steps the level on release;
-				-- step() sees the pick and ends the tour with `level`); any other card goes on
-				local card=hit
-				while card.Parent and card.Parent~=host do card=card.Parent end
-				if a.step==Tour.LevelStep and card.Name==Tour.Steps[Tour.LevelStep].card then return end
-				self:act("next")
-				return
+		if gui and self.skipPill then
+			local ok,hits=pcall(gui.GetGuiObjectsAtPosition,gui,input.Position.X,input.Position.Y)
+			if ok then
+				for _,hit in ipairs(hits)do
+					if hit==self.skipPill or hit:IsDescendantOf(self.skipPill)then self:act("skip");return end
+				end
 			end
 		end
+		self:act("next")
 	end)
 end
 function Tour:pill(parent,name,text,z)
@@ -193,38 +195,41 @@ function Tour:clearPills()
 		if self[name]then self[name]:Destroy();self[name]=nil end
 	end
 end
-local function layerOf(node)
-	while node and not node:IsA("LayerCollector")do node=node.Parent end
-	return node
-end
--- Place a pill under (or over) a card in its ScreenGui's coordinates.
+-- Place a pill under a card in its ScreenGui's coordinates.
 local function placeUnder(p,card,gui,above)
 	local origin=gui.AbsolutePosition
 	local at,size=card.AbsolutePosition-origin,card.AbsoluteSize
 	local w=math.max(48,p.AbsoluteSize.X)
 	local x=math.clamp(at.X+size.X/2-w/2,4,math.max(4,gui.AbsoluteSize.X-w-4))
-	local y=if above then at.Y-30 else at.Y+size.Y+8
-	y=math.clamp(y,4,math.max(4,gui.AbsoluteSize.Y-30))
+	local y=math.clamp(if above then at.Y-30 else at.Y+size.Y+8,4,math.max(4,gui.AbsoluteSize.Y-30))
 	p.Position=UDim2.fromOffset(x,y)
 end
 function Tour:act(action)
 	local a=self.active
-	if not a then return end
-	local nextStep=Tour.after(a.mode,a.step,action,a.guided)
-	if nextStep then
-		a.step=nextStep
-		a.since=os.clock()
+	if not a or action==nil then return end
+	local nextAt=Tour.after(a.at,#a.plan,action)
+	if nextAt then
+		a.at=nextAt
+		a.missing=nil
 		return
 	end
-	self:finish(action)
+	self:finish(if action=="skip"then "skip"else "done")
 end
 function Tour:finish(how)
 	local a=self.active
 	if not a then return end
 	self.active=nil
-	for _,id in ipairs(Tour.saves(a.mode,a.stepped))do pcall(self.d.latch,id)end
-	if self.d.event then pcall(self.d.event,"TourDone")end
+	for _,id in ipairs(Tour.Saves)do pcall(self.d.latch,id)end
+	if self.d.event then pcall(self.d.event,if how=="skip"then "TourSkipped"else "TourDone")end
 	self:hide()
+	local now=self.now or 0
+	if how=="skip"then
+		-- they chose to play: the deck stays open, the round live; the hold lets go once the tap is over
+		self.releaseAt=now+Tour.SkipGrace
+	else
+		-- the deck closes by itself; drops stay held until it has
+		self.closing={at=now+Tour.CloseAfter,from=now,lastAsk=nil}
+	end
 end
 function Tour:hide()
 	if self.d.pointer then self.d.pointer:hide()end
@@ -233,6 +238,8 @@ function Tour:hide()
 	self:bind(false)
 end
 function Tour:touring()return self.active~=nil end
+-- The tour's own work is still on (a step, or the deck closing after it): the all-set card waits.
+function Tour:busy()return self.active~=nil or self.closing~=nil end
 -- The overlay the tour's pointer draws in: one ScreenGui beside the card's own, same insets, DisplayOrder 11 (over the
 -- play well's gui at 10; the tour hides whenever an overlay or modal is up).
 Tour.OverlayOrder=11
@@ -251,85 +258,107 @@ function Tour:overlayFor(card)
 	end
 	return gui
 end
+-- The deck's boot as the ready gate reads it.
+function Tour:bootFacts(deck)
+	local boot=deck and deck.boot
+	local host=deck and deck.bootHost
+	return{playing=boot~=nil and boot.playing==true,finishes=boot and boot.finishes or 0,showing=host~=nil and host.Visible==true}
+end
+-- The ready gate, every frame: the deck's opening, its boot, then ReadyAfter s. -> ready now.
+function Tour:stepGate(now,ctx)
+	local deck=self.d.deck()
+	local open=ctx.mode=="Board"and deck~=nil and deck.visible~=false
+	if not open then self.gate=nil;self.readyAt=nil;return false end
+	local b=self:bootFacts(deck)
+	if not self.gate then self.gate={openedAt=now,mark=b.finishes}end
+	local g=self.gate
+	g.finishes,g.playing,g.showing=b.finishes,b.playing,b.showing
+	if not Tour.bootDone(g,now)then self.readyAt=nil;return false end
+	self.readyAt=self.readyAt or now
+	return now-self.readyAt>=Tour.ReadyAfter
+end
 function Tour:step(now,dt)
 	local d=self.d
+	self.now=now
 	local f=d.facts()
 	local ctx=d.ctx()
-	local a=self.active
-	if a then
-		if(ctx.drops or 0)>0 then self:finish("drop");a=nil
-		elseif not Tour.opener(ctx)or f.on~=true or f.graduated==true then
-			-- the deck left (or a layer came up) before a drop: nothing saved, the tour waits for the next opener
-			self.active=nil;self:hide();a=nil
+	ctx.ready=self:stepGate(now,ctx)
+	-- after the last Next: close the deck (the normal Back path), asking again while the garden switch is busy
+	local closing=self.closing
+	if closing then
+		if ctx.mode~="Board"then
+			self.closing=nil;self:hold(false)
+			if d.event then pcall(d.event,"TourClosed")end
+		elseif now>=closing.at and(closing.lastAsk==nil or now-closing.lastAsk>=Tour.CloseRetry)then
+			closing.lastAsk=now
+			if d.close then pcall(d.close)end
+			if now-closing.from>=Tour.CloseGiveUp then self.closing=nil;self:hold(false)end
 		end
 	end
-	if not a then
-		local mode=Tour.mode(f,ctx)
-		if mode then
-			a={mode=mode,step=Tour.first(mode),since=now,picked=d.picked and d.picked(),guided=ctx.guided==true}
+	if self.releaseAt and now>=self.releaseAt then self.releaseAt=nil;if not self.active and not self.closing then self:hold(false)end end
+	local a=self.active
+	if a then
+		if f.on~=true or f.graduated==true or ctx.mode~="Board"or(ctx.drops or 0)>0 or ctx.over==true or ctx.phase==nil then
+			-- the deck left (or the round changed) before the end: nothing saved, the tour waits for the next opener
+			self.active=nil;self:hide();self:hold(false);a=nil
+		elseif ctx.overlay==true then
+			-- a layer is up (the Pocket menu): the tour waits under it, drawn again when it closes
+			if d.pointer then d.pointer:hide()end
+			self:clearPills();self:dim(nil);self:bind(false)
+			return
+		end
+	end
+	if not a and not self.closing and Tour.wants(f,ctx)then
+		local deck=d.deck()
+		local plan=Tour.plan(function(name)return cardOf(deck,name)~=nil end)
+		if #plan>0 then
+			a={plan=plan,at=1,since=now,guided=ctx.guided==true}
 			self.active=a
+			self.releaseAt=nil
+			self:hold(true)
 			if d.event then pcall(d.event,"TourShown")end
 		end
 	end
-	if a then
-		-- the level stepped while its step shows: `level` is learned (saved when the tour ends)
-		local picked=d.picked and d.picked()
-		if picked~=a.picked then
-			a.picked=picked
-			-- tried it: learned, and the tour is over (they are playing)
-			if a.step==Tour.LevelStep then a.stepped=true;self:finish("stepped");a=nil end
-		end
+	if not a then return end
+	local s=Tour.Steps[a.plan[a.at]]
+	local deck=d.deck()
+	local card,name=stepCard(deck,s)
+	if not card then
+		-- the HUD rebuilding: wait a moment, then on (never stuck on an invisible card); no pointer, no keys meanwhile
+		if d.pointer then d.pointer:hide()end
+		self:clearPills()
+		self:bind(false)
+		a.missing=a.missing or now
+		if now-a.missing>=Tour.MissingGrace then a.missing=nil;self:act("next")end
+		return
 	end
-	if a then
-		local s=Tour.Steps[a.step]
-		local deck=d.deck()
-		local card=cardOf(deck,s.card)
-		if not card then
-			-- this layout has no such card now: on to the next step (never stuck on an invisible one). No pointer, so no
-			-- keys either: Enter / R1 / L1 are the game's own through the grace (bound again when the card is back)
-			if d.pointer then d.pointer:hide()end
-			self:clearPills()
-			self:bind(false)
-			a.missing=a.missing or now
-			if now-a.missing>=Tour.MissingGrace then a.missing=nil;self:act("next")end
-		else
-			a.missing=nil
-			self:listen();self:bind(true)
-			local count=d.text("teach.count",{n=a.step,of=Tour.last(a.guided)})
-			local line=Tour.label(d.text(s.words),a.mode,a.step,count)
-			-- Beta 43 Studio check: drawn in an overlay ScreenGui just above the play well's (the deck's own gui sits under it,
-			-- and the well hid the label), with the deck gui's insets so the positions match.
-			if d.pointer then
-				local opts=table.clone(Tour.Glyphs);opts.gui=self:overlayFor(card);opts.rect=true
-				d.pointer:show(card,line,opts);d.pointer:step(dt or 0)
-			end
-			local lit={[s.card]=true}
-			if s.sub then lit[s.sub]=true end
-			self:dim(lit)
-			local gui=layerOf(card)
-			if gui then
-				-- Skip under the label's side (under the card); the sub pill over Win pays
-				local skip=self:pill(gui,"skipPill",d.text("coach.skip"),997)
-				placeUnder(skip,card,gui,false)
-				local subCard=s.sub and cardOf(deck,s.sub)
-				if subCard then
-					local sub=self:pill(gui,"subPill",d.text(s.subWords),996)
-					placeUnder(sub,subCard,gui,false)
-				elseif self.subPill then self.subPill:Destroy();self.subPill=nil end
-			end
-		end
+	a.missing=nil
+	self:listen();self:bind(true)
+	local count=d.text("teach.count",{n=a.at,of=#a.plan})
+	local line=Tour.label(d.text(s.words),count)
+	if d.pointer then
+		local opts=table.clone(Tour.Glyphs);opts.gui=self:overlayFor(card);opts.rect=true
+		d.pointer:show(card,line,opts);d.pointer:step(dt or 0)
 	end
-	-- the tips ----------------------------------------------------------------------------------------------------
-	local tip=Tour.tip(f,{mode=ctx.mode,phase=ctx.phase,over=ctx.over,drops=ctx.drops,chain=ctx.chain,goalsDone=ctx.goalsDone,
-		now=now,lastTip=self.lastTip,railEmpty=d.railEmpty and d.railEmpty(),touring=self.active~=nil})
-	if tip and d.rail and d.rail(tip,d.text(Tour.TipWords[tip]))==true then
-		self.lastTip=now
-		pcall(d.latch,tip)
+	local lit={[name]=true}
+	if s.also then lit[s.also]=true end
+	self:dim(lit)
+	local gui=card
+	while gui and not gui:IsA("LayerCollector")do gui=gui.Parent end
+	if gui then
+		local skip=self:pill(gui,"skipPill",d.text("coach.skip"),997)
+		placeUnder(skip,card,gui)
+		local subCard=Tour.subOn(s,a.guided)and cardOf(deck,s.sub)or nil
+		if subCard then
+			local sub=self:pill(gui,"subPill",d.text(s.subWords),996)
+			placeUnder(sub,subCard,gui,true) -- over Difficulty (Win pays, the lit card, sits under it)
+		elseif self.subPill then self.subPill:Destroy();self.subPill=nil end
 	end
 end
 function Tour:destroy()
-	self.active=nil
+	self.active=nil;self.closing=nil;self.releaseAt=nil
 	self:hide()
+	self:hold(false)
 	if self.listening then self.listening:Disconnect();self.listening=nil end
 	if self.overlay then self.overlay:Destroy();self.overlay=nil end
 end

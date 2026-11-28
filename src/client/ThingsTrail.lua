@@ -239,7 +239,10 @@ function Trail:start(target)
 			end
 			local ok,points=pcall(Trail.route,compute,root,target.position)
 			if self.generation~=mine or not self.target then return end
-			if ok and points then self:lay(points)else self.folder:SetAttribute("Way","none")end
+			if ok and points then self:lay(points)
+			-- beta 44 note 23: a target may carry a straight fallback, laid when it stays dry
+			elseif type(target.fallback)=="table"and #target.fallback>=2 and Trail.dry(target.fallback)then self:lay(target.fallback)
+			else self.folder:SetAttribute("Way","none")end
 		end)
 	end
 	if self.d.step~=false then
