@@ -316,5 +316,15 @@ return function(client)
 		assert(table.find(log,"A-")and table.find(log,"Left-"))
 		assert(#v:releaseAll(2)==0,"nothing held: nothing")
 	end)
+	test("beta 42 note 10 (C10): a moved NEXT ball bobs about its new rest; rebase hands back the old rest",function()
+		local View=require(client.DeckFeelScreen)
+		local v=setmetatable({screen={},holds={},springs={},runners={}},View)
+		assert(v:rebase(1,"calm")==nil,"no HUD built yet: nothing")
+		v.nextBase={"build","second"};v.bob={1,0}
+		assert(v:rebase(1,"calm")=="build","the HUD-build rest comes back")
+		assert(v.nextBase[1]=="calm"and v.nextBase[2]=="second","only that ball moves")
+		assert(v.bob[1]==nil and v.bob[2]==0,"its bob is rewritten on the next frame")
+		assert(v:rebase(1,"build")=="calm"and v.nextBase[1]=="build","restoreCalm puts it back")
+	end)
 	return{passed=#cases,cases=cases}
 end

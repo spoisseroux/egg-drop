@@ -94,7 +94,8 @@ function Deck2:build()
 	if egg.cover then self:buildCard()end
 end
 -- Three egg pips: a CanvasGroup body (a round foot and a narrower crown, so the two read as one egg when faded), a
--- white glint when filled, a Path2D outline ring when empty (a round ring if Path2D is missing), and a pop ring.
+-- white glint when filled, and a pop ring. Beta 42 note 11 (C11): an empty pip is a solid navy egg (WelcomeEgg3D's
+-- pipEmpty) with no outline; the old Path2D ring sat outside the CanvasGroup at full opacity and read as a stray oval.
 function Deck2:buildPips(z)
 	local meter=self.egg.meter
 	local W,H=D.pipW,D.pipH
@@ -106,34 +107,18 @@ function Deck2:buildPips(z)
 		local holder=frame(self.pipRow,"EggPip"..i,z,{AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(home.X,home.Y),Size=UDim2.fromOffset(W,H)})
 		local scale=node("UIScale",holder,{Scale=1})
 		local body=node("CanvasGroup",holder,{Name="Body",BackgroundTransparency=1,BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=z,GroupTransparency=D.pipEmptyAlpha})
-		local foot=frame(body,"Foot",z,{AnchorPoint=Vector2.new(.5,1),Position=UDim2.fromScale(.5,1),Size=UDim2.fromOffset(W,W),BackgroundTransparency=0,BackgroundColor3=WHITE})
+		local foot=frame(body,"Foot",z,{AnchorPoint=Vector2.new(.5,1),Position=UDim2.fromScale(.5,1),Size=UDim2.fromOffset(W,W),BackgroundTransparency=0,BackgroundColor3=D.pipEmpty})
 		round(foot)
 		local crown=frame(body,"Crown",z,{AnchorPoint=Vector2.new(.5,0),Position=UDim2.fromScale(.5,0),Size=UDim2.fromOffset(math.floor(W*.8+.5),math.floor(W*.8+.5)),
-			BackgroundTransparency=0,BackgroundColor3=WHITE})
+			BackgroundTransparency=0,BackgroundColor3=D.pipEmpty})
 		round(crown)
 		local glint=frame(body,"Glint",z+1,{AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.34,.3),Size=UDim2.fromOffset(math.max(3,math.floor(W*.24)),math.max(4,math.floor(W*.32))),
 			BackgroundTransparency=.05,BackgroundColor3=WHITE,Rotation=-20,Visible=false})
 		round(glint)
-		local ring=nil
-		local ok=pcall(function()
-			local path=Instance.new("Path2D")
-			path.Name="Ring";path.Thickness=2;path.Color3=D.pipRing;path.ZIndex=z+1;path.Closed=true
-			local points={}
-			for _,p in ipairs(V2.eggOutline(W,H))do
-				table.insert(points,Path2DControlPoint.new(UDim2.fromOffset(p[1],p[2]),UDim2.fromOffset(p[3],p[4]),UDim2.fromOffset(p[5],p[6])))
-			end
-			path:SetControlPoints(points)
-			path.Parent=holder
-			ring=path
-		end)
-		if not ok then
-			-- no Path2D: a round ring on the foot
-			ring=node("UIStroke",foot,{Name="Ring",Color=D.pipRing,Thickness=2,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
-		end
 		local pop=frame(self.pipRow,"PopRing"..i,z,{AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset(home.X,home.Y),Size=UDim2.fromOffset(W,W),Visible=false})
 		round(pop)
 		local popStroke=node("UIStroke",pop,{Color=D.gold,Thickness=2,Transparency=0,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
-		self.pips[i]={holder=holder,scale=scale,body=body,foot=foot,crown=crown,glint=glint,ring=ring,pop=pop,popStroke=popStroke,home=home}
+		self.pips[i]={holder=holder,scale=scale,body=body,foot=foot,crown=crown,glint=glint,pop=pop,popStroke=popStroke,home=home}
 	end
 end
 -- The left card: dress WelcomeEgg3D's cover (the sky, the highlight, the bubbles) and add the picture over its line.
@@ -440,10 +425,9 @@ function Deck2:paintPips(clock,combos,reduced)
 	end
 	for i,p in ipairs(self.pips)do
 		local filled=V2.pip(i,combos)=="filled"
-		set(p.foot,"BackgroundColor3",if filled then D.pipFilled else WHITE)
-		set(p.crown,"BackgroundColor3",if filled then D.pipFilled else WHITE)
+		set(p.foot,"BackgroundColor3",if filled then D.pipFilled else D.pipEmpty)
+		set(p.crown,"BackgroundColor3",if filled then D.pipFilled else D.pipEmpty)
 		set(p.glint,"Visible",filled)
-		if p.ring:IsA("UIStroke")then set(p.ring,"Enabled",not filled)else set(p.ring,"Visible",not filled)end
 		local alpha=if filled then 0 else D.pipEmptyAlpha
 		local scale=1
 		local popAge=if self.popAt[i]then clock-self.popAt[i]else nil

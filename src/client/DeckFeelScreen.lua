@@ -396,6 +396,16 @@ function View:stepperCard(card,live,stepper)
  end
 end
 
+-- Beta 42 note 10 (C10): a next ball moved after the HUD was built (the calm Welcome deck re-centres NEXT's ball in its
+-- cut card, restoreCalm puts it back) bobs about its new rest; returns the old rest (the ball's true place, never a
+-- bobbed one) so the caller can save that. The next stepNext writes the ball at once.
+function View:rebase(index,position)
+ local base=self.nextBase;if not base then return nil end
+ local was=base[index]
+ base[index]=position
+ if self.bob then self.bob[index]=nil end
+ return was
+end
 -- The next balls' 1 px bob, half a beat apart (Screen:stepNext, every frame; written on whole-pixel changes).
 function View:stepNext(now)
  if not self:on()or self:reduced()or not self.nextBase then return end

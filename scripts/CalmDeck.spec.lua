@@ -43,9 +43,20 @@ return function(client,parent)
 			assert(view.skip.Visible and inside(rect(view.skip),rect(h.welcomeCoach)),"Skip stays inside the coach card")
 			assert(inside(rect(view.egg),rect(screen.welcomeMeterHost)),"the egg stays in its well")
 			assert(geometry.board.x==board.x and geometry.board.y==board.y and geometry.board.w==board.w and geometry.board.h==board.h,"the board never moves")
+			-- Beta 42 note 10 (C10): the deck feel's bob rest follows NEXT's re-centred ball (stepNext wrote the old one back).
+			local ball=h.next and h.next[1]and h.next[1].ball
+			local feel=screen.feel
+			if ball and feel and feel.nextBase then
+				assert(feel.nextBase[1]==ball.Position,"the bob rest is the calm place at "..size.X.."x"..size.Y)
+				local card=screen.hudRoot:FindFirstChild("Next")
+				if card and card.Visible then assert(inside(rect(ball),rect(card)),"NEXT's ball inside its cut card") end
+			end
 			-- The first field round: everything back.
 			screen:setWelcome({generation=300+index,charge=0,threshold=6,phase="Play",active=true,owned=1,drops=0,device="Touch",reduced=true},deps)
 			assert(h.calm==nil,"restored")
+			if ball and feel and feel.nextBase then
+				assert(feel.nextBase[1]==before[ball].Position,"the bob rest is back at "..size.X.."x"..size.Y)
+			end
 			for object,props in pairs(before)do
 				if object.Parent and object~=h.status then
 					for property,value in pairs(props)do
