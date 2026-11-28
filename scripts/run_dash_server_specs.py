@@ -199,7 +199,9 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           "RackShop",
           # Rotation slice 2, lane C (toy colours): the rows as the brief's table, a skin on its own toy and named part,
           # the sparks, the snapshot and public-field readers, the swatch row and its one-at-a-time wear queue.
-          "ToySkinLook"]
+          "ToySkinLook",
+          # Rotation slice 2, lane D: Deck style as a closet under rack_deck (DeckCloset's pure rules).
+          "DeckCloset"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -302,7 +304,9 @@ def client_modules():
                     # The daily rack, lane C: the swatch row's equip queue and the finishes' pure rules.
                     "WardrobeSwatches.lua", "WearableFinish.lua",
                     # Rotation slice 2, lane C: the toy colours' client reader and wear queue.
-                    "ToySkinLook.lua"):
+                    "ToySkinLook.lua",
+                    # Rotation slice 2, lane D: the Deck style closet's pure rules.
+                    "DeckCloset.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

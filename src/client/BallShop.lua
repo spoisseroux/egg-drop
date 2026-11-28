@@ -14,6 +14,8 @@ local Deal=require(script.Parent.ShelfDeal)
 local Sprite=require(script.Parent.JellySprite)
 -- Levels matter (S2): the level-gated theme's chip, bar and way to its training.
 local Locked=require(script.Parent.LockedItem)
+-- Rotation slice 2, lane D: the Balls tab as a closet under the rack_deck switch (DeckCloset; off = today's shop).
+local Closet=require(script.Parent.DeckCloset)
 local TweenService=game:GetService("TweenService")
 local Shop={}
 Shop.__index=Shop
@@ -35,11 +37,15 @@ end
 Shop.Reasons={NeedStars=UICopy.get("shop.reason.needStars"),Busy=UICopy.get("shop.reason.busy"),Throttled=UICopy.get("shop.reason.throttled"),
  PriceChanged=UICopy.get("shop.reason.priceChanged"),ShelfChanged=UICopy.get("shop.reason.priceChanged"),Unowned=UICopy.get("shop.reason.unowned"),
  NeedsLevel=UICopy.get("shop.reason.needsLevel")}
+-- The closet: a direct buy refused because the theme comes from the Deck Egg now (lane A's reason).
+function Shop.reasonText(reason,fallback)return Closet.reason(reason)or Shop.Reasons[reason]or UICopy.get(fallback)end
 -- The pane's small board: {tier, x, bottom} in pane-board units (0..1 across, px up from the floor).
 Shop.Pile={{4,.22,0},{3,.5,0},{5,.8,0},{2,.36,40},{1,.12,44},{2,.62,52},{1,.9,64}}
 
 -- Pure: what the pane says and offers for one theme.
--- ctx = { owned = saved purchase list, equipped = id, wallet = n, levels = {petId={stat=level}} }
+-- ctx = { owned = saved purchase list, equipped = id, wallet = n, levels = {petId={stat=level}}, closet = bool }
+-- closet (DeckCloset): an unowned theme the Deck Egg deals says "From the Deck Egg" (kind "egg"), and nothing sells
+-- at a weekly-shelf price.
 function Shop.status(id,ctx)
  local entry=Themes.ById[id]
  if not entry then return{kind="invalid",text="",button=nil}end
@@ -47,13 +53,15 @@ function Shop.status(id,ctx)
  -- QA v2 R3.5: the theme in use keeps the Use button, disabled, reading "In use".
  if(ctx.equipped or Themes.Default)==id then return{kind="inUse",text="In use",button=UICopy.get("r4.inUse"),enabled=false}end
  if Themes.owns(ctx.owned,id)then return{kind="owned",text="Owned",button="Use",enabled=true}end
+ local egg=Closet.status("ball",id,false,ctx.closet)
+ if egg then return egg end
  -- Levels matter (S2): below the level the pane shows the way there; the card shows the chip.
  local gate=Locked.info(entry,ctx.levels)
  if gate and not gate.met then return{kind="locked",text=gate.line,button=Locked.trainText(gate),price=entry.price,gate=gate,enabled=true}end
  if entry.gate and not Locked.on()then return{kind="invalid",text="",button=nil}end -- not for sale, not listed
  local wallet=ctx.wallet or 0
- -- Slice C: a theme on this week's shelf sells at the shelf price (`full` = the struck price).
- local price,full=Deal.quote("ball",id,entry.price,weekOf(ctx))
+ -- Slice C: a theme on this week's shelf sells at the shelf price (`full` = the struck price). Never in the closet.
+ local price,full=Deal.quote("ball",id,entry.price,Closet.week(ctx.closet,weekOf(ctx)))
  if wallet>=price then return{kind="buy",text=if full then UICopy.get("shelf.status")else "You have enough Stars",button="★ Buy "..price,price=price,full=full,enabled=true}end
  return{kind="short",text=require(script.Parent.ShopPriceState).need(price,wallet),button="★ Buy "..price,price=price,full=full,enabled=false}
 end
@@ -62,6 +70,7 @@ function Shop.tileStatus(id,ctx)
  local s=Shop.status(id,ctx)
  if s.kind=="inUse"then return "IN USE","accent"end
  if s.kind=="owned"then return "✓ Owned","soft"end
+ if s.kind=="egg"then return Closet.tileStatus()end
  if s.kind=="buy"then return Deal.priceText(s.price,s.full),"stars"end
  if s.kind=="short"then return Deal.priceText(s.price,s.full),"dim"end
  if s.kind=="locked"then return "","dim"end -- the chip says it
@@ -115,7 +124,7 @@ end
 -- owner: the Deck style screen (FaceplateShop): root, ring, visible, tab.
 -- callbacks: send(action, payload) (optional; default fires Remotes.HatchRequest), bought(id), equipped(id)
 function Shop.new(owner,callbacks)
- return setmetatable({owner=owner,callbacks=callbacks or {},index=1,tiles={},ctx={owned={},equipped=Themes.Default,wallet=0,revision=0},
+ return setmetatable({owner=owner,callbacks=callbacks or {},index=1,tiles={},ctx={owned={},equipped=Themes.Default,wallet=0,revision=0,closet=Closet.on()},
   pending=nil,confirmId=nil,confirmUntil=0},Shop)
 end
 
@@ -265,9 +274,11 @@ function Shop:buildTile(parent,index,id,x,y,w,h,compact)
  tile.MouseEnter:Connect(function()if self:active()then Shop.dropIn(balls)end end)
 end
 
--- ctx keys: owned (list), equipped (id), wallet (n), revision (n). Absent keys keep their value.
+-- ctx keys: owned (list), equipped (id), wallet (n), revision (n), closet (bool). Absent keys keep their value; an
+-- absent closet reads the rack_deck switch again.
 function Shop:setContext(ctx)
  for key,value in pairs(ctx)do self.ctx[key]=value end
+ self.ctx.closet=Closet.resolve(ctx.closet)
  -- QA Q2.4: while an optimistic equip is in flight a snapshot cannot flip it back;
  -- the server's word arrives as the result (Saved keeps it, a refusal rolls back).
  local p=self.pending
@@ -328,14 +339,14 @@ function Shop:paintPane()
  local note=if pending then "Buying…"
   elseif self.errorId==id and self.errorText then self.errorText else nil
  if self.statusLabel then
-  self.statusLabel.Text=note or(if s.kind=="short"or s.kind=="locked"then s.text elseif s.full then UICopy.get("shelf.status")else UICopy.get("style.balls.pitch"))
+  self.statusLabel.Text=note or(if s.kind=="short"or s.kind=="locked"or s.kind=="egg"then s.text elseif s.full then UICopy.get("shelf.status")else UICopy.get("style.balls.pitch"))
   if not pending and self.errorId==id and self.errorFit then Kit.fitText(self.statusLabel,self.errorFit)end
  end
  self:paintLock(if s.kind=="locked"then s.gate else nil,note~=nil)
  self.action.Visible=s.button~=nil
  if s.button then
   Kit.setText(self.action,if pending then "…"elseif confirming then "Confirm ★ "..s.price else s.button)
-  Kit.setEnabled(self.action,s.enabled==true and not pending and(s.kind~="locked"or self:canTrain()))
+  Kit.setEnabled(self.action,s.enabled==true and not pending and(s.kind~="locked"or self:canTrain())and(s.kind~="egg"or self:canDeckEgg()))
   Kit.setTappable(self.action,s.kind=="short"and not self.pending)
  end
  self.owner.root:SetAttribute("FocusedBallTheme",id);self.owner.root:SetAttribute("BallPaneState",s.kind)
@@ -358,6 +369,8 @@ function Shop:paintLock(gate,noted)
  if gate and self.statusLabel and not noted then Kit.fitText(self.statusLabel,{gate.line,gate.needs})end
 end
 function Shop:canTrain()local callbacks=self.owner.callbacks;return callbacks~=nil and callbacks.train~=nil end
+-- The closet's "More at the Deck Egg" goes through the Deck style screen's deckEgg callback.
+function Shop:canDeckEgg()return self.owner~=nil and self.owner.canDeckEgg~=nil and self.owner:canDeckEgg()end
 
 function Shop:scrollTo(index)
  local list=self.grid;local tile=self.tiles[index];if not list or not tile then return end
@@ -427,6 +440,10 @@ function Shop:act()
   -- Round 3 (Spencer): a buy asks in the confirm dialog instead of "press again".
   return require(script.Parent.ConfirmDialog).purchase(self,id,(Themes.ById[id]or{name=""}).name,s.price,
    function()return self:active()and self:focusedId()==id end,function()self:act()end)~=nil
+ elseif s.kind=="egg"then
+  -- The closet: "More at the Deck Egg" opens Hatch eggs on the Deck Egg (init.client's onDeckEgg).
+  if self.pending or not self:canDeckEgg()then return false end
+  return self.owner.callbacks.deckEgg("ball",id)~=false
  elseif s.kind=="locked"then
   -- Levels matter: the button leads to where that stat is trained.
   if self.pending or not self:canTrain()then return false end
@@ -447,7 +464,7 @@ function Shop:result(message)
   -- Roll back the optimistic equip (the server's last word, else what was worn before).
   local back=self.serverEquipped or done.previous or Themes.Default
   self.serverEquipped=nil;self.ctx.equipped=back
-  self.errorId,self.errorText,self.errorFit=done.themeId,Shop.Reasons[message.reason]or UICopy.get("shop.failed.applied"),nil
+  self.errorId,self.errorText,self.errorFit=done.themeId,Shop.reasonText(message.reason,"shop.failed.applied"),nil
   if self.callbacks.equipped then self.callbacks.equipped(back)end
   if self.callbacks.rolledBack then self.callbacks.rolledBack(done.themeId)
   elseif self.owner and self.owner.root then self.toaster=self.toaster or Kit.toaster(self.owner.root);self.toaster.show(UICopy.get("shop.rolledBack"))end
@@ -455,12 +472,12 @@ function Shop:result(message)
  end
  self.serverEquipped=nil
  if message.status~="Saved"then
-  self.errorId,self.errorText,self.errorFit=done.themeId,Shop.Reasons[message.reason]or UICopy.get(if done.action=="ballThemeBuy"then "shop.failed.bought"else "shop.failed.applied"),nil
+  self.errorId,self.errorText,self.errorFit=done.themeId,Shop.reasonText(message.reason,if done.action=="ballThemeBuy"then "shop.failed.bought"else "shop.failed.applied"),nil
   -- A stale card: read the save again, so the chip shows.
   if message.reason=="NeedsLevel"then self:send("snapshot")end
   if message.reason=="NeedStars"and done.action=="ballThemeBuy"then
    local entry=Themes.ById[done.themeId]
-   local price=entry and entry.price and Deal.quote("ball",done.themeId,entry.price,weekOf(self.ctx))
+   local price=entry and entry.price and Deal.quote("ball",done.themeId,entry.price,Closet.week(self.ctx.closet,weekOf(self.ctx)))
    self.errorFit=UICopy.starsShort(if price then price-(self.ctx.wallet or 0)else nil);self.errorText=self.errorFit[1]
   end
  else
