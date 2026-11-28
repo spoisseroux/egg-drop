@@ -727,7 +727,7 @@ ui.onbAllSet.giftSub,A welcome gift from {pet}.,,Menu text; e.g. A welcome gift 
 ui.onbAllSet.hatch,Hatch one!,,Menu text
 ui.onbAllSet.nest,Nest,,Menu text
 ui.onbAllSet.next,What's next?,,Menu text
-ui.onbAllSet.pet,Pet,,Menu text
+ui.onbAllSet.pet,Pet,,Menu text; also ui.pet.unnamed
 ui.onbAllSet.stars,Stars,,"Menu text; also ui.r3.help.dash.d.title, ui.report.category.stars, ui.store.starsRow"
 ui.onbAllSet.sub,{pet} loves it here.,,Menu text; e.g. Bear loves it here.
 ui.onbGift.atMachine,Tap the machine!,,Menu text
@@ -752,7 +752,7 @@ ui.onbGift.fetchSub,Throw the ball any time,,Menu text
 ui.onbGift.freeEgg,Free egg!,,Menu text
 ui.onbGift.nestSub,Come and see,,Menu text
 ui.onbGift.nudge,For you!,,Menu text
-ui.onbGift.paintSub,A free Paint Egg,,Menu text
+ui.onbGift.paintSub,Free egg at the machine!,,Menu text
 ui.onbGift.park,Let's go play!,,Menu text
 ui.onbGift.parkSub,The Pet Park is open,,Menu text
 ui.onbGift.pull,You can hatch one!,,Menu text
@@ -764,10 +764,10 @@ ui.onbGift.row.name,Gift waiting,,Menu text
 ui.onbGift.shop.free,FREE,,Menu text; also ui.v2.adopt.freeStatus
 ui.onbGift.shop.hatch,Hatch free!,,Menu text
 ui.onbGift.snack,A snack for me?,,Menu text
-ui.onbGift.snackSub,A free Snack Egg,,Menu text
+ui.onbGift.snackSub,Snack Egg at the machine!,,Menu text
 ui.onbGift.throw,Throw it!,,Menu text; also ui.teach.throw
 ui.onbGift.toy,A toy for me?,,Menu text
-ui.onbGift.toySub,A free Toy Egg,,Menu text
+ui.onbGift.toySub,Toy Egg at the machine!,,Menu text
 ui.onbGift.waiting,Gift waiting!,,Menu text
 ui.onbGift.waitingSub,At the egg machine,,Menu text
 ui.onbGift.wipe,{pet} is {colour}!,,Menu text; e.g. Bear is {colour}!
@@ -1256,11 +1256,30 @@ ui.style.effects.title,Effects,,Deck style screen
 ui.style.effects.trail,Drop trail,,Deck style screen
 ui.style.promise.backgrounds,"Backgrounds are earned, not bought.",,Deck style screen
 ui.style.promise.faceplates,Fixed prices. No random plates.,,Deck style screen
+ui.teach.count,{n}/{of},,Menu text; e.g. {n}/{of}
 ui.teach.dress,Dress up!,,Menu text
+ui.teach.feed,Feed {pet}!,,Menu text; e.g. Feed Bear!
 ui.teach.go,Go!,,Menu text
+ui.teach.level,Tap to change level!,,Menu text
+ui.teach.levelSub,Harder pays more ★,,Menu text
 ui.teach.menu,Open the Menu!,,Menu text
+ui.teach.more,One more thing!,,Menu text
+ui.teach.outfits,Outfits!,,Menu text
 ui.teach.paint,Tap Paint!,,Menu text
+ui.teach.quests,Quests pay extra ★,,Menu text
+ui.teach.reset,Change your mind? It's free!,,Menu text
+ui.teach.skipAll,Skip the tips,,Menu text; also ui.teach.skipYes
+ui.teach.skipDone,Tips are off,,Menu text
+ui.teach.skipLine,You can still find everything in the Menu.,,Menu text
+ui.teach.skipTitle,No more tips?,,Menu text
+ui.teach.snack,Snack time!,,Menu text
+ui.teach.stats,See {pet} grow!,,Menu text; e.g. See Bear grow!
 ui.teach.things,All the games!,,Menu text
+ui.teach.tipChain,Chain! Quick merges score more,,Menu text
+ui.teach.tipGoal,One down! Tick them all to win,,Menu text
+ui.teach.tipNext,This one's next!,,Menu text
+ui.teach.tour1,Tick these to win!,,Menu text
+ui.teach.tour2,Your balls. Use them well!,,Menu text
 ui.things.dash.gather,Race: {count} of 8,,Things to do page; e.g. Race: 3 of 8
 ui.things.dash.idle,Start a race,,Things to do page
 ui.things.dash.live,A race is on,,Things to do page
