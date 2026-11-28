@@ -95,7 +95,10 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          "TourRound",
          # The daily rack (qa-2026-11-28-rotation, ARCH-REVIEW-ROTATION): the Outfit Egg's pure rules, its save path and
          # the Outfit gift, the Paint Egg's daily splash and no pity, and the live and base builds loading a rack save.
-         "DailyRack", "RackEgg", "RackCrossVersion"]
+         "DailyRack", "RackEgg", "RackCrossVersion",
+         # DECK-AERO-BRIEF (qa-2026-11-28-beta44, switch deckglass): the glass palette from every plate (the brief's
+         # 25-plate table, the rule for plates without a row), the contrast floors, the recipe, pill states and motion.
+         "DeckGlass"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.

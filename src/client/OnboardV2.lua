@@ -137,6 +137,8 @@ V2.Deck2=table.freeze({
 	-- story asks for the garden, or never takes the Bear), the egg stays, knocks every 0.4 s and the card's border
 	-- pulses gold; its rise starts as the deck tucks. holdMax: the rise starts by then whatever (past V2.Hold + tuckAfter)
 	holdKnock=.4,pulseHz=1.4,pulseLow=.15,pulseHigh=.8,pulseReduced=.35,holdMax=6,
+	-- DECK-AERO-BRIEF 4 (Alive deckglass): the sky card, the egg card and NEXT share this radius and the glass rim
+	glassRadius=12,
 })
 V2.ComboWords=table.freeze({"onb2.deck.nice","onb2.deck.close","onb2.deck.hatching"})
 -- Both switches: the cuter deck dresses the egg3d deck.
