@@ -1,6 +1,6 @@
 # Test pass: beta (43), 2026-11-27
 
-Build: beta (43), v149, runtime 20441d01, on **Pocket Pals Beta**. Live is not touched.
+Build: beta (44), v151, runtime 4d40ea17 (beta 43 plus the Hatch free! ring fix), on **Pocket Pals Beta**. Live is not touched.
 Your notes: `FEEDBACK.md`. Designs: `POINTER-STORK-BRIEF.md`, `TEACH-MORE-BRIEF.md`. Reviews: `ARCH-REVIEW-TEACH.md`.
 
 `/freshsave`, rejoin, play from the start (`/freshsave restore` brings your save back).
@@ -51,7 +51,7 @@ Switches: `/onboard teach|gifts off`, `/alive deckfeel|fruit off` (and `on`, `cl
 ## Known
 
 - The stork sounds are new uploads; if they are silent, they're still in moderation review.
-- In the shop the Hatch free! ring slightly overlaps the "A gift from Bear!" line above it.
+- Fixed in beta (44): the Hatch free! ring no longer overlaps the line above it (that line is gone; the footer keeps "A gift from Bear!").
 - The level step needs `/alive deckfeel` on (the level card is a control only then).
 - Not checked by hand: the Toy and Snack gifts through the shop, Snacks/Stats/Wardrobe/Park/Dash lessons, the quests pointer, the tips, fruit eating, birds, the stairs rock, a phone, a gamepad.
 
