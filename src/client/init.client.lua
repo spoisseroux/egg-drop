@@ -6378,13 +6378,17 @@ do
         seenWaiting[id]={kind=r.kind,tries=0}
         nurseryRequest:FireServer("giftSeen",{kind=r.kind,id=id})
        end,
-       closed=function()
+       closed=function(how)
         if chain then chain:revealed()end
         local m=clientUI.eggMachine
         -- "Later" on the Paint card: the pot is kept and the deck lesson comes next (part 2)
         if record.kind=="paint"and not acted and clientUI.teach then clientUI.teach:skip("dress")end
         local lesson=lessonA;lessonA=nil
-        if lesson then
+        if how=="replaced"then
+         -- Code review (beta 43): a newer gift's stage is taking over and its shot owns the camera now: nothing here hands
+         -- the camera back or opens the pet screen. Paint pressed: today's one tap (the pot used; the lesson's fact)
+         if lesson then clientUI.hueIntent:use(petId(),"main",lesson.pot,nil)end
+        elseif lesson then
          -- Beta (40) note 4 (ARCH-REVIEW-P2 3): the machine gives the camera back at once, then one Heartbeat, then the pet
          -- screen takes it (else it would record the shot's Scriptable camera and restore that on exit).
          if m then pcall(m.returnCamera,m,true)end
@@ -6696,7 +6700,7 @@ do
     clientUI.teach=api
     local beatTeach=RunService.Heartbeat:Connect(function(dt)
      local good,why=pcall(function()
-      if not teachOn()then pointer:hide();dress=nil;wiring:step(os.clock(),dt);return end
+      if not teachOn()then pointer:hide();dress=nil;return end -- (the tour steps below, on its own)
       -- lesson A's end: a pot used on the pet (hueUse saved). The Dress up screen closes back to the pet screen and the
       -- wipe plays there, close up.
       if dress then
@@ -6722,9 +6726,12 @@ do
        end
       end
       lessons:step(os.clock(),dt)
-      wiring:step(os.clock(),dt)
      end)
      if not good then warn("[Teach] "..tostring(why))end
+     -- Code review (beta 43): the deck tour steps on its own, so a lesson that throws never freezes it with its keys
+     -- (Enter / R1 / L1) bound and the deck dimmed
+     local stepped,tourWhy=pcall(wiring.step,wiring,os.clock(),dt)
+     if not stepped then warn("[Teach] tour: "..tostring(tourWhy))end
     end)
     gui.Destroying:Connect(function()beatTeach:Disconnect();pointer:destroy();wiring:destroy()end)
    end)

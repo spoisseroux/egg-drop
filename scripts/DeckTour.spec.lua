@@ -119,5 +119,21 @@ return function(client)
 		r.run(Tour.MissingGrace+.25);assert(r.at==r.cards.Difficulty,"gone for good: on to step 3")
 	end)
 
+	test("controller (code review, beta 43): through the missing-card grace no keys are held (Enter / R1 / L1 the game's); back with the card",function()
+		local r=rig(facts())
+		r.run(.5);assert(r.tour.keysOn==true,"a step showing: its keys bound")
+		r.cards.EggsLeft.Visible=false
+		r.tour:act("next");r.run(.5)
+		assert(r.at==nil and r.tour.active and r.tour.active.step==2 and r.tour.keysOn==false,"no pointer: no keys")
+		r.cards.EggsLeft.Visible=true;r.run(.25)
+		assert(r.at==r.cards.EggsLeft and r.tour.keysOn==true,"the card back: the keys back")
+		r.tour:act("skip");assert(r.tour.keysOn==false,"over: unbound")
+	end)
+
+	test("the Skip pill (code review, beta 43): an Active button, so its tap is consumed and never drops a ball; the Win pays line lets taps through",function()
+		assert(Tour.Pills.skipPill.class=="TextButton"and Tour.Pills.skipPill.active==true)
+		assert(Tour.Pills.subPill.class=="TextLabel"and Tour.Pills.subPill.active==false)
+	end)
+
 	return {passed=#cases,cases=cases}
 end

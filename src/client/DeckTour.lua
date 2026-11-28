@@ -7,7 +7,8 @@
 --              well!", 3 the level card "Tap to change level!" with "Harder pays more ★" on Win pays. Each label carries
 --              "1/3".
 --   Next       a tap on any HUD card (read from UserInputService.InputBegan by position, never an Active or Modal frame),
---              Enter, or R1. Skip: the Skip pill under the label (a tap) or L1. A, Space, B and touch on the board stay
+--              Enter, or R1. Skip: the Skip pill under the label (a tap) or L1. The Skip pill alone is an Active button
+--              (Tour.Pills), so its tap is consumed there and never reaches the board under it (a drop). A, Space, B and touch on the board stay
 --              the round's own (drop, items): this binds none of them. No long-press, no countdown; untouched, it stays.
 --   Ends       on Skip, past step 3, or the first drop (on any step): saves `deckTour`. Stepping the level on step 3 saves
 --              `level`; without it, the round-two opener shows step 3 alone once and saves `level` whatever they do.
@@ -28,6 +29,8 @@ Tour.Forbidden=table.freeze({"A","Space","B","Backspace","ButtonA","ButtonB","Bu
 Tour.Glyphs=table.freeze({key="ENTER",glyph="R1"})
 Tour.TipGap=8 -- s between two tips at least
 Tour.MissingGrace=1 -- s a step's card may be missing (the HUD rebuilding) before the tour moves past it
+-- The two pills: Skip sinks its tap (a TextButton, Active), the Win pays line lets every tap through.
+Tour.Pills=table.freeze({skipPill=table.freeze({class="TextButton",active=true}),subPill=table.freeze({class="TextLabel",active=false})})
 Tour.TipOrder=table.freeze({"tipNext","tipChain","tipGoal"})
 Tour.TipWords=table.freeze({tipNext="teach.tipNext",tipChain="teach.tipChain",tipGoal="teach.tipGoal"})
 
@@ -110,6 +113,7 @@ function Tour:dim(lit)
 	if deck and deck.teachDim then pcall(deck.teachDim,deck,lit)end
 end
 function Tour:bind(on)
+	self.keysOn=on==true -- what the tour wants (specs read it); the binding below follows it
 	if self.d.listen==false then return end -- specs: no engine input
 	local okCas,CAS=pcall(function()return game:GetService("ContextActionService")end)
 	if not okCas then return end
@@ -163,8 +167,11 @@ function Tour:pill(parent,name,text,z)
 	local p=self[name]
 	if not(p and p.Parent==parent)then
 		if p then p:Destroy()end
-		p=Instance.new("TextLabel")
-		p.Name="EggDropTour"..name;p.Active=false;p.Selectable=false;p.BackgroundColor3=Color3.fromHex("#FFFFFF");p.BorderSizePixel=0
+		local kind=Tour.Pills[name]or Tour.Pills.subPill
+		p=Instance.new(kind.class)
+		p.Name="EggDropTour"..name;p.Active=kind.active;p.Selectable=false;
+		if p:IsA("GuiButton")then p.AutoButtonColor=false;p.Modal=false end
+		p.BackgroundColor3=Color3.fromHex("#FFFFFF");p.BorderSizePixel=0
 		p.TextColor3=Color3.fromHex("#1B2A4A");p.Font=Enum.Font.BuilderSansBold;p.TextSize=14;p.AutomaticSize=Enum.AutomaticSize.X
 		p.Size=UDim2.fromOffset(0,26);p.ZIndex=z or 996
 		local c=Instance.new("UICorner");c.CornerRadius=UDim.new(.5,0);c.Parent=p
@@ -255,9 +262,11 @@ function Tour:step(now,dt)
 		local deck=d.deck()
 		local card=cardOf(deck,s.card)
 		if not card then
-			-- this layout has no such card now: on to the next step (never stuck on an invisible one)
+			-- this layout has no such card now: on to the next step (never stuck on an invisible one). No pointer, so no
+			-- keys either: Enter / R1 / L1 are the game's own through the grace (bound again when the card is back)
 			if d.pointer then d.pointer:hide()end
 			self:clearPills()
+			self:bind(false)
 			a.missing=a.missing or now
 			if now-a.missing>=Tour.MissingGrace then a.missing=nil;self:act("next")end
 		else

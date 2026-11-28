@@ -10,7 +10,10 @@
 -- The callbacks are GiftReveal's, unchanged, so init's present() wires both the same way: act(record) at the primary
 -- press (lesson A's hand-off), then, once the stage's iris has shut, landed(record) (a primary only), seen(record) and
 -- closed() (the machine's camera back, GiftChain's reveal phase over). Each runs once. A stage that is torn down any
--- other way (replaced, its gui gone) still calls closed() (never seen(): it replays on the next join).
+-- other way (replaced, its gui gone) before a choice still calls closed() (never seen(): it replays on the next join);
+-- after a choice (a key pressed, its iris still shutting) it finishes as chosen: landed, seen, closed. closed(how) says
+-- "replaced" when a newer gift's stage is taking over (that stage's shot owns the camera: closed must not hand it back
+-- or open the pet screen), "lost" when its gui went, nil otherwise.
 -- show(playerGui, record, options) -> true when the stage opened; false (nothing left behind): the caller shows
 -- GiftReveal, the fallback card. options = GiftReveal's (text, pet, petId, itemName, poolSize, deeper, act, landed,
 -- seen, closed, reduced) plus audio (BoardAudio, the cinematic's sounds) and reduceEffects.
@@ -51,6 +54,8 @@ end
 -- Pure: one choice, the callbacks once and in order. leave(acted) dismisses the stage and later calls f.finish().
 --   f.choose(acted)   the primary (true) or Later / x (false); a second choice is ignored. -> true when taken
 --   f.finish(how)     the stage is gone: nil (after a choice: landed if acted, seen, closed), "lost" (closed only)
+--   f.lose(why)       torn down early ("replaced" | "lost"): chosen, it finishes as chosen; unchosen, closed only.
+--                     closed hears `why` either way
 function Stage.flow(record,options,leave)
 	local f={chosen=nil,done=false}
 	local function call(name,...)
@@ -64,13 +69,19 @@ function Stage.flow(record,options,leave)
 		leave(f.chosen)
 		return true
 	end
-	function f.finish(how)
+	local function finish(how,why)
 		if f.done then return end
 		f.done=true
-		if how=="lost"or f.chosen==nil then call("closed");return end
+		if how=="lost"or f.chosen==nil then call("closed",why);return end
 		if f.chosen then call("landed",record)end
 		call("seen",record)
-		call("closed")
+		call("closed",why)
+	end
+	function f.finish(how)finish(how,if how=="lost"then "lost"else nil)end
+	-- Code review (beta 43): a press already chosen is never thrown away by a newer gift within the iris's .3 s
+	function f.lose(why)
+		why=if why=="replaced"then "replaced"else "lost"
+		finish(if f.chosen~=nil then nil else "lost",why)
 	end
 	return f
 end
@@ -85,7 +96,7 @@ end
 function Stage.show(playerGui,record,options)
 	local result,recipe=Stage.result(record)
 	if not result or typeof(playerGui)~="Instance"then return false end
-	if current then current.lose()end
+	if current then current.lose("replaced")end -- the old one finishes first (chosen or not), then this one takes over
 	local entry={}
 	local gui,reveal,unregisterCursor
 	local ContextActionService=game:GetService("ContextActionService")
@@ -110,11 +121,12 @@ function Stage.show(playerGui,record,options)
 	end
 	flow=Stage.flow(record,options,leave)
 	entry.flow=flow
-	-- replaced by a newer gift, or its gui gone: closed (the camera and the chain), never seen
-	function entry.lose()
+	-- replaced by a newer gift ("replaced"), or its gui gone ("lost"): unchosen, closed (the chain) and never seen;
+	-- chosen, finished as chosen. The iris's delayed finish is then nothing (done).
+	function entry.lose(why)
 		if current==entry then current=nil end
 		teardown()
-		flow.finish("lost")
+		flow.lose(why)
 	end
 	local words=Stage.words(record,options)
 	local ok,problem=pcall(function()
@@ -157,7 +169,7 @@ function Stage.show(playerGui,record,options)
 		end,false,Enum.ContextActionPriority.High.Value+830,Enum.KeyCode.ButtonA,Enum.KeyCode.ButtonB,Enum.KeyCode.Return,
 			Enum.KeyCode.KeypadEnter,Enum.KeyCode.Space,Enum.KeyCode.Escape,Enum.KeyCode.Backspace)
 		gui.AncestryChanged:Connect(function()
-			if gui and gui.Parent==nil and current==entry then entry.lose()end
+			if gui and gui.Parent==nil and current==entry then entry.lose("lost")end
 		end)
 	end)
 	if not ok then

@@ -331,6 +331,13 @@ function Pointer:hide()
 	self.target=nil
 	self.glideState,self.swap,self.tipX,self.tipY=nil,nil,nil,nil
 	if self.v then self.v.root.Visible=false end
+	-- Code review (beta 43): a drawing fading out of another ScreenGui goes now; left set, step() (which returns early with
+	-- no target) never moves its fade on and it freezes half-visible
+	if self.leaving then
+		local root=self.leaving.v and self.leaving.v.root
+		self.leaving=nil
+		if root then pcall(root.Destroy,root)end
+	end
 end
 function Pointer:destroy()
 	self.target=nil

@@ -206,5 +206,17 @@ return function(client)
 		assert(Lessons.Keys.menu.key=="M"and Lessons.Keys.menu.glyph=="Y"and Lessons.Keys.throw.key=="F"and Lessons.Keys.throw.glyph=="R2"and Lessons.Keys.dress.glyph=="R1")
 	end)
 
+	test("the pointer (code review, beta 43): hide() takes the drawing fading out of another ScreenGui with it (never frozen half-visible)",function()
+		local gone=0
+		local root={Parent=true,Visible=true,Destroy=function()gone+=1 end}
+		local p=Pointer.new({})
+		p.v={root={Visible=true}}
+		p.leaving={v={root=root},at=0}
+		p:hide()
+		assert(p.leaving==nil and gone==1,"the fading drawing goes with the hide")
+		assert(p.v.root.Visible==false and p.target==nil)
+		p:hide();assert(gone==1,"twice: nothing more")
+	end)
+
 	return {passed=#cases,cases=cases}
 end
