@@ -117,6 +117,8 @@ function Chain.facts(state,live)
 		returned=live.returned==true,
 		parkOn=live.park~=false,
 		teach=live.teach==true,
+		-- The lessons remembered (ARCH-REVIEW-TEACH 5): graduated (teachMask `done`), read only with `teach` on.
+		graduated=live.teach==true and bit32.band(tonumber(state.teachMask)or 0,2^16)~=0,
 	}
 end
 -- The step the chain is on now, or nil. A gift already given and unseen first; the nest first on a return.
@@ -142,12 +144,18 @@ function Chain.giftOf(step,f)
 	return s and s.gift or nil
 end
 -- May the bubble for `step` show now? session = {closed = {[step] = true}, count, lastReveal}. teach: part 2's rules.
+-- Teach more (ARCH-REVIEW-TEACH 5, TEACH-MORE-BRIEF 0.1; `teach` on): a save owed the chain is never a veteran here; a
+-- graduated one gets no invites (a gift's bubble stays: gifts are presents, not lessons); the next lesson's invite (the
+-- park and the Dash) is not counted toward the session's three.
+Chain.LessonInvites=table.freeze({park=true,dash=true})
 function Chain.may(session,step,now,f,teach)
 	if not step or session.closed[step]then return false end
-	if f and f.veteran then return false end
+	local owedTeach=teach==true and f~=nil and f.on==true
+	if owedTeach and f.graduated==true and Chain.giftOf(step,f)==nil then return false end
+	if f and f.veteran and not owedTeach then return false end
 	local r=Chain.rules(teach)
 	if r.exempt[step]then return true end
-	if(session.count or 0)>=r.perSession then return false end
+	if(session.count or 0)>=r.perSession and not(owedTeach and Chain.LessonInvites[step])then return false end
 	return now-(session.lastReveal or -math.huge)>=r.gap
 end
 -- The gift that parks as the chip, ribbon and row: ready (or unseen) and not the one the bubble is showing.

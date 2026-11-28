@@ -226,5 +226,15 @@ return function(server)
 		assert(ok and reason=="AlreadySaved","OR-only: a second mark changes nothing")
 	end)
 
+	test("teach more (ARCH-REVIEW-TEACH 4): a graduated save gets no teaching card; the four news cards stay",function()
+		local ctx={mask=0,totalWins=0,owned=1,graduated=true}
+		for _,id in ipairs({"fillLine","gardenIntro","hatch","item","parkInvite","tipHatch","needHi"})do
+			assert(not Coach.wants(id,ctx),"graduated: "..id)
+			assert(Coach.wants(id,{mask=0,totalWins=0,owned=1}),"in the course: "..id)
+		end
+		for _,id in ipairs({"petArrived","questDone","weekDone","nestIntro"})do assert(Coach.wants(id,ctx),"kept: "..id)end
+		assert(Coach.stage({owned=1,graduated=true,mask=0})=="free","graduated: no garden step")
+	end)
+
 	return{passed=#cases,cases=cases}
 end

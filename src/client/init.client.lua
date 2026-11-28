@@ -5881,7 +5881,8 @@ do
     finds={waiting=finds.waiting,count=tonumber(saved.count)or 0,limit=tonumber(saved.limit)or Finds.DailyLimit}
    end
    return{den=denNow()~=nil,park=Attract.parkAnchor()~=nil,playDate=state.playDate,finds=finds,dash=dashNow(),prizes=Dash.prizes(),saved=state.dash,new=things.new(),
-    gift=clientUI.giftRow} -- the gift chain's parked gift (GiftChain), nil without one
+    gift=clientUI.giftRow, -- the gift chain's parked gift (GiftChain), nil without one
+    dashLesson=clientUI.teach~=nil and clientUI.teach:dashOpen()==true} -- teach more: the Dash row leads while its lesson waits
   end
   function things.seen(id)
    if id=="dash"and Things.on()and not Coach.has(clientUI.coach.mask,"dashSeen")then clientUI.coach:mark("dashSeen")end
@@ -6051,6 +6052,7 @@ do
    end)
    needs=Needs.new({bubble=bubble,clock=os.clock,state=function()return nurseryState end,owned=function()return board:GetAttribute("OwnedPets")or 0 end,
     mask=function()return clientUI.coach.mask end,mark=function(id)clientUI.coach:mark(id)end,finishIntro=function()clientUI.coach:finishGarden()end,
+    teach=function()return Onboard.on("teach")end,teachMask=function()return clientUI.teach and clientUI.teach.live and clientUI.teach.live()end,
     follow=function()return Onboard.sessionFollow()end,needs=function()return Onboard.on("needs")end,returning=function()return things.returning==true end,
     nestFirst=function()return Onboard.on("nestfirst")and Onboard.on("needs")and Onboard.on("nest")end, -- the First Hatch
     -- Onboarding v2 step 5 (Onboard "guide"): the worded prompts, the trail to the far nest, the deck button's pulse,
@@ -6164,6 +6166,8 @@ do
     firstPet=function()pcall(function()require(script.Haptics).play("settle")end)end,
     allSet=function()
      request:FireServer("onboardEvent","AllSet")
+     -- Teach more (ARCH-REVIEW-TEACH 3): the need bubbles are over for good (not graduation: the lessons go on)
+     if clientUI.teach then clientUI.teach:latch("needs")end
      -- The v3 brief section 3 (Onboard "allset2"): the celebration card; off, the exhale card as before.
      if needs and needs.allSet2 then
       local shown=roomView.shownPet
@@ -6610,11 +6614,15 @@ do
      return nil
     end
     local dress=nil -- lesson A started from the Paint card: {pot, hue, deeper, petId, base, wasOpen}
+    local wiring=nil -- teach more (TeachWiring): the new lessons' targets and facts, the deck tour, Skip the tips
     local lessons=Lessons.new({state=function()return nurseryState end,mask=function()return clientUI.coach.mask end,
      teach=teachOn,park=function()return Attract.parkAnchor()~=nil end,pointer=pointer,
      text=function(key)return Copy.get(key,{pet=petName()})end,
      event=function(name)request:FireServer("onboardEvent",name)end,
-     target=function(id)
+     send=function(value)nurseryRequest:FireServer("teachMark",value)end,
+     wipe=function()local w=clientUI.giftWipe;return w~=nil and w:running()end,
+     visit=function()return wiring and wiring.visit or 0 end,
+     target=function(id,f)
       if anyCard()then return nil end
       if id=="dress"then
        local hueView=clientUI.hueView
@@ -6646,11 +6654,21 @@ do
        local tile=sheet and sheet:FindFirstChild("Fun",true)
        return if live(tile)then tile else nil,"go"
       end
+      if wiring then return wiring:target(id,f)end
       return nil
      end})
+    wiring=require(script.TeachWiring).new({lessons=lessons,teach=teachOn,clientUI=clientUI,roomView=roomView,board=board,attr=clientUI.attr,
+     playerGui=function()return playerGui end,text=function(key,vars)vars=vars or {};vars.pet=vars.pet or petName();return Copy.get(key,vars)end,
+     live=live,picker=picker,event=function(name)request:FireServer("onboardEvent",name)end,
+     pointer=require(script.TeachPointer).new({reduced=reducedNow,input=function()return Glyphs.kindOf(UserInputService:GetLastInputType())end}),
+     toast=function(key)require(script.DeckKit).toaster(overlayGui).show(Copy.get(key))end})
     local api={}
     function api:ask(id)return teachOn()and lessons:ask(id)end
     function api:skip(id)lessons:skip(id)end
+    -- teach more: a latch by name ("needs" from the all-set card), this session's latches, the Dash's Things row
+    function api:latch(id)return lessons:latch(id)end
+    function api.live()return lessons.live end
+    function api:dashOpen()return wiring~=nil and wiring:dashOpen()end
     -- Lesson A: "Paint {pet}!" opens the pet screen (the machine gave the camera back a Heartbeat ago). False: the caller
     -- paints in one tap (the pet not out, a race seat, the Dress up door off, the screen refused).
     function api:startDress(lesson)
@@ -6667,7 +6685,7 @@ do
     clientUI.teach=api
     local beatTeach=RunService.Heartbeat:Connect(function(dt)
      local good,why=pcall(function()
-      if not teachOn()then pointer:hide();dress=nil;return end
+      if not teachOn()then pointer:hide();dress=nil;wiring:step(os.clock(),dt);return end
       -- lesson A's end: a pot used on the pet (hueUse saved). The Dress up screen closes back to the pet screen and the
       -- wipe plays there, close up.
       if dress then
@@ -6693,10 +6711,11 @@ do
        end
       end
       lessons:step(os.clock(),dt)
+      wiring:step(os.clock(),dt)
      end)
      if not good then warn("[Teach] "..tostring(why))end
     end)
-    gui.Destroying:Connect(function()beatTeach:Disconnect();pointer:destroy()end)
+    gui.Destroying:Connect(function()beatTeach:Disconnect();pointer:destroy();wiring:destroy()end)
    end)
    if not okTeach then warn("[Teach] not mounted: "..tostring(teachProblem))end
    -- Code review: the welcome gift never stays owed for good. While the snapshot says owed (welcomeGift = 0) and the

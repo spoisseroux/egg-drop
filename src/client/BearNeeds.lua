@@ -15,6 +15,7 @@
 -- that is off). Pure rules first (spec-checked), then the controller; init.client gives it the game as deps.
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Coach=require(Shared:WaitForChild("CoachMarks"))
+local Teach=require(Shared:WaitForChild("TeachMarks"))
 local Toys=require(Shared:WaitForChild("ToyCatalog"))
 local Tips=require(script.Parent.ThingsTips)
 local V2=require(script.Parent.OnboardV2)
@@ -55,7 +56,10 @@ function Needs.facts(state,live)
 		toyGiven=toyGiven,toyBought=toyBought,rounds=tonumber(stats.rounds)or 0,
 		nest=nest,nestShown=nest~=nil and live.nest==true,nestTucked=nest~=nil and(nest.tucked==true or(tonumber(nest.n)or 0)>0),
 		nestReady=nest~=nil and nest.ready==true,
-		playDates=tonumber(playDate.count)or 0,parkOn=live.park~=false,saidHi=live.saidHi==true,deckDone=live.deckDone==true,inPark=live.inPark==true}
+		playDates=tonumber(playDate.count)or 0,parkOn=live.park~=false,saidHi=live.saidHi==true,deckDone=live.deckDone==true,inPark=live.inPark==true,
+		-- Teach more (ARCH-REVIEW-TEACH 3): the need bubbles are over for good (TeachMarks `needs`: "You're all set!", or
+		-- the server's load rules), read only with Onboard `teach` on (live.teach); a later build's new need never comes back.
+		needsOver=live.teach==true and Teach.has(Teach.merge(state.teachMask,live.teachMask),"needs")}
 end
 -- Is this need done (its bit saved, or the thing itself already true)?
 function Needs.closed(id,f)
@@ -78,7 +82,7 @@ end
 -- The need open now, or nil. ctx: {on (the switch), returning, owned, order, skip (ids passed over this session)}.
 function Needs.current(f,ctx)
 	ctx=ctx or {}
-	if ctx.on~=true or ctx.returning==true or(ctx.owned or 0)<=0 or Coach.veteran(f.totalWins)then return nil end
+	if ctx.on~=true or ctx.returning==true or(ctx.owned or 0)<=0 or Coach.veteran(f.totalWins)or f.needsOver==true then return nil end
 	for _,id in ipairs(ctx.order or Needs.Order)do
 		if Needs.available(id,f)and not Needs.closed(id,f)and not(ctx.skip and ctx.skip[id])then return id end
 	end
@@ -322,6 +326,8 @@ function Needs:step(now,dt)
 	if owned>0 and d.greeting()==true and(self.hiShown or not asking)then self.live.saidHi=true end
 	if d.inPark()==true then self.live.inPark=true end
 	self.live.mask=d.mask()
+	self.live.teach=d.teach~=nil and d.teach()==true
+	self.live.teachMask=if d.teachMask then d.teachMask()else nil
 	self.live.nest=d.nest()==true
 	if d.park then self.live.park=d.park()~=false end
 	local f=Needs.facts(state,self.live)

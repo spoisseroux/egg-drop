@@ -43,6 +43,10 @@
 --                           taps after the Paint gift, the Pocket Deck, the Menu (coach bit menuSeen), the Pet Park's
 --                           Throw and the Garden Dash's Go. Each is done only by its saved fact. Off is beta (40) with
 --                           the free eggs through the shop (`gifts`) and the camera fix.
+--                           Teach more (qa-2026-11-27-beta42/TEACH-MORE-BRIEF, ARCH-REVIEW-TEACH): the first field
+--                           round's deck tour and tips (DeckTour), the reset, quests, snacks, stats and wardrobe
+--                           lessons, Settings > Skip the tips, and "done for good" (TeachMarks: `teachMask`). Off is
+--                           beta (42): the saved latches are kept but never read.
 -- ConfigService keys `onboard_follow`, `onboard_needs`, `onboard_nest` (server OnboardConfig): off until the config has
 -- loaded once, then missing or malformed = on. The server publishes `Onboard_<feature>` as its own value AND Things.on()
 -- and republishes when Things changes, so the attribute alone is the truth for clients; on() checks Things too, so a
@@ -64,8 +68,9 @@ Onboard.Keys=table.freeze({follow="onboard_follow",needs="onboard_needs",nest="o
 -- Onboarding v3 brief (switch `lead`): LeadStarted, LeadParked, NestReached.
 -- The gift chain (switch `gifts`): GiftShown, GiftParked, GiftCranked, GiftDone, PeekShown (the first of each).
 -- Onboarding part 2 (switch `teach`): TeachShown, TeachDone (the first of each).
+-- Teach more: TeachGraduated_<finished|skipped|movedOn> is recorded by the server when its write graduates the save.
 Onboard.Events=table.freeze({StorkShown=true,EggSetDown=true,AllSet=true,OnboardSkipped_Stork=true,LeadStarted=true,LeadParked=true,NestReached=true,
-	GiftShown=true,GiftParked=true,GiftCranked=true,GiftDone=true,PeekShown=true,TeachShown=true,TeachDone=true})
+	GiftShown=true,GiftParked=true,GiftCranked=true,GiftDone=true,PeekShown=true,TeachShown=true,TeachDone=true,TourShown=true,TourDone=true})
 function Onboard.attribute(feature)return Onboard.Attributes[feature]end
 function Onboard.key(feature)return Onboard.Keys[feature]end
 

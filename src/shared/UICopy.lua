@@ -341,7 +341,14 @@ local Table={
  },
  -- Onboarding part 2 (ONBOARDING-P2-BRIEF 2, Onboard "teach"): the pointer's labels on the real buttons, a few words
  -- each. Keyboard and gamepad add their key or glyph after the words (TeachPointer).
- teach={dress="Dress up!",paint="Tap Paint!",deck="Play!",menu="Open the Menu!",things="All the games!",throw="Throw it!",go="Go!"},
+ teach={dress="Dress up!",paint="Tap Paint!",deck="Play!",menu="Open the Menu!",things="All the games!",throw="Throw it!",go="Go!",
+  -- Teach more (qa-2026-11-27-beta42/TEACH-MORE-BRIEF): the first field round's tour (DeckTour, with "{n}/{of}"), its tips,
+  -- the round-two quests pointer, the colour reset, the snack, stats and wardrobe lessons and Settings > Skip the tips.
+  tour1="Tick these to win!",tour2="Your balls. Use them well!",level="Tap to change level!",levelSub="Harder pays more ★",
+  tipNext="This one's next!",tipChain="Chain! Quick merges score more",tipGoal="One down! Tick them all to win",
+  quests="Quests pay extra ★",more="One more thing!",reset="Change your mind? It's free!",snack="Snack time!",feed="Feed {pet}!",
+  stats="See {pet} grow!",outfits="Outfits!",skipAll="Skip the tips",count="{n}/{of}",
+  skipTitle="No more tips?",skipLine="You can still find everything in the Menu.",skipYes="Skip the tips",skipDone="Tips are off"},
  -- Section 3 (Onboard "allset2"): the celebration card.
  -- gift: the one-time welcome gift's pill under the stamps, its Stars landing one by one up to 5 (shown only once the
  -- server paid it); giftSub replaces `sub` with it. hatch: the button when the Stars cover the cheapest egg (the fun pass).

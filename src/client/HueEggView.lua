@@ -1900,6 +1900,23 @@ function View:teachPot(pot)
  end
  return self.chromeAction
 end
+-- Teach more (artifacts/qa-2026-11-27-beta42/TEACH-MORE-BRIEF.md section 2, the `reset` lesson; Onboard "teach"): the
+-- Colour tab with Back to white focused once per opening, so the grid scrolls to it (a focus only previews: nothing is
+-- cleared without its own tap and confirm). Returns the card (the pointer's target), or nil when this is not that screen.
+function View:teachWhite()
+ if not self.shade.Visible then self.teachWhiteFor=nil;return nil end
+ if not DressUp.on()or not self:chromeActive()or self.tab~="hue"or self.assignment or self.boundedEating then return nil end
+ if self.teachWhiteFor~=self.petId then
+  self.teachWhiteFor=self.petId
+  local ok,cards=pcall(PaintPanel.cards,self.state,self.petId,self.channel,self:paintReady())
+  if ok and type(cards)=="table"then
+   self.chromeFocus=self.chromeFocus or {};self.chromeFocus.hue=#cards+1
+   pcall(self.layout,self)
+  end
+ end
+ local card=self.hueCards and self.hueCards.original
+ return if card and card.Visible then card else nil
+end
 -- Tap / click on a chrome card: the first tap selects (and previews), the second acts.
 function View:chromeTap(tab,id)
  if not self:chromeActive()or self.tab~=tab then return false end

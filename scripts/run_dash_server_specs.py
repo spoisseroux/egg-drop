@@ -88,7 +88,9 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          # GIFT-ART-BRIEF (beta 40): the chip, ribbon, card, paint wipe and nest Peek's pure rules.
          "GiftArt",
          # Onboarding part 2 (qa-2026-11-27-beta40, ARCH-REVIEW-P2 1): the coach mask with lesson C's menuSeen bit.
-         "CoachMask"]
+         "CoachMask",
+         # Teach more (qa-2026-11-27-beta42, ARCH-REVIEW-TEACH): the lessons remembered (teachMask), and older builds keeping it.
+         "TeachMarks", "TeachMarksCrossVersion"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
@@ -158,6 +160,8 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           "GiftChain",
           # Onboarding part 2 (qa-2026-11-27-beta40): the shop's gift mode and latch, the five lessons and the pointer.
           "GiftShop", "TeachLessons",
+          # Teach more (qa-2026-11-27-beta42): the first field round's deck tour and tips.
+          "DeckTour",
           # DECK-FEEL-BRIEF (beta 40 notes 9-17, switch deckfeel): the open, holds, body press, life, stepper, polish,
           # results; the stale-balls gate (DeckFresh, always on).
           "DeckFeel"]
@@ -243,7 +247,7 @@ def client_modules():
                     # The gift chain: its controller; GIFT-ART-BRIEF: the wrapped egg's drawing and the machine's ribbon.
                     "GiftChain.lua", "GiftEggArt.lua", "GiftRibbon.lua",
                     # Onboarding part 2: the shop's gift mode, the lessons and their pointer.
-                    "GiftShop.lua", "TeachLessons.lua", "TeachPointer.lua",
+                    "GiftShop.lua", "TeachLessons.lua", "TeachPointer.lua", "DeckTour.lua",
                     # DECK-FEEL-BRIEF: the feel pass's pure rules, the body press and the fresh reopen gate.
                     "DeckFeel.lua", "DeckPressLean.lua", "DeckFresh.lua", "DeckHandoff.lua",
                     # Beta 41 code review: the jolt's rebase and the screen's holds (DeckFeel spec).

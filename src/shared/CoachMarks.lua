@@ -129,11 +129,15 @@ function Coach.veteran(totalWins)
 end
 -- Should this one-time card show now? Never twice (saved bit or shown this session), never
 -- for a veteran save, never before the first pet (the Welcome round has its own card).
+-- The lessons remembered (ARCH-REVIEW-TEACH 4): a graduated save (ctx.graduated: teachMask `done` with Onboard `teach`
+-- on) gets no teaching card again; these news cards are not lessons and stay.
+Coach.AfterGraduation=table.freeze({petArrived=true,questDone=true,weekDone=true,nestIntro=true})
 function Coach.wants(id,ctx)
 	ctx=ctx or {}
 	if not Coach.Bits[id]then return false end
 	if Coach.has(ctx.mask,id)then return false end
 	if type(ctx.seen)=="table"and ctx.seen[id]then return false end
+	if ctx.graduated==true and not Coach.AfterGraduation[id]then return false end
 	if Coach.veteran(ctx.totalWins)then return false end
 	return(ctx.owned or 0)>0
 end

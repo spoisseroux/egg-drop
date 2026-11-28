@@ -81,6 +81,7 @@ Beta (33), 2026-11-26: player scale (row 60). Beta (32), 2026-11-26: the first e
 
 | # | What | Beta | Try | Switch |
 |---|---|---|---|---|
+| 70 | **Teach more and onboarding remembered** (beta 42 notes 6-8, `artifacts/qa-2026-11-27-beta42/TEACH-MORE-BRIEF.md`, `ARCH-REVIEW-TEACH.md`) | - | `/freshsave`, play to the first full round: before the first drop three pointers (Goals, Balls left, the level card with "Harder pays more" on Win pays), Enter / R1 / a tap on a card goes on, Skip or L1 skips, a drop ends it; the level step comes back once in round two if untried, then "Quests pay extra" on the quest handle; the three tip pills (next ball, chain, goal). After the paint wipe: "One more thing!" then Back to white ringed. A snack: Snacks then the snack; then Stats; the next pet screen visit: Dress up then Outfit. Garden Dash shows past five wins and leads Things to do. Settings > Skip the tips (one confirm). Rejoin: nothing repeats; a pre-chain save sees no lessons; 12 rounds graduates | `/onboard teach` |
 
 ## Scoped, not built
 

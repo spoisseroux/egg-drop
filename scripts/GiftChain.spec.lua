@@ -254,5 +254,21 @@ return function(client)
 		b.chain:revealed();assert(not b.chain:replayUnseen(),"then the shop opens")
 	end)
 
+	test("teach more (ARCH-REVIEW-TEACH 5, brief 0.1): Chain.may with teach on",function()
+		local owedVet={on=true,veteran=true,granted={}}
+		assert(Chain.may({closed={},count=0},"dash",1e6,owedVet,true),"a save owed the chain is never a veteran (the Dash invite shows)")
+		assert(not Chain.may({closed={},count=0},"dash",1e6,owedVet,false),"teach off: as before")
+		assert(not Chain.may({closed={},count=0},"dash",1e6,{veteran=true,granted={}},true),"an unowed veteran: still none")
+		local grad={on=true,graduated=true,granted={}}
+		assert(not Chain.may({closed={},count=0},"park",1e6,grad,true)and not Chain.may({closed={},count=0},"pull",1e6,grad,true),"graduated: no invites")
+		assert(Chain.may({closed={},count=0},"toy",1e6,grad,true)and Chain.may({closed={},count=0},"snack",0,grad,true),"gift bubbles stay")
+		assert(Chain.may({closed={},count=0},"unseen",0,{on=true,graduated=true,granted={},unseen={kind="toy"}},true),"an unseen gift stays")
+		local full={closed={},count=3,lastReveal=0}
+		assert(Chain.may(full,"dash",1e6,{on=true,granted={}},true)and Chain.may(full,"park",1e6,{on=true,granted={}},true),"the next lesson's invite is outside the three")
+		assert(not Chain.may(full,"pull",1e6,{on=true,granted={}},true)and not Chain.may(full,"nest",1e6,{on=true,granted={}},true),"the other invites still count")
+		local f=Chain.facts({gifts={v=1},teachMask=2^16},{teach=true});assert(f.graduated==true)
+		assert(Chain.facts({gifts={v=1},teachMask=2^16},{teach=false}).graduated==false,"read only with teach on")
+	end)
+
 	return {passed=#cases,cases=cases}
 end

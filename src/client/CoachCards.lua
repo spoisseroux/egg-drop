@@ -357,6 +357,11 @@ function Cards:sync(snapshot)
  if type(snapshot)~="table"then return end
  self.snapshot=snapshot -- growth cuts: the Tomorrow line reads the stamp card from it
  self.mask=Coach.merge(self.mask,Coach.mask(snapshot.coachMask))
+ -- The lessons remembered (ARCH-REVIEW-TEACH 4): a graduated save gets no teaching card, only with Onboard `teach` on.
+ local okTeach,graduated=pcall(function()
+  return require(Shared:WaitForChild("TeachMarks")).has(snapshot.teachMask,"done")and require(Shared:WaitForChild("Onboard")).on("teach")
+ end)
+ self.graduated=okTeach and graduated==true
  self.totalWins=type(snapshot.totalWins)=="number"and snapshot.totalWins or self.totalWins
  if type(snapshot.inventoryMask)=="number"then self.inventoryMask=snapshot.inventoryMask end
  local hatch=snapshot.lastHatch
@@ -373,7 +378,7 @@ function Cards:sync(snapshot)
  self.synced=true
 end
 function Cards:ctx(extra)
- local ctx={mask=self.mask,seen=self.seen,totalWins=self.totalWins,owned=self.owned,revealPending=self.revealPending,inventoryMask=self.inventoryMask}
+ local ctx={mask=self.mask,seen=self.seen,totalWins=self.totalWins,owned=self.owned,revealPending=self.revealPending,inventoryMask=self.inventoryMask,graduated=self.graduated}
  if extra then for key,value in pairs(extra)do if ctx[key]==nil then ctx[key]=value end end end
  return ctx
 end
@@ -610,7 +615,7 @@ end
 function Cards:stepIntro(now,base,vars,roomFor)
  local things=self.options.things
  if not things then return end
- local ok,id,notice=pcall(things.due,{mask=base.mask,seen=base.seen,totalWins=base.totalWins,owned=base.owned,
+ local ok,id,notice=pcall(things.due,{mask=base.mask,seen=base.seen,totalWins=base.totalWins,owned=base.owned,graduated=base.graduated,
   shown=self.introShown,lastAt=self.introAt,now=now,roomFor=roomFor})
  if not ok then
   warn("[Things] tips: "..tostring(id))

@@ -2127,6 +2127,28 @@ function Screen:restoreCalm(h)
  -- The compact HUD re-applies the coach card's own height on its next paint.
  h.cardH=nil
 end
+-- Teach more (TEACH-MORE-BRIEF 1, ARCH-REVIEW-TEACH 7; DeckTour): the first field round's tour dims the HUD cards it is
+-- not pointing at, on the calm path's own card list. Nothing on a card changes: each gets one inactive veil child (its
+-- corner, 40% ink), shown or hidden, so the calm path, the feel pass's NEXT base and the HUD's own paint are untouched.
+-- lit = {[card name] = true} or nil (no veil anywhere). A rebuilt HUD starts clean.
+Screen.TeachVeil=.6
+function Screen:teachDim(lit)
+ local host=self.hudRoot;if not host then return end
+ for _,name in ipairs(CalmNames)do
+  local c=host:FindFirstChild(name)
+  if c and c:IsA("GuiObject")then
+   local veil=c:FindFirstChild("TeachVeil")
+   local want=lit~=nil and not lit[name]
+   if want and not veil then
+    veil=Kit.node("Frame",c,{Name="TeachVeil",BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=Screen.TeachVeil,BorderSizePixel=0,
+     Size=UDim2.fromScale(1,1),ZIndex=c.ZIndex+40,Active=false,Selectable=false})
+    local corner=c:FindFirstChildOfClass("UICorner")
+    Kit.node("UICorner",veil,{CornerRadius=corner and corner.CornerRadius or UDim.new(0,10)})
+   end
+   if veil then veil.Visible=want end
+  end
+ end
+end
 function Screen:stepWelcome(dt)if self.welcomeView then self.welcomeView:step(dt)end end
 function Screen:welcomeInput()if self.welcomeView then self.welcomeView:input()end end
 function Screen:welcomeResult(pending)if self.welcomeView then self.welcomeView:setSkipPending(pending)end end
