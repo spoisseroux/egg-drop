@@ -6559,7 +6559,7 @@ do
       local column=nurseryView.body and nurseryView.body:FindFirstChild("EggColumn")
       tile=column and column:FindFirstChild("Recipe_"..require(script.EggHatchView).GiftTile[kind])
      end
-     if tile then shopPointer:show(tile,Copy.get("onbGift.shop.hatch"));shopPointer:step(dt)else shopPointer:hide()end
+     if tile then shopPointer:show(tile,Copy.get("onbGift.shop.hatch"),{noLabel=true});shopPointer:step(dt)else shopPointer:hide()end
     end
     local nextLook=0
     local beatGifts=RunService.Heartbeat:Connect(function(dt)

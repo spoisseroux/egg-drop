@@ -143,6 +143,9 @@ function Pointer:step(dt)
 	self.ringScale.Scale=Pointer.pulse(self.time,reduced)
 	local o=self.opts or {}
 	self.label.Text=Pointer.words(self.words,kind,o.key,o.glyph)
+	-- opts.noLabel (beta 41 Studio check): ring and hand only, where the target already says it (the shop's FREE tile,
+	-- whose label sat over the tile above it).
+	self.label.Visible=o.noLabel~=true
 	local width=math.max(60,self.label.AbsoluteSize.X)
 	local screen=self.root.AbsoluteSize
 	local x,y,side=Pointer.labelSpot({x=at.X,y=at.Y,w=size.X,h=size.Y},{w=screen.X,h=screen.Y},width)

@@ -8,7 +8,7 @@
 --   .6-1.5 the count; the Star pulses 1.04 every 5; a mini Star flies from each payout row into it   [count_blip 1.0-1.5]
 --   1.5   the total punches 1.25, a 12-piece star burst (6 so close), confetti for a win (to 2.7), the body bounces
 --         3 px (win)                                                               [bank + stars_total]
---   1.7   new best only: a stamp over the score line                                [new_best]
+--   1.7   new best only: a stamp over the Stars count                                             [new_best]
 --   1.9   the buttons rise 8 px into place, Replay focused (never later)
 -- Sounds are RecapFeedback's beats (DeckResults.showInPlace sets them). A skips to the final state at any time.
 -- Reduced Motion: no slam, burst, confetti or bounce; everything shows at once.
@@ -54,11 +54,13 @@ function Fx.new(view,kind)
   self.minis[j]=node("TextLabel",view.root,{Name="FeelMini"..j,BackgroundTransparency=1,Text="★",TextSize=14,TextColor3=Gold,
    AnchorPoint=Vector2.new(.5,.5),Size=UDim2.fromOffset(16,16),ZIndex=view.root.ZIndex+18,Visible=false,Font=Enum.Font.GothamBold})
  end
- -- The new best's stamp over the score line (goals pane).
- if view.metrics then
-  self.best=node("TextLabel",view.metrics.Parent,{Name="FeelBest",BackgroundColor3=Gold,BackgroundTransparency=0,Text=Copy.get("deck.feel.best"),
-   TextColor3=Color3.fromHex("#15143A"),TextSize=13,Font=Enum.Font.GothamBold,AnchorPoint=Vector2.new(1,.5),Size=UDim2.fromOffset(84,22),
-   ZIndex=view.metrics.ZIndex+4,Visible=false,Rotation=-4})
+ -- The new best's stamp: between the Star and the Stars count in the middle pane (beta 41 Studio check: over the score line it hid
+ -- the score, in the narrow goals pane it hid "Goals n/m"); the goals pane's top-right corner when there is no count.
+ local bestHost=if view.count and view.count.Parent then view.count else view.metrics
+ if bestHost then
+  self.best=node("TextLabel",bestHost.Parent,{Name="FeelBest",BackgroundColor3=Gold,BackgroundTransparency=0,Text=Copy.get("deck.feel.best"),
+   TextColor3=Color3.fromHex("#15143A"),TextSize=13,Font=Enum.Font.GothamBold,AnchorPoint=Vector2.new(if bestHost==view.count then .5 else 1,.5),Size=UDim2.fromOffset(84,22),
+   ZIndex=bestHost.ZIndex+4,Visible=false,Rotation=-4})
   node("UICorner",self.best,{CornerRadius=UDim.new(0,6)})
  end
  if self.kind=="close"and view.star and view.star.rays then
@@ -176,8 +178,14 @@ function Fx:step(t,data)
   local newBest=data and data.newBest==true
   local st,rot,shown=Feel.stampAt(t-R.bestAt)
   self.best.Visible=newBest and shown
-  if newBest and shown and view.metrics then
-   self.best.Position=UDim2.fromOffset(view.metrics.Position.X.Offset+view.metrics.Size.X.Offset,view.metrics.Position.Y.Offset+8)
+  if newBest and shown then
+   local c=view.count
+   if c and self.best.Parent==c.Parent then
+    -- centred in the gap between the Star and the count (the pane is too narrow beside the count)
+    self.best.Position=UDim2.fromOffset(c.Position.X.Offset+c.Size.X.Offset/2,c.Position.Y.Offset-10)
+   else
+    self.best.Position=UDim2.new(1,-10,0,18)
+   end
    scaleOf(self.best,"FeelStamp").Scale=st;self.best.Rotation=-4+rot
   end
  end
