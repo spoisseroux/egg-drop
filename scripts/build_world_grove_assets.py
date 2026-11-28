@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 import sys
 from pathlib import Path
 
@@ -58,6 +59,7 @@ MESH_KEYS = ("role", "band", "kind", "tris", "size", "center", "pivotToCentre", 
 # The pool's look for the moat (WorldAero.Surfaces.water_pool: the teal tile at 14 studs; the moat's UVs are 16 a tile).
 POOL_TEXTURE = "rbxassetid://135229051638910"
 POOL_REFLECTANCE = .22
+PLASTIC, SMOOTH_PLASTIC, CONCRETE = 256, 272, 816  # Enum.Material tokens
 
 
 def finite(v):
@@ -340,16 +342,28 @@ def part_size(size):
     return [max(float(v), MIN_SIZE) for v in size]
 
 
+def template_material(mesh):
+    """(Enum.Material token, Reflectance) of a mesh's template. Plastic: matte surroundings (vertex colours show on the
+    untextured ones); stone Concrete (INGAME-CRITIQUE A: matte against the sky sheen, the drawn cracks kept); the water
+    the pool's reflectance; the lanterns SmoothPlastic by day (GroveLight turns them Neon at night)."""
+    kind = mesh.get("kind")
+    if kind == "water":
+        return PLASTIC, POOL_REFLECTANCE
+    if mesh["role"] in ("lantern", "lanterns") or kind == "glow":
+        return SMOOTH_PLASTIC, 0.0
+    if kind == "stone":
+        return CONCRETE, 0.0
+    return PLASTIC, 0.0
+
+
 def xml_part(index, mesh, mesh_id, raw, textures):
     sx, sy, sz = part_size(mesh["size"])
     initial = [v if v > 0 else 1e-3 for v in raw]
     kind = mesh.get("kind")
     texture = textures[mesh["texture"]]["color"] if mesh["texture"] else ""
-    material, reflectance = 256, 0.0  # Plastic: matte surroundings (vertex colours show on the untextured ones)
+    material, reflectance = template_material(mesh)
     if kind == "water":
-        texture, reflectance = POOL_TEXTURE, POOL_REFLECTANCE  # the pool's look
-    elif mesh["role"] in ("lantern", "lanterns") or kind == "glow":
-        material = 272  # SmoothPlastic by day; GroveLight turns it Neon at night
+        texture = POOL_TEXTURE  # the pool's look
     far = mesh["band"] == "far"
     lines = [
         f"    <Item class=\"MeshPart\" referent=\"GV{index}\">",
@@ -451,6 +465,20 @@ def fixture_lua(folder):
     contract(manifest)
     bound, textures = bind(manifest, readback, readback["fbxSha256"], readback["manifestSha256"], set())
     return lua(manifest, readback, textures)
+
+
+def fixture_materials(folder):
+    """{name: Enum.Material token} of the templates a fixture manifest makes (xml_part's rule), for the offline spec."""
+    manifest = normalise(json.loads((folder / "grove-fixture-manifest.json").read_text(encoding="utf-8")))
+    contract(manifest)
+    return {m["name"]: template_material(m)[0] for m in manifest["meshes"]}
+
+
+def kit_materials(path=XML_OUT):
+    """{name: Enum.Material token} of the committed GroveKit's templates, read from the file."""
+    text = path.read_text(encoding="utf-8")
+    return {name: int(token) for name, token in
+            re.findall(r'<string name="Name">(GV_[^<]+)</string>.*?<token name="Material">(\d+)</token>', text, re.S)}
 
 
 def main(argv):

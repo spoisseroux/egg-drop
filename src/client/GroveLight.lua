@@ -1,7 +1,8 @@
 -- The Hidden Grove's light (GROVE-MOCKUP "Lighting", GROVE-BUILD-PLAN 4, ARCH-REVIEW-GROVE 7). Built by GroveWorld inside
 -- its folder and destroyed with it; client only, nothing replicates, nothing collides.
---   * rays: one Beam per data ray (canopy to above the lawn), FaceCamera, 1 segment, LightInfluence 0, LightEmission 1,
---     about .8 clear, the streaks drifting (TextureSpeed); at most 5 on a touch-only device. Faded by the garden hour's
+--   * rays: one Beam per data ray (canopy to above the lawn), FaceCamera, 1 segment, LightInfluence 0, LightEmission .7,
+--     the drawn ray texture (the data's), clearer toward the lawn (Ray.keys), drifting slowly (TextureSpeed); at most 5
+--     on a touch-only device. Faded by the garden hour's
 --     phase (GardenHour.phase): full in the day hold, cyan in the night hold (the moon is where the 10.5 sun is), 0 at
 --     dawn and golden hour, blended by its k. Hour off: HollowClock.daylight(). Level 1 keeps half; level 2 none.
 --     Reduced Motion: the rays stand still.
@@ -22,10 +23,18 @@ Light.Name="GroveLight"
 Light.Weights=table.freeze({day=1,night=1,dawn=0,golden=0})
 Light.NightPhases=table.freeze({night=true})
 Light.PhoneRays=5
-Light.Ray=table.freeze({clear=.8,edge=.12,speed=.035,length=60,emission=1,
+-- INGAME-CRITIQUE B (Fable, 2026-11-28; first values, judge in a capture): the drawn ray (WorldGrove textures.ray, its
+-- studsPerTile the TextureLength), a slow drift (a tile a minute or more), less glow. `texture` and `length` are the
+-- fallback when the data carries no ray image (the falls strand at its old tile).
+Light.Ray=table.freeze({speed=.015,length=140,emission=.7,
 	day=Color3.fromHex("#FFF2D2"),night=Color3.fromHex("#9FE8FF"),
-	-- [check] Fable: the falls strand's streaks stand in for a drawn ray texture.
-	texture=Values.Waterfall.Textures.Strand})
+	texture=Values.Waterfall.Textures.Strand,fallbackLength=60,
+	-- Transparency along the beam at weight 1 ({position, value}; Attachment0, position 0, is the canopy end). The foot
+	-- key (.86) protects the lawn: raise it toward .9 first if the grass under a foot goes white.
+	keys=table.freeze({
+		day=table.freeze({{0,1},{.10,.52},{.55,.60},{.86,.82},{1,1}}),
+		night=table.freeze({{0,1},{.10,.71},{.55,.76},{.86,.89},{1,1}}),
+	})})
 Light.Mote=table.freeze({alive=8,life=8,speed=.6,size=.22,lift=.15,emission=1,texture=Values.GlintTexture})
 Light.Bubble=table.freeze({material=Enum.Material.Glass,look=Values.Surfaces.bubble,rate=1/20})
 -- The lanterns' night look. A mesh that holds both kinds in its vertex colours (the grove's GV_Glow__glow, kind
@@ -78,10 +87,27 @@ end
 function Light.motesOn(level,reduced)return level<1 and not reduced end
 function Light.bubblesOn(level,reduced)return level<2 and not reduced end
 function Light.rayMoves(reduced)return not reduced end
--- Pure: a ray's transparency at a weight (0 shows nothing; 1 is Ray.clear in the middle, fading at both ends).
-function Light.rayClear(weight)
-	weight=math.clamp(weight or 0,0,1)
-	return 1-(1-Light.Ray.clear)*weight
+-- Pure: a transparency `value` (weight 1's) at a weight: 0 shows nothing, 1 the value itself.
+function Light.rayClear(weight,value)
+	weight=if finite(weight)then math.clamp(weight,0,1)else 0
+	return 1-(1-value)*weight
+end
+-- Pure: the ray's transparency keys ({position, value}) at a weight, day or night (Ray.keys, each scaled by rayClear).
+function Light.rayKeys(weight,night)
+	local out={}
+	for i,key in ipairs(if night then Light.Ray.keys.night else Light.Ray.keys.day)do
+		out[i]={key[1],Light.rayClear(weight,key[2])}
+	end
+	return out
+end
+-- Pure: the ray's texture and TextureLength from the data (WorldGrove textures.ray: {color, studsPerTile}); the falls
+-- strand at its old length when the data has no ray image.
+function Light.rayTexture(data)
+	local ray=type(data)=="table"and type(data.textures)=="table"and data.textures.ray
+	if type(ray)=="table"and type(ray.color)=="string"and ray.color:match("^rbxassetid://%d+$")then
+		return ray.color,if finite(ray.studsPerTile)and ray.studsPerTile>0 then ray.studsPerTile else Light.Ray.length
+	end
+	return Light.Ray.texture,Light.Ray.fallbackLength
 end
 function Light.rayColour(night)return if night then Light.Ray.night else Light.Ray.day end
 -- Which rays show (indices into `rays`, the data's): a touch-only device takes only those marked phone (all, if none
@@ -166,6 +192,7 @@ function Light.build(options)
 		reduced=options.reduced==true,phone=options.phone==true,clock={look=math.huge,sun=math.huge,bubble=math.huge},
 		look={weight=-1,night=nil},gain=1,lit=nil,elapsed=0}
 	local gate=Light.gateDirection(data.sunGate)
+	local rayTexture,rayLength=Light.rayTexture(data)
 	-- Rays: one holder at the origin, two attachments a ray.
 	local rayHolder=holder(folder,"GroveRays",CFrame.new())
 	for index,ray in ipairs(data.rays)do
@@ -180,9 +207,9 @@ function Light.build(options)
 		beam.FaceCamera=true
 		beam.Segments=1
 		beam.LightInfluence,beam.LightEmission=0,Light.Ray.emission
-		beam.Texture=Light.Ray.texture
+		beam.Texture=rayTexture
 		beam.TextureMode=Enum.TextureMode.Wrap
-		beam.TextureLength=Light.Ray.length
+		beam.TextureLength=rayLength
 		beam.TextureSpeed=0
 		beam.Enabled=false
 		beam.Parent=rayHolder
@@ -243,13 +270,13 @@ function Light.build(options)
 		local shown={}
 		for _,index in ipairs(Light.rayChoice(data.rays,self.level,self.phone))do shown[index]=true end
 		local visible=look.weight>.02
-		local clear=Light.rayClear(look.weight)
-		-- The sequences are made only when the clear value or the night flag changes (this runs every .5 s).
-		if self.sequenceClear~=clear then
-			local edge=Light.Ray.edge
-			self.sequenceClear=clear
-			self.sequence=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(edge,clear),
-				NumberSequenceKeypoint.new(1-edge,clear),NumberSequenceKeypoint.new(1,1)})
+		local clear=math.clamp(look.weight,0,1)
+		-- The sequences are made only when the weight or the night flag changes (this runs every .5 s).
+		if self.sequenceClear~=clear or self.sequenceNight~=look.night then
+			self.sequenceClear,self.sequenceNight=clear,look.night
+			local points={}
+			for i,key in ipairs(Light.rayKeys(clear,look.night))do points[i]=NumberSequenceKeypoint.new(key[1],key[2])end
+			self.sequence=NumberSequence.new(points)
 		end
 		if self.colourNight~=look.night or self.colour==nil then
 			self.colourNight=look.night
