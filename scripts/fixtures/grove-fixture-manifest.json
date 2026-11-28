@@ -1,33 +1,37 @@
 {
- "note": "Fixture for scripts/Grove.spec.lua (a small grove, not the real one): run through build_world_grove_assets.fixture_lua.",
+ "note": "Fixture for scripts/Grove.spec.lua (a small grove in the art lane's manifest shape, not the real one): run through build_world_grove_assets.fixture_lua.",
  "version": 1,
- "coordinates": "FIXTURE. Blender (x, y, z) = Roblox (x, -z, y - 4); every number here is Roblox studs",
- "turnApplied": true,
- "meshes": [
-  {
-   "name": "GV_Fix_Moat",
-   "role": "moat",
+ "assetId": "",
+ "coordinateRule": "FIXTURE. Roblox (X, Y, Z) = Blender (x, z + 4, -y); every position here is already Roblox.",
+ "turnApplied": false,
+ "meshes": {
+  "GV_Fix_Moat__water": {
+   "name": "GV_Fix_Moat__water",
+   "role": "water",
    "band": "near",
+   "kind": "water",
    "tris": 1200,
    "size": [
     300,
-    4,
+    0.0,
     280
    ],
    "center": [
     12,
-    -27,
+    -26,
     -8
    ],
-   "texture": "stone",
+   "texture": "",
    "shadow": false,
+   "doubleSided": false,
    "maxLevel": 2,
-   "minRimDist": 0
+   "minRimDist": -60
   },
-  {
-   "name": "GV_Fix_TierNorth",
+  "GV_Fix_TierNorth__stone": {
+   "name": "GV_Fix_TierNorth__stone",
    "role": "tier",
    "band": "mid",
+   "kind": "stone",
    "tris": 4000,
    "size": [
     220,
@@ -41,13 +45,15 @@
    ],
    "texture": "stone",
    "shadow": false,
+   "doubleSided": false,
    "maxLevel": 2,
    "minRimDist": 46
   },
-  {
-   "name": "GV_Fix_FarEast",
-   "role": "forest",
+  "GV_Fix_FarEast__leaf": {
+   "name": "GV_Fix_FarEast__leaf",
+   "role": "far",
    "band": "far",
+   "kind": "leaf",
    "tris": 1800,
    "size": [
     120,
@@ -61,13 +67,15 @@
    ],
    "texture": "leaf",
    "shadow": false,
+   "doubleSided": false,
    "maxLevel": 2,
-   "minRimDist": 170
+   "minRimDist": 130
   },
-  {
-   "name": "GV_Fix_Trunk",
-   "role": "trunk",
+  "GV_Fix_Trunk__bark": {
+   "name": "GV_Fix_Trunk__bark",
+   "role": "giant_trunk",
    "band": "giant",
+   "kind": "bark",
    "tris": 3000,
    "size": [
     24,
@@ -81,13 +89,15 @@
    ],
    "texture": "bark",
    "shadow": false,
+   "doubleSided": false,
    "maxLevel": 2,
-   "minRimDist": 30
+   "minRimDist": -8
   },
-  {
-   "name": "GV_Fix_Crown",
-   "role": "crown",
+  "GV_Fix_Crown__leaf": {
+   "name": "GV_Fix_Crown__leaf",
+   "role": "giant_crown",
    "band": "giant",
+   "kind": "leaf",
    "tris": 2500,
    "size": [
     70,
@@ -101,13 +111,15 @@
    ],
    "texture": "leaf",
    "shadow": false,
+   "doubleSided": false,
    "maxLevel": 2,
-   "minRimDist": 0
+   "minRimDist": -25
   },
-  {
-   "name": "GV_Fix_Lamps",
-   "role": "lantern",
-   "band": "giant",
+  "GV_Fix_Glow__glow": {
+   "name": "GV_Fix_Glow__glow",
+   "role": "lanterns",
+   "band": "dressing",
+   "kind": "glow",
    "tris": 600,
    "size": [
     200,
@@ -119,15 +131,17 @@
     30,
     -8
    ],
-   "texture": "bark",
+   "texture": "",
    "shadow": false,
-   "maxLevel": 2,
-   "minRimDist": 10
+   "doubleSided": false,
+   "maxLevel": 1,
+   "minRimDist": 44
   },
-  {
-   "name": "GV_Fix_Vines",
-   "role": "vine",
-   "band": "giant",
+  "GV_Fix_Vines__leaf": {
+   "name": "GV_Fix_Vines__leaf",
+   "role": "dressing",
+   "band": "dressing",
+   "kind": "leaf",
    "tris": 2000,
    "size": [
     220,
@@ -141,13 +155,15 @@
    ],
    "texture": "leaf",
    "shadow": false,
+   "doubleSided": false,
    "maxLevel": 1,
    "minRimDist": 20
   }
- ],
+ },
  "instances": [
   {
-   "mesh": "GV_Fix_Trunk",
+   "tree": "Giant_1",
+   "mesh": "GV_Fix_Trunk__bark",
    "pivot": [
     150,
     -25,
@@ -157,7 +173,8 @@
    "scale": 1.0
   },
   {
-   "mesh": "GV_Fix_Trunk",
+   "tree": "Giant_2",
+   "mesh": "GV_Fix_Trunk__bark",
    "pivot": [
     -130,
     -25,
@@ -167,7 +184,8 @@
    "scale": 1.1
   },
   {
-   "mesh": "GV_Fix_Trunk",
+   "tree": "Giant_3",
+   "mesh": "GV_Fix_Trunk__bark",
    "pivot": [
     12,
     -25,
@@ -177,7 +195,8 @@
    "scale": 0.95
   },
   {
-   "mesh": "GV_Fix_Crown",
+   "tree": "Giant_1",
+   "mesh": "GV_Fix_Crown__leaf",
    "pivot": [
     150,
     165,
@@ -187,7 +206,8 @@
    "scale": 1.0
   },
   {
-   "mesh": "GV_Fix_Crown",
+   "tree": "Giant_2",
+   "mesh": "GV_Fix_Crown__leaf",
    "pivot": [
     -130,
     184,
@@ -197,7 +217,8 @@
    "scale": 1.1
   },
   {
-   "mesh": "GV_Fix_Crown",
+   "tree": "Giant_3",
+   "mesh": "GV_Fix_Crown__leaf",
    "pivot": [
     12,
     155,
@@ -210,76 +231,93 @@
  "textures": {
   "stone": {
    "color": "tex/stone.png",
-   "studsPerTile": 16
+   "colorId": "",
+   "studsPerTile": 32.0
   },
   "bark": {
    "color": "tex/bark.png",
-   "studsPerTile": 12
+   "colorId": "",
+   "studsPerTile": 24.0
   },
   "leaf": {
    "color": "tex/leaf.png",
-   "normal": "tex/leaf-n.png",
-   "studsPerTile": 10
+   "colorId": "",
+   "studsPerTile": 24.0
   }
  },
  "rays": [
   {
    "from": [
-    29.744,
-    147.207,
-    38.839
+    72.437,
+    212.0,
+    40.957
    ],
    "to": [
     -10,
-    20,
+    13,
     -30
    ],
-   "w0": 8,
-   "w1": 4
+   "w0": 5,
+   "w1": 9,
+   "phone": true
   },
   {
    "from": [
-    59.744,
-    147.207,
-    78.839
+    102.437,
+    212.0,
+    80.957
    ],
    "to": [
     20,
-    20,
+    13,
     10
    ],
-   "w0": 10,
-   "w1": 5
+   "w0": 6,
+   "w1": 11,
+   "phone": false
   },
   {
    "from": [
-    -20.256,
-    147.207,
-    68.839
+    22.437,
+    212.0,
+    70.957
    ],
    "to": [
     -60,
-    20,
+    13,
     0
    ],
-   "w0": 7,
-   "w1": 3.5
+   "w0": 5.5,
+   "w1": 10,
+   "phone": true
   }
  ],
+ "sun": {
+  "clockTime": 10.5,
+  "dir": [
+   0.3635,
+   0.87748,
+   0.31288
+  ]
+ },
  "sunGate": {
-  "az": 300.0,
-  "el": 58.0
+  "az": 40.72,
+  "el": 61.34
  },
  "moat": {
-  "surfaceY": -26,
-  "bedOpaque": true
+  "surfaceY": -26.0,
+  "bedOpaque": true,
+  "bankTopY": -8.8
  },
- "canopyBottomY": 130,
+ "canopyBottomY": 133.27,
  "hides": [
   "W7_Backdrop__cloud_1",
   "W7_Backdrop__far_peak_1",
   "W7_IsletsA__bark",
   "W7_CastleFlag_1__far_peak"
+ ],
+ "keeps": [
+  "W7_Underside__cliff_rock"
  ],
  "lanterns": [
   {
@@ -288,7 +326,9 @@
     20,
     -8
    ],
-   "kind": "warm"
+   "kind": "warm",
+   "radius": 4.5,
+   "source": "house"
   },
   {
    "pos": [
@@ -296,29 +336,27 @@
     22,
     40
    ],
-   "kind": "aqua"
+   "kind": "aqua",
+   "radius": 1.5,
+   "source": "post"
   }
  ],
  "falls": [
   {
-   "name": "GV_Fix_Falls_1",
+   "gorge": 1,
+   "tier": 1,
    "top": [
     150,
-    60,
+    30,
     -60
    ],
    "bottom": [
     140,
-    -26,
+    -25.9,
     -58
    ],
-   "width0": 6,
-   "width1": 8,
-   "normal": [
-    -1,
-    0,
-    0
-   ]
+   "width": 8,
+   "into": "moat"
   }
  ],
  "bubbles": [
@@ -345,8 +383,9 @@
      0
     ]
    ],
-   "period": 80,
-   "size": 3
+   "closed": true,
+   "radius": 1.5,
+   "seconds": 80
   },
   {
    "path": [
@@ -361,12 +400,15 @@
      -40
     ]
    ],
-   "period": 60,
-   "size": 2.4
+   "closed": true,
+   "radius": 1.2,
+   "seconds": 60
   }
  ],
  "totals": {
-  "tris": 26100,
-  "meshes": 7
+  "triangles": 26100,
+  "meshes": 7,
+  "instances": 6,
+  "groups": 11
  }
 }

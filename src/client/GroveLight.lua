@@ -8,14 +8,15 @@
 --   * motes: one ParticleEmitter per shown ray (6 to 10 alive, the glint texture, drifting up); off at level 1 or more
 --     and under Reduced Motion.
 --   * bubbles: one slow soap bubble per data path (3 to 5), the Bubble Spring's look; off at level 2 and Reduced Motion.
---   * lanterns: the role "lantern" meshes go Neon (their kind's glow) only while DriftLanterns.lit (daylight under .3);
---     no new PointLights.
+--   * lanterns: the role "lanterns" meshes glow (Glow.material, their kind's colour; a vertex-coloured mesh keeps a white
+--     part colour) only while DriftLanterns.lit (daylight under .3); no new PointLights.
 --   * sun gate: a SunRays multiplier while the camera faces the gate, through AeroWorld's look (look.setSunRays); this
 --     file never writes HollowSunRays (HollowClock and AeroWorld.paintLight own it).
 -- The pure parts are first so specs test them offline.
 local Shared=game:GetService("ReplicatedStorage"):WaitForChild("Shared")
 local Values=require(Shared:WaitForChild("WorldAero"))
 local Lanterns=require(Shared:WaitForChild("DriftLanterns"))
+local Rules=require(Shared:WaitForChild("Grove"))
 local Light={}
 Light.Name="GroveLight"
 Light.Weights=table.freeze({day=1,night=1,dawn=0,golden=0})
@@ -27,7 +28,12 @@ Light.Ray=table.freeze({clear=.8,edge=.12,speed=.035,length=60,emission=1,
 	texture=Values.Waterfall.Textures.Strand})
 Light.Mote=table.freeze({alive=8,life=8,speed=.6,size=.22,lift=.15,emission=1,texture=Values.GlintTexture})
 Light.Bubble=table.freeze({material=Enum.Material.Glass,look=Values.Surfaces.bubble,rate=1/20})
-Light.Glow=table.freeze({warm=Color3.fromHex("#FFC96A"),aqua=Color3.fromHex("#6FE6FF")})
+-- The lanterns' night look. A mesh that holds both kinds in its vertex colours (the grove's GV_Glow__glow, kind
+-- "vertex") keeps them: Neon over a white part colour, so the vertex colours carry warm and aqua; by day it is the
+-- template's SmoothPlastic, white, the vertex colours bright as drawn. [check] in Studio at night: if Neon flattens the
+-- vertex colours to white, set Glow.material to Enum.Material.SmoothPlastic (no glow, colours kept).
+Light.Glow=table.freeze({material=Enum.Material.Neon,warm=Color3.fromHex("#FFC96A"),aqua=Color3.fromHex("#6FE6FF"),
+	vertex=Color3.new(1,1,1)})
 -- SunRays toward the gate: WorldAero's .03 up to .08 as the camera looks within Near degrees of it (none past Far).
 Light.Sun=table.freeze({base=Values.SunRays.Intensity,peak=.08,near=15,far=40,step=.02})
 Light.Every=table.freeze({look=.5,sun=.25})
@@ -78,10 +84,20 @@ function Light.rayClear(weight)
 	return 1-(1-Light.Ray.clear)*weight
 end
 function Light.rayColour(night)return if night then Light.Ray.night else Light.Ray.day end
--- Pure: the unit direction to the sun gate (degrees: az counter-clockwise from +X toward -Z, el over the horizon).
+-- Which rays show (indices into `rays`, the data's): a touch-only device takes only those marked phone (all, if none
+-- are), at most PhoneRays; then the level's count, evenly spread over them.
+function Light.rayChoice(rays,level,phone)
+	local pool={}
+	for index,ray in ipairs(rays)do if not phone or ray.phone==true then table.insert(pool,index)end end
+	if phone and #pool==0 then for index in ipairs(rays)do table.insert(pool,index)end end
+	local out={}
+	for k,at in ipairs(Light.rayPick(#pool,Light.rayCount(#pool,level,phone)))do out[k]=pool[at]end
+	return out
+end
+-- Pure: the unit direction to the sun gate (degrees: az from +X toward +Z, el over the horizon).
 function Light.gateDirection(gate)
 	local az,el=math.rad(gate.az),math.rad(gate.el)
-	return Vector3.new(math.cos(el)*math.cos(az),math.sin(el),-math.cos(el)*math.sin(az))
+	return Vector3.new(math.cos(el)*math.cos(az),math.sin(el),math.cos(el)*math.sin(az))
 end
 -- Pure: the SunRays multiplier for a camera look (unit) and the gate direction: 1 looking away, peak/base facing it.
 function Light.sunGain(look,gate)
@@ -146,13 +162,14 @@ function Light.build(options)
 	-- Rays: one holder at the origin, two attachments a ray.
 	local rayHolder=holder(folder,"GroveRays",CFrame.new())
 	for index,ray in ipairs(data.rays)do
-		local from,to=vector(ray.from),vector(ray.to)
+		-- A foot on raised ground is stopped over it (Grove.rayEnds; options.groundY: HollowWorldLayout's).
+		local from,to,w1=Rules.rayEnds(ray,options.groundY)
 		local a0=Instance.new("Attachment");a0.Name="RayFrom"..index;a0.Position=from;a0.Parent=rayHolder
 		local a1=Instance.new("Attachment");a1.Name="RayTo"..index;a1.Position=to;a1.Parent=rayHolder
 		local beam=Instance.new("Beam")
 		beam.Name="GroveRay"..index
 		beam.Attachment0,beam.Attachment1=a0,a1
-		beam.Width0,beam.Width1=ray.w0,ray.w1
+		beam.Width0,beam.Width1=ray.w0,w1
 		beam.FaceCamera=true
 		beam.Segments=1
 		beam.LightInfluence,beam.LightEmission=0,Light.Ray.emission
@@ -215,7 +232,7 @@ function Light.build(options)
 	function self.paintRays(look)
 		look=look or self.look
 		local shown={}
-		for _,index in ipairs(Light.rayPick(#self.rays,Light.rayCount(#self.rays,self.level,self.phone)))do shown[index]=true end
+		for _,index in ipairs(Light.rayChoice(data.rays,self.level,self.phone))do shown[index]=true end
 		local visible=look.weight>.02
 		local clear=Light.rayClear(look.weight)
 		local edge=Light.Ray.edge
@@ -248,7 +265,7 @@ function Light.build(options)
 			local part=lantern.part
 			pcall(function()
 				if lit then
-					part.Material=Enum.Material.Neon
+					part.Material=Light.Glow.material
 					part.Color=Light.Glow[lantern.kind]or Light.Glow.warm
 				else
 					part.Material,part.Color=lantern.material,lantern.color

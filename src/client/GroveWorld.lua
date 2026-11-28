@@ -6,11 +6,13 @@
 --     the server copies them there only where the Aero and grove ceilings pass) into the workspace folder EggDropGrove,
 --     never inside EggDropLounge (World:paint recolours Beams there, WindClient scans its folders). Anchored, nothing
 --     collides, is queried or touched, nothing casts a shadow. A mesh with `center` stands once at its bounds centre; an
---     instanced one (giants, crowns) stands at each `instances` row (pivot, yaw, scale). With turnApplied, every part
---     takes the import's pi turn about Y after its position (AeroKit.Turn). A mesh whose maxLevel is under the budget
---     level is not built, and is taken down when the level rises (it never comes back down).
---   * the gorge falls: one flat Beam a data fall, the server sheets' look (WorldV7Data.fallTexture); still under Reduced
---     Motion.
+--     instanced one (giants, crowns) stands at each `instances` row (pivot, yaw, scale). Unless turnApplied (the turn is
+--     baked), every part takes the import's pi turn about Y after its position and yaw (AeroKit.Turn; the manifest's
+--     importTurn recipes; the fbx-import-pi-turn rule). A mesh whose maxLevel is under the budget level is not built,
+--     and is taken down when the level rises (it never comes back down).
+--   * the gorge falls: the GV_Falls mesh is the water; over each data fall one flat moving Beam (the server sheets' look,
+--     WorldV7Data.fallTexture), only at level 0 on a device that is not touch-only (12 draws: the phone budget keeps
+--     the mesh alone); still under Reduced Motion.
 --   * the light: GroveLight (rays, motes, bubbles, lanterns, the sun gate's SunRays multiplier).
 --   * the backdrop: what the grove replaces (Shared.Grove.hides: the data's hides plus Sky Falls' server sheet and cloud
 --     foam) is hidden in GroveWorld's own records on AeroWorld's writer, never in the kit's (dropKit restores all of its
@@ -26,10 +28,19 @@ GroveWorld.Folder=Rules.Folder
 GroveWorld.Templates=Rules.Templates
 GroveWorld.Turn=CFrame.Angles(0,math.pi,0)
 GroveWorld.Hidden="GroveHidden" -- the part attribute WorldMotion skips
-GroveWorld.Falls=table.freeze({speed=1.3,length=8})
+GroveWorld.Falls=table.freeze({speed=1.3,length=8,out=.6})
+
+-- Pure: the falls' moving layer shows only at level 0 off touch-only devices.
+function GroveWorld.fallsOn(level,phone)return(level or 0)<1 and not phone end
+-- Pure: a fall's normal (flattened, unit) and its across (horizontal, at right angles: the beam's width direction).
+function GroveWorld.fallAxes(fall)
+	local n=Vector3.new(fall.normal[1],0,fall.normal[3]).Unit
+	return n,Vector3.new(n.Z,0,-n.X)
+end
 
 local function vector(list)return Vector3.new(list[1],list[2],list[3])end
-local function turnOf(data)return if data.turnApplied then GroveWorld.Turn else CFrame.identity end
+-- turnApplied false: the import's turn is not in the geometry, so the part carries it.
+local function turnOf(data)return if data.turnApplied then CFrame.identity else GroveWorld.Turn end
 
 -- Pure: a placed mesh's CFrame and Size.
 function GroveWorld.placedFrame(mesh,turn)
@@ -65,9 +76,11 @@ function GroveWorld.layout(data,level)
 	end
 	return out
 end
--- Pure: the lantern kind of a lantern mesh: its own `kind` if it has one, else the nearest data lantern's, else warm.
+-- Pure: the lantern kind of a lantern mesh: "vertex" for one that carries both in its vertex colours (kind "glow": the
+-- grove's GV_Glow__glow), its own warm or aqua, a name that says which, else the nearest data lantern's.
 function GroveWorld.lanternKind(data,name,cframe)
 	local mesh=data.meshes[name]
+	if mesh.kind=="glow"then return "vertex"end
 	if mesh.kind=="warm"or mesh.kind=="aqua"then return mesh.kind end
 	if string.find(string.lower(name),"aqua",1,true)then return "aqua"end
 	if string.find(string.lower(name),"warm",1,true)then return "warm"end
@@ -112,13 +125,15 @@ function GroveWorld.build(options)
 			if row.instance then p:SetAttribute("GroveInstance",row.instance)end
 			p.Parent=folder
 			table.insert(parts,p)
-			if row.mesh.role=="lantern"then
+			if Rules.LanternRoles[row.mesh.role]then
 				table.insert(lanterns,{part=p,kind=GroveWorld.lanternKind(data,row.name,row.cframe),material=p.Material,color=p.Color})
 			end
 		end
-		-- The gorge falls: one holder at the origin, a flat beam a fall (the attachments' Axis the normal, world up second).
+		-- The gorge falls' moving layer: one holder at the origin, a flat beam a fall. A Beam lays its width along its
+		-- attachments' SecondaryAxis, so that is the sheet's across (world up would stand it edge-on: the
+		-- roblox-beam-orientation rule); Axis is the normal. Just in front of the mesh's sheet.
 		local falls={}
-		if #data.falls>0 then
+		if #data.falls>0 and GroveWorld.fallsOn(level,options.phone)then
 			local anchor=Instance.new("Part")
 			anchor.Name="GroveFalls"
 			inert(anchor)
@@ -127,10 +142,10 @@ function GroveWorld.build(options)
 			anchor.CFrame=CFrame.new()
 			anchor.Parent=folder
 			for _,fall in ipairs(data.falls)do
-				local normal=vector(fall.normal).Unit
+				local normal,across=GroveWorld.fallAxes(fall)
 				local function attach(at)
 					local a=Instance.new("Attachment")
-					a.CFrame=CFrame.fromMatrix(vector(at),normal,Vector3.yAxis)
+					a.CFrame=CFrame.fromMatrix(vector(at)+normal*GroveWorld.Falls.out,normal,across)
 					a.Parent=anchor
 					return a
 				end
@@ -150,7 +165,10 @@ function GroveWorld.build(options)
 				table.insert(falls,beam)
 			end
 		end
+		local groundY=options.groundY
+		if groundY==nil then groundY=require(Shared:WaitForChild("HollowWorldLayout")).groundY end
 		local light=Light.build({parent=folder,data=data,lanterns=lanterns,level=level,reduced=options.reduced,phone=options.phone,
+			groundY=groundY or nil,
 			hour=options.hour,daylight=options.daylight,camera=options.camera,setSunRays=options.setSunRays,connect=options.connect,
 			now=options.now,warn=options.warn})
 		return{falls=falls,light=light}
@@ -166,6 +184,11 @@ function GroveWorld.build(options)
 	function handle.setLevel(next)
 		if type(next)~="number"or next<=handle.level then return end
 		handle.level=next
+		if not GroveWorld.fallsOn(next)and #handle.falls>0 then
+			local anchor=handle.falls[1].Parent
+			table.clear(handle.falls)
+			pcall(function()anchor:Destroy()end)
+		end
 		for i=#parts,1,-1 do
 			local p=parts[i]
 			if(p:GetAttribute("GroveMaxLevel")or 2)<next then

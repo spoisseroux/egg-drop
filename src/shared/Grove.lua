@@ -10,21 +10,25 @@
 -- and the upload's grove-readback.json). Roblox studs. Every field below is required; GroveWorld builds nothing (the
 -- floating-island backdrop stays) while validate() says no, and the committed placeholder (assetId "") always says no.
 --   version         1
---   coordinates     the coordinate rule, as words (Blender (x, y, z) = Roblox (x, -z, y - 4)); every number here is Roblox
---   turnApplied     boolean: true = the FBX import turned every mesh by pi about Y, so each part gets CFrame.Angles(0, pi,
---                   0) after its position (AeroKit.Turn, the fbx-import-pi-turn rule); false = no turn
+--   coordinates     the coordinate rule, as words (Roblox (X, Y, Z) = Blender (x, z + 4, -y)); every number here is Roblox
+--   turnApplied     boolean: whether the pi turn the FBX import puts on every mesh is already baked into the geometry.
+--                   false (the grove pack) = it is not, so every part takes CFrame.Angles(0, pi, 0) after its position
+--                   and yaw (AeroKit.Turn, the fbx-import-pi-turn rule, the manifest's importTurn recipes); true = none
 --   assetId         the uploaded Model's id (digits); "" = not uploaded (placeholder)
---   meshes          {[GV_name] = {role, band, tris, size {x,y,z}, center {x,y,z} | pivotToCentre {x,y,z}, texture,
+--   meshes          {[GV_name] = {role, band, kind?, tris, size {x,y,z}, center {x,y,z} | pivotToCentre {x,y,z}, texture,
 --                   shadow, maxLevel, minRimDist}}. `center`: placed once at its bounds centre. `pivotToCentre`: an
 --                   instanced piece (giants, crowns), placed by `instances`; the bounds centre from its pivot at scale 1
---                   before the yaw. band: near (moat, 0-45 past the rim), mid (the tiers, 45-160), giant (the nine and
---                   what hangs on them), far (the forest rim, 160 and out). role "lantern" glows at night. maxLevel: the
---                   highest AliveBudget level it still shows at (2: always; 1: dropped at level 2). shadow must be false.
+--                   before the yaw. band: near (moat and bank), mid (the tiers, 45 and more past the rim), giant (the
+--                   nine), dressing (houses, props, lanterns on the giants), far (the forest rim, 45 and more past).
+--                   role "lanterns" (or "lantern") glows at night. texture: a textures key, or "" (vertex-coloured, or
+--                   the template's own look). maxLevel: the highest AliveBudget level it still shows at (2: always; 1:
+--                   dropped at level 2). shadow must be false. minRimDist may be negative (the bank, the giants' boughs).
 --   instances       {{mesh, pivot {x,y,z}, yaw (radians), scale}}
---   textures        {[key] = {color = rbxassetid, normal = rbxassetid?, studsPerTile}}; a mesh's texture names a key
---   rays            {{from {x,y,z}, to {x,y,z}, w0, w1}}: from in the canopy, to above the lawn (at most Rays.Max)
---   sunGate         {az, el} in degrees: the way to the gap in the giants, az counter-clockwise from +X toward -Z (the
---                   Blender az with y = -z), el over the horizon; aimed at the sun's direction at ClockTime 10.5
+--   textures        {[key] = {color = rbxassetid, normal = rbxassetid?, studsPerTile}}
+--   rays            {{from {x,y,z}, to {x,y,z}, w0, w1, phone}}: from in the canopy, to above the lawn (at most
+--                   Rays.Max); phone: one of those a touch-only device shows (at most 5)
+--   sunGate         {az, el} in degrees: the way to the gap in the giants, az from +X toward +Z, el over the horizon;
+--                   the sun's direction at ClockTime 10.5 (Studio: GetSunDirection() = (.3635, .8775, .3129))
 --   moat            {surfaceY, bedOpaque}: the moat's water top (at or under Clear.MoatTop, under the sky layers) and
 --                   whether its bed is opaque (nothing below shows through)
 --   canopyBottomY   the lowest crown underside over the island (the balloons stay under it)
@@ -32,14 +36,16 @@
 --   lanterns        {{pos {x,y,z}, kind "warm" | "aqua"}}
 --   falls           {{name, top {x,y,z}, bottom {x,y,z}, width0, width1, normal {x,y,z}}}: the gorge falls, Beams
 --   bubbles         {{path {{x,y,z}, ...}, period, size}}: closed loops, one bubble each (at most Bubbles.Max)
---   totals          {tris, meshes}: the ring's triangles counting every instance, and the mesh count
+--   totals          {tris, meshes, groups}: the ring's triangles counting every instance, the mesh count, the draw
+--                   groups (a placed mesh or an instance each)
 local Grove={}
 Grove.Feature="grove"
 Grove.Folder="EggDropGrove" -- the workspace folder the ring lives in (never inside EggDropLounge: ARCH-REVIEW-GROVE 1)
 Grove.Templates="GroveKit"  -- ReplicatedStorage.GroveKit (AeroConfig.mountKit copies it where the ceilings pass)
 Grove.Prefix="GV_"
 Grove.Version=1
-Grove.Bands=table.freeze({near=true,mid=true,giant=true,far=true})
+Grove.Bands=table.freeze({near=true,mid=true,giant=true,dressing=true,far=true})
+Grove.LanternRoles=table.freeze({lantern=true,lanterns=true})
 Grove.LanternKinds=table.freeze({warm=true,aqua=true})
 -- Budgets (GROVE-MOCKUP "Performance budget", ARCH-REVIEW-GROVE 6).
 Grove.Budget=table.freeze({tris=45000,perMesh=10000,groups=40,farMesh=2000})
@@ -48,9 +54,11 @@ Grove.Budget=table.freeze({tris=45000,perMesh=10000,groups=40,farMesh=2000})
 Grove.Clear=table.freeze({MoatTop=-25,MidRim=45,RayOverLawn=4,RayDome=4,RaySheet=2})
 Grove.Rays=table.freeze({Max=9})
 Grove.Bubbles=table.freeze({Max=5})
--- Island pieces Sky Falls needs gone while the grove stands, whatever `hides` says (ARCH-REVIEW-GROVE 3): the server's
--- sheet beam (to y -68, through the moat) and the cloud foam under the old drop.
-Grove.SkyFallsHides=table.freeze({"Water_SkyFalls","W7_Water__cloud"})
+-- Island pieces that must go while the grove stands, whatever `hides` says. Sky Falls (ARCH-REVIEW-GROVE 3): the
+-- server's sheet beam (to y -68, through the moat) and the cloud foam under the old drop. The Sky Falls mesh
+-- (W7_Water__waterfall_sky, also to -68) stays: it lands in the moat, whose opaque surface hides the rest. The crystals
+-- under the island (to y -90) would stand up out of the moat as spikes in the water: hidden.
+Grove.ExtraHides=table.freeze({"Water_SkyFalls","W7_Water__cloud","W7_Crystals__glow_aqua","W7_Crystals__glow_pink"})
 
 -- Switch ----------------------------------------------------------------------------------------------------------
 -- env (specs): {alive, aero}; the game passes nothing.
@@ -102,10 +110,10 @@ function Grove.validate(data)
 		if(mesh.center~=nil)==(mesh.pivotToCentre~=nil)then return false,name..": needs exactly one of center and pivotToCentre"end
 		if mesh.center~=nil and not vec3(mesh.center)then return false,name..": center"end
 		if mesh.pivotToCentre~=nil and not vec3(mesh.pivotToCentre)then return false,name..": pivotToCentre"end
-		if type(mesh.texture)~="string"or not data.textures[mesh.texture]then return false,name..": texture "..tostring(mesh.texture)end
+		if type(mesh.texture)~="string"or mesh.texture~=""and not data.textures[mesh.texture]then return false,name..": texture "..tostring(mesh.texture)end
 		if mesh.shadow~=false then return false,name..": shadow must be false (the ring casts none)"end
 		if mesh.maxLevel~=0 and mesh.maxLevel~=1 and mesh.maxLevel~=2 then return false,name..": maxLevel"end
-		if not finite(mesh.minRimDist)or mesh.minRimDist<0 then return false,name..": minRimDist"end
+		if not finite(mesh.minRimDist)then return false,name..": minRimDist"end
 	end
 	if not list(data.instances)then return false,"no instances list"end
 	local placed={}
@@ -124,6 +132,7 @@ function Grove.validate(data)
 		if type(ray)~="table"or not vec3(ray.from)or not vec3(ray.to)then return false,"ray "..i..": from or to"end
 		if not finite(ray.w0)or not finite(ray.w1)or ray.w0<=0 or ray.w1<=0 then return false,"ray "..i..": widths"end
 		if ray.from[2]<=ray.to[2]then return false,"ray "..i..": does not come down"end
+		if type(ray.phone)~="boolean"then return false,"ray "..i..": phone"end
 	end
 	local gate=data.sunGate
 	if type(gate)~="table"or not finite(gate.az)or not finite(gate.el)then return false,"sunGate"end
@@ -151,33 +160,37 @@ function Grove.validate(data)
 		for _,point in ipairs(bubble.path)do if not vec3(point)then return false,"bubble "..i..": path"end end
 	end
 	local totals=data.totals
-	if type(totals)~="table"or not finite(totals.tris)or not finite(totals.meshes)then return false,"totals"end
+	if type(totals)~="table"or not finite(totals.tris)or not finite(totals.meshes)or not finite(totals.groups)then return false,"totals"end
 	local budget=Grove.budget(data)
 	if totals.tris~=budget.tris then return false,("totals.tris %d is not the ring's %d"):format(totals.tris,budget.tris)end
-	if totals.meshes~=budget.groups then return false,("totals.meshes %d is not %d"):format(totals.meshes,budget.groups)end
+	if totals.meshes~=budget.meshes then return false,("totals.meshes %d is not %d"):format(totals.meshes,budget.meshes)end
+	if totals.groups~=budget.groups then return false,("totals.groups %d is not %d"):format(totals.groups,budget.groups)end
 	return true
 end
 
 -- Budgets ---------------------------------------------------------------------------------------------------------
--- Pure: {tris (every instance counted), groups (distinct meshes: one template, one draw group each), problems}.
+-- Pure: {tris (every instance counted), meshes (templates), groups (draw groups: a placed mesh or an instance each),
+-- problems}.
 function Grove.budget(data)
 	local B=Grove.Budget
 	local count={}
 	for _,row in ipairs(data.instances or {})do count[row.mesh]=(count[row.mesh]or 0)+1 end
-	local tris,groups,problems=0,0,{}
+	local tris,meshes,problems=0,0,{}
+	local groups=#(data.instances or {})
 	local names={}
 	for name in pairs(data.meshes or {})do table.insert(names,name)end
 	table.sort(names)
 	for _,name in ipairs(names)do
 		local mesh=data.meshes[name]
-		groups+=1
+		meshes+=1
+		if mesh.center then groups+=1 end
 		tris+=mesh.tris*(if mesh.pivotToCentre then count[name]or 0 else 1)
 		if mesh.tris>B.perMesh then table.insert(problems,("%s: %d tris (over %d)"):format(name,mesh.tris,B.perMesh))end
 		if mesh.band=="far"and mesh.tris>B.farMesh then table.insert(problems,("%s: far band %d tris (over %d)"):format(name,mesh.tris,B.farMesh))end
 	end
 	if tris>B.tris then table.insert(problems,("ring %d tris (over %d)"):format(tris,B.tris))end
-	if groups>B.groups then table.insert(problems,("%d mesh groups (over %d)"):format(groups,B.groups))end
-	return{tris=tris,groups=groups,problems=problems}
+	if groups>B.groups then table.insert(problems,("%d draw groups (over %d)"):format(groups,B.groups))end
+	return{tris=tris,meshes=meshes,groups=groups,problems=problems}
 end
 
 -- Clearances ------------------------------------------------------------------------------------------------------
@@ -204,6 +217,24 @@ function Grove.segmentDistance(p0,p1,q0,q1)
 	end
 	return((p0+d1*s)-(q0+d2*t)).Magnitude
 end
+-- Pure: where a ray is drawn: from its canopy end down its line, stopped RayOverLawn over the ground (a data foot on
+-- raised ground, the east plateau, would end inside it). groundY nil: the data's own ends. Returns from, to, w1 (the
+-- foot's width at the new end) and whether it was shortened.
+function Grove.rayEnds(ray,groundY)
+	local from,to,w1=v(ray.from),v(ray.to),ray.w1
+	if not groundY then return from,to,w1,false end
+	local cut=false
+	for _=1,4 do
+		local floor=groundY(to.X,to.Z)+Grove.Clear.RayOverLawn
+		if to.Y>=floor-1e-6 or from.Y<=floor then break end
+		local f=(from.Y-floor)/(from.Y-to.Y)
+		local was=(to-from).Magnitude
+		to=from:Lerp(to,f)
+		w1=ray.w0+(w1-ray.w0)*((to-from).Magnitude/math.max(was,1e-6))
+		cut=true
+	end
+	return from,to,w1,cut
+end
 -- The highest a balloon's envelope top reaches (DriftLanterns place: its ground, rest height, bob, burn lift, size).
 function Grove.balloonTop(Lanterns,World,place)
 	local M=Lanterns.motion(place)
@@ -217,7 +248,9 @@ function Grove.clearances(data,ctx)
 	local problems={}
 	if data.moat.surfaceY>C.MoatTop then table.insert(problems,("moat surfaceY %g is over %g"):format(data.moat.surfaceY,C.MoatTop))end
 	for name,mesh in pairs(data.meshes)do
-		if mesh.band=="mid"and mesh.minRimDist<C.MidRim then table.insert(problems,("%s: %g past the rim (mid band needs %g)"):format(name,mesh.minRimDist,C.MidRim))end
+		if(mesh.band=="mid"or mesh.band=="far")and mesh.minRimDist<C.MidRim then
+			table.insert(problems,("%s: %g past the rim (%s band needs %g)"):format(name,mesh.minRimDist,mesh.band,C.MidRim))
+		end
 	end
 	ctx=ctx or {}
 	if ctx.lanterns and ctx.world then
@@ -227,10 +260,12 @@ function Grove.clearances(data,ctx)
 		end
 	end
 	for i,ray in ipairs(data.rays)do
-		local from,to=v(ray.from),v(ray.to)
+		-- As drawn (rayEnds: a foot on raised ground is stopped over it).
+		local from,to=Grove.rayEnds(ray,ctx.world and ctx.world.groundY)
 		if ctx.world then
 			local ground=ctx.world.groundY(to.X,to.Z)
-			if to.Y<ground+C.RayOverLawn then table.insert(problems,("ray %d ends %.1f over the lawn (needs %g)"):format(i,to.Y-ground,C.RayOverLawn))end
+			-- (rayEnds settles within a few hundredths on sloped ground.)
+			if to.Y<ground+C.RayOverLawn-.05 then table.insert(problems,("ray %d ends %.1f over the lawn (needs %g)"):format(i,to.Y-ground,C.RayOverLawn))end
 		end
 		local reach=math.max(ray.w0,ray.w1)/2
 		if ctx.dome then
@@ -244,10 +279,10 @@ function Grove.clearances(data,ctx)
 	end
 	return problems
 end
--- Every island name the grove hides: the data's, then Sky Falls' own (ARCH-REVIEW-GROVE 3), once each.
+-- Every island name the grove hides: the data's, then ExtraHides (Sky Falls, the crystals), once each.
 function Grove.hides(data)
 	local out,seen={},{}
-	for _,group in ipairs({data and data.hides or {},Grove.SkyFallsHides})do
+	for _,group in ipairs({data and data.hides or {},Grove.ExtraHides})do
 		for _,name in ipairs(group)do
 			if not seen[name]then seen[name]=true;table.insert(out,name)end
 		end
