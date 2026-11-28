@@ -91,8 +91,11 @@ function How.cards(id,input)
  for _,card in ipairs(set.cards)do
   if not open(card)then continue end
   local lineKey=if card.input then How.InputLine[input or How.inputKind()]or "line" else "line"
+  local line=UICopy.get("r3.help."..id.."."..card.key.."."..lineKey)
+  -- The daily rack (beta 45): the Wardrobe card says clothes come from the Outfit Egg, not Stars
+  if id=="companions"and card.key=="b"and require(game:GetService("ReplicatedStorage").Shared.DailyRack).on("rack")then line=UICopy.get("rack.closet.book")end
   table.insert(out,{key=card.key,icon=card.icon,art=card.art,
-   title=UICopy.get("r3.help."..id.."."..card.key..".title"),line=UICopy.get("r3.help."..id.."."..card.key.."."..lineKey)})
+   title=UICopy.get("r3.help."..id.."."..card.key..".title"),line=line})
  end
  return out
 end

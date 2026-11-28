@@ -148,13 +148,15 @@ return function(client,parent)
    test("Machine hub: this week's shelf on the Deck style and Companions tiles",function()
     local state={dailyDay=tostring(days[1])}
     local week=Deal.weekOf(days[1])
-    local companions=Hub.shelfLines("companions",{owned=1,state=state})
+    local companions=Hub.shelfLines("companions",{owned=1,state=state,closet=false})
     assert(companions and string.find(companions[1],"This week:",1,true)and companions[2]==UICopy.get("shelf.short"))
+    -- the daily rack (beta 45): clothes come from the Outfit Egg, so no wearable deals on the Companions tile
+    assert(Hub.shelfLines("companions",{owned=1,state=state,closet=true})==nil,"closet: no wearable deals")
     for _,slot in ipairs(Deal.slots(week))do
      local name=Hub.ShelfNames[slot.kind](slot.id)
      assert(type(name)=="string"and name~="",slot.kind..":"..slot.id.." has a name")
      local tile=if slot.kind=="wearable"then "companions"else "style"
-     local lines=Hub.shelfLines(tile,{owned=1,state=state})
+     local lines=Hub.shelfLines(tile,{owned=1,state=state,closet=false})
      assert(lines and string.find(lines[1],name,1,true),name.." is on the "..tile.." tile")
     end
     for _,id in ipairs({"hatch","quests","book","settings"})do assert(Hub.shelfLines(id,{owned=1,state=state})==nil,id)end

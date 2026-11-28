@@ -63,6 +63,9 @@ function Hub.rowsFor(callbacks)
   if paint and row.id=="wardrobe"then continue end
   if paint and row.id=="customize"then
    table.insert(out,{id="customize",icon="wand",name=UICopy.get("paint.door"),line=UICopy.get("paint.hub.line")})
+  elseif row.id=="wardrobe"and(if callbacks.closet~=nil then callbacks.closet==true else require(game:GetService("ReplicatedStorage").Shared.DailyRack).on("rack"))then
+   -- the daily rack (beta 45): clothes come from the Outfit Egg, not Stars
+   table.insert(out,{id=row.id,icon=row.icon,name=row.name,line=UICopy.get("rack.closet.hub")})
   elseif not(row.id=="stats"and callbacks.stats==false)and not(row.id=="name"and callbacks.names==false)then table.insert(out,row)end
  end
  return out

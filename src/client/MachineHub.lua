@@ -107,6 +107,15 @@ function Hub.shelfLines(id,ctx)
  ctx=ctx or {}
  local kinds=Hub.ShelfKinds[id]
  if not kinds or Hub.locked(id,ctx.owned)then return nil end
+ -- The daily rack (beta 45): clothes come from the Outfit Egg, so the Wardrobe's This week deals are not shown
+ -- (the server refuses a deal on an egg item). ctx.closet overrides the switch for specs.
+ local closet=if ctx.closet~=nil then ctx.closet==true else require(game:GetService("ReplicatedStorage").Shared.DailyRack).on("rack")
+ if closet then
+  local kept={}
+  for _,kind in ipairs(kinds)do if kind~="wearable"then table.insert(kept,kind)end end
+  if #kept==0 then return nil end
+  kinds=kept
+ end
  local week=if ctx.week~=nil then ctx.week else Deal.week(type(ctx.state)=="table"and ctx.state or {})
  if not week then return nil end
  return Deal.lines(week,kinds,Hub.ShelfNames)
