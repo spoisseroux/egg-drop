@@ -139,6 +139,8 @@ task.spawn(function()local ok,problem=pcall(function()require(script.PlayerScale
 task.spawn(function()local ok,problem=pcall(function()require(script.FindsConfig).start()end);if not ok then warn("[Finds] config not started: "..tostring(problem))end end)
 -- "This week" wardrobe pick off switch (ThisWeekConfig): the same way, one key. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.ThisWeekConfig).start()end);if not ok then warn("[ThisWeek] config not started: "..tostring(problem))end end)
+-- The daily rack's switches (RackConfig: daily_rack, look_daily, look_nopity). With its build ceiling off nothing starts.
+task.spawn(function()local ok,problem=pcall(function()require(script.RackConfig).start()end);if not ok then warn("[DailyRack] config not started: "..tostring(problem))end end)
 -- Garden hour off switch (GardenHourConfig): the same way, one key, but missing = off. With its build ceiling off nothing starts.
 task.spawn(function()local ok,problem=pcall(function()require(script.GardenHourConfig).start()end);if not ok then warn("[Hour] config not started: "..tostring(problem))end end)
 -- Island edges off switch (IslandBoundsConfig): the same way, one key. With its build ceiling off nothing starts.
@@ -1129,6 +1131,8 @@ local function addPlayer(player)
 		player.Chatted:Connect(function(message) pcall(function() require(script.FindsConfig).command(message) end) end)
 		-- "/thisweek <on|off|clear>": the This week wardrobe pick switch, this server only.
 		player.Chatted:Connect(function(message) pcall(function() require(script.ThisWeekConfig).command(message) end) end)
+		-- "/rack <rack|lookdaily|looknopity|all> <on|off|clear>": the daily rack's switches, this server only.
+		player.Chatted:Connect(function(message) pcall(function() require(script.RackConfig).command(message) end) end)
 		-- "/finds now": one find at once near you, past the timer (beta (12) QA G2), this server only.
 		player.Chatted:Connect(function(message)
 			if not garden.findsHost or not garden.findsHost.parseNow(message) then return end
@@ -2096,6 +2100,49 @@ nurseryRequest.OnServerEvent:Connect(function(player, action, value, revision)
 		board.nurseryBusy=false;if boards[player]~=board then return end
 		publishNursery(board);publishState(board);publishPetAppearance(board)
 		reply(if ok then "Saved"elseif reason=="Retrying"then "Retrying"else "Rejected",reason);return
+	end
+
+	-- The Outfit Egg (DailyRack "rack"; ROTATION-BRIEF 5, ARCH-REVIEW-ROTATION 1-3). value = {id (the request id: keep it
+	-- across Retrying and timeouts), egg="outfit", petId, day, price, mode, poolKey (all from `public.rack`), equip?}.
+	-- A saved request replays read-only (AlreadySaved with its record); a day, price, policy or pool the player did not see
+	-- answers DayChanged / PriceChanged / PolicyChanged / PoolChanged with no charge and a fresh snapshot. Replies ride
+	-- WearableResult with action="rackEgg", itemId and `rack` (RackState.publicLast: {id, egg, pet, item, rarity, day}).
+	if action=="rackEgg"then
+		local v=if type(value)=="table"then value else {}
+		local Rack=require(ReplicatedStorage.Shared.DailyRack)
+		local RackState=require(script.RackState)
+		local opId=if type(v.id)=="string"and #v.id>=1 and #v.id<=100 then v.id else nil
+		local petId=if type(v.petId)=="string"and #v.petId<=32 then v.petId else nil
+		local function reply(status,reason,record)
+			if boards[player]==board then
+				wearableResult:FireClient(player,{id=opId,action=action,petId=petId,itemId=record and record.item,status=status,reason=reason,rack=record,revision=board.nursery.state.revision})
+			end
+		end
+		if not opId or not petId or v.egg~="outfit"then reply("Rejected","InvalidRack");return end
+		local request={requestId=opId,petId=petId,day=v.day,price=v.price,mode=v.mode,poolKey=v.poolKey,equip=v.equip==true}
+		if RackState.find(board.nursery.state,opId)then
+			-- Read-only replay, still throttled.
+			if os.clock()-(board.lastRackReplay or -math.huge)<.3 then reply("Rejected","Throttled");return end
+			board.lastRackReplay=os.clock()
+			local ok,reason,record=Nursery.rackEgg(board.nursery,"outfit",request)
+			reply(if ok then "Saved"else "Rejected",reason,record);return
+		end
+		if not Rack.on("rack")then reply("Rejected","NotReady");return end
+		if os.clock()-(board.lastHatchRequest or -math.huge)<.3 then reply("Rejected","Throttled");return end
+		board.lastHatchRequest=os.clock()
+		if board.nurseryBusy or board.payoutPending then reply("Rejected","Busy");return end
+		board.nurseryBusy=true;publishNursery(board)
+		local walletBefore=board.nursery.state.nectar
+		local called,ok,reason,record=pcall(Nursery.rackEgg,board.nursery,"outfit",request)
+		if not called then warn("[DailyRack] "..tostring(ok));ok,reason,record=false,"Unavailable",nil end
+		if ok and reason=="Saved"and type(record)=="table"then
+			Economy.command(player,"OutfitEgg",walletBefore,board.nursery.state.nectar,board.nursery.state)
+			Economy.event(player,"EggOpened_outfit",1,{tostring(record.item),tostring(record.rarity)})
+		end
+		board.nurseryBusy=false;if boards[player]~=board then return end
+		publishNursery(board);publishState(board)
+		if ok and request.equip then publishPetAppearance(board)end
+		reply(if ok then "Saved"elseif reason=="Retrying"or reason=="Pending"then "Retrying"else "Rejected",reason,record);return
 	end
 
 	-- Ball themes (hatching v11, batch R1): fixed Star price, server-validated,

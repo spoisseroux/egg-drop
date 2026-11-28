@@ -26,7 +26,8 @@ Catalog.week=Variants.week
 -- Order: each rig item, then its variants in row order, so a slot tab lists a base with its
 -- recolours right after it. A variant copies the base's slot, keys, flags, tier and main
 -- colour data and adds variant=true, base=<id>, color=<hex>, piece=<attachment name or nil>,
--- gate=<LevelGate gate or nil>, weekly=<true on a "This week" row (ThisWeek), else nil>.
+-- gate=<LevelGate gate or nil>, weekly=<true on a "This week" row (ThisWeek), else nil>, and on an Outfit Egg row
+-- (DailyRack) egg=true, rarity, finish?, finishHexes? (listed only under math.huge: never sold, always rendered).
 function Catalog.compose(petId,rows)
  local definition=type(petId)=="string"and Defs[petId]
  local order,byId={},{}
@@ -53,7 +54,8 @@ function Catalog.compose(petId,rows)
     local list=following[row.base];if not list then list={};following[row.base]=list end
     table.insert(list,table.freeze({id=row.id,slot=base.slot,name=row.name,tier=base.tier,price=row.price or base.price,
      flags=base.flags,perSide=base.perSide,keys=base.keys,primary=base.primary,role=base.role,
-     variant=true,base=base.id,color=row.color,piece=row.piece,gate=row.gate,weekly=row.weekly}))
+     variant=true,base=base.id,color=row.color,piece=row.piece,gate=row.gate,weekly=row.weekly,
+     egg=row.egg,rarity=row.rarity,finish=row.finish,finishHexes=row.finishHexes}))
    end
   end
   for _,raw in ipairs(definition.wearableItems)do
@@ -122,8 +124,9 @@ end
 -- owned, in any week); unowned, the pick is sold from the Wardrobe's This week tab alone, by the
 -- server's week, never by this clock's list (review B37). With gates on and no weekly item listed or
 -- owned, or nothing gated or weekly owned, it is exactly inTab.
+-- Outfit Egg rows (DailyRack) are kept the same way: never sold here, listed in their slot tab once owned.
 local function ownsWeekly(owned)
- for _,id in ipairs(owned)do if Variants.ById[id]and Variants.ById[id].weekly then return true end end
+ for _,id in ipairs(owned)do if Variants.ById[id]and(Variants.ById[id].weekly or Variants.ById[id].egg)then return true end end
  return false
 end
 local function listsWeekly(petId)
@@ -139,7 +142,7 @@ function Catalog.shopTab(petId,tabSlot,owned)
  for _,item in ipairs(Catalog.forPet(petId,math.huge).order)do
   local mine=table.find(owned,item.id)~=nil
   local sold=listed[item.id]~=nil and item.weekly~=true
-  local kept=((item.gate~=nil and not gates)or item.weekly==true)and mine
+  local kept=((item.gate~=nil and not gates)or item.weekly==true or item.egg==true)and mine
   if item.slot==tabSlot and(sold or kept)then table.insert(result,listed[item.id]or item)end
  end
  return result

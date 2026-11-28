@@ -107,6 +107,10 @@
 -- ThisWeek (GARDEN-PLAY-BRIEF-2 section 8, Spencer 2026-11-26): the build ceiling for the "This week" wardrobe pick, one
 -- recolour a week at its full price on a stated cycle (ThisWeek.lua). Also needs the beta place or Studio
 -- (ThisWeek.PlaceId) and the server's switch (ThisWeekConfig: this_week). Missing = off: no weekly row listed or sold.
+-- DailyRack (artifacts/qa-2026-11-28-rotation/ROTATION-BRIEF.md, ARCH-REVIEW-ROTATION): the build ceiling for the daily
+-- Outfit Egg rack, its onboarding gift and the Paint Egg's daily odds / no-pity switches (DailyRack.lua). Also needs the
+-- beta place or Studio (DailyRack.PlaceId) and the server's switches (RackConfig: daily_rack, look_daily, look_nopity).
+-- Missing = off: no rack, no Outfit gift, the gift chain and the Paint Egg exactly as before. Live never opens it.
 return table.freeze({PetTrail=true,FirstHelloBonus=true,RoundTwoNudge=true,ToyPillCopy=true,CalmFirstDeck=true,TomorrowStrip=true,GardenTourCut=true,StarterBonus=true,FirstSessionFunnel=true,SimCheck=false,DeckClientSim=true,DeckClientSimTesters=true,Features=false,DayNight=false,Park=true,TestFreshSaves=false,PseudoLocale=false,SecondPet=true,WeeklyShelf=true,
  DeckNetTicks=true,DeckNetStream=true,DeckNetRender=true,DeckNetDrop=true,DeckNetGhost=true,
  AliveSprings=true,AliveMenus=true,AliveClose=true,AliveWind=true,AliveLife=true,AliveScene=true,AliveSnack=true,AliveWindbed=true,
@@ -138,4 +142,4 @@ return table.freeze({PetTrail=true,FirstHelloBonus=true,RoundTwoNudge=true,ToyPi
  -- AliveMusic2 (MUSIC-BRIEF 3 and 4, qa-2026-11-28-music): the v2 music (MusicTracks); beta and Studio only.
  AliveMusic2=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
- PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,PlayerScale=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true,TierPets=true,ParkTopLawn=true,ThisWeek=true})
+ PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,PlayerScale=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true,TierPets=true,ParkTopLawn=true,ThisWeek=true,DailyRack=true})

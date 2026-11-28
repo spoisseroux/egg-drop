@@ -91,11 +91,13 @@ function State.check(state,petId,itemId,price,week,gates,listWeek)
 	local item=if type(listWeek)=="number"then Catalog.forPet(petId,listWeek).byId[itemId]else Catalog.item(petId,itemId)
 	-- A weekly row is only ever sold by its own week (never through the clock's list).
 	if item and item.weekly==true and type(listWeek)~="number"then item=nil end
+	-- An Outfit Egg row (DailyRack) is never sold: only the egg grants one (architect review 4).
+	if item and item.egg==true then item=nil end
 	if not item and gates==true then
 		item=Catalog.forPet(petId,math.huge).byId[itemId]
 		if item and item.gate==nil then item=nil end
 	end
-	if not item then return false,"NotForSale"end
+	if not item or item.egg==true then return false,"NotForSale"end
 	local expected=expectedPrice("wearable",itemId,item.price,week)
 	if price~=nil and price~=expected then return false,"PriceChanged"end
 	if State.owns(state,petId,itemId)then return false,"AlreadyOwned"end
@@ -116,6 +118,22 @@ function State.applyBuy(state,candidate,gates)
 	put(state,candidate.petId,row)
 	state.nectar-=expected
 	return true
+end
+
+-- A granted item (the Outfit Egg and its gift, DailyRack; no price here, the caller debits): appends `itemId` to the
+-- pet's owned list (any row this build renders, math.huge) and, with `equip`, wears it. Refuses Unowned (pet),
+-- InvalidWearable, AlreadyOwned and ClosetFull at State.Limit, so no write path ever saves a 129th item.
+function State.grant(state,petId,itemId,equip)
+	if not Eggs.isOwned(state.inventoryMask,petId)then return false,"Unowned"end
+	local item=Catalog.forPet(petId,math.huge).byId[itemId]
+	if not item then return false,"InvalidWearable"end
+	local row=State.row(state,petId)
+	if table.find(row.owned,itemId)then return false,"AlreadyOwned"end
+	if #row.owned>=State.Limit then return false,"ClosetFull"end
+	table.insert(row.owned,item.id)
+	if equip then wear(row,petId,item)end
+	put(state,petId,row)
+	return true,nil,item
 end
 
 -- What an equip would change to, or nil plus a reason. itemId=false takes the slot off.

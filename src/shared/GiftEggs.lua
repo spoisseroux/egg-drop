@@ -25,14 +25,33 @@
 --   * Unknown keys (inside the field or a record) are newer data: kept, never a reason to fail.
 --   * Older builds ignore the unknown top-level field and keep it when they save (GiftEggCrossVersion.spec); what a
 --     gift adds (a pot, a toy unlock, a Stat Egg receipt) is in fields every build already accepts.
+-- The Outfit gift (DailyRack "rack", ROTATION-BRIEF 4, ARCH-REVIEW-ROTATION 10 and 11): while the rack switch is on the
+-- chain is Outfit -> Paint -> Toy -> Snack (Gifts.kinds(true)); off it is Paint -> Toy -> Snack exactly as before.
+--   outfit  takes Paint's trigger (the tuck, or the first hello with the nest off). Not random: "A gift: Pom Beanie,
+--           100%". Gives `beanie` (else the rig's first common Hat the pet lacks) to the pet that is out and wears it in
+--           the same write; the pet must be owned and its closet under WearableState.Limit (128). Record
+--           gifts.outfit = {op, item, day, rev, seq, pet, rounds, seen?}; `seen` latches through giftSeen (no coach bit).
+--   paint   (rack on) after the Outfit record, two rounds after it (stats.rounds - outfit.rounds >= ToyRounds) or a later
+--           server day. If the Outfit gift can never be given (no hat left, closet full) Paint keeps its own trigger.
+--   toy     (rack on) the same rule counted from the Paint record (a Paint record without `rounds`, granted under the
+--           old order, counts from zero: the old rule).
+--   A save that got Paint under the old order is simply owed the Outfit gift next. A malformed `outfit` record closes
+--   the Outfit gift alone (it reads as granted); the other kinds read on as before, so the switch off is unchanged.
 local Shared=script.Parent
 local Hue=require(Shared.HueCatalog)
 local Toys=require(Shared.ToyCatalog)
 local Coach=require(Shared.CoachMarks)
+local Wear=require(Shared.WearableCatalog)
+local Eggs=require(Shared.EggCatalog)
 local Gifts={}
 Gifts.Version=1
 Gifts.Kinds=table.freeze({"paint","toy","snack"})
-Gifts.Crankable=table.freeze({paint=true,toy=true}) -- the kinds HatchProgress.giftEgg grants (the Snack rides statEggBuy)
+Gifts.Crankable=table.freeze({paint=true,toy=true,outfit=true}) -- the kinds HatchProgress.giftEgg grants (the Snack rides statEggBuy)
+Gifts.RackKinds=table.freeze({"outfit","paint","toy","snack"}) -- the chain while DailyRack "rack" is on
+Gifts.OutfitItem="beanie" -- the brief's Pom Beanie; else the rig's first common Hat the pet does not own
+Gifts.OwnedLimit=Wear.OwnedLimit
+-- The chain's kinds in order: the rack's while it is on, else Kinds.
+function Gifts.kinds(rack)return if rack==true then Gifts.RackKinds else Gifts.Kinds end
 Gifts.ToyRounds=2 -- saved stats.rounds: two field rounds after the Bear (the Welcome round is not counted)
 Gifts.IdLimit=100 -- frozen: an op id's length
 Gifts.ItemLimit=40 -- frozen: an item id's length
@@ -60,6 +79,7 @@ local function record(kind,r)
 	if kind=="snack"then
 		return r.snackId==nil or integer(r.snackId,1,1e15)
 	end
+	if r.rounds~=nil and not integer(r.rounds,0,1e15)then return false end
 	return text(r.item,Gifts.ItemLimit)
 end
 
@@ -79,7 +99,13 @@ function Gifts.read(state)
 			records[kind]=r
 		end
 	end
-	return {owed=true,broken=false,records=records,fetch=g.fetch==true}
+	-- The Outfit record is read on its own: a malformed one closes the Outfit gift only (`outfitBroken`), never the
+	-- kinds a build without the rack reads, so the switch off reads exactly what it did before.
+	local outfitBroken=false
+	if g.outfit~=nil then
+		if record("outfit",g.outfit)then records.outfit=g.outfit else outfitBroken=true end
+	end
+	return {owed=true,broken=false,records=records,fetch=g.fetch==true,outfitBroken=outfitBroken}
 end
 -- The granted record for `kind`, or nil (none, or a broken field: see granted()).
 function Gifts.record(state,kind)
@@ -89,7 +115,7 @@ end
 -- Granted (or closed): a record is saved, or the field is broken (fail closed).
 function Gifts.granted(state,kind)
 	local view=Gifts.read(state)
-	return view.broken or view.records[kind]~=nil
+	return view.broken or view.records[kind]~=nil or(kind=="outfit"and view.outfitBroken==true)
 end
 function Gifts.owed(state)return Gifts.read(state).owed end
 -- Inside the Bear's grant: mark a brand-new save owed. Writes nothing when the field is already there (any value).
@@ -118,30 +144,79 @@ function Gifts.facts(state,mask)
 	}
 end
 
+-- The hat the Outfit gift gives `petId` on this save: Gifts.OutfitItem when the pet's rig has it and the pet lacks it,
+-- else the first common Hat (a rig item, not a recolour) it lacks, else nil.
+function Gifts.outfitItem(state,petId)
+	if type(petId)~="string"then return nil end
+	local items=Wear.forPet(petId,math.huge)
+	local rows=type(state)=="table"and type(state.petWearables)=="table"and state.petWearables[petId]
+	local owned=type(rows)=="table"and type(rows.owned)=="table"and rows.owned or {}
+	local function free(id)return table.find(owned,id)==nil end
+	local first=items.byId[Gifts.OutfitItem]
+	if first and not first.variant and free(first.id)then return first.id end
+	for _,item in ipairs(items.order)do
+		if not item.variant and item.slot=="Hat"and item.tier=="common"and free(item.id)then return item.id end
+	end
+	return nil
+end
+-- Why the Outfit gift cannot be given to `petId` now (Unowned, AllOwned, ClosetFull), or nil when it can.
+function Gifts.outfitBlock(state,petId)
+	local mask=type(state)=="table"and state.inventoryMask or 0
+	if type(petId)~="string"or not Eggs.isOwned(mask,petId)then return "Unowned"end
+	if not Gifts.outfitItem(state,petId)then return "AllOwned"end
+	local rows=type(state.petWearables)=="table"and state.petWearables[petId]
+	local count=type(rows)=="table"and type(rows.owned)=="table"and #rows.owned or 0
+	if count>=Gifts.OwnedLimit then return "ClosetFull"end
+	return nil
+end
+-- Rounds since a record (its saved `rounds`, else zero: a record from before the rack counts from the start).
+local function since(f,r)return f.rounds-(if type(r)=="table"and integer(r.rounds,0,1e15)then r.rounds else 0)end
+local function laterDay(today,r)return canonicalDay(today)and tonumber(today)>tonumber(r.day)end
+
 -- Pure: may `kind` be granted on this save now? -> true, or false and the reason. ctx = {nest (false: the nest is off
--- in this world), mask}. `today` is the server day ("20000"). No veteran check: a save owed the chain (`v`) is a new
+-- in this world), mask, rack (DailyRack "rack" on: the Outfit order), petId (the pet that is out, for the Outfit)}. `today` is the server day ("20000"). No veteran check: a save owed the chain (`v`) is a new
 -- save by construction, and a few wins must never cancel its later gifts (architect review 2); the client's leads
 -- skip veterans. Reasons: AlreadyGranted (a record, or a broken field), NotOwed, MeetPipFirst, NotDue, AllOwned,
 -- InvalidGift. The Snack's deliverability (switch, pouch, stats) is the server's (HatchProgress.giftReady).
 function Gifts.due(state,kind,today,ctx)
 	ctx=ctx or {}
-	if kind~="paint"and kind~="toy"and kind~="snack"then return false,"InvalidGift"end
+	local rack=ctx.rack==true
+	if kind~="paint"and kind~="toy"and kind~="snack"and kind~="outfit"then return false,"InvalidGift"end
+	if kind=="outfit"and not rack then return false,"NotReady"end
 	if type(state)~="table"then return false,"NotOwed"end
 	local view=Gifts.read(state)
-	if view.broken or view.records[kind]then return false,"AlreadyGranted"end
+	if view.broken or view.records[kind]or(kind=="outfit"and view.outfitBroken)then return false,"AlreadyGranted"end
 	if not view.owed then return false,"NotOwed"end
 	local f=Gifts.facts(state,ctx.mask)
 	if not f.pet then return false,"MeetPipFirst"end
+	local opening=if ctx.nest==false then f.hello else f.tucked
+	if kind=="outfit"then
+		if not opening then return false,"NotDue"end
+		local block=Gifts.outfitBlock(state,ctx.petId)
+		if block then return false,block end
+		return true
+	end
 	if kind=="paint"then
-		local ready=if ctx.nest==false then f.hello else f.tucked
-		if not ready then return false,"NotDue"end
+		if rack then
+			local outfit=view.records.outfit
+			if outfit then
+				if since(f,outfit)<Gifts.ToyRounds and not laterDay(today,outfit)then return false,"NotDue"end
+				return true
+			end
+			-- No Outfit record: Paint waits for it, unless it can never be given (then Paint keeps its own trigger).
+			if not view.outfitBroken then
+				local block=Gifts.outfitBlock(state,ctx.petId)
+				if block~="AllOwned"and block~="ClosetFull"then return false,"NotDue"end
+			end
+		end
+		if not opening then return false,"NotDue"end
 		return true
 	end
 	local paint=view.records.paint
 	if not paint then return false,"NotDue"end
 	if kind=="toy"then
-		local later=canonicalDay(today)and tonumber(today)>tonumber(paint.day)
-		if f.rounds<Gifts.ToyRounds and not later then return false,"NotDue"end
+		local rounds=if rack then since(f,paint)else f.rounds
+		if rounds<Gifts.ToyRounds and not laterDay(today,paint)then return false,"NotDue"end
 		if #Toys.remaining(state.toyUnlocks)==0 then return false,"AllOwned"end
 		return true
 	end
@@ -149,8 +224,9 @@ function Gifts.due(state,kind,today,ctx)
 	return true
 end
 
--- The pot or toy a gift gives (inside the write). c = {kind, unit (random accounts) or fixed = true}.
+-- The pot, toy or hat a gift gives (inside the write). c = {kind, unit (random accounts) or fixed = true, pet (outfit)}.
 function Gifts.draw(state,c)
+	if c.kind=="outfit"then return Gifts.outfitItem(state,c.pet)end
 	if c.kind=="paint"then
 		if c.fixed then return Hue.fixedNext(state.hueInventory)end
 		local pool=Gifts.Pools.paint
@@ -163,8 +239,13 @@ function Gifts.draw(state,c)
 	end
 	return nil
 end
--- The odds a gift card shows: {id, percent} rows (whole numbers for the Paint Egg: 25 each).
-function Gifts.odds(kind,state)
+-- The odds a gift card shows: {id, percent} rows (whole numbers for the Paint Egg: 25 each; the Outfit gift's one hat,
+-- 100%, for `petId`).
+function Gifts.odds(kind,state,petId)
+	if kind=="outfit"then
+		local item=Gifts.outfitItem(state,petId)
+		return if item then {{id=item,percent=100}}else {}
+	end
 	if kind=="paint"then
 		local rows={}
 		for _,id in ipairs(Gifts.Pools.paint)do table.insert(rows,{id=id,percent=100/#Gifts.Pools.paint})end
@@ -187,13 +268,13 @@ end
 -- What the owner's client sees of a record.
 function Gifts.publicRecord(kind,r)
 	if type(r)~="table"then return nil end
-	return {kind=kind,id=r.op,item=r.item,day=r.day,seen=r.seen==true,snackId=r.snackId,stat=r.stat,size=r.size}
+	return {kind=kind,id=r.op,item=r.item,day=r.day,seen=r.seen==true,snackId=r.snackId,stat=r.stat,size=r.size,pet=r.pet}
 end
--- The first granted Paint or Toy record the player has not seen yet (its reveal replays), or nil.
-function Gifts.unseen(state)
+-- The first granted Paint or Toy record (with `rack`, the Outfit first) the player has not seen yet, or nil.
+function Gifts.unseen(state,rack)
 	local view=Gifts.read(state)
 	if view.broken then return nil end
-	for _,kind in ipairs({"paint","toy"})do
+	for _,kind in ipairs(if rack==true then {"outfit","paint","toy"}else {"paint","toy"})do
 		local r=view.records[kind]
 		if r and r.seen~=true then return kind,r end
 	end
