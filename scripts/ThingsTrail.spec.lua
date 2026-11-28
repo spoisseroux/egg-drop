@@ -116,5 +116,54 @@ return function(client)
 		r.at=P(58,0);assert(r.trail:start(far));assert(r.parts()==0);r.trail:step(1);assert(r.trail:active());r.trail:step(3);assert(not r.trail:active()and r.trail.reason=="arrived")
 		r.trail:destroy()
 	end)
+
+	-- Beta (44) #17: "the footprints leading to stuff are sometimes not facing the right way, and they need to pathfind
+	-- around objects".
+	local function yawGap(a,b)return math.abs((a-b+math.pi)%(2*math.pi)-math.pi)end
+	test("beta 44 #17: a print faces the way's smoothed tangent, so a pathfinder's little zig never turns it aside",function()
+		-- a 1-stud zig in the line at 12.5 studs, where the fourth print lands (3.2 apart)
+		local zig={V(0,0),V(12.5,0),V(12.8,1),V(13.1,0),V(30,0)}
+		local prints=Trail.prints(zig,Trail.Parts)
+		local along=math.atan2(1,0) -- +X
+		for i,p in ipairs(prints)do
+			assert(yawGap(p.yaw,along)<math.rad(15),"print "..i.." faces "..math.deg(p.yaw))
+			-- its side step is square to the way: the left / right prints stay either side of the line
+			assert(math.abs(math.abs(p.position.Z)-Trail.Side)<.25 or(p.position.X>12 and p.position.X<14.2),"print "..i.." off the line")
+		end
+		-- the raw segment heading there would have been ~17 degrees off the way
+		assert(yawGap(math.atan2(.3,1),along)>math.rad(60))
+		-- round a corner the heading turns between the two legs' headings, never past them
+		local corner=Trail.prints({V(0,0),V(30,0),V(30,30)},Trail.Parts)
+		for _,p in ipairs(corner)do
+			assert(p.yaw>=-1e-6 and p.yaw<=math.pi/2+1e-6,"between the legs: "..math.deg(p.yaw))
+		end
+		assert(Trail.Tangent>=1 and Trail.Tangent<=2)
+		assert(Trail.heading({V(0,0),V(0,0)},0,0)==nil and Trail.along({},1)==nil)
+	end)
+	test("beta 44 #17: the way goes round the lead's keep-outs, dry; nothing in the way or no clear way: unchanged",function()
+		local Lead=require(game:GetService("ReplicatedStorage").Shared.PetLead)
+		local bush={id="bush",x=50,z=66,r=1.5,kind="plant"}
+		local line={}
+		for i=0,15 do table.insert(line,P(i*4,0))end -- the pathfinder's points, 4 studs apart, through the bush
+		local dry=function(a,b)return Trail.dry({a,b})end
+		local out=Trail.around(line,{bush},dry)
+		assert(out~=line and Lead.flat(out[1],line[1])<1e-6 and Lead.flat(out[#out],line[#line])<1e-6,"the same ends")
+		for i=2,#out do assert(Lead.blocker(out[i-1],out[i],{bush},Lead.Body,i==2,i==#out)==nil,"leg "..i.." clear of the bush")end
+		assert(Trail.dry(out),"still dry")
+		assert(Trail.around(line,{{id="far",x=0,z=0,r=1}},dry)==line,"nothing in the way: the same way")
+		assert(Trail.around(line,{bush},function()return false end)==line,"no dry way round: as it was")
+		assert(Trail.around(line,{},dry)==line and Trail.around(line,nil,dry)==line)
+		-- laid: the trail's prints and its route (the way a leading pet runs) go round it; keepOut false: as before
+		local r=rig({keepOut=function()return{bush}end})
+		assert(r.trail:start(far))
+		local points=r.trail.points
+		assert(points and #points>2,"a way round")
+		for i=2,#points do assert(Lead.blocker(points[i-1],points[i],{bush},Lead.Body,i==2,i==#points)==nil,"route leg "..i)end
+		for _,p in ipairs(Trail.prints(points,Trail.Parts))do
+			assert(Vector2.new(p.position.X-bush.x,p.position.Z-bush.z).Magnitude>bush.r,"no print in the bush")
+		end
+		r.trail:destroy()
+		r=rig({keepOut=false});assert(r.trail:start(far)and #r.trail.points==2,"off: the straight way");r.trail:destroy()
+	end)
 	return{passed=#cases,cases=cases}
 end

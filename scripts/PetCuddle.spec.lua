@@ -273,5 +273,60 @@ return function(server)
 		end
 		assert(high-low<.05,"jitter passed through: "..(high-low))
 	end)
+
+	-- Beta (44) #15: "the petting still feels weird, like the pets head jitters around".
+	test("beta 44 #15: rubbing back and forth over a spot border never flips the spot; a dwell or a step past it does",function()
+		local s={}
+		local spot,changed=C.settleSpot(s,C.spotAt(.5,.4),.5,.4,1/60)
+		assert(spot=="head"and changed,"the first spot at once")
+		-- the hand wobbles across the head / cheeks border (across .12) every frame: it stays the head
+		local flips=0
+		for i=1,120 do
+			local u=if i%2==0 then .5+.11 else .5+.135
+			local _,c=C.settleSpot(s,C.spotAt(u,.4),u,.4,1/60)
+			if c then flips+=1 end
+		end
+		assert(flips==0 and s.spot=="head","a border rub flipped "..flips.." times")
+		-- just over the border and held there: after the dwell (.1 s), not before
+		local u=.5+.135
+		C.settleSpot(s,C.spotAt(u,.4),u,.4,.05);assert(s.spot=="head","not yet")
+		C.settleSpot(s,C.spotAt(u,.4),u,.4,.06);assert(s.spot=="cheeks","after the dwell")
+		-- a step well past the border changes it at once
+		local t={};C.settleSpot(t,"head",.5,.4,1/60)
+		local _,now=C.settleSpot(t,C.spotAt(.8,.4),.8,.4,1/60)
+		assert(now and t.spot=="cheeks","deep in the cheeks: at once")
+		-- off the pet: the spot is kept, the pending one dropped
+		assert(C.settleSpot(t,nil,nil,nil,1)=="cheeks"and t.pending==nil)
+		assert(C.SpotSettle.dwell>=.08 and C.SpotSettle.dwell<=.15 and C.SpotSettle.border>=.03 and C.SpotSettle.border<=.06)
+	end)
+	test("beta 44 #15: the head's pitch, roll and eye glide to a new spot's pose; the nod never restarts; the side holds",function()
+		local e={}
+		C.easePose(e,{headPitch=0,headRoll=0,eye=.15,stretch=0},1/60)
+		assert(e.eye==.15,"the first frame takes the pose")
+		-- the chin's nose lift: one frame moves part of the way, ~.15 s gets there, never past it
+		local before=e.headPitch
+		C.easePose(e,{headPitch=-.18,headRoll=0,eye=.45,stretch=0},1/60)
+		assert(e.headPitch<before and e.headPitch>-.18*.5,"one frame is a small step: "..e.headPitch)
+		local largest=0;local last=e.headPitch
+		for _=1,30 do
+			C.easePose(e,{headPitch=-.18,headRoll=0,eye=.45,stretch=0},1/60)
+			largest=math.max(largest,math.abs(e.headPitch-last));last=e.headPitch
+			assert(e.headPitch>=-.18-1e-9,"never past")
+		end
+		assert(near(e.headPitch,-.18,.01)and near(e.eye,.45,.01),"there in ~.15 s (30 frames: .5 s)")
+		assert(largest<.18*.3,"no frame jumps: "..largest)
+		-- a hitch is one .1 s step, never a snap
+		local h={headPitch=0,headRoll=0,eye=1,stretch=0};C.easePose(h,{headPitch=-.18,headRoll=.18,eye=.5,stretch=0},3)
+		assert(h.headPitch>-.18 and h.headRoll<.18)
+		-- the head's nod follows the rub's own clock: a spot change (age 0) carries on where it was
+		local a=C.spotPose("head",0,0,false,1.3)
+		local b=C.spotPose("head",1.3,0,false,1.3)
+		assert(near(a.headPitch,b.headPitch)and a.headPitch~=0,"the nod carries on")
+		assert(C.spotPose("head",1,0,false).headPitch==C.spotPose("head",1,0,false,1).headPitch,"no clock: age, as before")
+		-- the side: a camera near side-on (|x| under the dead band) keeps the last side
+		assert(C.sideSign(nil,.5)==1 and C.sideSign(nil,-.5)==-1 and C.sideSign(nil,-.01)==-1)
+		assert(C.sideSign(1,-.1)==1 and C.sideSign(-1,.1)==-1,"held through the dead band")
+		assert(C.sideSign(1,-.3)==-1 and C.sideSign(-1,.3)==1,"past it: flips")
+	end)
 	return{passed=#cases,cases=cases}
 end

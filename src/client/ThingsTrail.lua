@@ -46,6 +46,33 @@ Trail.PlateHeight=34
 Trail.Pointer=14
 
 local function flat(a,b)return Vector2.new(a.X-b.X,a.Z-b.Z).Magnitude end
+-- Beta (44) #17 ("the footprints ... are sometimes not facing the right way"): a print faces along the way's smoothed
+-- tangent, from the point Tangent studs behind it to the one Tangent studs ahead (clamped to the ends), so the prints
+-- turn through a corner instead of kinking at it, and the left / right offset turns with them.
+Trail.Tangent=1.5
+-- Pure: the point `s` flat studs along a polyline (clamped to its ends).
+function Trail.along(points,s)
+	local n=#points
+	if n==0 then return nil end
+	if s<=0 then return points[1]end
+	local walked=0
+	for i=2,n do
+		local a,b=points[i-1],points[i]
+		local length=flat(a,b)
+		if length>1e-4 and s<=walked+length then return a:Lerp(b,(s-walked)/length)end
+		walked+=length
+	end
+	return points[n]
+end
+-- Pure: the way's heading (yaw, +Z turned to it) at `s` studs along, from Trail.Tangent either side; nil when flat.
+function Trail.heading(points,s,total)
+	local back=Trail.along(points,math.max(0,s-Trail.Tangent))
+	local ahead=Trail.along(points,math.min(total,s+Trail.Tangent))
+	if not back or not ahead then return nil end
+	local d=Vector2.new(ahead.X-back.X,ahead.Z-back.Z)
+	if d.Magnitude<1e-4 then return nil end
+	return math.atan2(d.X,d.Y)
+end
 -- Pure: up to `count` prints along a polyline: {position, yaw, side}. None under the player or under the marker.
 function Trail.prints(points,count)
 	local total=0
@@ -58,7 +85,7 @@ function Trail.prints(points,count)
 		local a,b=points[i-1],points[i]
 		local length=flat(a,b)
 		while length>1e-4 and nextAt<=walked+length and nextAt<total-1 and #out<count do
-			local yaw=math.atan2(b.X-a.X,b.Z-a.Z)
+			local yaw=Trail.heading(points,nextAt,total)or math.atan2(b.X-a.X,b.Z-a.Z)
 			local side=if #out%2==0 then 1 else -1
 			local at=a:Lerp(b,(nextAt-walked)/length)
 			table.insert(out,{position=at+Vector3.new(math.cos(yaw)*side*Trail.Side,0,-math.sin(yaw)*side*Trail.Side),yaw=yaw})
@@ -67,6 +94,35 @@ function Trail.prints(points,count)
 		walked+=length
 	end
 	return out
+end
+-- Beta (44) #17 ("they need to pathfind around objects"): the way round the garden's bushes, reeds and props the
+-- navmesh cannot see, with the same keep-out list and detours the lead uses (GardenKeepOut.lead, PetLead.around), each
+-- detour leg kept dry (`dry(a, b)`). The pathfinder's close points are thinned first (PetLead.simplify) so the server's
+-- route caps fit. Returns the way round, or `points` unchanged when nothing is in the way or it cannot be cleared.
+function Trail.around(points,list,dry)
+	if type(points)~="table"or #points<2 or type(list)~="table"or #list==0 then return points end
+	local Lead=require(Shared:WaitForChild("PetLead"))
+	local blocked=false
+	for i=2,#points do
+		if Lead.blocker(points[i-1],points[i],list,Lead.Body,i==2,i==#points)then blocked=true;break end
+	end
+	if not blocked then return points end
+	local thin=Lead.simplify(points)
+	local cleared=Lead.around(thin,list,dry,points)
+	return cleared or points
+end
+-- The keep-out list (deps.keepOut() when given; else GardenKeepOut.lead with the Alive switches, as the lead's).
+function Trail:keepOut()
+	if type(self.d.keepOut)=="function"then
+		local ok,list=pcall(self.d.keepOut)
+		return if ok and type(list)=="table"then list else nil
+	end
+	local ok,list=pcall(function()
+		local KeepOut=require(Shared:WaitForChild("GardenKeepOut"))
+		local Alive=require(Shared:WaitForChild("Alive"))
+		return KeepOut.lead(function(feature)return Alive.on(feature)end)
+	end)
+	return if ok and type(list)=="table"then list else nil
 end
 -- The garden's water as GardenWalkability reads it, from the same data the world is built with.
 local wet
@@ -239,6 +295,14 @@ function Trail:start(target)
 			end
 			local ok,points=pcall(Trail.route,compute,root,target.position)
 			if self.generation~=mine or not self.target then return end
+			-- beta (44) #17: round the keep-outs, dry (deps.keepOut false: off)
+			if ok and points and self.d.keepOut~=false then
+				local list=self:keepOut()
+				if list then
+					local good,round=pcall(Trail.around,points,list,function(a,b)return Walk.segmentAllowed(a,b,Trail.wet())end)
+					if good and type(round)=="table"and #round>=2 then points=round end
+				end
+			end
 			if ok and points then self:lay(points)else self.folder:SetAttribute("Way","none")end
 		end)
 	end

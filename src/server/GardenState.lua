@@ -713,13 +713,27 @@ function Garden:leadRun(actor,position,now,pace)
         local targets=Lead.ahead(lead.points,position,lead.goal)
         path,seconds=Activity.through(position,targets,velocity,speed/Activity.ThroughPace,yaw,accept)
     end
+    local action=if pace then "leadPace"else "leadRun"
+    if not path and Garden.leadKeepsPath(actor,now)then
+        -- beta (44) #16: a run or a trot still under way on a walk the keep-out check already took: it carries on along
+        -- that walk (only the look-back changes), never a stop and the straight rest-to-rest planner below
+        lead.phase,lead.stuckAt,lead.stuckFrom,lead.nudged=if pace then "pace"else "run",nil,nil,nil
+        actor.action=action;self.dirty=true
+        return
+    end
     if not path then
         -- no smooth walk fits: the server's own planner, straight to the goal round the water and the props
         local planner=self.options.planPath or Activity.plan
         path,seconds=planner(position,lead.goal,velocity,speed*3,0,yaw,nil,ZERO)
     end
     lead.phase,lead.stuckAt,lead.stuckFrom,lead.nudged=if pace then "pace"else "run",nil,nil,nil
-    self:transition(actor,"investigate",lead.goal,0,if pace then "leadPace"else "leadRun",nil,nil,{path=path,duration=seconds})
+    self:transition(actor,"investigate",lead.goal,0,action,nil,nil,{path=path,duration=seconds})
+end
+-- Pure (beta 44 #16): is the pet still on a lead run or trot (a walk the server took, under way past the next .3 s)?
+-- Then a refused re-plan keeps it instead of the straight fallback.
+function Garden.leadKeepsPath(actor,now)
+    return actor~=nil and(actor.action=="leadRun"or actor.action=="leadPace")and type(actor.path)=="table"and #actor.path>0
+        and type(actor.endTime)=="number"and now<actor.endTime-.3
 end
 function Garden:leadHold(actor,position,now,face,action,phase)
     local Lead=leadModule()
@@ -793,7 +807,10 @@ function Garden:leadBack(id)
     local velocity=if sample and now<actor.endTime then sample.velocity else ZERO
     local way=Lead.backWay(lead.points,position,input.position)
     if way then
-        local path,seconds=Activity.through(position,way,velocity,Lead.Run/Activity.ThroughPace,yaw,self:leadAccept(position,lead))
+        local accept=self:leadAccept(position,lead)
+        local path,seconds=Activity.through(position,way,velocity,Lead.Run/Activity.ThroughPace,yaw,accept)
+        -- beta (44) #16: refused at speed, the same route from a turn on the spot before the straight planner
+        if not path and velocity.Magnitude>.001 then path,seconds=Activity.through(position,way,ZERO,Lead.Run/Activity.ThroughPace,yaw,accept)end
         if not path then
             local planner=self.options.planPath or Activity.plan
             path,seconds=planner(position,way[#way],velocity,Lead.Run*3,0,yaw,nil,ZERO)

@@ -28,6 +28,9 @@ Lead.Closing=4         -- the player coming on faster than this (studs a second,
                        -- pet runs on at once, and a running one never stops: it trots at Pace and looks back
 Lead.Pace=15           -- studs a second while it looks back at a following player (a touch under their 16: they close)
 Lead.AheadMax=27       -- even a followed pet waits this far ahead (under Far, so a follow is never a nudge)
+-- Beta (44) #16: hysteresis on the run / pace / wait switch (Lead.decide): `dwell` s in a phase before the owner's
+-- following can switch it, and a trot stops only once closing falls `band` under Closing.
+Lead.Switch=table.freeze({dwell=.5,band=1.5})
 Lead.Arc=table.freeze({keep=.4,radius=1.5,time=.35,slow=.25,stop=.25,min=2,leg=.25}) -- the turn: keep 40% of the
                        -- speed, curve through at most `radius` studs in about `time` s (after `slow` s easing down to
                        -- it), then stop in `stop` s facing the player; from rest the same arc the other way, then the
@@ -198,6 +201,47 @@ function Lead.blocker(a,b,list,grow,fromInside,toInside)
 	end
 	return nil
 end
+-- Beta (44) #16 (Spencer: "its pathfinding still sounds weird and unnatural"): a detour is an arc round the circle, an
+-- entry point, the apex (the old single point's side, `ArcTurn` radians each way) and an exit point, all at
+-- reach / cos(ArcTurn / 2) from the centre so every chord between them still clears it by `reach`. The walk then bends
+-- ArcTurn at each (Activity.through keeps most of its speed) instead of a V it slows to a stop at.
+Lead.ArcTurn=math.rad(40)
+-- Pure: the arc's 2 or 3 points round `hit` for the leg a-b, on the side `dir` (a unit flat vector out from the
+-- centre), `reach` studs out; nil when it does not fit (a point in another circle, refused by ok, or neither the
+-- entry nor the exit lies between a and b clear of the circle): the caller keeps the single point.
+-- first: a is the route's first point (it may stand inside a circle); last: b is its last.
+function Lead.arcRound(a,b,hit,dir,reach,list,ok,first,last)
+	local x,z=circle(hit)
+	local ab=Vector3.new(b.X-a.X,0,b.Z-a.Z)
+	if ab.Magnitude<1e-3 or type(reach)~="number"or reach<=0 then return nil end
+	local along=ab.Unit
+	local turn=Lead.ArcTurn
+	local R=reach/math.cos(turn*.5)
+	local function ahead(p)return Vector3.new(p.X-a.X,0,p.Z-a.Z):Dot(along)end
+	local function at(d)
+		local p=Vector3.new(x+d.X*R,0,z+d.Z*R)
+		local t=math.clamp(ahead(p)/ab.Magnitude,0,1)
+		return Vector3.new(p.X,a.Y+(b.Y-a.Y)*t,p.Z)
+	end
+	local apex=at(dir)
+	local entry=at(dir*math.cos(turn)-along*math.sin(turn))
+	local exit=at(dir*math.cos(turn)+along*math.sin(turn))
+	local span=ab.Magnitude
+	-- the entry only ahead of a with its approach clear of the circle; the exit only before b, likewise
+	local useEntry=ahead(entry)>.5 and ahead(entry)<ahead(apex)and Lead.blocker(a,entry,{hit},Lead.Body,first,false)==nil
+	local useExit=ahead(exit)<span-.5 and ahead(exit)>ahead(apex)and Lead.blocker(exit,b,{hit},Lead.Body,false,last)==nil
+	if not useEntry and not useExit then return nil end
+	local seq={}
+	if useEntry then table.insert(seq,entry)end
+	table.insert(seq,apex)
+	if useExit then table.insert(seq,exit)end
+	for _,p in ipairs(seq)do if Lead.blocker(p,p,list,Lead.Body,false)~=nil then return nil end end
+	if ok then
+		if not ok(a,seq[1])or not ok(seq[#seq],b)then return nil end
+		for k=2,#seq do if not ok(seq[k-1],seq[k])then return nil end end
+	end
+	return seq
+end
 -- Pure (the client, after Lead.fit): the route pushed round every keep-out circle it passes within Body of. Each leg
 -- that hits one gains a point beside the circle (r + Body + Detour out from its centre, square to the leg, on the side
 -- the leg passes; the other side if that one is in another circle or `ok(a, b)` refuses it: water). A route point
@@ -208,9 +252,15 @@ end
 -- to the other side, then Push studs further out. A point moved out of a circle is checked against its legs the same
 -- way. `raw` (optional): the route before Lead.fit; a leg that cannot be cleared is tried again through the raw points
 -- fit cut between its ends (a lamp beside a corner fit cut off) before it gives up.
+-- Beta (44) #16: each detour is an arc (Lead.arcRound) where it fits; a route the arcs make too long for the server's
+-- caps is planned again with single detour points, as before.
+local aroundWith
 function Lead.around(points,list,ok,raw)
 	if type(points)~="table"or #points<2 then return nil end
 	if type(list)~="table"or #list==0 then return table.clone(points)end
+	return aroundWith(points,list,ok,raw,true)or aroundWith(points,list,ok,raw,false)
+end
+function aroundWith(points,list,ok,raw,arcs)
 	local n=#points
 	local moved=table.clone(points)
 	for i=2,n-1 do
@@ -275,7 +325,12 @@ function Lead.around(points,list,ok,raw)
 			else
 				added+=1
 				if added>Lead.MaxDetours then return nil end
-				table.insert(queue,1,chosen)
+				-- beta (44) #16: an arc of 2-3 points round it (Lead.arcRound) instead of one V corner the walk
+				-- slows to a stop at; the single point when the arc does not fit
+				local out2=Vector3.new(chosen.X-x,0,chosen.Z-z)
+				local arc=if arcs and out2.Magnitude>1e-3 then Lead.arcRound(a,b,hit,out2.Unit,out2.Magnitude,list,ok,first,#queue==1)else nil
+				arc=arc or {chosen}
+				for k=#arc,1,-1 do table.insert(queue,1,arc[k])end
 			end
 		end
 	end
@@ -403,17 +458,31 @@ function Lead.decide(lead,ctx)
 	local phase=lead.phase
 	local pet,owner,goal,now=ctx.pet,ctx.owner,ctx.goal,ctx.now
 	local atGoal=flat(pet,goal)<=.6
+	-- beta (44) #16 hysteresis: the switches the owner's following drives (a wait running on, a trot giving up) only
+	-- come Switch.dwell s after the last phase change, and a trot keeps trotting until the owner is clearly no longer
+	-- following (closing under Closing - Switch.band), so a closing speed hovering at Closing never re-plans every tick.
+	-- A lead with no stamp yet (a fresh table) counts as settled.
+	local settled=true
+	if type(now)=="number"then
+		if lead.phaseSeen~=phase then
+			settled=lead.phaseSeen==nil
+			lead.phaseSeen,lead.phaseAt=phase,now
+		elseif type(lead.phaseAt)=="number"then
+			settled=now-lead.phaseAt>=Lead.Switch.dwell
+		end
+	end
 	if phase=="start"then return if ctx.moving then nil else "run"end
 	if phase=="back"then return if ctx.moving then nil else "wait"end
 	if phase=="arrive"then return nil end
 	local gap=flat(pet,owner)
 	local ownerPassed=flat(owner,goal)<=flat(pet,goal)
-	local following=(tonumber(ctx.closing)or 0)>=Lead.Closing
+	local closing=tonumber(ctx.closing)or 0
+	local following=closing>=Lead.Closing
 	if phase=="wait"then
 		if atGoal then return "arrive"end
 		-- after a nudge's run back (lead.nudged) it waits for the player to come to it (Back + 2) or to follow, as before
 		local resume=if lead.nudged then Lead.Back+2 else Lead.Resume
-		if gap<=resume or ownerPassed or(following and gap<Lead.AheadMax)then return "run"end
+		if gap<=resume or ownerPassed or(following and settled and gap<Lead.AheadMax)then return "run"end
 		return nil
 	end
 	if phase=="run"or phase=="pace"then
@@ -423,7 +492,8 @@ function Lead.decide(lead,ctx)
 		end
 		if phase=="pace"then
 			if gap<=Lead.Resume or ownerPassed then return "run"end
-			if gap>=Lead.AheadMax or(gap>=Lead.Ahead and not following)then return "wait"end
+			local stopped=closing<Lead.Closing-Lead.Switch.band
+			if gap>=Lead.AheadMax or(gap>=Lead.Ahead and stopped and settled)then return "wait"end
 		end
 		-- stuck: under StuckMove studs in StuckTime s while running
 		if lead.stuckAt==nil or typeof(lead.stuckFrom)~="Vector3"then lead.stuckAt,lead.stuckFrom=now,pet;return nil end
