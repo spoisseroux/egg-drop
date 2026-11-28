@@ -14,8 +14,12 @@ local Follow = {}
 -- footfall hop grew .05 -> .085 (x the pet's scale in GardenPetVisual) and became a bounce (|sin|: quick off the
 -- ground, round at the top) instead of a sway, and the walk reaches full weight at 1.6 studs a second (was 3.5, so a
 -- park stroll at 1.3 drew a third of a gait: the glide).
+-- Beta (42) note 16, D16 ("the torso isnt moving with its feet, the torso is too high above the feet"): the bob now
+-- dips at each footfall and is back at rest by mid-step (PetHop.walkBob), never lifting the body over the planted
+-- feet; .085 -> .07 deep (Ovelle .07 -> .055), a scamper x1.3 (was x1.5 up).
 Follow.StrideSlow, Follow.StrideFast, Follow.CadenceCap = 1.25, 3.2, 3.5
-Follow.Bob, Follow.BobOvelle, Follow.ScamperSpeed = .085, .07, 7
+Follow.Bob, Follow.BobOvelle, Follow.ScamperSpeed = .07, .055, 7
+Follow.ScamperBob = 1.3
 Follow.FullGait = 1.6
 function Follow.stride(speed, scale)
 	local t = math.clamp(((speed or 0) - 3) / 6, 0, 1)
@@ -30,8 +34,8 @@ function Follow.bob(visual, reduced)
 	if reduced then return 0 end
 	local phase = visual.gaitPhase or 0
 	local amount = if visual.petId == "puddle" then Follow.BobOvelle else Follow.Bob
-	local scamper = if (visual.travelSpeed or 0) > Follow.ScamperSpeed then 1.5 else 1
-	return math.abs(math.sin(phase)) * amount * scamper * (visual.gaitWeight or 0)
+	local scamper = if (visual.travelSpeed or 0) > Follow.ScamperSpeed then Follow.ScamperBob else 1
+	return require(script.Parent.PetHop).walkBob(phase, amount, scamper, visual.gaitWeight or 0)
 end
 -- The body's lean into a change of pace (radians, + forward): a little forward as a walk gets going, back as it
 -- settles. `state` keeps the smoothed speed between frames; reduced motion: none.

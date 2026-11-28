@@ -189,7 +189,9 @@ local Table={
  -- G2 (FirstHelloBonus): the first paid pet on a new save, gold over the pet; {count} is the receipt's total.
  pet={star="+1 ★",hello="First hello! +{count} ★",capped="{pet}'s had plenty of pets today",cappedSolo="Plenty of pets today",
   -- The petting screen (ONBOARDING-V3-BRIEF section 4, switch pet2): the bottom hint, the favourite spot's line, Back's label.
-  cuddle={rub="Rub {pet}!",loves="{pet} loves this!",back="Back",friend="your pet"}},
+  cuddle={rub="Rub {pet}!",loves="{pet} loves this!",back="Back",friend="your pet"},
+  -- Beta (42) D13: the pet screen's name pill for a pet with no name yet.
+  unnamed="Pet"},
  -- Play-forever F2: collection book, stamp card, restricted eggs.
  book={
   title="Collection book",eyebrow="Garden",

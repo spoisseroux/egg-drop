@@ -150,16 +150,19 @@ return function(client, parent)
 	end)
 
 	test("the walk bounces twice per stride and stride grows with speed", function()
-		local peaks, last, rising = 0, 0, false
-		for i = 0, 200 do
+		-- Beta (42) D16: the bounce is a dip at each footfall (phase 0 and pi), never a lift over the planted feet.
+		local dips, last, falling = 0, Follow.bob({ gaitPhase = 0, gaitWeight = 1, petId = "pip", travelSpeed = 4 }, false), false
+		for i = 1, 250 do -- one stride and a quarter, so both footfalls are passed through
 			local v = { gaitPhase = i / 200 * math.pi * 2, gaitWeight = 1, petId = "pip", travelSpeed = 4 }
 			local b = Follow.bob(v, false)
-			if b < last and rising then peaks += 1 end
-			rising = b > last;last = b
-			assert(b >= 0 and b <= Follow.Bob + 1e-9)
+			if b > last and falling then dips += 1 end
+			falling = b < last;last = b
+			assert(b <= 1e-9 and b >= -Follow.Bob - 1e-9)
 		end
-		assert(peaks == 2, "bounces per stride " .. peaks)
-		assert(Follow.bob({ gaitPhase = math.pi / 2, gaitWeight = 1, petId = "pip", travelSpeed = 8 }, false) > Follow.Bob * 1.4, "no scamper")
+		assert(dips == 2, "bounces per stride " .. dips)
+		assert(math.abs(Follow.bob({ gaitPhase = 0, gaitWeight = 1, petId = "pip", travelSpeed = 4 }, false) + Follow.Bob) < 1e-9, "deepest at contact")
+		assert(math.abs(Follow.bob({ gaitPhase = math.pi / 2, gaitWeight = 1, petId = "pip", travelSpeed = 4 }, false)) < 1e-9, "at rest mid-step")
+		assert(Follow.bob({ gaitPhase = 0, gaitWeight = 1, petId = "pip", travelSpeed = 8 }, false) < -Follow.Bob * 1.2, "no scamper")
 		assert(Follow.bob({ gaitPhase = 1, gaitWeight = 1 }, true) == 0)
 		-- Beta (34): baby steps, 1.25 a stride at a stroll (was 1.5), up to 3.5 strides a second (was 3).
 		assert(Follow.stride(3, 1) == 1.25 and Follow.stride(9, 1) == 3.2 and Follow.stride(20, .5) == 1.6)

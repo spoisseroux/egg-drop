@@ -74,5 +74,22 @@ return function(client)
   local c,_,_,_,notices=fixture();c:request("careSetDown",nil,function()c.destroyed=true end)
   c:receive({kind="careSetDown",seq=1,status="Rejected",reason="NoDrySpace"});assert(#notices==0)
  end)
+ test("beta 42 D14: a carry key draws the CareIcons PNG once its id is uploaded, the old arrow while it is 0",function()
+  local Icons=require(client.CareIcons)
+  local node=Instance.new("TextButton");node.ZIndex=15;node.Text="Pick up"
+  local ok,err=pcall(function()
+   local drawn=Client.icon(node,true,false)
+   assert(drawn.Name=="CarryArrow"and drawn.Visible and drawn.Rotation==0 and node.Text==""and not node:FindFirstChild("CareIcon"),"stand-in arrow")
+   drawn=Client.icon(node,true,"rbxassetid://123")
+   assert(drawn.Name=="CareIcon"and drawn:IsA("ImageLabel")and drawn.Visible and drawn.Image=="rbxassetid://123"and drawn.ZIndex==17)
+   assert(drawn.Size==UDim2.fromOffset(Icons.Size,Icons.Size)and drawn.BackgroundTransparency==1 and not node.CarryArrow.Visible,"the PNG replaces the arrow")
+   drawn=Client.icon(node,false,false)
+   assert(drawn.Name=="CarryArrow"and drawn.Visible and drawn.Rotation==180 and not node.CareIcon.Visible,"back to the arrow, pointing down")
+   -- The live table: 0 draws the arrow; an uploaded id draws its PNG.
+   drawn=Client.icon(node,true)
+   assert(drawn.Name==(if Icons.image("pickUp")then "CareIcon"else "CarryArrow"))
+  end)
+  node:Destroy();assert(ok,err)
+ end)
  return {passed=#cases,cases=cases}
 end

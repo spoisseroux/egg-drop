@@ -168,8 +168,10 @@ function Focus:buildBondCard()
 	local card=Kit.frame(self.panel,"BondCard","panel",UDim2.new(1,-12,0,12),UDim2.fromOffset(140,56),12)
 	card.AnchorPoint=Vector2.new(1,0);card.BackgroundTransparency=.08;card.Visible=false;card.Active=false;card.ZIndex=8
 	Kit.stroke(card)
+	-- Beta (42) D13: the card is a light pill, so its words are ink (the shell's text role read light on light).
+	Kit.setSurface(card,"light")
 	self.bondCard=card
-	self.bondName=Kit.text(card,"Name","","text",{Name="PetName",Position=UDim2.fromOffset(12,6),Size=UDim2.new(1,-24,0,20),TextSize=16,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
+	self.bondName=Kit.text(card,"Name","","ink",{Name="PetName",Position=UDim2.fromOffset(12,6),Size=UDim2.new(1,-24,0,20),TextSize=16,TextTruncate=Enum.TextTruncate.AtEnd,AutoLocalize=false})
 	self.bondLevel=Kit.text(card,"Small","","soft",{Name="BondLabel",TextSize=12,TextXAlignment=Enum.TextXAlignment.Right,TextTruncate=Enum.TextTruncate.AtEnd})
 	self.bondPips=nil
 	self.bondCompact=nil
@@ -482,9 +484,33 @@ function Focus:endPointer(input)
 	self:cancelPointer(true)
 end
 
+-- Beta (42) D17 (smooth petting): the petting box from the pet's resting body, not its posed one. The body bounds are
+-- cached in the pet's own root frame (origin, yaw) the first frame focus sees them, per visit, pet, rig and scale, so
+-- the lean and look the box drives can no longer move the box (the feedback loop that jittered). `memo` is the
+-- visit's table; frame/size are RigBounds.getBody's (nil passes through).
+function Focus.restBounds(memo,pet,frame,size)
+	if not memo or not frame or not size then return frame,size end
+	local origin=pet and pet.origin
+	local root=if typeof(origin)=="Vector3"then CFrame.new(origin)*CFrame.Angles(0,tonumber(pet.yaw)or 0,0)else nil
+	local key=tostring(pet and pet.rigRevision)..":"..tostring(pet and pet.scale)
+	-- Until the pet first settles (its walk faded, the opening hello hop over) the box keeps following it; then it holds
+	-- for the visit (a later hello or a rub's lean never moves it).
+	if memo.pet~=pet or memo.key~=key then memo.settled=false end
+	local settling=pet~=nil and((tonumber(pet.gaitWeight)or 0)>.05 or(tonumber(pet.greeting)or 2)<1.2)
+	if not memo.settled or not memo.size then
+		memo.pet,memo.key,memo.size,memo.world=pet,key,size,frame
+		memo.localFrame=if root then root:ToObjectSpace(frame)else nil
+		memo.settled=not settling
+	end
+	if memo.localFrame and root then return root*memo.localFrame,memo.size end
+	return memo.world,memo.size
+end
+
 function Focus:setActive(active)
 	active = active == true
 	if self.destroyed or self.active == active then return end
+	-- D17: each visit measures its own resting box.
+	self.restBody={}
 	self.active, self.panel.Visible = active, active and self:canOwnInput()
 	-- A transparent fullscreen frame still participates in GUI hit testing.
 	-- Only raise this surface above game navigation while focus owns input.
@@ -646,7 +672,11 @@ function Focus:update(camera, pet, roamHint)
 	if self.currentPet~=pet or self.currentCamera~=camera then self:cancelPointer()end
 	self.currentPet,self.currentCamera=pet,camera
 	local rigFrame,rigSize
-	if pet and pet.model and pet.model.Parent then rigFrame,rigSize=RigBounds.getBody(pet)end
+	if pet and pet.model and pet.model.Parent then
+		rigFrame,rigSize=RigBounds.getBody(pet)
+		self.restBody=self.restBody or {}
+		rigFrame,rigSize=Focus.restBounds(self.restBody,pet,rigFrame,rigSize)
+	end
 	local position,size=Focus.projectBounds(camera,pet and pet.model,self.root,rigFrame,rigSize)
 	-- The snack drop target: the pet's on-screen box (SnackTray grows it 30%, at least 96 px).
 	self.petRectPosition=if position then position+self.root.AbsolutePosition else nil

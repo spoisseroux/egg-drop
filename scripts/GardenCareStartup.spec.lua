@@ -24,8 +24,17 @@ return function(client,parentGui)
    assert(care.gui:IsA("ScreenGui")and care.uiRoot:IsA("Frame")and care.uiRoot.Parent==gui)
    assert(care.setDown.Parent==care.uiRoot and care.uiRoot.Size==UDim2.fromScale(1,1)and not care.uiRoot.Active)
    assert(care.pickup.Parent==focus.panel and care.uiRoot:FindFirstChild("CareNotice")==nil and not care.setDown.Visible)
-   assert(care.pickup.CarryArrow.Rotation==0 and care.setDown.CarryArrow.Rotation==180 and focus.back.CarryArrow.Rotation==-90)
-   for _,node in ipairs({care.pickup,care.setDown,focus.back})do assert(node.Size.X.Offset>=44 and node.Size.Y.Offset>=44 and node.CarryArrow.Stem.Size.X.Offset==4 and node.CarryArrow.Head8.Size.X.Offset==16)end
+   -- Beta (42) D14: the carry keys draw the CareIcons PNGs once uploaded; until then the old arrow.
+   local Icons=require(client.CareIcons)
+   local uploaded=Icons.image("pickUp")~=nil and Icons.image("setDown")~=nil
+   if uploaded then
+    assert(care.pickup.CareIcon.Visible and care.setDown.CareIcon.Visible and care.pickup.CareIcon.Image==Icons.image("pickUp")and care.setDown.CareIcon.Image==Icons.image("setDown"))
+   else
+    assert(care.pickup.CarryArrow.Rotation==0 and care.setDown.CarryArrow.Rotation==180)
+   end
+   assert(focus.back.CarryArrow.Rotation==-90)
+   for _,node in ipairs({care.pickup,care.setDown,focus.back})do assert(node.Size.X.Offset>=44 and node.Size.Y.Offset>=44)end
+   if not uploaded then for _,node in ipairs({care.pickup,care.setDown})do assert(node.CarryArrow.Stem.Size.X.Offset==4 and node.CarryArrow.Head8.Size.X.Offset==16)end end
    focus.gui.Enabled=false;care:step();assert(care.uiRoot.Parent==gui,"carry controls borrowed the retiring focus GUI")
    care:destroy();assert(care.controls.Parent==nil and care.pickup.Parent==nil and cancelled==care.controls);focus:destroy()
   end)
