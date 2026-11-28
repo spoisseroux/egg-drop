@@ -1292,7 +1292,9 @@ do
   return {wallet=state and state.nectar or 0,week=require(script.ShelfDeal).week(state or {}),
    thisWeek=require(script.ShelfDeal).thisWeek(state or {})or false,
    row={owned=table.clone(row and row.owned or {}),equipped=table.clone(row and row.equipped or {})},
-   stages={horns=features.horns and features.horns.visible or 0,wings=features.wings and features.wings.visible or 0}}
+   stages={horns=features.horns and features.horns.visible or 0,wings=features.wings and features.wings.visible or 0},
+   -- The daily rack (lane C): the closet, clothes from the Outfit Egg, while the rack switch is on.
+   closet=require(ReplicatedStorage.Shared.DailyRack).on("rack")}
  end
  local function syncInsets()
   -- Compact phones use the device root (UI-SPEC-COMPACT 1.1), like the deck guis,
@@ -1311,6 +1313,16 @@ do
    if item then clientUI.wardrobeToaster.show(if order.action=="wearableBuy"then item.name.." bought"elseif order.wear then item.name.." on"else item.name.." off")end
   end,
   back=function()clientUI.wardrobe:close();if clientUI.isHueOpen()then clientUI.hueView:refresh()end end,
+  -- The closet's "From the Outfit Egg": close the Wardrobe and Dress up, then Hatch eggs picked on the Outfit Egg (the
+  -- one-shot egg pick openNursery reads; the Outfit tile is the shop lane's).
+  outfitEgg=function()
+   clientUI.wardrobe:close()
+   if clientUI.isHueOpen()then clientUI.hueView:close("forced")end
+   if clientUI.hub and clientUI.hub:isOpen()then clientUI.hub:close("eggs")end
+   clientUI.eggPick={id="outfit",at=os.clock()}
+   task.defer(function()if not visitEggs()then clientUI.eggPick=nil end end)
+   return true
+  end,
   -- Levels matter: a locked item's button goes to the stats panel on the stat that unlocks it.
   train=function(route)clientUI.closeAllMenus("stats");clientUI.openStats({from="rail",stat=route.stat,petId=route.petId})end})
  clientUI.isWardrobeOpen=function()return clientUI.wardrobe:isOpen()end
@@ -1339,11 +1351,13 @@ do
   elseif key==Enum.KeyCode.Q or key==Enum.KeyCode.ButtonL1 then shop:shiftTab(-1)
   elseif key==Enum.KeyCode.E or key==Enum.KeyCode.ButtonR1 then shop:shiftTab(1)
   elseif key==Enum.KeyCode.ButtonB or key==Enum.KeyCode.Backspace then shop:back()
+  elseif key==Enum.KeyCode.ButtonX or key==Enum.KeyCode.C then if not shop:cycleSwatch(1)then return Enum.ContextActionResult.Pass end
   else shop:act()end
   return Enum.ContextActionResult.Sink
  end,false,Enum.ContextActionPriority.High.Value+800,Enum.KeyCode.Left,Enum.KeyCode.Right,Enum.KeyCode.Up,Enum.KeyCode.Down,Enum.KeyCode.A,Enum.KeyCode.D,
   Enum.KeyCode.W,Enum.KeyCode.S,Enum.KeyCode.Q,Enum.KeyCode.E,Enum.KeyCode.ButtonL1,Enum.KeyCode.ButtonR1,Enum.KeyCode.DPadLeft,Enum.KeyCode.DPadRight,
-  Enum.KeyCode.DPadUp,Enum.KeyCode.DPadDown,Enum.KeyCode.Space,Enum.KeyCode.Return,Enum.KeyCode.KeypadEnter,Enum.KeyCode.ButtonA,Enum.KeyCode.ButtonB,Enum.KeyCode.Backspace)
+  Enum.KeyCode.DPadUp,Enum.KeyCode.DPadDown,Enum.KeyCode.Space,Enum.KeyCode.Return,Enum.KeyCode.KeypadEnter,Enum.KeyCode.ButtonA,Enum.KeyCode.ButtonB,Enum.KeyCode.Backspace,
+  Enum.KeyCode.ButtonX,Enum.KeyCode.C)
  gui.Destroying:Connect(function()wearableResultConnection:Disconnect();ContextActionService:UnbindAction("EggDropWardrobe");clientUI.wardrobe:destroy();wardrobeGui:Destroy()end)
 end
 -- Companions hub (redesign menus 1): its own ScreenGui under the Wardrobe (12), so the

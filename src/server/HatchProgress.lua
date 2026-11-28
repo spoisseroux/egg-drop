@@ -1572,7 +1572,9 @@ function Hatching.buyWearable(handle, operationId, petId, itemId, price, equip)
 	if Wearables.owns(handle.state, petId, itemId) and not resuming then return true, "AlreadyOwned" end
 	local candidate = resuming and handle.pending.candidate
 		or table.freeze({ petId = petId, itemId = itemId, price = price, operationId = operationId, equip = equip == true,
-			week = shelfWeek(handle.adapter.now()), listWeek = listWeek(itemId, handle.adapter.now()) })
+			week = shelfWeek(handle.adapter.now()), listWeek = listWeek(itemId, handle.adapter.now()),
+			-- Closet mode (DailyRack "rack"): frozen when asked, so a retry decides the same way (WearableState.check).
+			closet = if DailyRack.on("rack") then true else nil })
 	if candidate.petId ~= petId or candidate.itemId ~= itemId or candidate.price ~= price then return false, "OperationConflict" end
 	local digest = "buy:" .. candidate.petId .. ":" .. candidate.itemId .. ":" .. tostring(candidate.price)
 	local ok, reason = transact(handle, signature, handle.state.revision, shelfApply(handle, Wearables.applyBuy), candidate, signature, nil, digest)

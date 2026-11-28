@@ -147,6 +147,61 @@ function Catalog.shopTab(petId,tabSlot,owned)
  end
  return result
 end
+-- Closet mode (DailyRack "rack" on; ROTATION-BRIEF 1 "Wardrobe with the switch on", Spencer: "move clothes to eggs").
+-- Clothes come from the Outfit Egg: the Wardrobe sells only a level-gated row (an earned goal stays earned) and the
+-- "This week" pick (unchanged). Everything else is "From the Outfit Egg"; whatever the pet owns stays owned and
+-- wearable. Pure: the server's refusal (WearableState.check, FromOutfitEgg) and the Wardrobe read the same rule.
+function Catalog.closetSells(item)
+ return type(item)=="table"and item.egg~=true and(item.gate~=nil or item.weekly==true)
+end
+-- Every colour of one base item for this pet (the base, then its rows in data order), every row ever (math.huge).
+function Catalog.family(petId,baseId)
+ local result={}
+ for _,item in ipairs(Catalog.forPet(petId,math.huge).order)do
+  if item.id==baseId or item.base==baseId then table.insert(result,item)end
+ end
+ return result
+end
+-- The colour selector (ROTATION-BRIEF 2): the colours of `itemId`'s base the pet owns, in family order. Unowned colours
+-- are never drawn (no wall of things you lack). A row shows only with two or more (Catalog.swatchRow).
+function Catalog.swatches(petId,itemId,owned)
+ local item=type(petId)=="string"and Catalog.forPet(petId,math.huge).byId[itemId]
+ if not item then return {}end
+ local mine={};for _,id in ipairs(type(owned)=="table"and owned or {})do mine[id]=true end
+ local result={}
+ for _,row in ipairs(Catalog.family(petId,item.base or item.id))do if mine[row.id]then table.insert(result,row)end end
+ return result
+end
+function Catalog.swatchRow(petId,itemId,owned)
+ local list=Catalog.swatches(petId,itemId,owned)
+ return if #list>=2 then list else nil
+end
+-- A closet card's face: the family's colour worn in its slot, else the base when owned, else the first owned colour,
+-- else the base itself (unowned: "From the Outfit Egg").
+function Catalog.closetFace(petId,baseId,owned,equipped)
+ local base=type(petId)=="string"and Catalog.forPet(petId,math.huge).byId[baseId]
+ if not base then return baseId end
+ local list=Catalog.swatches(petId,baseId,owned)
+ local worn=Catalog.equippedIn(petId,equipped,base.slot)
+ for _,row in ipairs(list)do if row.id==worn then return worn end end
+ for _,row in ipairs(list)do if row.id==base.id then return base.id end end
+ return if list[1]then list[1].id else base.id
+end
+-- The closet's slot tab: one card per base item (its face is Catalog.closetFace; its owned colours are the swatches),
+-- plus each level-gated row the shop lists now that the pet does not own yet (it is still sold: an earned goal).
+-- Recolours, Outfit Egg rows and owned gated or weekly rows are colours of their base's card, never cards of their own.
+function Catalog.closetTab(petId,tabSlot,owned)
+ local mine={};for _,id in ipairs(type(owned)=="table"and owned or {})do mine[id]=true end
+ local listed=Catalog.forPet(petId).byId
+ local result={}
+ for _,item in ipairs(Catalog.forPet(petId,math.huge).order)do
+  if item.slot==tabSlot then
+   if not item.variant then table.insert(result,item)
+   elseif item.gate~=nil and not mine[item.id]and listed[item.id]then table.insert(result,listed[item.id])end
+  end
+ end
+ return result
+end
 -- The shop tabs that sell at least one item for this pet, in Tabs order. A tab ships only
 -- when it has an item (VISUAL-BRIEF 6): no Anklets, no Ankle tab.
 function Catalog.tabsFor(petId)

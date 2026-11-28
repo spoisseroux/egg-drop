@@ -5,6 +5,7 @@ local ReplicatedStorage=game:GetService("ReplicatedStorage")
 local RunService=game:GetService("RunService")
 local Rules=require(ReplicatedStorage.Shared.PetAttachmentRules)
 local Wearables=require(ReplicatedStorage.Shared.WearableCatalog)
+local Variants=require(ReplicatedStorage.Shared.WearableVariants)
 local Attachments={}
 local rotation=CFrame.Angles(0,math.pi,0)
 
@@ -57,6 +58,12 @@ function Attachments.template(v)
 end
 
 local function handle(part)return {part=part,destroy=function()part:Destroy()end}end
+-- The finish stepper, required on first use (a rig with no sparkle pick never loads it).
+local finishModule=nil
+function Attachments.finish()
+ if not finishModule then finishModule=require(script.Parent.WearableFinish)end
+ return finishModule
+end
 
 -- Adds one entry per shown attachment to v.pieces and returns the cleanup handles.
 -- tints (optional, WearableCatalog.renderMap(...).tints): slot key -> recolour for a variant;
@@ -79,7 +86,8 @@ function Attachments.build(v,resolved,source,tints)
   part.Anchored=true;part.CanCollide=false;part.CanTouch=false;part.CanQuery=false;part.CastShadow=true
   part.Material=Enum.Material.SmoothPlastic
   if a.texture and v.definition.attachmentTextures then part.TextureID=v.definition.attachmentTextures[a.texture]or part.TextureID end
-  local tinted=if tints and a.item then Wearables.tintFor(tints[Wearables.attachmentKey(v.definition,a)],a)else nil
+  local tint=if tints and a.item then tints[Wearables.attachmentKey(v.definition,a)]else nil
+  local tinted=if tint then Wearables.tintFor(tint,a)else nil
   local color=if tinted then Color3.fromHex(tinted)elseif a.colorRole=="own"then Color3.fromHex(a.color)else(v.colors[a.colorRole]or v.secondaryColor)
   part.Color=color
   -- Piece colour roles: own colour, secondary-tinted, face ink. Wearables never glow at
@@ -103,6 +111,12 @@ function Attachments.build(v,resolved,source,tints)
   local c=a.slot=="Eyes"and a.item and eyeCenter[(a.side or "")..a.item]
   if c then entry.eyeOffsetY=(a.center[2]-c.y)*v.scale end
   part.Parent=v.model
+  -- A sparkle pick (WearableVariants finish row): its main piece moves on a garden pet only (WearableFinish).
+  local finishRow=tinted and tint and Variants.ById[tint.id]
+  if finishRow and finishRow.finish then
+   entry.finish=finishRow.finish
+   Attachments.finish().attach(part,finishRow,v.worldContext==true)
+  end
   table.insert(v.pieces,entry);table.insert(handles,handle(part))
  end
  return handles
