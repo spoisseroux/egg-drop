@@ -26,6 +26,13 @@
 --   DailyRack.on("lookdaily")   look_daily:  the Paint Egg's daily splash (LookEggCatalog.tables(day)) (missing = OFF)
 --   DailyRack.on("looknopity")  look_nopity: no guaranteed charm (LookEggCatalog.pityDue false) (missing = OFF)
 -- The two Paint switches default off: their before-live items are open (ARCH-REVIEW-ROTATION 8). Off is the game before.
+-- Slice 2 (ROTATION-2-BRIEF 4, ARCH-REVIEW-ROTATION-2): three more parts, each needing daily_rack on too (missing = on):
+--   DailyRack.on("toys")        rack_toys:   the Toy Colour Egg (ToySkins), toySkinWear, a pet's toy drawn in its colour
+--   DailyRack.on("deck")        rack_deck:   the Deck Egg (DeckRack) and Deck style as a closet (FromDeckEgg)
+--   DailyRack.on("wings")       rack_wings:  Angel Wings as the sparkle pick on days where day mod 9 == 4 (Rack.view)
+-- Angel Wings (review 1, 2): an egg-only BASE (WearableCatalog.EggBases: under math.huge only, in `eggBases`, never in
+-- `order`), so it is never one of the daily 8; on a wings day it replaces the sparkle pick until the pet owns it, at the
+-- same flat 1%, never on the fixed path. With rack_wings off: the slice 1 schedule exactly.
 local RunService=game:GetService("RunService")
 local Shared=script.Parent
 local Flags=require(Shared.FeatureFlags)
@@ -33,19 +40,30 @@ local Daily=require(Shared.DailyContracts)
 local Wear=require(Shared.WearableCatalog)
 local Variants=require(Shared.WearableVariants)
 local Rack={Version=1}
+local function wholeDay(day)return type(day)=="number"and day==day and day%1==0 and math.abs(day)<=1e9 end
 Rack.PlaceId=107705084891479 -- Pocket Pals Beta
-Rack.Eggs=table.freeze({"outfit"})
+Rack.Eggs=table.freeze({"outfit","toycolour","deck"})
 Rack.Price=25 -- [PLACEHOLDER] Stars an Outfit Egg
 Rack.PerDay=8
 Rack.Weights=table.freeze({common=18,uncommon=12,rare=6,epic=2}) -- [PLACEHOLDER] until played
 Rack.SparkleShare=100 -- the sparkle pick is 1 / SparkleShare (a flat 1%)
 Rack.RarityOrder=table.freeze({"common","uncommon","rare","epic","legendary"})
 Rack.TierRarity=table.freeze({common="common",rare="rare",showcase="epic"})
-Rack.Features=table.freeze({"rack","lookdaily","looknopity"})
-Rack.Attributes=table.freeze({rack="DailyRack_on",lookdaily="LookDaily_on",looknopity="LookNoPity_on"})
-Rack.Keys=table.freeze({rack="daily_rack",lookdaily="look_daily",looknopity="look_nopity"})
-Rack.Defaults=table.freeze({rack=true,lookdaily=false,looknopity=false})
+Rack.Features=table.freeze({"rack","lookdaily","looknopity","toys","deck","wings"})
+Rack.Attributes=table.freeze({rack="DailyRack_on",lookdaily="LookDaily_on",looknopity="LookNoPity_on",
+	toys="RackToys_on",deck="RackDeck_on",wings="RackWings_on"})
+Rack.Keys=table.freeze({rack="daily_rack",lookdaily="look_daily",looknopity="look_nopity",toys="rack_toys",deck="rack_deck",wings="rack_wings"})
+Rack.Defaults=table.freeze({rack=true,lookdaily=false,looknopity=false,toys=true,deck=true,wings=true})
+-- A part that also needs another part on (slice 2's three sit under daily_rack).
+Rack.Needs=table.freeze({toys="rack",deck="rack",wings="rack"})
+-- The egg each slice 2 part opens (Rack.on(Rack.EggSwitch[egg]) is the egg's switch).
+Rack.EggSwitch=table.freeze({outfit="rack",toycolour="toys",deck="deck"})
+-- Angel Wings' days (ROTATION-2-BRIEF 3): day mod 9 == 4, nine so it drifts through the weekdays.
+Rack.WingsEvery=9
+Rack.WingsDay=4
+function Rack.wingsDay(day)return wholeDay(day)and day%Rack.WingsEvery==Rack.WingsDay end
 local rank={};for i,r in ipairs(Rack.RarityOrder)do rank[r]=i end
+Rack.rank=rank
 
 -- FNV-1a over "salt:id" (WeeklyShelf.hash's exact-double recipe).
 local function hash(salt,id)
@@ -60,7 +78,6 @@ local function hash(salt,id)
 	return h
 end
 Rack.hash=hash
-local function wholeDay(day)return type(day)=="number"and day==day and day%1==0 and math.abs(day)<=1e9 end
 Rack.wholeDay=wholeDay
 -- The server day as a number (the snapshot's `rack.day`; `dailyDay` is the same day as a string).
 function Rack.today(now)return tonumber(Daily.dayOf(if type(now)=="number"then now else os.time()))end
@@ -78,8 +95,13 @@ local function data(petId)
 	if found~=nil then return found or nil end
 	local items=Wear.forPet(petId,math.huge)
 	local bases,colours,sparkle={},{},{}
+	-- Egg-only bases (Angel Wings) are never one of the daily picks (architect review 1): `order` never holds them.
+	local wings=nil
+	for _,item in ipairs(items.eggBases or {})do
+		if item.id==Wear.WingsId then wings=table.freeze({id=item.id,base=item.id,rarity="legendary",finish=item.finish,name=item.name,wings=true})end
+	end
 	for _,item in ipairs(items.order)do
-		if not item.variant then
+		if not item.variant and item.egg~=true then
 			table.insert(bases,item.id)
 			colours[item.id]={{id=item.id,base=item.id,rarity=Rack.TierRarity[item.tier]or "common",name=item.name}}
 		end
@@ -113,7 +135,7 @@ local function data(petId)
 	end
 	for _,row in ipairs(sparkle)do table.freeze(row)end
 	if #bases==0 then cache[petId]=false;return nil end
-	found={bases=table.freeze(bases),colours=colours,sparkle=table.freeze(sparkle),period=math.ceil(#bases/Rack.PerDay)}
+	found={bases=table.freeze(bases),colours=colours,sparkle=table.freeze(sparkle),period=math.ceil(#bases/Rack.PerDay),wings=wings}
 	cache[petId]=found
 	return found
 end
@@ -122,12 +144,15 @@ function Rack.period(petId)local d=data(petId);return d and d.period end
 -- Every colour row of one base, in its cycle order (the base first only if it sorts first).
 function Rack.colours(petId,baseId)local d=data(petId);return d and d.colours[baseId]end
 function Rack.sparkles(petId)local d=data(petId);return d and d.sparkle or {}end
+-- Angel Wings for this pet ({id, base, rarity="legendary", finish, name, wings=true}), or nil when its rig has no mount.
+function Rack.wings(petId)local d=data(petId);return d and d.wings end
 -- Every id the Outfit Egg can ever give this pet (picks and sparkle rows), for the specs and the cap check.
 function Rack.pool(petId)
 	local d=data(petId);local out={}
 	if not d then return out end
 	for _,base in ipairs(d.bases)do for _,row in ipairs(d.colours[base])do table.insert(out,row.id)end end
 	for _,row in ipairs(d.sparkle)do table.insert(out,row.id)end
+	if d.wings then table.insert(out,d.wings.id)end
 	return out
 end
 
@@ -152,11 +177,20 @@ function Rack.picks(petId,day)
 	end
 	return out
 end
--- Today's sparkle pick (legendary finish row), or nil when the pet has none.
+-- Today's sparkle pick (legendary finish row), or nil when the pet has none. The slice 1 schedule (no wings).
 function Rack.sparkle(petId,day)
 	local d=data(petId)
 	if not d or not wholeDay(day)or #d.sparkle==0 then return nil end
 	return d.sparkle[day%#d.sparkle+1]
+end
+-- The sparkle pick the egg deals (architect review 1): with `wings` (the rack_wings switch, frozen by the caller) on a
+-- wings day, Angel Wings while the pet does not own it (`have`: an owned set); otherwise the slice 1 pick.
+function Rack.sparkleFor(petId,day,have,wings)
+	if wings==true and Rack.wingsDay(day)then
+		local d=data(petId)
+		if d and d.wings and not(type(have)=="table"and have[d.wings.id])then return d.wings end
+	end
+	return Rack.sparkle(petId,day)
 end
 
 -- The pool key the client sends back (architect review 2): today's unowned picks and the unowned sparkle pick.
@@ -179,11 +213,13 @@ Rack.ownedSet=ownedSet
 --     sparkle = {id, base, rarity="legendary", finish, units, percent, owned, name} or nil}
 -- units / total is the exact chance (integers); percent = units / total * 100 for OddsText.list. Owned rows: units 0.
 -- Fixed mode: `next` alone has units 1 of total 1; the sparkle is 0 (never on the fixed path).
-function Rack.view(petId,day,owned,mode)
+-- `wings` (slice 2: the rack_wings switch, frozen by the caller): Angel Wings may be the sparkle pick (Rack.sparkleFor);
+-- the sparkle view then carries wings=true.
+function Rack.view(petId,day,owned,mode,wings)
 	mode=if mode=="fixed"then "fixed"else "random"
 	local have=ownedSet(owned)
 	local picks=Rack.picks(petId,day)
-	local sparkle=Rack.sparkle(petId,day)
+	local sparkle=Rack.sparkleFor(petId,day,have,wings)
 	local W,unowned=0,{}
 	for _,row in ipairs(picks)do if not have[row.id]then W+=row.weight;table.insert(unowned,row.id)end end
 	local sparkleOpen=sparkle~=nil and not have[sparkle.id]and W>0
@@ -213,7 +249,7 @@ function Rack.view(petId,day,owned,mode)
 	if sparkle then
 		local units=if mode=="random"and sparkleOpen then W else 0
 		sparkleView={id=sparkle.id,base=sparkle.base,rarity="legendary",finish=sparkle.finish,name=sparkle.name,owned=have[sparkle.id]==true,
-			units=units,percent=if total>0 then units/total*100 else 0}
+			units=units,percent=if total>0 then units/total*100 else 0,wings=sparkle.wings}
 	end
 	return {pet=petId,day=day,mode=mode,rest=W==0,next=if mode=="fixed"then nextId else nil,total=total,
 		poolKey=Rack.poolKey(unowned,if sparkleOpen then sparkle.id else nil),items=items,sparkle=sparkleView}
@@ -231,12 +267,16 @@ function Rack.roll(view,unit)
 	if view.sparkle and r<view.sparkle.units then return view.sparkle.id,"legendary"end
 	return nil
 end
--- The rarity of an id the egg gives this pet on `day` (nil when it is not on that day's egg).
-function Rack.rarityOf(petId,day,id)
+-- The rarity of an id the egg gives this pet on `day` (nil when it is not on that day's egg). `wings` as Rack.view: on a
+-- wings day both Angel Wings and the regular sparkle pick (dealt once the wings are owned) are that day's legendary.
+function Rack.rarityOf(petId,day,id,wings)
 	for _,row in ipairs(Rack.picks(petId,day))do if row.id==id then return row.rarity end end
 	local s=Rack.sparkle(petId,day)
-	return if s and s.id==id then "legendary"else nil
+	if s and s.id==id then return "legendary"end
+	local w=Rack.sparkleFor(petId,day,nil,wings)
+	return if w and w.id==id then "legendary"else nil
 end
+-- The generic roll for any rack view (items, then an optional sparkle): Rack.roll. ToySkins and DeckRack views use it.
 
 -- The switches.
 function Rack.attribute(feature)return Rack.Attributes[feature]end
@@ -267,24 +307,26 @@ function Rack.resolve(feature,configValue,override,ceiling)
 	return Rack.Defaults[feature]==true
 end
 -- Server only (RackConfig): the resolved values every server check reads. Off until they are set.
-local switches={rack=false,lookdaily=false,looknopity=false}
+local switches={rack=false,lookdaily=false,looknopity=false,toys=false,deck=false,wings=false}
 function Rack.setSwitch(feature,value)
 	if not RunService:IsServer()or switches[feature]==nil then return false end
 	switches[feature]=value==true
 	return true
 end
 function Rack.changed(feature)return workspace:GetAttributeChangedSignal(Rack.Attributes[feature or "rack"])end
--- Spec seam, refused outside Studio. env = {flags, studio, place, rack, lookdaily, looknopity} (a part is on when its
+-- Spec seam, refused outside Studio. env = {flags, studio, place, rack, lookdaily, looknopity, toys, deck, wings} (a part is on when its
 -- key is true; missing = its default); nil clears it.
 function Rack.inject(env)
 	if not RunService:IsStudio()then return false end
 	injected=if type(env)=="table"then table.clone(env)else nil
 	return true
 end
--- Is this part on right now? An unknown feature is off.
+-- Is this part on right now? An unknown feature is off; a slice 2 part also needs daily_rack (Rack.Needs).
 function Rack.on(feature)
 	feature=feature or "rack"
 	if Rack.Attributes[feature]==nil then return false end
+	local needs=Rack.Needs[feature]
+	if needs and not Rack.on(needs)then return false end
 	if injected then
 		local value=injected[feature]
 		if type(value)~="boolean"then value=Rack.Defaults[feature]end

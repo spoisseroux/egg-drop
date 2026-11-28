@@ -3,6 +3,9 @@
 local Appearance={Ids={"pip","puddle","wick","orbit","bloom_pip","foxfire_wick","eclipse_orbit","blip"}}
 local Hue=require(game:GetService("ReplicatedStorage").Shared.HueCatalog)
 local Charms=require(game:GetService("ReplicatedStorage").Shared.PetCharmCatalog)
+-- Toy colours (rotation slice 2, ARCH-REVIEW-ROTATION-2 8): the companion's toy may carry `toySkin`.
+local Rack=require(game:GetService("ReplicatedStorage").Shared.DailyRack)
+local ToySkins=require(game:GetService("ReplicatedStorage").Shared.ToySkins)
 local supported=Hue.Supported
 local function stamp(n)return if type(n)=="number"and n==n and n%1==0 and n>=0 and n<=9007199254740000 then n else 0 end
 local function valid(entry)
@@ -47,6 +50,11 @@ function Appearance.public(profile,hues,petHues,petMaterials,petToys,petFeatures
   result[id].jellyStage=if type(dose)=="table"and type(dose.jelly)=="number"then dose.jelly else 0
   if id==(confirmedPetId or profile.companionId)then
   result[id].toyId=if type(petToys)=="table"then petToys[id]or "none"else "none"
+  -- The toy's colour (ToySkins.shown): only a skin the save owns, of that toy, while rack_toys is on; else no key and
+  -- every client draws the original colour. The host republishes after toySkinWear and the Toy Colour Egg.
+  if Rack.on("toys")and type(hatching)=="table"and type(hatching.rack)=="table"then
+   result[id].toySkin=ToySkins.shown(hatching.rack.toy,result[id].toyId)
+  end
   local features=type(petFeatures)=="table"and petFeatures[id]
   result[id].featureStages={horns=features and features.horns.visible or 0,claws=features and features.claws.visible or 0,wings=features and features.wings.visible or 0}
   -- Saved wearables (hatching v10) replicate with the rest of the public appearance.

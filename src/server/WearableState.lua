@@ -11,7 +11,9 @@ local Catalog=require(Shared.WearableCatalog)
 local Eggs=require(Shared.EggCatalog)
 local Gate=require(Shared.LevelGate)
 local Stats=require(script.Parent.StatState)
-local State={Limit=Catalog.OwnedLimit,KeyLimit=24,ClosetReason="FromOutfitEgg"}
+-- Limit: the write cap (every write path refuses a 129th: applyBuy's OwnedLimit, grant's ClosetFull). LoadLimit: what
+-- valid() accepts (ARCH-REVIEW-ROTATION-2 4: loosened now so the write cap can rise one release later).
+local State={Limit=Catalog.OwnedLimit,LoadLimit=Catalog.LoadLimit,KeyLimit=24,ClosetReason="FromOutfitEgg"}
 -- Weekly shelf (slice C): a purchase made in shelf week `week` pays the shelf price when the
 -- item is on that week's shelf, otherwise the catalogue price. The module is Lane K's; a
 -- build without it (or with FeatureFlags.WeeklyShelf off) simply always pays full price.
@@ -43,7 +45,7 @@ function State.valid(state)
 		for key in pairs(row)do if key~="owned"and key~="equipped"then return false end end
 		local count,seen=0,{}
 		for key in pairs(row.owned)do count+=1;if type(key)~="number"then return false end end
-		if count~=#row.owned or count>State.Limit then return false end
+		if count~=#row.owned or count>State.LoadLimit then return false end
 		for _,item in ipairs(row.owned)do if not id(item)or seen[item]then return false end;seen[item]=true end
 		local keys=0
 		for key,item in pairs(row.equipped)do

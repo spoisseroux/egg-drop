@@ -7,7 +7,10 @@
 local Defs=require(script.Parent.PetRigDefinitions)
 local Variants=require(script.Parent.WearableVariants)
 local Levels=require(script.Parent.Levels)
-local Catalog={Version=1,OwnedLimit=128}
+-- OwnedLimit: every WRITE path refuses at 128 (ClosetFull / OwnedLimit). LoadLimit (ARCH-REVIEW-ROTATION-2 4): what
+-- this build's load accepts, loosened now so a later build may raise the write cap one release after; builds before
+-- this one still refuse a save over 128 on load, so the write cap stays 128 until this build is the rollback floor.
+local Catalog={Version=1,OwnedLimit=128,LoadLimit=256}
 -- Shop tabs in display order (UI: hat, shirt, neck, ears, eyes, mouth, tail, then slice B's
 -- eyewear, cheek, wrist, ankle). Append-only: WearableState validates take-off against this
 -- list. The shop shows only tabs that sell something for the pet (Catalog.tabsFor).
@@ -16,11 +19,25 @@ Catalog.Tabs=table.freeze({
  {id="ears",slot="EarPiercing",label="Ears"},{id="eyes",slot="Eyes",label="Eyes"},{id="mouth",slot="Mouth",label="Mouth"},
  {id="tail",slot="Tail",label="Tail"},
  {id="eyewear",slot="Eyewear",label="Eyewear"},{id="cheek",slot="Cheek",label="Cheek"},
- {id="wrist",slot="Wrist",label="Wrist"},{id="ankle",slot="Ankle",label="Ankle"}})
+ {id="wrist",slot="Wrist",label="Wrist"},{id="ankle",slot="Ankle",label="Ankle"},
+ -- Rotation slice 2 (ARCH-REVIEW-ROTATION-2 2): Angel Wings' slot. Shown only for a pet that owns a Back item.
+ {id="back",slot="Back",label="Back"}})
 Catalog.TierPrice=table.freeze({common=40,rare=100,showcase=250})
 -- Recolour rows (WearableVariants), here so the localization export reads their names.
 Catalog.Variants=Variants.Rows
 Catalog.week=Variants.week
+-- Egg-only BASE items (rotation slice 2, ARCH-REVIEW-ROTATION-2 1-3): an item of its own (not a recolour) that no rig
+-- sells. compose lists one only under math.huge (render, equip, grant) and only for a rig whose definition carries its
+-- attachment rows (PetRigDefinitions: the Bear's, which the Bunny inherits); it is never in `order` (so never one of the
+-- daily picks, a Wardrobe card for sale, the Book's wardrobe page or the shelf), only in `eggBases` and `byId`. No
+-- price: WearableState.check refuses it NotForSale; only the Outfit Egg's wings-day sparkle pick grants it.
+-- Append-only; never rename or reuse an id.
+Catalog.WingsId="angelwings"
+Catalog.EggBases=table.freeze({
+ table.freeze({id="angelwings",slot="Back",name="Angel Wings",tier="showcase",rarity="legendary",finish="sparkle",color="#F4F6FB"}),
+})
+local eggBaseById={};for _,row in ipairs(Catalog.EggBases)do eggBaseById[row.id]=row end
+Catalog.EggBaseById=table.freeze(eggBaseById)
 
 -- Items for one pet's rig from an explicit variant row list (uncached; forPet caches it).
 -- Order: each rig item, then its variants in row order, so a slot tab lists a base with its
@@ -28,9 +45,11 @@ Catalog.week=Variants.week
 -- colour data and adds variant=true, base=<id>, color=<hex>, piece=<attachment name or nil>,
 -- gate=<LevelGate gate or nil>, weekly=<true on a "This week" row (ThisWeek), else nil>, and on an Outfit Egg row
 -- (DailyRack) egg=true, rarity, finish?, finishHexes? (listed only under math.huge: never sold, always rendered).
-function Catalog.compose(petId,rows)
+-- `eggBases` (forPet passes it only under math.huge): Catalog.EggBases rows to add, each only when the rig has its
+-- attachment rows. They land in `eggBases` and `byId`, never in `order`.
+function Catalog.compose(petId,rows,eggBases)
  local definition=type(petId)=="string"and Defs[petId]
- local order,byId={},{}
+ local order,byId,extra={},{},{}
  if type(definition)=="table"and type(definition.wearableItems)=="table"then
   local slots=definition.slots or {}
   local bases={}
@@ -67,8 +86,19 @@ function Catalog.compose(petId,rows)
     end
    end
   end
+  for _,row in ipairs(eggBases or {})do
+   local mounted=false
+   for _,a in ipairs(type(definition.attachments)=="table"and definition.attachments or {})do if a.item==row.id then mounted=true;break end end
+   if mounted and not byId[row.id]then
+    local perSide=slots[row.slot]~=nil and slots[row.slot].perSide==true
+    local item=table.freeze({id=row.id,slot=row.slot,name=row.name,tier=row.tier,price=nil,flags=table.freeze({}),perSide=perSide,
+     keys=table.freeze(if perSide then {row.slot.."L",row.slot.."R"}else {row.slot}),primary=nil,role=nil,
+     egg=true,eggBase=true,rarity=row.rarity,finish=row.finish,color=row.color})
+    table.insert(extra,item);byId[item.id]=item
+   end
+  end
  end
- return table.freeze({order=table.freeze(order),byId=table.freeze(byId)})
+ return table.freeze({order=table.freeze(order),byId=table.freeze(byId),eggBases=table.freeze(extra)})
 end
 local cache={}
 local none=Catalog.compose(nil)
@@ -81,11 +111,15 @@ function Catalog.forPet(petId,week)
  -- Rows only ever join as the week advances, so the count names the set (with the gated rows
  -- listed or not: Levels may differ between two calls in a spec). "This week" rows come and go, so
  -- the ones listed are named too.
- local key=petId.."|"..#rows..(if Levels.on("gates")then "|g"else "").."|"..weekly
+ -- Egg-only bases join under math.huge only ("|e" names that set: ARCH-REVIEW-ROTATION-2 2).
+ local huge=week==math.huge
+ local key=petId.."|"..#rows..(if Levels.on("gates")then "|g"else "").."|"..weekly..(if huge then "|e"else "")
  local found=cache[key]
- if not found then found=Catalog.compose(petId,rows);cache[key]=found end
+ if not found then found=Catalog.compose(petId,rows,if huge then Catalog.EggBases else nil);cache[key]=found end
  return found
 end
+-- The egg-only bases this pet's rig can wear (every one ever, math.huge), in EggBases order.
+function Catalog.eggBases(petId)return Catalog.forPet(petId,math.huge).eggBases or {}end
 function Catalog.item(petId,id)return Catalog.forPet(petId).byId[id]end
 function Catalog.price(petId,id)local item=Catalog.item(petId,id);return item and item.price or nil end
 function Catalog.hasItems(petId)return #Catalog.forPet(petId).order>0 end
@@ -133,10 +167,15 @@ local function listsWeekly(petId)
  for _,item in ipairs(Catalog.forPet(petId).order)do if item.weekly then return true end end
  return false
 end
+-- An owned egg-only base (Angel Wings) is kept the same way, after the slot's rig items.
+local function ownsEggBase(petId,owned)
+ for _,item in ipairs(Catalog.eggBases(petId))do if table.find(owned,item.id)then return true end end
+ return false
+end
 function Catalog.shopTab(petId,tabSlot,owned)
  local gates=Levels.on("gates")
  if type(owned)~="table"then owned={}end
- if gates and not ownsWeekly(owned)and not listsWeekly(petId)then return Catalog.inTab(petId,tabSlot)end
+ if gates and not ownsWeekly(owned)and not listsWeekly(petId)and not ownsEggBase(petId,owned)then return Catalog.inTab(petId,tabSlot)end
  local listed=Catalog.forPet(petId).byId
  local result={}
  for _,item in ipairs(Catalog.forPet(petId,math.huge).order)do
@@ -144,6 +183,9 @@ function Catalog.shopTab(petId,tabSlot,owned)
   local sold=listed[item.id]~=nil and item.weekly~=true
   local kept=((item.gate~=nil and not gates)or item.weekly==true or item.egg==true)and mine
   if item.slot==tabSlot and(sold or kept)then table.insert(result,listed[item.id]or item)end
+ end
+ for _,item in ipairs(Catalog.eggBases(petId))do
+  if item.slot==tabSlot and table.find(owned,item.id)then table.insert(result,item)end
  end
  return result
 end
@@ -155,10 +197,15 @@ function Catalog.closetSells(item)
  return type(item)=="table"and item.egg~=true and(item.gate~=nil or item.weekly==true)
 end
 -- Every colour of one base item for this pet (the base, then its rows in data order), every row ever (math.huge).
+-- An egg-only base is a family of one (no colours: ROTATION-2-BRIEF 3).
 function Catalog.family(petId,baseId)
  local result={}
  for _,item in ipairs(Catalog.forPet(petId,math.huge).order)do
   if item.id==baseId or item.base==baseId then table.insert(result,item)end
+ end
+ if #result==0 then
+  local egg=Catalog.forPet(petId,math.huge).byId[baseId]
+  if egg and egg.eggBase then table.insert(result,egg)end
  end
  return result
 end
@@ -190,6 +237,7 @@ end
 -- The closet's slot tab: one card per base item (its face is Catalog.closetFace; its owned colours are the swatches),
 -- plus each level-gated row the shop lists now that the pet does not own yet (it is still sold: an earned goal).
 -- Recolours, Outfit Egg rows and owned gated or weekly rows are colours of their base's card, never cards of their own.
+-- An egg-only base (Angel Wings) is a card only once owned (never a wall of things you lack).
 function Catalog.closetTab(petId,tabSlot,owned)
  local mine={};for _,id in ipairs(type(owned)=="table"and owned or {})do mine[id]=true end
  local listed=Catalog.forPet(petId).byId
@@ -200,12 +248,19 @@ function Catalog.closetTab(petId,tabSlot,owned)
    elseif item.gate~=nil and not mine[item.id]and listed[item.id]then table.insert(result,listed[item.id])end
   end
  end
+ for _,item in ipairs(Catalog.eggBases(petId))do
+  if item.slot==tabSlot and mine[item.id]then table.insert(result,item)end
+ end
  return result
 end
 -- The shop tabs that sell at least one item for this pet, in Tabs order. A tab ships only
--- when it has an item (VISUAL-BRIEF 6): no Anklets, no Ankle tab.
-function Catalog.tabsFor(petId)
+-- when it has an item (VISUAL-BRIEF 6): no Anklets, no Ankle tab. `owned` (optional, the pet's owned list): a tab
+-- whose only item is an owned egg-only base shows too (the Back tab once the pet owns Angel Wings).
+function Catalog.tabsFor(petId,owned)
  local used={};for _,item in ipairs(Catalog.forPet(petId).order)do used[item.slot]=true end
+ if type(owned)=="table"then
+  for _,item in ipairs(Catalog.eggBases(petId))do if table.find(owned,item.id)then used[item.slot]=true end end
+ end
  local result={};for _,tab in ipairs(Catalog.Tabs)do if used[tab.slot]then table.insert(result,tab)end end
  return result
 end

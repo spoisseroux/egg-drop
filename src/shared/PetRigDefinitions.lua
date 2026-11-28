@@ -5,6 +5,30 @@ for id,definition in pairs(require(script.Parent.NewBabyRigDefinitions))do defin
 -- The Zivvi definition above stays for reference only.
 definitions.zivvi_legacy=definitions.pip
 definitions.pip=require(script.Parent.BearRigDefinition)
+-- Rotation slice 2 (ROTATION-2-BRIEF 3, ARCH-REVIEW-ROTATION-2 3): Angel Wings, the egg-only Back item
+-- (WearableCatalog.EggBases). No new art: two rows on Back that reuse the authored stage 5 wing templates (`name` and
+-- `template` are the template's, so PetAttachments.template finds every part), drawn in their own Snow colour (stage 5 feature rows take
+-- `secondary`). `piece` names each side; `scale` (1.25 about the wing root) and the halo are lane E's to draw. Worn, the
+-- Back slot is occupied, so PetAttachmentRules hides the pet's own grown wings; off, they come back. The Bunny inherits
+-- these rows with the Bear's `attachments` table (BunnyRigDefinition.inheritFromBear). Older builds have no such rows:
+-- PetAttachmentRules.normalize drops the unknown Back=angelwings pair and the save keeps it.
+do
+ local bear=definitions.pip
+ local list=type(bear)=="table"and bear.attachments
+ local mounted=false
+ for _,a in ipairs(type(list)=="table"and list or {})do if a.item=="angelwings"then mounted=true end end
+ if type(list)=="table"and not mounted then
+  local rows={}
+  for _,a in ipairs(list)do
+   if a.feature=="wings"and a.stage==5 and(a.name=="WingL_S5"or a.name=="WingR_S5")then
+    table.insert(rows,{name=a.name,template=a.name,slot="Back",anchor=a.anchor,channel=a.channel,colorRole="own",color="#F4F6FB",
+     center=table.clone(a.center),size=table.clone(a.size),piece=if a.side=="L"then "WingL"else "WingR",item="angelwings",
+     side=a.side,scale=1.25})
+   end
+  end
+  if #rows==2 then for _,row in ipairs(rows)do table.insert(list,row)end end
+ end
+end
 -- v2 (2026-11-19): the earned slot `blip` renders the Bunny. It wears the Bear's attachment meshes:
 -- the keys in inheritFromBear (attachments, slots, wearableItems, ...) are the Bear's own tables,
 -- so the wardrobe sells the same items and the server validates against the same list.

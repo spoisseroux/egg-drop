@@ -1,10 +1,12 @@
 -- The daily rack's runtime switches (DailyRack; ROTATION-BRIEF 5, ARCH-REVIEW-ROTATION 7): AliveConfig's publisher on
--- three keys, the OnboardConfig pattern. ConfigService `daily_rack` / `look_daily` / `look_nopity`. All are off until
+-- six keys, the OnboardConfig pattern. ConfigService `daily_rack` / `look_daily` / `look_nopity`. All are off until
 -- the config has loaded once (or an owner override), then follow it: missing or malformed = the part's shipped default
 -- (daily_rack on; look_daily and look_nopity OFF until their before-live items are settled); a later failed or errored
 -- snapshot keeps the last good values. With the build ceiling off (live) nothing starts: no attribute is written and
 -- ConfigService is never asked. Owned items stay owned and wearable either way.
--- Owner chat on the beta and in Studio: /rack <rack|lookdaily|looknopity|all> <on|off|clear>, this server only.
+-- Slice 2 (ROTATION-2-BRIEF 4): rack_toys, rack_deck, rack_wings (missing = on; each also needs daily_rack).
+-- Owner chat on the beta and in Studio: /rack <rack|lookdaily|looknopity|toys|deck|wings|all> <on|off|clear>, this
+-- server only.
 local Rack=require(game:GetService("ReplicatedStorage").Shared.DailyRack)
 local Publisher=require(script.Parent.AliveConfig)
 local Config={}

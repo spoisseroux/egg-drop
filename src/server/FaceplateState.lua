@@ -5,7 +5,7 @@ local Shared=game:GetService("ReplicatedStorage").Shared
 local Themes=require(Shared.DeckThemes)
 local Gate=require(Shared.LevelGate)
 local Stats=require(script.Parent.StatState)
-local Faceplates={Limit=64}
+local Faceplates={Limit=64,ClosetReason="FromDeckEgg"}
 -- Weekly shelf (slice C): a purchase made in shelf week `week` pays the shelf price when the
 -- item is on that week's shelf, otherwise the catalogue price. The module is Lane K's; a
 -- build without it (or with FeatureFlags.WeeklyShelf off) simply always pays full price.
@@ -42,10 +42,14 @@ end
 -- the shelf week frozen in the purchase (nil = no shelf: the catalogue price). A level-gated plate
 -- reads the levels of the save being written: below the gate it is NeedsLevel with no charge, and
 -- while gates are off it is NotForSale (unless `gates` says the purchase began with them on).
-function Faceplates.check(state,plateId,price,week,gates)
+-- `closet` (DailyRack "deck", frozen in the purchase when it was asked; ARCH-REVIEW-ROTATION-2 7): Deck style is a closet,
+-- plates come from the Deck Egg, so only a level-gated plate (an earned goal) still sells; any other is FromDeckEgg with no
+-- charge. A plate already owned stays owned and equippable. nil (an older pending purchase) = off.
+function Faceplates.check(state,plateId,price,week,gates,closet)
 	local expected=Themes.price(plateId)
 	local gate=expected and Themes.ById[plateId].gate
 	if not expected or not(gates==true or Gate.listed(gate))then return false,"NotForSale"end
+	if closet==true and gate==nil then return false,Faceplates.ClosetReason end
 	expected=expectedPrice("faceplate",plateId,expected,week)
 	if price~=nil and price~=expected then return false,"PriceChanged"end
 	if Faceplates.owns(state,plateId)then return false,"AlreadyOwned"end
@@ -55,10 +59,10 @@ function Faceplates.check(state,plateId,price,week,gates)
 	return true,nil,expected
 end
 
--- candidate = { plateId, price, operationId, week }
+-- candidate = { plateId, price, operationId, week, closet? }
 function Faceplates.apply(state,candidate,gates)
 	if type(candidate)~="table"or not validId(candidate.plateId)then return false,"InvalidFaceplate"end
-	local ok,why,price=Faceplates.check(state,candidate.plateId,candidate.price,candidate.week,gates)
+	local ok,why,price=Faceplates.check(state,candidate.plateId,candidate.price,candidate.week,gates,candidate.closet)
 	if not ok then return false,why end
 	local owned=table.clone(state.faceplates or {})
 	table.insert(owned,candidate.plateId)

@@ -85,6 +85,7 @@ return function(server)
 		end
 		for base,gap in pairs(gapBase)do assert(gap<=5,base.." back within 5 days: "..gap)end
 		local sparkles={};for _,r in ipairs(Rack.sparkles("pip"))do sparkles[r.id]=true end
+		sparkles[Rack.wings("pip").id]=true -- Angel Wings: only ever the wings-day sparkle pick (RackSlice2.spec)
 		for _,id in ipairs(pool)do
 			if not sparkles[id]then
 				assert(last[id],"every row shows in a year: "..id)
@@ -209,8 +210,8 @@ return function(server)
 	end)
 
 	test("the 128 cap: everything a Bear could ever own fits; a full closet refuses every grant",function()
-		local all=#Wear.forPet("pip",math.huge).order
-		assert(all==124 and all<=W.Limit and W.Limit==128,"23 + 24 + 8 + 64 + 5 = "..all)
+		local all=#Wear.forPet("pip",math.huge).order+#Wear.eggBases("pip")
+		assert(all==125 and all<=W.Limit and W.Limit==128,"23 + 24 + 8 + 64 + 5 + Angel Wings = "..all)
 		local owned={};for i=1,128 do owned[i]="x"..i end
 		local state={inventoryMask=1,petWearables={pip={owned=owned,equipped={}}}}
 		assert(select(2,W.grant(state,"pip","beanie_sky"))=="ClosetFull"and #state.petWearables.pip.owned==128)
@@ -259,7 +260,7 @@ return function(server)
 		assert(Rack.resolve("rack",nil,nil,true)==true and Rack.resolve("lookdaily",nil,nil,true)==false and Rack.resolve("looknopity","x",nil,true)==false)
 		assert(Rack.resolve("rack",false,nil,true)==false and Rack.resolve("lookdaily",true,nil,true)==true and Rack.resolve("rack",true,nil,false)==false)
 		assert(Rack.resolve("rack",false,true,true)==true,"an owner override wins")
-		local p=Config.parse("/rack all off");assert(p and #p.features==3 and p.value==false)
+		local p=Config.parse("/rack all off");assert(p and #p.features==6 and p.value==false)
 		p=Config.parse("/rack lookdaily clear");assert(p and p.features[1]=="lookdaily"and p.value==nil)
 		assert(Config.parse("/rack nope on")==nil and Config.parse("/thisweek on")==nil)
 		assert(Rack.inject({flags={DailyRack=true},studio=true}))

@@ -101,7 +101,10 @@ SPECS = ["Dash", "DashConfig", "DashWire", "DashDirector", "DashState", "DashPri
          "DeckGlass",
          # The daily rack, lane C (wear and finishes): the closet's rules and the server's refusal, and older saves keeping
          # their clothes in the closet.
-         "WardrobeCloset", "ClosetCrossVersion"]
+         "WardrobeCloset", "ClosetCrossVersion",
+         # Rotation slice 2, lane A (ROTATION-2-BRIEF, ARCH-REVIEW-ROTATION-2): the three switches, Angel Wings, the Toy
+         # Colour Egg and the Deck Egg (odds against 100k rolls on 30 days each), toySkinWear, the deck closet, the caps.
+         "RackSlice2"]
 # Client specs: the Dash, Things, Finds, onboarding v3 and garden life modules (with Wind, AmbientAudio and AliveBudget) as they are, small stand-ins for the screens they borrow, and
 # RoomView's hooks cut out of RoomView.lua (the rest of it needs an engine). One realm: the mocks answer IsServer and
 # IsStudio true.
