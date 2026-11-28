@@ -1,0 +1,461 @@
+{
+  "version": "v3",
+  "brief": "artifacts/qa-2026-11-28-music/MUSIC-BRIEF.md",
+  "feedback": "Spencer: less dense day/night, more background ambience; Pocket Deck more exciting",
+  "seed": 20261128,
+  "disabled_samples": [
+    "boing",
+    "la-chop"
+  ],
+  "targets": {
+    "lufs": {
+      "garden-day-v3": -18.6,
+      "garden-night-v3": -21.6,
+      "pocket-deck-v3": -17.5,
+      "pocket-deck-lite-v3": -21.9
+    },
+    "true_peak": {
+      "garden-day-v3": -1.5,
+      "garden-night-v3": -6.0,
+      "pocket-deck-v3": -1.5,
+      "pocket-deck-lite-v3": -1.5
+    }
+  },
+  "stem_offset_frames": 2257,
+  "garden_pad_notes_bars_1_8": [
+    [
+      "G3",
+      "A3",
+      "C4",
+      "E4"
+    ],
+    [
+      "A3",
+      "C4",
+      "D4"
+    ],
+    [
+      "G3",
+      "A3",
+      "B3",
+      "C4"
+    ],
+    [
+      "F\u266f3",
+      "A3",
+      "B3",
+      "C4"
+    ],
+    [
+      "G3",
+      "A3",
+      "C4",
+      "E4"
+    ],
+    [
+      "A3",
+      "C4",
+      "D4"
+    ],
+    [
+      "G3",
+      "B3",
+      "D4",
+      "E4"
+    ],
+    [
+      "F\u266f3",
+      "A3",
+      "B3",
+      "C\u266f4"
+    ]
+  ],
+  "glue": {
+    "day": {
+      "threshold_db": -21.0,
+      "loudness_reduction_db": 1.09
+    },
+    "night": {
+      "threshold_db": -24.0,
+      "loudness_reduction_db": 1.29
+    },
+    "deck": {
+      "threshold_db": -22.0,
+      "loudness_reduction_db": 1.74
+    },
+    "lite": {
+      "threshold_db": -24.0,
+      "loudness_reduction_db": 1.62
+    }
+  },
+  "drums_deck": {
+    "clip_depth_db": 8.5,
+    "crest_before_db": 16.93,
+    "crest_after_db": 12.66
+  },
+  "deck_chords": [
+    "C",
+    "Am",
+    "C",
+    "G",
+    "Em",
+    "G",
+    "C",
+    "G"
+  ],
+  "event_counts": {
+    "day": {
+      "brush": 48,
+      "eep": 1,
+      "kalimba": 16,
+      "music-box": 12,
+      "pip": 4,
+      "plip": 4,
+      "shaker": 384,
+      "swell": 2
+    },
+    "night": {
+      "crickets": 4,
+      "music-box": 20,
+      "owl-hoo": 2,
+      "plip": 1,
+      "ribbit": 1
+    },
+    "deck": {
+      "arp": 376,
+      "bass": 286,
+      "boom": 1,
+      "coin": 2,
+      "kick": 99,
+      "laser": 2,
+      "riser": 1,
+      "snare": 57,
+      "snare-roll": 32,
+      "stab": 31,
+      "tom": 12
+    },
+    "lite": {
+      "music-box": 72,
+      "tok-ticktock": 32
+    }
+  },
+  "sample_vs_bed_db": {
+    "day": {
+      "brush": -26.0,
+      "eep": -16.9,
+      "kalimba": -9.1,
+      "music-box": -2.5,
+      "pip": -10.9,
+      "plip": -12.2,
+      "shaker": -29.3,
+      "swell": -10.1
+    },
+    "night": {
+      "crickets": -25.1,
+      "music-box": 0.2,
+      "owl-hoo": -8.1,
+      "plip": -12.9,
+      "ribbit": -12.7
+    },
+    "deck": {
+      "arp": -11.7,
+      "bass": -13.6,
+      "boom": -14.6,
+      "coin": -10.2,
+      "kick": -13.1,
+      "laser": -10.8,
+      "riser": -6.4,
+      "snare": -7.5,
+      "snare-roll": -11.5,
+      "stab": -2.6,
+      "tom": -7.3
+    },
+    "lite": {
+      "music-box": 7.9,
+      "tok-ticktock": -14.9
+    }
+  },
+  "files": {
+    "garden-day-v3": {
+      "file": "garden-day-v3.wav",
+      "frames": 5789538,
+      "seconds": 131.282,
+      "integrated_lufs": -18.6,
+      "true_peak_dbtp": -7.21,
+      "sample_peak_dbfs": -7.22,
+      "loudness_range_lu": 1.65,
+      "mono_loss_db": -0.49,
+      "share_above_6k": 0.0,
+      "seam": {
+        "rms_last50_db": -18.94,
+        "rms_first50_db": -22.26,
+        "wrap_step": [
+          1069,
+          1140
+        ],
+        "p99_step": [
+          499,
+          488
+        ],
+        "wrap_step_ratio_p99": 2.336,
+        "wrap_curvature_ratio_p99": 0.059,
+        "hf_seam_vs_median_barline_db": -26.42,
+        "hf_seam_vs_loudest_barline_db": -28.62,
+        "slope_last4ms_vs_first4ms": [
+          -12.18,
+          -0.17
+        ]
+      },
+      "ogg": {
+        "bytes": 2471816,
+        "sha256": "d3138701967ef17b76dd04671ccbbc31f453243aca3a39f4f747c313690fcde1",
+        "decoded_frames": 5789538,
+        "frames_match": true,
+        "seam": {
+          "rms_last50_db": -18.85,
+          "rms_first50_db": -22.24,
+          "wrap_step": [
+            930,
+            1178
+          ],
+          "p99_step": [
+            496,
+            484
+          ],
+          "wrap_step_ratio_p99": 2.433,
+          "wrap_curvature_ratio_p99": 0.619,
+          "hf_seam_vs_median_barline_db": -23.85,
+          "hf_seam_vs_loudest_barline_db": -26.36,
+          "slope_last4ms_vs_first4ms": [
+            -11.66,
+            -0.63
+          ]
+        },
+        "true_peak_dbtp": -7.28
+      },
+      "wav_sha256": "a5049e8887e964786fde3eeaeae3fffb154927c96b32aef7f26f7624ba9e810f"
+    },
+    "garden-night-v3": {
+      "file": "garden-night-v3.wav",
+      "frames": 5789538,
+      "seconds": 131.282,
+      "integrated_lufs": -21.6,
+      "true_peak_dbtp": -10.86,
+      "sample_peak_dbfs": -10.86,
+      "loudness_range_lu": 0.95,
+      "mono_loss_db": -0.87,
+      "share_above_6k": 0.0,
+      "seam": {
+        "rms_last50_db": -22.62,
+        "rms_first50_db": -24.68,
+        "wrap_step": [
+          591,
+          622
+        ],
+        "p99_step": [
+          308,
+          293
+        ],
+        "wrap_step_ratio_p99": 2.123,
+        "wrap_curvature_ratio_p99": 0.195,
+        "hf_seam_vs_median_barline_db": -0.06,
+        "hf_seam_vs_loudest_barline_db": -25.92,
+        "slope_last4ms_vs_first4ms": [
+          -12.09,
+          -0.11
+        ]
+      },
+      "ogg": {
+        "bytes": 2229807,
+        "sha256": "88f08ba7b12aec066c9659bd9e2f862633262ceb0afe86c0cee3c1b3523e580f",
+        "decoded_frames": 5789538,
+        "frames_match": true,
+        "seam": {
+          "rms_last50_db": -22.67,
+          "rms_first50_db": -24.66,
+          "wrap_step": [
+            644,
+            565
+          ],
+          "p99_step": [
+            308,
+            293
+          ],
+          "wrap_step_ratio_p99": 2.091,
+          "wrap_curvature_ratio_p99": 1.399,
+          "hf_seam_vs_median_barline_db": 8.68,
+          "hf_seam_vs_loudest_barline_db": -18.92,
+          "slope_last4ms_vs_first4ms": [
+            -11.8,
+            0.01
+          ]
+        },
+        "true_peak_dbtp": -10.84
+      },
+      "wav_sha256": "8fe1326655bb9a076b56eccba897a5af3af72061128ed62698d0d219d0a68f81"
+    },
+    "pocket-deck-v3": {
+      "file": "pocket-deck-v3.wav",
+      "frames": 2894769,
+      "seconds": 65.641,
+      "integrated_lufs": -17.5,
+      "true_peak_dbtp": -3.53,
+      "sample_peak_dbfs": -3.56,
+      "loudness_range_lu": 1.0,
+      "mono_loss_db": -0.16,
+      "share_above_6k": 0.0039,
+      "seam": {
+        "rms_last50_db": -24.27,
+        "rms_first50_db": -15.21,
+        "wrap_step": [
+          1293,
+          1252
+        ],
+        "p99_step": [
+          1370,
+          1549
+        ],
+        "wrap_step_ratio_p99": 0.944,
+        "wrap_curvature_ratio_p99": 0.052,
+        "hf_seam_vs_median_barline_db": 0.04,
+        "hf_seam_vs_loudest_barline_db": -8.74,
+        "slope_last4ms_vs_first4ms": [
+          27.81,
+          24.43
+        ]
+      },
+      "ogg": {
+        "bytes": 1295255,
+        "sha256": "abfe1ebefa0f0147de8058f44cc8c97397c994b10aaf53d7f11b9804aaad9eab",
+        "decoded_frames": 2894769,
+        "frames_match": true,
+        "seam": {
+          "rms_last50_db": -24.25,
+          "rms_first50_db": -15.18,
+          "wrap_step": [
+            1369,
+            1330
+          ],
+          "p99_step": [
+            1343,
+            1517
+          ],
+          "wrap_step_ratio_p99": 1.019,
+          "wrap_curvature_ratio_p99": 0.098,
+          "hf_seam_vs_median_barline_db": 0.1,
+          "hf_seam_vs_loudest_barline_db": -8.81,
+          "slope_last4ms_vs_first4ms": [
+            27.96,
+            23.94
+          ]
+        },
+        "true_peak_dbtp": -3.53
+      },
+      "wav_sha256": "b473b4c6f5451ac58510351abad6d3dfb7a96a244294eeb8783644e95d1b5fca"
+    },
+    "pocket-deck-lite-v3": {
+      "file": "pocket-deck-lite-v3.wav",
+      "frames": 1447385,
+      "seconds": 32.821,
+      "integrated_lufs": -21.9,
+      "true_peak_dbtp": -8.97,
+      "sample_peak_dbfs": -8.98,
+      "loudness_range_lu": 2.54,
+      "mono_loss_db": -0.27,
+      "share_above_6k": 0.0001,
+      "seam": {
+        "rms_last50_db": -34.3,
+        "rms_first50_db": -20.48,
+        "wrap_step": [
+          271,
+          271
+        ],
+        "p99_step": [
+          622,
+          620
+        ],
+        "wrap_step_ratio_p99": 0.437,
+        "wrap_curvature_ratio_p99": 0.2,
+        "hf_seam_vs_median_barline_db": -7.32,
+        "hf_seam_vs_loudest_barline_db": -9.13,
+        "slope_last4ms_vs_first4ms": [
+          -0.46,
+          17.6
+        ]
+      },
+      "ogg": {
+        "bytes": 613859,
+        "sha256": "ea83b913cd60f201c39bcb1654c480f65e2df12d31e0dc1aca176cc956b54fb0",
+        "decoded_frames": 1447385,
+        "frames_match": true,
+        "seam": {
+          "rms_last50_db": -34.33,
+          "rms_first50_db": -20.43,
+          "wrap_step": [
+            319,
+            274
+          ],
+          "p99_step": [
+            624,
+            622
+          ],
+          "wrap_step_ratio_p99": 0.512,
+          "wrap_curvature_ratio_p99": 0.193,
+          "hf_seam_vs_median_barline_db": -7.51,
+          "hf_seam_vs_loudest_barline_db": -9.35,
+          "slope_last4ms_vs_first4ms": [
+            -0.57,
+            17.43
+          ]
+        },
+        "true_peak_dbtp": -8.96
+      },
+      "wav_sha256": "5a3d5fe84d8d9068cb434c5d67dc64accf58a1a141f1f9afa189a7ba58485e9a"
+    }
+  },
+  "crossfade": {
+    "day_lufs": -18.6,
+    "night_lufs": -21.6,
+    "bump_equal_power_lu": 1.41,
+    "bump_exp1_5_lu": -0.09,
+    "exp1_5_within_1lu": true,
+    "loudness_vs_day_at_w_0_to_1_exp1_5": [
+      0.0,
+      0.18,
+      0.32,
+      0.34,
+      0.2,
+      -0.09,
+      -0.53,
+      -1.11,
+      -1.79,
+      -2.49,
+      -3.0
+    ],
+    "exponent_for_flat_midpoint": 1.5,
+    "midpoint_at_that_exponent_lu": -0.09,
+    "midpoint_by_exponent": {
+      "1.0": 1.41,
+      "1.1": 1.11,
+      "1.2": 0.81,
+      "1.3": 0.51,
+      "1.4": 0.21,
+      "1.5": -0.09,
+      "1.6": -0.39,
+      "1.7": -0.69,
+      "1.8": -0.99,
+      "1.9": -1.3,
+      "2.0": -1.6,
+      "2.1": -1.9,
+      "2.2": -2.2,
+      "2.3": -2.5,
+      "2.4": -2.8,
+      "2.5": -3.1,
+      "2.6": -3.4,
+      "2.7": -3.7,
+      "2.8": -4.01,
+      "2.9": -4.31,
+      "3.0": -4.61
+    }
+  }
+}

@@ -3,8 +3,9 @@
 
 Follows artifacts/qa-2026-11-28-music/MUSIC-BRIEF.md (Fable, 2026-11-28).
 
-  python scripts/build_music.py                      # full build
-  python scripts/build_music.py --without boing,eep  # drop risky samples
+  python scripts/build_music.py                      # v3 (current): garden beds, exciting Pocket Deck
+  python scripts/build_music.py --version v2         # the first-pass v2 render
+  python scripts/build_music.py --with boing,la-chop # v3 with the risky samples back on
   python scripts/build_music.py --no-encode          # WAV only, skip OGG/MP3
 
 Inputs:  assets/audio/music-src/{main,deck}/*.mp3 (Spencer's stems, his own music)
@@ -1463,12 +1464,609 @@ def print_summary(report):
         print("feature density:", report["feature_density_warnings"])
 
 
+# ============================================================================= v3 (2026-11-28, second pass)
+# Spencer on the v2 previews: "can we make them less dense, etc, for the day and night music, more background
+# ambience, but the pocket deck songs should be more exciting I think".
+# Garden day/night become a bed: soft synth pad from his chords, quiet bass, light shaker/brush, the melody once
+# per 32 bars, samples a third as often. The Pocket Deck gets a programmed kit, octave bass, arpeggio, stabs,
+# pumping pad, a build into bar 17 and a short drop. The lite variant stays calm.
+
+V3_LUFS = {"garden-day-v3": -18.6, "garden-night-v3": -21.6, "pocket-deck-v3": -17.5, "pocket-deck-lite-v3": -21.9}
+V3_TP = {"garden-day-v3": -1.5, "garden-night-v3": -6.0, "pocket-deck-v3": -1.5, "pocket-deck-lite-v3": -1.5}
+V3_DEFAULT_OFF = ("boing", "la-chop")
+V3_SAMPLE_DIR = os.path.join(OUT_DIR, "samples-v3")
+V3_PREVIEW_DIR = os.path.join(QA_DIR, "previews-v3")
+# Pocket Deck harmony per stem bar, from the chord-stem chroma and the lead's notes (template match + ear)
+DECK_CHORDS = ["C", "Am", "C", "G", "Em", "G", "C", "G"]
+_ROOT = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
+TAB = 4096
+
+
+def chord_pcs(name):
+    r = _ROOT[name[0]]
+    return [r, (r + (3 if name.endswith("m") else 4)) % 12, (r + 7) % 12]
+
+
+def voice(pc, low):
+    """MIDI note of pitch class `pc` in the octave starting at `low`."""
+    return low + ((pc - low) % 12)
+
+
+def wtable(harm):
+    ph = np.arange(TAB) * 2 * np.pi / TAB
+    y = np.zeros(TAB)
+    for k, a in harm:
+        y += a * np.sin(k * ph)
+    return y / np.abs(y).max()
+
+
+TAB_PAD = wtable([(k, 1.0 / k ** 1.4) for k in range(1, 9)])                  # soft saw
+TAB_PAD_BRIGHT = wtable([(k, 1.0 / k ** 1.1) for k in range(1, 13)])
+TAB_TRI = wtable([(k, ((-1) ** ((k - 1) // 2)) / k ** 2) for k in range(1, 12, 2)])
+TAB_PULSE = wtable([(k, np.sin(np.pi * k * 0.25) / k) for k in range(1, 15)])
+TAB_SQ = wtable([(k, 1.0 / k) for k in range(1, 12, 2)])
+
+
+def tab_loop(tab, f, n, frames):
+    """Loop-periodic oscillator: the frequency is snapped (by < 0.01 Hz) so the loop holds a whole number of
+    cycles, and the phase comes from integer math, so the wrap is seamless and runs are bit-identical."""
+    k = max(1, int(round(f * n / SR)))
+    t = np.asarray(frames, dtype=np.int64) % n
+    p = ((k * t) % n).astype(np.float64) * (TAB / n)
+    i = np.floor(p).astype(np.int64)
+    fr = p - i
+    return tab[i % TAB] * (1 - fr) + tab[(i + 1) % TAB] * fr
+
+
+def tab_tone(tab, f, n):
+    """One-shot oscillator at a fixed frequency, phase from 0."""
+    p = (np.arange(n) * (f / SR)) % 1.0 * TAB
+    i = np.floor(p).astype(np.int64)
+    fr = p - i
+    return tab[i % TAB] * (1 - fr) + tab[(i + 1) % TAB] * fr
+
+
+def unit(y):
+    return y / max(body_rms(y), 1e-9)
+
+
+def note_env(n, att, tau, rel):
+    t = np.arange(n) / SR
+    e = np.exp(-t / tau)
+    a = max(1, int(att * SR))
+    e[:a] *= np.linspace(0, 1, a)
+    r = min(n, max(1, int(rel * SR)))
+    e[-r:] *= np.linspace(1, 0, r)
+    return e
+
+
+def pad_render(n, notes_per_bar, tab, det_cents=7.0, breathe_bars=2):
+    """Sustained pad: each bar's chord tones, legato across bar lines (half-beat raised-cosine overlap; a held
+    note keeps its phase, so it does not dip), three detuned voices (centre, left -det, right +det), and a slow
+    loop-periodic breathing on each note."""
+    out = np.zeros((n, 2))
+    xf = int(BEAT / 2)
+    r = 0.5 - 0.5 * np.cos(np.pi * (np.arange(2 * xf) + 0.5) / (2 * xf))
+    nb = int(round(n / BAR))
+    cyc = nb / breathe_bars
+    for b, notes in enumerate(notes_per_bar):
+        frames = np.arange(barf(b) - xf, barf(b + 1) + xf, dtype=np.int64)
+        w = np.ones(len(frames))
+        w[: 2 * xf] = r
+        w[-2 * xf:] = r[::-1]
+        t = frames % n
+        for m in notes:
+            f = hz(m)
+            lfo = 1 + 0.12 * np.sin(2 * np.pi * cyc * t / n + (m % 12) * 0.9)
+            c = tab_loop(tab, f, n, frames)
+            lft = tab_loop(tab, f * 2 ** (-det_cents / 1200), n, frames)
+            rgt = tab_loop(tab, f * 2 ** (det_cents / 1200), n, frames)
+            g = w * lfo / max(1, len(notes))
+            out[t, 0] += g * (0.55 * c + 0.45 * lft)
+            out[t, 1] += g * (0.55 * c + 0.45 * rgt)
+    return out
+
+
+def duck_shape(n, tau=0.16):
+    """Sidechain-style duck on every beat: 0 at the beat, up to 1 within 6 ms, recovering with `tau`."""
+    t = np.arange(n, dtype=np.float64)
+    ph = (t - np.floor(t / BEAT) * BEAT) / SR
+    return np.minimum(1.0, ph / 0.006) * np.exp(-ph / tau)
+
+
+# --- new one-shots (all original recipes)
+
+def s_kick(rng):
+    n = int(0.24 * SR)
+    t = np.arange(n) / SR
+    f = 48 + 115 * np.exp(-t / 0.028)
+    y = np.sin(osc(f)) * np.exp(-t / 0.15)
+    c = int(0.002 * SR)
+    y[:c] += fft_filter_padded(rng.standard_normal(c), lambda fr: mag_lp(fr, 4000, 2)) * np.linspace(0.3, 0, c)
+    return y * note_env(n, 0.0005, 10, 0.01)
+
+
+def s_snare(rng):
+    n = int(0.22 * SR)
+    t = np.arange(n) / SR
+    tone = np.sin(osc(190 - 12 * (1 - np.exp(-t / 0.02)))) * np.exp(-t / 0.05) * 0.7
+    nz = fft_filter_padded(rng.standard_normal(n), lambda fr: mag_hp(fr, 900, 2) * mag_lp(fr, 6000, 2)) * np.exp(-t / 0.08)
+    return (tone + 0.8 * nz) * note_env(n, 0.0008, 10, 0.01)
+
+
+def s_tom(midi, rng):
+    n = int(0.28 * SR)
+    t = np.arange(n) / SR
+    f = hz(midi) * (1 + 0.45 * np.exp(-t / 0.025))
+    y = np.sin(osc(f)) * np.exp(-t / 0.15)
+    tip = int(0.003 * SR)
+    y[:tip] += fft_filter_padded(rng.standard_normal(tip), lambda fr: mag_lp(fr, 3000, 2)) * 0.3
+    return y * note_env(n, 0.0008, 10, 0.01)
+
+
+def s_laser(midi, rng):
+    n = int(0.16 * SR)
+    u = np.arange(n) / n
+    f = hz(midi) * 13.0 * (1 / 13.0) ** (u ** 0.7)          # ~2.4 kHz down to the note: a zip
+    ph = osc(f)
+    y = np.sin(ph) + 0.25 * np.sin(2 * ph)
+    return y * note_env(n, 0.002, 0.08, 0.01)
+
+
+def s_coin(midi, rng):
+    a, b = int(0.06 * SR), int(0.24 * SR)
+    y1 = tab_tone(TAB_TRI, hz(midi), a) * note_env(a, 0.001, 10, 0.004)
+    y2 = tab_tone(TAB_TRI, hz(midi + 5), b) * note_env(b, 0.001, 0.09, 0.02)
+    return np.concatenate([y1, y2])
+
+
+def s_riser(n, rng):
+    """Two-bar build: noise through a band-pass sweeping 400 Hz -> 5 kHz, plus a soft rising tone."""
+    u = np.arange(n) / n
+    x = rng.standard_normal(n)
+    fco = 2 * np.sin(np.pi * (400 * (5000 / 400) ** u) / SR)
+    q = 2.0
+    lo = bp = 0.0
+    out = np.zeros(n)
+    for i in range(n):
+        hi = x[i] - lo - bp / q
+        bp += fco[i] * hi
+        lo += fco[i] * bp
+        out[i] = bp
+    tone = np.sin(osc(200 * 4 ** u)) * 0.15
+    y = (out / np.abs(out).max() + tone) * u ** 2.5
+    y[-int(0.01 * SR):] *= np.linspace(1, 0, int(0.01 * SR))
+    return y
+
+
+def s_boom(rng):
+    """Drop impact: a 55 Hz sine thump with a short low noise burst."""
+    n = int(0.7 * SR)
+    t = np.arange(n) / SR
+    y = np.sin(osc(55 + 60 * np.exp(-t / 0.04))) * np.exp(-t / 0.3)
+    nz = fft_filter_padded(rng.standard_normal(n), lambda fr: mag_lp(fr, 1800, 2)) * np.exp(-t / 0.06) * 0.35
+    return (y + nz) * note_env(n, 0.001, 10, 0.02)
+
+
+def s_cricket(rng):
+    """A cricket: two trains of three 9 ms chirps at C8, 40 ms apart."""
+    pulse = int(0.009 * SR)
+    t = np.arange(pulse) / SR
+    p = np.sin(2 * np.pi * hz(108) * t) * np.sin(np.pi * np.arange(pulse) / pulse) ** 2
+    n = int(0.6 * SR)
+    y = np.zeros(n)
+    for train in (0.0, 0.3 + rng.uniform(-0.02, 0.02)):
+        for k in range(3):
+            a = int((train + 0.04 * k) * SR)
+            y[a: a + pulse] += p * (0.8 + 0.2 * k)
+    return y
+
+
+def s_brush(rng):
+    n = int(0.2 * SR)
+    t = np.arange(n) / SR
+    nz = fft_filter_padded(rng.standard_normal(n), lambda fr: mag_hp(fr, 1200, 2) * mag_lp(fr, 4500, 2))
+    e = np.minimum(1, t / 0.03) * np.exp(-np.maximum(t - 0.03, 0) / 0.07)
+    return nz * e
+
+
+def load_all(report):
+    """Stems cut to the grid with the same alignment as v2."""
+    main = {k: load_mp3(os.path.join(SRC_MAIN, f)) for k, f in [
+        ("drums", "[stem]maindrumloop.mp3"), ("bass", "[stem]-mainbass.mp3"), ("chords", "[stem]mainchords.mp3"),
+        ("melody", "[stem]-mainmelody.mp3"), ("lead2", "[stem]-mainlead2.mp3")]}
+    deck = {k: load_mp3(os.path.join(SRC_DECK, f)) for k, f in [
+        ("drums", "[stem]gameboydrums.mp3"), ("chords", "[stem]gameboychords.mp3"), ("lead", "[stem]gameboylead.mp3")]}
+    ref_g, _ = sf.read(REF_GARDEN, dtype="float64", always_2d=True)
+    off = measure_offset(ref_g, {"drums": main["drums"]})["drums"][0]
+    report["stem_offset_frames"] = off
+    nbars = {"drums": 32, "bass": 32, "chords": 32, "melody": 16, "lead2": 8}
+    G = {k: grid_stem(x, off, nbars[k])[0] for k, x in main.items()}
+    D = {k: grid_stem(x, off, 8)[0] for k, x in deck.items()}
+    return G, D
+
+
+def build_v3(args):
+    disabled = set(V3_DEFAULT_OFF) - set(s.strip() for s in (args.with_ or "").split(",") if s.strip())
+    disabled |= set(s.strip() for s in (args.without or "").split(",") if s.strip())
+    bad = [s for s in disabled if s not in ALL_SAMPLES + ("crickets", "fun-hits")]
+    if bad:
+        sys.exit(f"unknown sample(s): {bad}")
+    pal = Palette(args.seed, sorted(disabled))
+    on = lambda name: name not in disabled
+    report = {"version": "v3", "brief": "artifacts/qa-2026-11-28-music/MUSIC-BRIEF.md",
+              "feedback": "Spencer: less dense day/night, more background ambience; Pocket Deck more exciting",
+              "seed": args.seed, "disabled_samples": sorted(disabled), "targets": {"lufs": V3_LUFS, "true_peak": V3_TP}}
+    print("v3: loading stems")
+    G, D = load_all(report)
+    mel_notes = transcribe(G["melody"], 16)
+    deck_notes = transcribe(D["lead"], 8)
+    chroma_main = bar_chroma(G["chords"], 32)
+
+    def lead_proc(x, gain_db, lp):
+        m, s = ms_split(x)
+        return fft_filter(ms_join(m, s * db(-8)) * db(gain_db), lambda f: mag_lp(f, lp, 2))
+
+    def active_rms(x):
+        e = (x ** 2).mean(axis=1)
+        k = int(0.1 * SR)
+        blocks = e[: (len(e) // k) * k].reshape(-1, k).mean(axis=1)
+        return float(np.sqrt(blocks[blocks > blocks.max() * db(-30) ** 2].mean()))
+
+    melody = lead_proc(G["melody"], -4, 4500)
+    lead2 = lead_proc(G["lead2"], -6, 4500)
+    REF = active_rms(lead_proc(G["melody"], 2, 7000))          # the v2 melody level, so the dB numbers compare
+    rel = lambda d: REF * db(d) / np.sqrt(0.5)
+    sp = lambda b: PHRASE_SRC[(b - 1) // 8] * 8 + (b - 1) % 8
+
+    # ---------------------------------------------------------------- GARDEN (bed shared by day and night)
+    print("v3: garden bed")
+    N = N_DAY
+    pad_notes = []
+    for b in range(1, 65):
+        ch = chroma_main[sp(b)]
+        pcs = [int(p) for p in np.argsort(ch)[::-1] if ch[p] > 0.5][:4]
+        pad_notes.append(sorted(voice(p, 53) for p in pcs))
+    chords_arr = assemble(N, [Block(fft_filter(G["chords"], lambda f: mag_hp(f, 110, 2)), PHRASE_SRC[p] * 8, p * 8, 8)
+                              for p in range(8)])
+    pad = pad_render(N, pad_notes, TAB_PAD)
+    pad = fft_filter(pad, lambda f: mag_hp(f, 120, 2) * mag_lp(f, 3200, 2))
+    pad *= active_rms(chords_arr) / active_rms(pad) * db(-1)
+    chords_soft = fft_filter(chords_arr, lambda f: mag_lp(f, 3500, 2)) * db(-7)
+    bass_m = fft_filter(G["bass"].mean(axis=1), lambda f: mag_hp(f, 35, 2))
+    harm = fft_filter(np.tanh(4 * bass_m / np.abs(bass_m).max()), lambda f: mag_hp(f, 120, 2) * mag_lp(f, 500, 2))
+    harm *= np.sqrt((bass_m ** 2).mean()) / np.sqrt((harm ** 2).mean()) * db(-16)
+    bass_blocks = lambda src: assemble(N, [Block(src, sp(b), b - 1, 1) for b in range(1, 65)])
+    bass_day = bass_blocks(stereo(bass_m + harm) * db(-3))
+    bass_night = bass_blocks(stereo(bass_m) * db(-6))
+    report["garden_pad_notes_bars_1_8"] = [[librosa.midi_to_note(m) for m in ns] for ns in pad_notes[:8]]
+
+    # ---------------------------------------------------------------- DAY
+    print("v3: day")
+    day = Mix(N)
+    day.add(pad, -6)
+    day.add(chords_soft, -8)
+    day.add(bass_day)
+    perc_bars = list(range(9, 33)) + list(range(41, 65))
+    m_, _s = ms_split(fft_filter(G["drums"], lambda f: mag_lp(f, 160, 4)) * db(-12))
+    thump = stereo(m_)                              # the drum loop filtered to a soft kick heartbeat, mono
+    day.add(assemble(N, [Block(thump, sp(b), b - 1, 1) for b in list(range(9, 17)) + list(range(41, 49))]))
+    mel_bars = list(range(9, 17)) + list(range(41, 49))           # the melody once per 32 bars
+    day.add(assemble(N, [Block(melody, (b - 1) % 16, b - 1, 1) for b in mel_bars]), -8)
+    day.add(assemble(N, [Block(balance(lead2, 0.2), (b - 1) % 8, b - 1, 1) for b in range(57, 61)]), -6)
+    SEND = -6
+    r = np.random.default_rng(args.seed + 31)
+    six = BAR / 16
+    if on("shaker"):
+        for b in perc_bars:
+            for k in range(0, 16, 2):
+                acc = db(3) if k in (4, 12) else db(r.uniform(-2, 0))
+                snd = unit(s_shaker(1.0, 1 + r.uniform(-0.04, 0.04), np.random.default_rng(int(r.integers(1 << 30)))))
+                day.hit("shaker", snd, pos(b) + int(round(k * six + (0.1 * six if k % 4 == 2 else 0))), rel(-29) * acc,
+                        0.25 if k % 4 else -0.25, -12)
+            day.hit("brush", unit(s_brush(np.random.default_rng(int(r.integers(1 << 30))))), pos(b, 3), rel(-30), -0.2, -12)
+    chroma_of = lambda b: chroma_main[sp(b)]
+    if on("pip"):
+        for k, b in enumerate((20, 52)):
+            v = pal.best("pip", chroma_of(b), k=2)
+            for j, (m, s, vs) in enumerate(v if k == 0 else v[::-1]):
+                day.hit("pip", pal.render("pip", m, s, vs), pos(b, 4.5 + 0.25 * j), rel(-13), (0.4, -0.4)[k], SEND)
+    if on("plip"):
+        for b in (28, 60):
+            v = pal.best("plip", chroma_of(b), k=2)
+            for j, (m, s, vs) in enumerate(v):
+                day.hit("plip", pal.render("plip", m, s, vs), pos(b, (4.0, 4.375)[j]), rel(-14), (0.35, -0.35)[j], SEND)
+    if on("eep"):
+        m, s, vs = pal.best("eep", chroma_of(45), k=1)[0]
+        day.hit("eep", pal.render("eep", m, s, vs), pos(45, 4.5), rel(-17), 0.4, SEND)
+    if on("kalimba"):
+        cyc = [76, 79, 81]
+        for i, (b, e8) in enumerate([(b, e) for b in (29, 30) for e in range(8)]):
+            day.hit("kalimba", pal.note("kalimba", cyc[i % 3], i), pos(b, 1 + 0.5 * e8),
+                    rel(-14) * (1 if e8 % 2 == 0 else db(-3)), 0.25 if e8 % 2 else -0.25, SEND)
+    if on("music-box"):
+        play_line(day, pal, melody_line(mel_notes, 4, 4, +1, keep={0, 8}), 20, rel(-9), SEND)
+        play_line(day, pal, melody_line(mel_notes, 4, 4, +1, keep={0}), 52, rel(-10), SEND)
+    if on("swell"):
+        sw = make_swell(G["chords"], 31, 0.25)
+        for b in (32, 64):
+            day.hit("swell", sw, pos(b, 1), rel(-14) * np.sqrt(0.5), 0.0, SEND)
+    if on("boing"):
+        for b in (16, 48):
+            m, s, vs = pal.variants["boing"][b % 3]
+            day.hit("boing", pal.render("boing", m, s, vs), pos(b, 4), rel(-15), 0.2, SEND)
+    if on("la-chop"):
+        chops = make_lachop(G["melody"], mel_notes, args.seed + 3)
+        for j, bt in enumerate((2.5, 3.0, 4.0)):
+            m, y = chops[(0, 1, 0)[j] % len(chops)]
+            day.hit("la-chop", y, pos(38, bt), rel(-14), (-0.3, 0.3, -0.1)[j], SEND)
+    print("v3: day room + bus")
+    day_mix = day.dry + room(day.send, 0.78)
+    day_mix, g_day = glue(day_mix, 1.0)
+    day_out = finish(day_mix, V3_LUFS["garden-day-v3"], V3_TP["garden-day-v3"])
+
+    # ---------------------------------------------------------------- NIGHT
+    print("v3: night")
+    night = Mix(N)
+    night.add(fft_filter(pad, lambda f: mag_lp(f, 1100, 2)), -3)
+    night.add(fft_filter(chords_soft, lambda f: mag_lp(f, 1100, 2)) * db(-6), -4)
+    night.add(bass_night)
+    NS = -4
+    if on("music-box"):
+        for b in mel_bars:
+            play_line(night, pal, melody_line(mel_notes, (b - 1) % 16, 1, +1, keep={0}), b - 1, rel(-7), NS)
+        for b in (25, 29, 57, 61):
+            play_line(night, pal, melody_line(mel_notes, (b - 1) % 16, 1, +1, keep={8}), b - 1, rel(-10), NS)
+    if on("crickets"):
+        for b, bt, p in ((6, 2.5, 0.4), (22, 3.25, -0.4), (38, 1.75, 0.3), (54, 3.0, -0.3)):
+            night.hit("crickets", unit(s_cricket(np.random.default_rng(args.seed + b))), pos(b, bt), rel(-22), p, NS)
+    if on("hoo"):
+        for b, bt, p in ((30, 2.0, 0.3), (62, 2.5, -0.3)):
+            m, s, vs = pal.variants["hoo"][b % 3]
+            night.hit("owl-hoo", pal.render("hoo", m, s, vs), pos(b, bt), rel(-13), p, NS)
+    if on("ribbit"):
+        m, s, vs = pal.variants["ribbit"][1]
+        night.hit("ribbit", pal.render("ribbit", m, s, vs), pos(44, 3.5), rel(-15), 0.4, NS)
+    if on("plip"):
+        m, s, vs = pal.best("plip", chroma_of(40), k=1)[0]
+        night.hit("plip", pal.render("plip", m, s, vs), pos(40, 4.0), rel(-16), -0.35, NS)
+    print("v3: night room + bus")
+    night_mix = night.dry + room(night.send, 0.88)
+    night_mix = fft_filter(night_mix, lambda f: mag_rbj(f, "highshelf", 5000, -3, 0.707))
+    night_mix, g_night = glue(night_mix, 1.0)
+    night_out = finish(night_mix, V3_LUFS["garden-night-v3"], V3_TP["garden-night-v3"])
+
+    # ---------------------------------------------------------------- POCKET DECK
+    print("v3: pocket deck")
+    ND = N_DECK
+    dk = Mix(ND)
+    ddrums, dinfo = drum_chain(D["drums"], "deck-v3")
+    dlead = D["lead"] * db(-2)
+    REFD = active_rms(dlead)
+    reld = lambda d: REFD * db(d) / np.sqrt(0.5)
+    chords_of = lambda b: DECK_CHORDS[(b - 1) % 8]
+    # the stem drums (its hats and groove) under the programmed kit; out for the back half of bar 16
+    stem_dr = gate(assemble(ND, [Block(ddrums, 0, p * 8, 8, db(-3)) for p in range(4)]), [(pos(16, 3), pos(17))])
+    dk.add(stem_dr, -30)
+    kit = Mix(ND)                                   # the kit gets the garden drum shelf before it joins the mix
+    kick = unit(s_kick(np.random.default_rng(args.seed + 41)))
+    snares = [unit(s_snare(np.random.default_rng(args.seed + 42 + i))) for i in range(3)]
+    fills = (8, 24, 32)
+    for b in range(1, 33):
+        if 17 <= b <= 20:
+            kicks = (1, 2, 3, 4)                    # the drop: four on the floor
+        elif b == 16:
+            kicks = (1, 2)
+        else:
+            kicks = (1, 2.75, 3) if b % 2 else (1, 3, 3.5)
+        for bt in kicks:
+            if b in fills and bt >= 4:
+                continue
+            kit.hit("kick", kick, pos(b, bt), reld(-3), 0.0, -40)
+        if b in (15, 16):
+            continue
+        for bt in (2, 4):
+            if b in fills and bt == 4:
+                continue
+            kit.hit("snare", snares[(b + bt) % 3], pos(b, bt), reld(-7), 0.05, -24)
+    # snare roll into bar 17: 8ths through bar 15, 16ths then 32nds through bar 16, rising
+    roll = [(15, 1 + 0.5 * k) for k in range(8)] + [(16, 1 + 0.25 * k) for k in range(8)] + \
+           [(16, 3 + 0.125 * k) for k in range(16)]
+    for i, (b, bt) in enumerate(roll):
+        kit.hit("snare-roll", snares[i % 3], pos(b, bt), reld(-16 + 11 * i / (len(roll) - 1)), 0.05, -24)
+    toms = [unit(s_tom(m, np.random.default_rng(args.seed + 50 + m))) for m in (55, 52, 50, 48)]   # G3 E3 D3 C3
+    for b in fills:
+        for j in range(4):
+            kit.hit("tom", toms[j], pos(b, 4 + 0.25 * j), reld(-6), (0.3, 0.1, -0.1, -0.3)[j], -24)
+    dk.add(fft_filter(kit.dry, lambda f: mag_rbj(f, "highshelf", 6000, -4, 0.707)))
+    dk.send += kit.send
+    dk.events += kit.events
+    # octave bass, 8ths (16ths in the drop); out on beat 4 of bar 16
+    for b in range(1, 33):
+        root = voice(chord_pcs(chords_of(b))[0], 36)
+        step = 0.25 if 17 <= b <= 20 else 0.5
+        for k in range(int(round(4 / step))):
+            bt = 1 + k * step
+            if b == 16 and bt >= 4:
+                continue
+            m = root + (12 if k % 2 else 0)
+            ln = int(step * BEAT * 0.85)
+            y = tab_tone(TAB_PULSE, hz(m), ln) * 0.6 + np.sin(2 * np.pi * hz(m) * np.arange(ln) / SR) * 0.8
+            y = fft_filter_padded(y * note_env(ln, 0.003, 0.25, 0.012), lambda f: mag_lp(f, 1400, 2))
+            lift = db(2) if 17 <= b <= 20 else 1.0
+            dk.hit("bass", unit(y), pos(b, bt), reld(-5) * lift * (1 if k % 2 == 0 else db(-2)), 0.0, -40)
+    # pumping pad from the deck chords
+    dpad_notes = [sorted(voice(p, 55) for p in chord_pcs(chords_of(b))) for b in range(1, 33)]
+    dpad = pad_render(ND, dpad_notes, TAB_PAD_BRIGHT, det_cents=9)
+    dpad = fft_filter(dpad, lambda f: mag_hp(f, 150, 2) * mag_lp(f, 2600, 2))
+    dpad *= REFD / active_rms(dpad) * db(-9)
+    depth = np.full(ND, 0.55)
+    depth[pos(17):pos(21)] = 0.75
+    dpad = dpad * (1 - depth * duck_shape(ND))[:, None]
+    dpad = gate(dpad, [(pos(17), pos(21))], value=db(3))     # pad up and pumping harder in the drop
+    dk.add(dpad, -16)
+    dk.add(assemble(ND, [Block(D["chords"], 0, p * 8, 8) for p in range(4)]), -24)
+    # arpeggio countermelody (16ths over the chord tones, octave 5), from bar 9
+    for b in range(9, 33):
+        pcs = chord_pcs(chords_of(b))
+        seq = [voice(pcs[0], 72), voice(pcs[1], 72), voice(pcs[2], 72), voice(pcs[0], 72) + 12]
+        if b % 2 == 0:
+            seq = seq[::-1]
+        for k in range(8 if b == 16 else 16):
+            ln = int(0.25 * BEAT * 0.9)
+            y = tab_tone(TAB_TRI, hz(seq[k % 4]), ln) * note_env(ln, 0.002, 0.07, 0.01)
+            lift = db(6) if 17 <= b <= 20 else 1.0          # the arp leads the drop
+            dk.hit("arp", unit(y), pos(b, 1 + 0.25 * k), reld(-10) * lift * (1 if k % 4 == 0 else db(-2)),
+                   0.3 if k % 2 else -0.3, -18)
+    # call-and-response stabs
+    stab_at = {b: (4.0, 4.5) for b in (10, 12, 14)}
+    stab_at.update({b: (3.5, 4.0, 4.5) for b in (26, 28, 30)})
+    stab_at.update({b: (1.5, 2.5, 3.5, 4.5) for b in (17, 18, 19, 20)})      # the drop: offbeat stabs
+    for b, beats in sorted(stab_at.items()):
+        ln = int(0.5 * BEAT * 0.6)
+        y = sum(tab_tone(TAB_SQ, hz(voice(p, 60)), ln) for p in chord_pcs(chords_of(b))) * note_env(ln, 0.002, 0.09, 0.01)
+        y = unit(fft_filter_padded(y, lambda f: mag_lp(f, 2200, 2)))
+        for j, bt in enumerate(beats):
+            dk.hit("stab", y, pos(b, bt), reld(-8) * (db(3) if 17 <= b <= 20 else 1.0), (-0.25, 0.25, 0.0)[j % 3], -18)
+    # lead: out in the drop (17-20), back for 21-24; in 26/28/30 its back half rests and the stabs answer
+    lead_arr = assemble(ND, [Block(dlead, 0, p * 8, 8) for p in (0, 1, 3)] + [Block(dlead, 4, 20, 4)])
+    lead_arr = gate(lead_arr, [(pos(b, 3), pos(b + 1)) for b in (26, 28, 30)])
+    dk.add(lead_arr, -20)
+    if on("fun-hits"):
+        rr = np.random.default_rng(args.seed + 60)
+        dk.hit("riser", unit(s_riser(pos(17) - pos(15), rr)), pos(15), reld(-11), 0.0, -14)
+        dk.hit("boom", unit(s_boom(rr)), pos(17), reld(-6), 0.0, -14)                    # the drop lands
+        dk.hit("laser", unit(s_laser(43, rr)), pos(8, 4.5), reld(-12), 0.35, -16)       # zip down to G2
+        dk.hit("laser", unit(s_laser(45, rr)), pos(24, 4.5), reld(-12), -0.35, -16)     # zip down to A2
+        dk.hit("coin", unit(s_coin(79, rr)), pos(12, 4.5), reld(-13), 0.3, -16)          # G5 -> C6
+        dk.hit("coin", unit(s_coin(79, rr)), pos(32, 3.5), reld(-13), -0.3, -16)
+    print("v3: deck room + bus")
+    deck_mix = dk.dry + room(dk.send, 0.35)
+    deck_mix = fft_filter(deck_mix, lambda f: mag_rbj(f, "peak", 3000, -3, 0.7))   # leave 3 kHz to the merge SFX
+    deck_mix, g_deck = glue(deck_mix, 1.5)
+    deck_out = finish(deck_mix, V3_LUFS["pocket-deck-v3"], V3_TP["pocket-deck-v3"])
+
+    # ---------------------------------------------------------------- DECK LITE (calm: the v2 recipe plus a soft pad)
+    print("v3: deck lite")
+    NL = N_LITE
+    lt = Mix(NL)
+    lt.add(assemble(NL, [Block(D["chords"], 0, p * 8, 8) for p in range(2)]), -24)
+    lpad = pad_render(NL, dpad_notes[:16], TAB_PAD, det_cents=7)
+    lpad = fft_filter(lpad, lambda f: mag_hp(f, 150, 2) * mag_lp(f, 1800, 2))
+    lt.add(lpad * (REFD / active_rms(lpad) * db(-14)), -12)
+    if on("tok"):
+        for b in range(1, 17):
+            for bt, idx in ((2, 0), (4, 1)):
+                v = sorted(pal.variants["tok"], key=lambda q: -q[0])[0 if idx == 0 else -1]
+                lt.hit("tok-ticktock", pal.render("tok", *v), pos(b, bt), reld(-20), (0.2, -0.2)[idx], -16)
+    if on("music-box"):
+        play_line(lt, pal, melody_line(deck_notes, 0, 8, +1, src_len_bars=8), 0, reld(-3), -16)
+        play_line(lt, pal, melody_line(deck_notes, 0, 8, +1, keep={0, 4, 8}, src_len_bars=8), 8, reld(-3), -16)
+    lite_mix = lt.dry + room(lt.send, 0.35)
+    lite_mix = fft_filter(lite_mix, lambda f: mag_rbj(f, "peak", 3000, -2, 0.7))
+    lite_mix, g_lite = glue(lite_mix, 1.5)
+    lite_out = finish(lite_mix, V3_LUFS["pocket-deck-lite-v3"], V3_TP["pocket-deck-lite-v3"])
+
+    report["glue"] = {"day": g_day, "night": g_night, "deck": g_deck, "lite": g_lite}
+    report["drums_deck"] = dinfo
+    report["deck_chords"] = DECK_CHORDS
+    mixes = (("day", day), ("night", night), ("deck", dk), ("lite", lt))
+    report["event_counts"] = {lab: _count(mx.events) for lab, mx in mixes}
+    report["sample_vs_bed_db"] = {lab: mx.fx_levels() for lab, mx in mixes}
+
+    # ---------------------------------------------------------------- write + measure
+    os.makedirs(V3_SAMPLE_DIR, exist_ok=True)
+    os.makedirs(V3_PREVIEW_DIR, exist_ok=True)
+    files = {"garden-day-v3": day_out, "garden-night-v3": night_out, "pocket-deck-v3": deck_out,
+             "pocket-deck-lite-v3": lite_out}
+    q = {}
+    for i, (name, x) in enumerate(files.items()):
+        qi = quantize16(x, args.seed + 300 + i)
+        sf.write(os.path.join(OUT_DIR, name + ".wav"), qi, SR, subtype="PCM_16")
+        q[name] = qi.astype(np.float64) / 32767.0
+    rs = np.random.default_rng(args.seed + 70)
+    for name, y in (("kick", s_kick(rs)), ("snare", s_snare(rs)), ("tom-G3", s_tom(55, rs)), ("tom-C3", s_tom(48, rs)),
+                    ("laser-G2", s_laser(43, rs)), ("coin-G5-C6", s_coin(79, rs)),
+                    ("riser-2bars", s_riser(pos(17) - pos(15), rs)), ("boom", s_boom(rs)), ("cricket-C8", s_cricket(rs)), ("brush", s_brush(rs))):
+        sf.write(os.path.join(V3_SAMPLE_DIR, name + ".wav"), quantize16(y / np.abs(y).max() * db(-3), args.seed + 80),
+                 SR, subtype="PCM_16")
+    print("v3: measuring")
+    meas = {name: measure(x, name + ".wav") for name, x in q.items()}
+    report["files"] = meas
+    dayq, nightq = q["garden-day-v3"], q["garden-night-v3"]
+    l_day = meas["garden-day-v3"]["integrated_lufs"]
+
+    def mid(e):
+        return lufs(np.sqrt(0.5) ** e * dayq + np.sqrt(0.5) ** e * nightq) - l_day
+
+    sweep = [round(lufs(np.cos(w * np.pi / 2) ** 1.5 * dayq + np.sin(w * np.pi / 2) ** 1.5 * nightq) - l_day, 2)
+             for w in np.linspace(0, 1, 11)]
+    grid = [(round(float(e), 2), mid(e)) for e in np.arange(1.0, 3.01, 0.1)]
+    fit = min(grid, key=lambda t: (abs(t[1]), t[0]))
+    b15 = mid(1.5)
+    report["crossfade"] = {
+        "day_lufs": l_day, "night_lufs": meas["garden-night-v3"]["integrated_lufs"],
+        "bump_equal_power_lu": round(mid(1.0), 2), "bump_exp1_5_lu": round(b15, 2),
+        "exp1_5_within_1lu": bool(abs(b15) <= 1.0), "loudness_vs_day_at_w_0_to_1_exp1_5": sweep,
+        "exponent_for_flat_midpoint": fit[0], "midpoint_at_that_exponent_lu": round(fit[1], 2),
+        "midpoint_by_exponent": {str(e): round(v, 2) for e, v in grid}}
+    if not args.no_encode:
+        print("v3: encoding")
+        for name in files:
+            wav = os.path.join(OUT_DIR, name + ".wav")
+            ogg = os.path.join(OUT_DIR, name + ".ogg")
+            ffmpeg(["-i", wav, "-c:a", "libvorbis", "-q:a", "6", ogg])
+            dec = decode(ogg)
+            meas[name]["ogg"] = {"bytes": os.path.getsize(ogg), "sha256": sha256(ogg), "decoded_frames": int(len(dec)),
+                                 "frames_match": bool(len(dec) == len(q[name])), "seam": seam_stats(dec),
+                                 "true_peak_dbtp": round(true_peak_db(dec), 2)}
+            meas[name]["wav_sha256"] = sha256(wav)
+            ffmpeg(["-i", wav, "-c:a", "libmp3lame", "-q:a", "2", os.path.join(V3_PREVIEW_DIR, name + ".mp3")])
+        write_mp3(dusk(dayq, nightq, 60, 20, 20, 1.5), os.path.join(V3_PREVIEW_DIR, "dusk-crossfade-60s.mp3"), args.seed + 301)
+        for v3 in files:
+            v2 = os.path.join(OUT_DIR, v3.replace("-v3", "-v2") + ".wav")
+            if not os.path.exists(v2):
+                continue
+            a, _ = sf.read(v2, dtype="float64", always_2d=True)
+            n = 25 * SR
+            a = a[np.arange(n) % len(a)].copy()
+            bq = q[v3][np.arange(n) % len(q[v3])].copy()
+            f = int(0.03 * SR)
+            a[-f:] *= np.linspace(1, 0, f)[:, None]
+            bq[:f] *= np.linspace(0, 1, f)[:, None]
+            write_mp3(np.concatenate([a, np.zeros((int(0.6 * SR), 2)), bq]),
+                      os.path.join(V3_PREVIEW_DIR, f"compare-{v3.replace('-v3', '')}-v2-then-v3.mp3"), args.seed + 310)
+    with open(os.path.join(QA_DIR, "report-v3.json"), "w", encoding="utf-8", newline="\n") as fh:
+        json.dump(report, fh, indent=2, default=_jsonable)
+        fh.write("\n")
+    print("\n%-22s %10s %9s %8s %8s %6s %7s %6s" % ("file", "frames", "seconds", "LUFS", "dBTP", "LRA", ">6k", "seam"))
+    for name, m in meas.items():
+        print("%-22s %10d %9.3f %8.2f %8.2f %6.2f %6.1f%% %6.2f" % (
+            name, m["frames"], m["seconds"], m["integrated_lufs"], m["true_peak_dbtp"], m["loudness_range_lu"],
+            100 * m["share_above_6k"], m["seam"]["wrap_step_ratio_p99"]))
+        if "ogg" in m:
+            o = m["ogg"]
+            print("   ogg %d bytes, %d frames (match %s), TP %.2f" % (o["bytes"], o["decoded_frames"], o["frames_match"],
+                                                                     o["true_peak_dbtp"]))
+    c = report["crossfade"]
+    print(f"\ncrossfade midpoint with exponent 1.5: {c['bump_exp1_5_lu']:+.2f} LU (equal power {c['bump_equal_power_lu']:+.2f}); "
+          f"flattest exponent {c['exponent_for_flat_midpoint']} ({c['midpoint_at_that_exponent_lu']:+.2f} LU)")
+    print("loudness vs day across w (exp 1.5):", c["loudness_vs_day_at_w_0_to_1_exp1_5"])
+    print("sample level vs bed (dB):")
+    for lab, v in report["sample_vs_bed_db"].items():
+        print(f"  {lab}: {v}")
+    return report
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--without", help="comma list of samples to leave out, e.g. boing,eep,la-chop")
+    ap.add_argument("--version", choices=("v2", "v3"), default="v3", help="v3 (default) or the first-pass v2 render")
+    ap.add_argument("--without", help="comma list of samples to leave out, e.g. eep,kalimba (v3 also: crickets, fun-hits)")
+    ap.add_argument("--with", dest="with_", help="v3: turn back on samples that are off by default (boing, la-chop)")
     ap.add_argument("--seed", type=int, default=SEED)
     ap.add_argument("--no-encode", action="store_true", help="skip OGG/MP3 encoding and previews")
-    build(ap.parse_args())
+    args = ap.parse_args()
+    build_v3(args) if args.version == "v3" else build(args)
 
 
 if __name__ == "__main__":
