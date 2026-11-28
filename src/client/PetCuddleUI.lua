@@ -53,6 +53,26 @@ function Cuddle.on()
  local ok,on=pcall(function()return require(Shared.Alive).on(C.Feature)end)
  return ok and on==true
 end
+-- Beta (42) D13: the name the hints call the pet. A named pet by its name; an unnamed one (its pill reads "Pet",
+-- info.named==false) by its species, as before; no info at all: "your pet".
+function Cuddle.callName(info)
+ if type(info)~="table"then return UICopy.get("pet.cuddle.friend")end
+ if info.named==false and type(info.species)=="string"and info.species~=""then return info.species end
+ return if type(info.name)=="string"and info.name~=""then info.name else UICopy.get("pet.cuddle.friend")
+end
+-- Beta (42) D15: the vignette's own ScreenGui sits just below the focus gui (PetFocusUI raises that to 40 while it owns
+-- input, 9 otherwise).
+function Cuddle.underOrder(focusOrder)return math.max(0,(tonumber(focusOrder)or 0)-1)end
+-- The vignette gui follows the panel: on, at the order below the focus gui, only while this screen is on and the
+-- panel shows (a menu or a text box hides the panel and the tint with it).
+function Cuddle:syncUnder()
+ local gui=self.underGui;if not gui then return end
+ local focus=self.focus
+ local on=self.active and not self.destroyed and focus.panel.Visible and focus.gui.Enabled and focus.gui.Parent~=nil
+ if gui.Parent~=focus.gui.Parent and focus.gui.Parent then gui.Parent=focus.gui.Parent end
+ gui.DisplayOrder=Cuddle.underOrder(focus.gui.DisplayOrder)
+ gui.Enabled=on==true
+end
 
 local function make(class,parent,props)
  local node=Instance.new(class)
@@ -125,9 +145,14 @@ function Cuddle.new(focus,deps)
  deps=deps or {}
  local panel=focus.panel
  local self=setmetatable({focus=focus,deps=deps,active=false,state=C.new(),connections={},hearts={},sparkles={},bubbles={},
-  look={yaw=0,pitch=0,x=0,y=0},leanW=0,lookW=0,spotW=0,velocity=Vector2.zero,pose={}},Cuddle)
- -- Under the controls: the vignette and the bubbles.
- local under=frame(panel,"CuddleUnder",1,{BackgroundTransparency=1,Size=UDim2.fromScale(1,1),Visible=false,Interactable=false})
+  look={yaw=0,pitch=0,x=0,y=0},leanW=0,lookW=0,spotW=0,velocity=Vector2.zero,pose={},handAim={dx=0,dy=0}},Cuddle)
+ -- Under the controls: the vignette and the bubbles. Beta (42) D15: in their own ScreenGui with no insets, so the tint
+ -- reaches behind the top bar and the notch (the focus gui keeps CoreUISafeInsets for its controls), drawn just below
+ -- the focus gui (Cuddle.underOrder) and shown only while the panel is (Cuddle:syncUnder).
+ local underGui=make("ScreenGui",focus.gui.Parent,{Name="EggDropPetCuddleUnder",ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.None,
+  ZIndexBehavior=Enum.ZIndexBehavior.Sibling,DisplayOrder=Cuddle.underOrder(focus.gui.DisplayOrder),Enabled=false})
+ self.underGui=underGui
+ local under=frame(underGui,"CuddleUnder",1,{BackgroundTransparency=1,Size=UDim2.fromScale(1,1),Visible=false,Interactable=false,Active=false})
  self.under=under
  for _,edge in ipairs({{"Top",UDim2.new(1,0,.2,0),UDim2.fromScale(0,0),90},{"Bottom",UDim2.new(1,0,.2,0),UDim2.fromScale(0,.8),-90},
   {"Left",UDim2.new(.14,0,1,0),UDim2.fromScale(0,0),0},{"Right",UDim2.new(.14,0,1,0),UDim2.fromScale(.86,0),180}})do
@@ -211,11 +236,13 @@ function Cuddle:begin()
  self.closeRetryAt,self.closeFirstTry,self.closeGaveUp=nil,nil,nil
  self.hinted=false;self.hintUntil=nil;self.lovedUntil=nil;self.spot=nil;self.spotAge=0;self.burstAge=nil;self.heartClock=0
  self.leanW,self.lookW,self.spotW,self.blush,self.shownFill=0,0,0,0,0
+ self.handAim={dx=0,dy=0}
  self.padAt=nil;self.stickAt=Vector2.zero;self.lastHand=nil;self.velocity=Vector2.zero
  self.mouseAt=nil
  local ok,at=pcall(function()return UserInputService:GetMouseLocation()-GuiService:GetGuiInset()-self.focus.root.AbsolutePosition end)
  if ok and typeof(at)=="Vector2"then self.mouseAt=at end
  self.under.Visible,self.over.Visible=true,true
+ self:syncUnder()
  self.hint.Visible=true;self.hint.BackgroundTransparency=.15;self.hintText.TextTransparency=0
  local face=self.backFace;face.Visible=true
  local back=self.focus.back
@@ -238,6 +265,7 @@ function Cuddle:finish()
  if not self.active then return end
  self.active=false
  self.under.Visible,self.over.Visible=false,false
+ self:syncUnder()
  self.hand.Visible=false
  if self.hidCursor then self.hidCursor=false;UserInputService.MouseIconEnabled=true end
  local back=self.focus.back
@@ -280,7 +308,7 @@ end
 function Cuddle:layout(force)
  local size=self.focus.root.AbsoluteSize
  local info=self.focus.bondInfo
- local key=tostring(size)..":"..tostring(info and info.name)..":"..tostring(info and info.heart)..":"..tostring(info and info.bond and info.bond.shown)
+ local key=tostring(size)..":"..tostring(info and info.name)..":"..tostring(info and info.named)..":"..tostring(info and info.heart)..":"..tostring(info and info.bond and info.bond.shown)
  if not force and key==self.layoutKey then return end
  self.layoutKey=key
  local L=C.layout(size.X,size.Y)
@@ -291,6 +319,8 @@ function Cuddle:layout(force)
  self.heart.fill.Size=UDim2.fromOffset(L.heart,L.heart)
  -- The name pill: top centre, name then the chip (Heart level) or the bond pips.
  local name=(info and info.name)or ""
+ -- Beta (42) D13: the pill's name, in ink (it was never written, so the pill showed only its chip).
+ self.pillName.Text=name;self.pillName.TextColor3=INK
  self.pillName.TextSize=L.text
  local nameW=math.ceil(width(name,L.text))+2
  local chipW=0
@@ -325,7 +355,7 @@ function Cuddle:layout(force)
  if chipRoot then chipRoot.AnchorPoint=Vector2.new(1,.5);chipRoot.Position=UDim2.new(1,-14,.5,0)end
  -- The hint: bottom centre.
  self.hintText.TextSize=L.text
- if not self.lovedUntil then self:setHint(UICopy.get("pet.cuddle.rub",{pet=if name~=""then name else UICopy.get("pet.cuddle.friend")}))end
+ if not self.lovedUntil then self:setHint(UICopy.get("pet.cuddle.rub",{pet=Cuddle.callName(info)}))end
 end
 function Cuddle:setHint(text)
  self.hintWords=text
@@ -458,13 +488,14 @@ function Cuddle:step(dt,camera,pet,boxAt,boxSize)
   self.pet=pet
  end
  self:layout(false)
+ self:syncUnder()
  local size=focus.root.AbsoluteSize
  local can=focus.active and focus.panel.Visible and focus:canOwnInput()
  local tray=focus.snacksOpen and focus:snacksOpen()
  -- The hint hides under the snack tray and a save notice; "loves this" comes and goes.
  if self.lovedUntil and os.clock()>=self.lovedUntil then
   self.lovedUntil=nil;self.hinted=false
-  self:setHint(UICopy.get("pet.cuddle.rub",{pet=(focus.bondInfo and focus.bondInfo.name)or UICopy.get("pet.cuddle.friend")}))
+  self:setHint(UICopy.get("pet.cuddle.rub",{pet=Cuddle.callName(focus.bondInfo)}))
   self:fadeHint()
  end
  self.hint.Visible=not tray and focus.saveNotice==nil
@@ -546,7 +577,7 @@ function Cuddle:step(dt,camera,pet,boxAt,boxSize)
   end)end
  end
  if onFavourite and not s.lovedShown then
-  s.lovedShown=true;self:showLoved((focus.bondInfo and focus.bondInfo.name)or UICopy.get("pet.cuddle.friend"))
+  s.lovedShown=true;self:showLoved(Cuddle.callName(focus.bondInfo))
  end
  self.shownFill=C.ease(self.shownFill,s.fill,dt,.15)
  self.heart.clip.Size=UDim2.fromScale(1,math.clamp(self.shownFill,0,1))
@@ -596,8 +627,9 @@ function Cuddle:step(dt,camera,pet,boxAt,boxSize)
   local localRight=CFrame.Angles(0,pet.yaw or 0,0):VectorToObjectSpace(camera.CFrame.RightVector)
   sideSign=if localRight.X<0 then -1 else 1
  end
- local dx,dy=0,0
- if u then dx,dy=math.clamp((u-.5)*2,-1.5,1.5),math.clamp((v-.3)*2,-1.5,1.5)end
+ -- Beta (42) D17: eased toward the hand (PetCuddle.easeHand), over the pet's resting box (PetFocusUI.restBounds), so
+ -- the lean no longer moves the box it is measured in and nothing snaps frame to frame.
+ local dx,dy=C.easeHand(self.handAim,u,v,dt)
  -- beta (40): the eyes stay inside the rig's ellipse (its eyeLook, else PetCuddle's), never into the head mesh
  local yaw,pitch,ex,ey=C.look(Vector3.new(dx*sideSign,-dy,1.4),self.lookW,pet.definition and pet.definition.eyeLook)
  local leanPitch,leanRoll=C.lean(math.clamp(dx,-1,1)*sideSign,self.leanW)
@@ -627,6 +659,6 @@ function Cuddle:destroy()
  table.clear(self.connections)
  if self.brush then self.brush:Destroy()end
  if self.chime then self.chime:Destroy()end
- self.under:Destroy();self.over:Destroy();self.backFace:Destroy()
+ self.under:Destroy();self.underGui:Destroy();self.over:Destroy();self.backFace:Destroy()
 end
 return Cuddle

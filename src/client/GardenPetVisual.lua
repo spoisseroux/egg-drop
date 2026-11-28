@@ -20,6 +20,7 @@ local Sit=require(script.Parent.PetSitPose)
 local Look=require(script.Parent.PetLookAt)
 local HelloPose=require(script.Parent.PetHelloPose)
 local EyeGlance=require(script.Parent.PetEyeGlance)
+local Hop=require(script.Parent.PetHop)
 local Visual={};Visual.__index=Visual
 local function v(a)return Vector3.new(a[1],a[2],a[3])end
 local function authoredFrame(def,scale)
@@ -386,7 +387,11 @@ function Visual:update(dt)
  self.boopSquash=boop
  -- Head nods 2 degrees a quarter cycle behind the two-bounce walk.
  headPitch+=math.rad(2)*math.sin(2*(self.gaitPhase or 0)-math.pi*.5)*gait
- local hop=(greet*.11+reactHop*.11-boop*.05+(self.movementBob or 0)+(beatRise or 0)+(if cuddle then cuddle.hop or 0 else 0))*self.scale+(if gift then gift.hop or 0 else 0)
+ -- Beta (42) D16 (PetHop): the airborne hops (hello, reaction, petting, gift) lift the feet with the body and let
+ -- planted feet go (airLift, read by PetPoseSampler); the walk's bob, the boop and an idle rise stay over the feet.
+ local air,ground=Hop.split(self.scale,greet,reactHop,if cuddle then cuddle.hop or 0 else 0,if gift then gift.hop or 0 else 0,self.movementBob or 0,boop,beatRise or 0)
+ local hop=air+ground
+ local footAir=Hop.feet(air);self.airLift=footAir
  local headAnchor=v(self.definition.anchors.Head)*self.scale
  local head=upper*CFrame.new(0,hop+(pose.head+breath)*self.scale,0)*CFrame.new(headAnchor)*CFrame.Angles(-greet*.08+shove*.15+headPitch+cooNod+(self.careHeadPitch or 0),headYaw,pose.tilt-weightRoll*.5+(self.affectionTilt or 0)*.08+cooRoll+(self.careHeadRoll or 0)+Sit.side(self)*Sit.HeadTilt*sit+(if cuddle then cuddle.headRoll or 0 else 0))*CFrame.new(-headAnchor)
  Bounds.begin(self);Bounds.begin(self.bodyHull)
@@ -436,7 +441,7 @@ function Visual:update(dt)
   elseif channel=="FootL"or channel=="FootR"or channel=="Foot"then
    local side=if string.sub(name,-1)=="L"then -1 else 1
    -- Beta (34): each foot lifts .085 (was .045) and swings .095 (was .075), x the pet's scale: visible little steps.
-   cf=root*CFrame.new(0,math.max(0,step*side)*(if reduced then .045 else .085)*self.scale+(self.careFootLift or 0),step*side*(if reduced then .075 else .095)*self.scale+(self.careFootForward or 0))*Sit.foot(entry.frame,side,sit,self.scale)*entry.frame
+   cf=root*CFrame.new(0,footAir+math.max(0,step*side)*(if reduced then .045 else .085)*self.scale+(self.careFootLift or 0),step*side*(if reduced then .075 else .095)*self.scale+(self.careFootForward or 0))*Sit.foot(entry.frame,side,sit,self.scale)*entry.frame
   end
   local size=entry.size;local hidden=not Charms.isVisible(self,entry)or entry.suppressed==true
   if channel=="Body"then

@@ -81,6 +81,7 @@ Beta (33), 2026-11-26: player scale (row 60). Beta (32), 2026-11-26: the first e
 
 | # | What | Beta | Try | Switch |
 |---|---|---|---|---|
+| - | **Beta (42) notes 13-17: the pet screen's name, pick-up icon, full-screen tint; the torso with the feet; smooth petting** (`artifacts/qa-2026-11-27-beta42/DIAGNOSIS.md` D13-D17) | - | Open the pet screen on an unnamed pet: the pill says "Pet" (the hint still "Rub Bear!"); name it: the pill shows the name. The Pick up / Set down keys are round (new icons once uploaded). The blue edge tint covers behind the top bar too. Let the pet run after you: the body bounces down onto its feet, never floats over them. Tap it (hello hop) on the screen and in the garden: the feet leave the ground with the body. Rub slowly side to side: the lean and look glide, no shaking. | `/alive pet2` |
 
 ## Scoped, not built
 

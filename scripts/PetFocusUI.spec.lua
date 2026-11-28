@@ -225,6 +225,65 @@ return function(client, _parent)
 			assert(camera.CFrame == plan.camera and camera.FieldOfView == 43)
 			camera:Destroy()
 		end)
+		test("beta 42 D13: the focus card's name is ink on its light pill; an unnamed pet reads Pet", function()
+			local v = Focus.new(host, { back = function() end, greet = function() return true end, pet = function() return true end,
+				petContact = function() end, canReact = function() return true end, canOwnInput = function() return true end })
+			local okCase, why = pcall(function()
+				local Kit = require(client.DeckKit)
+				assert(v.bondCard:GetAttribute("ToySurface") == "light" and v.bondName.TextColor3 == Kit.color("ink"), "ink name")
+				local UICopy = require(game:GetService("ReplicatedStorage").Shared.UICopy)
+				v:setBond({ name = UICopy.get("pet.unnamed"), named = false, species = "Bear", heart = 1 })
+				assert(v.bondName.Text == "Pet" and v.bondCard.Visible)
+				local Cuddle = require(client.PetCuddleUI)
+				assert(Cuddle.callName(v.bondInfo) == "Bear", "the hints still call an unnamed pet by its species")
+				assert(Cuddle.callName({ name = "Zivvi", named = true, species = "Bear" }) == "Zivvi")
+			end)
+			v:destroy(); assert(okCase, why)
+		end)
+		test("beta 42 D17: the petting box holds the pet's resting body once it settles; a lean never moves it", function()
+			local memo = {}
+			local pet = { origin = Vector3.new(10, 4, 0), yaw = 0, rigRevision = 1, scale = .72, gaitWeight = 0, greeting = 2 }
+			local rest = CFrame.new(10, 5, 0)
+			local f, s = Focus.restBounds(memo, pet, rest, Vector3.new(1, 1.5, 1))
+			assert(f == rest and s == Vector3.new(1, 1.5, 1) and memo.settled)
+			-- The rub's lean moves the posed body: the box stays at rest.
+			f, s = Focus.restBounds(memo, pet, CFrame.new(10.3, 5.1, 0) * CFrame.Angles(0, 0, .2), Vector3.new(1.2, 1.6, 1))
+			assert((f.Position - rest.Position).Magnitude < 1e-4 and s == Vector3.new(1, 1.5, 1), "posed bounds leaked into the box")
+			-- The pet's root moving carries the box with it (its own frame).
+			pet.origin = Vector3.new(12, 4, 0)
+			f = Focus.restBounds(memo, pet, CFrame.new(99, 0, 0), Vector3.one)
+			assert((f.Position - Vector3.new(12, 5, 0)).Magnitude < 1e-4)
+			-- A rig swap or a new pet measures again; a walking or hello-hopping pet is followed until it settles.
+			pet.rigRevision = 2; pet.greeting = .4
+			f = Focus.restBounds(memo, pet, CFrame.new(12, 5.2, 0), Vector3.one)
+			assert((f.Position - Vector3.new(12, 5.2, 0)).Magnitude < 1e-4 and not memo.settled)
+			pet.greeting = 2
+			f = Focus.restBounds(memo, pet, CFrame.new(12, 5, 0), Vector3.one)
+			assert((f.Position - Vector3.new(12, 5, 0)).Magnitude < 1e-4 and memo.settled)
+			pet.greeting = .2 -- a later hello never moves a settled box
+			f = Focus.restBounds(memo, pet, CFrame.new(12, 5.3, 0), Vector3.one)
+			assert((f.Position - Vector3.new(12, 5, 0)).Magnitude < 1e-4)
+			assert(Focus.restBounds(memo, pet, nil, nil) == nil, "no bounds pass through")
+		end)
+		test("beta 42 D15: the cuddle vignette has its own ScreenGui with no insets, just below the focus gui", function()
+			local Cuddle = require(client.PetCuddleUI)
+			local v = Focus.new(host, { back = function() end, greet = function() return true end, pet = function() return true end,
+				petContact = function() end, canReact = function() return true end, canOwnInput = function() return true end })
+			local okCase, why = pcall(function()
+				local c = Cuddle.new(v, {})
+				local gui = c.underGui
+				assert(gui:IsA("ScreenGui") and gui.ScreenInsets == Enum.ScreenInsets.None and c.under.Parent == gui and gui.Parent == v.gui.Parent)
+				assert(not gui.Enabled, "hidden until the screen opens")
+				v.active, v.panel.Visible, v.gui.DisplayOrder = true, true, 40
+				c:begin()
+				assert(gui.Enabled and gui.DisplayOrder == 39 and c.under.Visible)
+				v.panel.Visible = false; c:syncUnder(); assert(not gui.Enabled, "hides with the panel")
+				v.panel.Visible = true; c:syncUnder(); assert(gui.Enabled)
+				c:finish(); assert(not gui.Enabled)
+				c:destroy(); assert(gui.Parent == nil)
+			end)
+			v.active = false; v:destroy(); assert(okCase, why)
+		end)
 	end)
 	if ui then ui:destroy() end
 	host:Destroy()

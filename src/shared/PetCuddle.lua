@@ -108,6 +108,23 @@ function C.ease(current,target,dt,seconds)
  local k=1-math.exp(-math.max(0,dt)*3/math.max(seconds,1e-3))
  return current+(target-current)*k
 end
+-- Beta (42) D17 (smooth petting): where the hand is over the pet's resting box, as the lean and look read it. u, v are
+-- the hand across and down that box (0..1 inside; nil with no hand over the screen): dx -1.5..1.5 (centre 0), dy
+-- -1.5..1.5 (0 at 30% down, the face). No hand: 0, 0 (the pet looks ahead).
+C.HandEase=.18 -- s to about 95% of a new hand target: the lean and look glide instead of snapping each frame
+function C.handTarget(u,v)
+ if type(u)~="number"or type(v)~="number"or u~=u or v~=v then return 0,0 end
+ return math.clamp((u-.5)*2,-1.5,1.5),math.clamp((v-.3)*2,-1.5,1.5)
+end
+-- Pure: one frame of the eased hand. `state` keeps dx, dy between frames (missing: 0); a step longer than .1 s is
+-- treated as .1 s, so a hitch never jumps the pet.
+function C.easeHand(state,u,v,dt)
+ local tx,ty=C.handTarget(u,v)
+ dt=math.clamp(tonumber(dt)or 0,0,.1)
+ state.dx=C.ease(state.dx or 0,tx,dt,C.HandEase)
+ state.dy=C.ease(state.dy or 0,ty,dt,C.HandEase)
+ return state.dx,state.dy
+end
 -- Pure: the lean toward the hand. side: where the hand is across the pet (-1 its left, 1 its right, in the pet's own X);
 -- weight: the eased contact (0..1). Returns pitch and roll (radians, CFrame.Angles order) that tip the body's top toward
 -- the hand and a little toward the camera; the whole tilt is weight * 12 degrees at most.

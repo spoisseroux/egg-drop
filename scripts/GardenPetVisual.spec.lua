@@ -74,6 +74,21 @@ return function(client)
    end)
    placeholder:Destroy();original.Parent=source;assert(success,why)
   end)
+  test("beta 42 D16: on the petting screen a hop (hello, petting, burst) lifts the feet with the body",function()
+   for _,id in ipairs({"pip","puddle"})do
+    local v=make(id,false,{charmVisible=false});v.focusPose=true;v.greeting=2;v.poseDirty=true;v:update(1/60)
+    local feet={};for _,p in ipairs(v.pieces)do if p.channel=="FootL"or p.channel=="FootR"or p.channel=="Foot"then feet[p]=p.part.Position.Y end end
+    local body=v.model.PrimaryPart.Position.Y
+    v.cuddle={hop=.12};v.poseDirty=true;v:update(1/60)
+    local lift=v.model.PrimaryPart.Position.Y-body
+    assert(lift>.05 and math.abs(v.airLift-.12*v.scale)<1e-6,id.." body hop")
+    for p,y in pairs(feet)do assert(math.abs((p.part.Position.Y-y)-lift)<.02,id.." "..p.name.." stayed down")end
+    v.cuddle={hop=-.05};v.poseDirty=true;v:update(1/60)
+    assert(v.airLift==0,id.." a crouch keeps the feet on the ground")
+    for p,y in pairs(feet)do assert(math.abs(p.part.Position.Y-y)<.01,id.." "..p.name.." sank")end
+    v.cuddle=nil
+   end
+  end)
   test("twenty complete create/update/destroy cycles release every model",function()
    for i=1,20 do local v=Factory.new(folder,Vector3.new(2000,4,0),Pets.byId[if i%2==0 then "pip"else "puddle"],.72);v:update(.1);local m=v.model;v:destroy();assert(m.Parent==nil)end
   end)

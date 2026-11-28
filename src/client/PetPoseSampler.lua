@@ -1,6 +1,7 @@
 -- Cached expressive poses, fresh root/heading and planted feet every rendered frame.
 -- One host render clock; cadence can be 12/15 or 0 for the comparison control.
 local Bounds=require(script.Parent.PetRigBounds)
+local Hop=require(script.Parent.PetHop)
 local Sampler={DefaultCadence=15}
 local tau=math.pi*2
 local function footSide(entry)
@@ -24,6 +25,9 @@ function Sampler.attach(visual)
   local weight=self.gaitWeight or 0;local focus=self.focusPose or self.gardenFocus or self.gardenAction=="focus"
   local scale=self.worldScale or 1
   if focus or self.gardenAction=="greet"or self.gardenAction=="shove"then slot.anchor=nil;slot.stance=nil;slot.walking=false;return frame end
+  -- Beta (42) D16: an airborne hop (PetHop) lifts the feet with the body; planting lets go until it lands, and the
+  -- first frame back takes a fresh stance under the pet.
+  if Hop.airborne(self)then slot.anchor=nil;slot.stance=nil;slot.walking=false;slot.pivotBeat=nil;return frame end
   local rest=slot.rest;local base=root*rest
   if self.gardenPivot then
    slot.walking=false

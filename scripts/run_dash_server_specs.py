@@ -162,7 +162,10 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           "GiftStage",
           # DECK-FEEL-BRIEF (beta 40 notes 9-17, switch deckfeel): the open, holds, body press, life, stepper, polish,
           # results; the stale-balls gate (DeckFresh, always on).
-          "DeckFeel"]
+          "DeckFeel",
+          # Beta (42) D13-D17 (qa-2026-11-27-beta42): the carry icons' id table, the torso-with-feet hop rules, the
+          # petting screen's hint name and vignette order.
+          "CareIcons", "PetHop", "PetCuddleUI"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -251,7 +254,9 @@ def client_modules():
                     # DECK-FEEL-BRIEF: the feel pass's pure rules, the body press and the fresh reopen gate.
                     "DeckFeel.lua", "DeckPressLean.lua", "DeckFresh.lua", "DeckHandoff.lua",
                     # Beta 41 code review: the jolt's rebase and the screen's holds (DeckFeel spec).
-                    "DeckMergeJolt.lua", "DeckFeelScreen.lua"):
+                    "DeckMergeJolt.lua", "DeckFeelScreen.lua",
+                    # Beta (42) D13-D17: the carry icons, the hop rules, the petting screen (its pure helpers).
+                    "CareIcons.lua", "PetHop.lua", "PetCuddleUI.lua"):
         for path in sorted((ROOT / "src/client").glob(pattern)):
             out[f"client/{path.stem}"] = path.read_text(encoding="utf-8")
     room = (ROOT / "src/client/RoomView.lua").read_text(encoding="utf-8")

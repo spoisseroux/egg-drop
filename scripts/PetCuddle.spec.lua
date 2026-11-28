@@ -234,5 +234,44 @@ return function(server)
 		assert(UICopy.get("pet.cuddle.loves",{pet="Bear"})=="Bear loves this!")
 		assert(UICopy.get("pet.cuddle.back")=="Back")
 	end)
+
+	test("beta 42 D13: a pet with no name yet reads Pet on its pill",function()
+		assert(UICopy.get("pet.unnamed")=="Pet")
+	end)
+
+	test("beta 42 D17: the hand's aim over the resting box: centre 0, the face at 30% down, clamped, none without a hand",function()
+		local x,y=C.handTarget(.5,.3);assert(x==0 and y==0)
+		x,y=C.handTarget(1,1);assert(near(x,1)and near(y,1.4))
+		x,y=C.handTarget(-3,9);assert(x==-1.5 and y==1.5)
+		x,y=C.handTarget(nil,.4);assert(x==0 and y==0)
+		x,y=C.handTarget(0/0,.4);assert(x==0 and y==0)
+	end)
+
+	test("beta 42 D17: the lean and look glide to the hand (no snap, no overshoot) and a hitch never jumps them",function()
+		local s={}
+		local x=C.easeHand(s,1,.3,1/60)
+		assert(x>0 and x<.3,"one frame moves a little, not all the way: "..x)
+		local last=x
+		for _=1,120 do
+			local now=C.easeHand(s,1,.3,1/60)
+			assert(now>=last-1e-12 and now<=1+1e-9,"monotone, never past the target")
+			last=now
+		end
+		assert(near(last,1,.01),"arrives")
+		-- a 2 s hitch is one .1 s step
+		local h={};local a=C.easeHand(h,1,.3,2);local b=C.easeHand({},1,.3,.1);assert(near(a,b))
+		-- the hand leaves: back toward centre, smoothly
+		local before=s.dx;C.easeHand(s,nil,nil,1/60);assert(s.dx<before and s.dx>before*.7)
+	end)
+
+	test("beta 42 D17: a jittering hand reading is calmed, not passed on frame to frame",function()
+		local s={dx=0,dy=0};local high,low=-math.huge,math.huge
+		for i=1,240 do
+			local u=if i%2==0 then .56 else .44 -- the raw aim flips -.12 / +.12 each frame
+			local x=C.easeHand(s,u,.3,1/60)
+			if i>60 then high=math.max(high,x);low=math.min(low,x)end
+		end
+		assert(high-low<.05,"jitter passed through: "..(high-low))
+	end)
 	return{passed=#cases,cases=cases}
 end

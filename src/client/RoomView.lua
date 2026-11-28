@@ -621,15 +621,18 @@ end
 function Room:syncBond(animate)
 	if not self.focusUI or not self.focusUI.setBond then return end
 	local info=self:bondInfo()
-	local name=self:shownName();self.bondNameShown=name
+	local name,named=self:shownName();self.bondNameShown=name
 	local heart=self:heartLevel();self.heartShown=heart
 	local stat=if heart then self:topStat()else nil;self.statShown=statKey(stat)
-	self.focusUI:setBond(if self.shownPet and(info or heart)then {name=name,bond=info,heart=heart,stat=stat}else nil,animate)
+	self.focusUI:setBond(if self.shownPet and(info or heart)then {name=name,named=named,species=NameText.species(self.shownPet.id),bond=info,heart=heart,stat=stat}else nil,animate)
 end
--- The shown pet's given name (v2 pet names), or its species name without one.
+-- The shown pet's given name (v2 pet names) and true; without one, "Pet" (UICopy pet.unnamed) and false (beta 42 D13:
+-- it was the species). The petting hints still call an unnamed pet by its species (PetCuddleUI.callName).
 function Room:shownName()
-	if not self.shownPet then return nil end
-	return (NameText.own(if self.nameState then self.nameState()else nil,self.shownPet.id))
+	if not self.shownPet then return nil,false end
+	local text,named=NameText.own(if self.nameState then self.nameState()else nil,self.shownPet.id)
+	if named then return text,true end
+	return require(game:GetService("ReplicatedStorage").Shared.UICopy).get("pet.unnamed"),false
 end
 -- Start an idle beat now (tricks and the level-up stretch). The pet's own scheduler
 -- carries it on; it ends at once when the pet is not free to play a beat.

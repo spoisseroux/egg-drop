@@ -8,9 +8,35 @@ local function button(parent,name,text,callback)
  local n=Instance.new("TextButton");n.Name=name;n.Text=text;n.Size=UDim2.fromOffset(150,44);n.Parent=parent;n.ZIndex=15;n.BorderSizePixel=0
  Art.bind(n,{BackgroundColor3="raised",TextColor3="text"});Art.button(n,12);Art.type(n,"Action");n.Activated:Connect(callback);return n
 end
+-- Beta (42) D14 (POINTER-STORK-BRIEF 3): the carry keys' icon. The pickUp / setDown PNG (CareIcons, 30 px, centred)
+-- once its id is uploaded; while it is 0, the old frame-built arrow. `image` overrides the id (specs). Returns the drawn
+-- node: the ImageLabel "CareIcon" or DeckArt's "CarryArrow"; the other one is hidden.
+function Client.icon(node,up,image)
+ local Icons=require(script.Parent.CareIcons)
+ if image==nil then image=Icons.image(Icons.nameFor(up))end
+ local icon=node:FindFirstChild("CareIcon");local arrowNode=node:FindFirstChild("CarryArrow")
+ node.Text=""
+ if image then
+  if not icon then
+   icon=Instance.new("ImageLabel");icon.Name="CareIcon";icon.BackgroundTransparency=1;icon.BorderSizePixel=0
+   icon.AnchorPoint=Vector2.new(.5,.5);icon.Position=UDim2.fromScale(.5,.5);icon.ScaleType=Enum.ScaleType.Fit;icon.Active=false
+   icon.Parent=node
+  end
+  icon.Size=UDim2.fromOffset(Icons.Size,Icons.Size);icon.ZIndex=node.ZIndex+2;icon.Image=image;icon.Visible=true
+  if arrowNode then arrowNode.Visible=false end
+  return icon
+ end
+ if icon then icon.Visible=false end
+ arrowNode=Art.carryArrow(node,if up then "up"else "down");arrowNode.Visible=true
+ return arrowNode
+end
+-- The key itself: a 48 px round key (the brief's round skin; FocusRow already gives Pick up 48 x 48).
 local function arrow(node,up,label)
- node.Text="";node.Size=UDim2.fromOffset(44,44);node:SetAttribute("AccessibleLabel",label)
- Art.carryArrow(node,if up then "up"else "down")
+ node.Text="";node.Size=UDim2.fromOffset(48,48);node:SetAttribute("AccessibleLabel",label)
+ for _,holder in ipairs({node,node:FindFirstChild("FocusKeyline")})do
+  local corner=holder and holder:FindFirstChildOfClass("UICorner");if corner then corner.CornerRadius=UDim.new(.5,0)end
+ end
+ Client.icon(node,up)
 end
 function Client.new(room,gui,options)
  options=options or {}

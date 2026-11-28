@@ -49,13 +49,14 @@ return function(client,parent)
   local newer=cut:begin();assert(not cut:reveal(token)and cut.shade.Visible and cut.shade.BackgroundTransparency==0)
   assert(cut:cover(newer));cut:reveal(newer);assert(not cut.shade.Visible and not cut.shade.Active)
  end)
- test("authoritative gait covers .10-.15 studs and suppresses rest/Focus gait and reduced body bounce",function()
+ test("authoritative gait dips .05-.10 studs and suppresses rest/Focus gait and reduced body bounce",function()
   for _,petId in ipairs({"pip","puddle"})do
    local visual={petId=petId,worldScale=1,origin=Vector3.zero,yaw=0}
    local actor={from={0,0,0},to={10,0,0},startTime=0,endTime=2.5,mode="Room",behavior="follow"}
    local state;local low,high=math.huge,0
    for i=1,240 do state=Follow.activity(visual,actor,i/120+.12,1/120,state,false);low=math.min(low,visual.movementBob);high=math.max(high,visual.movementBob)end
-   assert(high-low>=.1 and high-low<=.151,"gait amplitude "..petId..": "..(high-low))
+   -- Beta (42) D16: the bob dips at each footfall (Follow.Bob .07, Ovelle .055) and never rises over the planted feet.
+   assert(high-low>=.05 and high-low<=.1 and high<=1e-9,"gait amplitude "..petId..": "..(high-low))
    for i=1,120 do state=Follow.activity(visual,actor,10+i/120,1/120,state,false)end
    assert(visual.gaitWeight==0 and visual.movementBob==0)
    actor.mode="Focus";Follow.activity(visual,actor,1,1/60,state,false);assert(visual.gaitWeight==0 and visual.movementBob==0)

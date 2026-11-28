@@ -48,6 +48,37 @@ return function(client)
    table.insert(cases,id.." reduced walking and half-turn keep stance/lift bounded without body bounce")
   end
   do
+   -- Beta (42) D16: a hello / reaction hop takes the feet with the body (planting lets go) and they plant again on landing.
+   local Hop=require(client.PetHop)
+   local v=visual("pip");v.gaitWeight=0;v.origin=Vector3.new(0,4,0);v.yaw=0;v.poseDirty=true;v:update(1/60)
+   local rest={};for _,slot in ipairs(v.poseSlots)do if slot.side then rest[slot]=slot.entry.part.Position.Y;assert(slot.stance,"standing feet plant")end end
+   local body=v.model.PrimaryPart;local bodyRest=body.Position.Y
+   v.greeting=.6;v.poseDirty=true;v:update(1/60)
+   assert(Hop.airborne(v),"the hello hop is airborne")
+   local lift=body.Position.Y-bodyRest
+   for slot,y in pairs(rest)do
+    assert(slot.stance==nil and slot.anchor==nil,"airborne feet released")
+    assert(slot.entry.part.Position.Y-y>v.airLift*.5 and math.abs((slot.entry.part.Position.Y-y)-lift)<.03,"feet rise with the body")
+   end
+   v.greeting=2;v.poseDirty=true;v:update(1/60)
+   assert(not Hop.airborne(v))
+   for slot,y in pairs(rest)do assert(slot.stance==true and math.abs(slot.entry.part.Position.Y-y)<.01,"landed feet plant again")end
+   table.insert(cases,"beta 42 D16: a hello hop lifts and releases the feet, landing replants them")
+  end
+  do
+   -- Beta (42) D16: running, the body never rises above its standing height over planted feet (the bob dips at contact).
+   local follow=require(client.PetFollow)
+   local v=visual("pip");v.gaitWeight=0;v.origin=Vector3.new(0,4,0);v.poseDirty=true;v:update(1/60)
+   local standing=v.model.PrimaryPart.Position.Y-v.origin.Y
+   for frame=1,120 do
+    local d=frame*4/60;v.origin=Vector3.new(0,4,d);v.yaw=0;v.travelSpeed=8;v.gaitWeight=1
+    v.gaitPhase=(d/(1.45*.72)*math.pi*2)%(math.pi*2);v.movementBob=follow.bob(v,false);v.poseDirty=true;v:update(1/60)
+    assert(v.movementBob<=1e-9,"the bob never lifts")
+    assert(v.model.PrimaryPart.Position.Y-v.origin.Y<=standing+.03,"torso floated above its feet")
+   end
+   table.insert(cases,"beta 42 D16: a scampering torso stays on its feet (bob dips at each footfall)")
+  end
+  do
    local v=visual("pip");v.gardenPivot=true;v.gardenPivotPhase=.4;v.gardenPivotTurn=math.pi
    local follow=require(client.PetFollow);local root={Position=Vector3.new(0,6,0),CFrame=CFrame.new(0,6,0)}
    follow.step(v,root,1/60,nil,true)
