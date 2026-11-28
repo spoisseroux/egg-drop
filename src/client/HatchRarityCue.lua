@@ -29,12 +29,15 @@ local rarePets={};for _,pet in ipairs(Pets.rares)do rarePets[pet.id]=true end
 for _,pet in ipairs(Pets.earned or {})do rarePets[pet.id]=true end
 local basePets={};for _,pet in ipairs(Pets)do basePets[pet.id]=true end
 local statTier=table.freeze({nibble="Common",snack="Uncommon",feast="Rare"})
+local wearTier=table.freeze({common="Common",uncommon="Uncommon",rare="Rare",epic="Rare",legendary="Rare"})
 local function tier(row)return if row and valid[row.rarity]then row.rarity else "Neutral"end
 function Policy.tier(kind,result)
  result=result or {}
  if kind=="material"then return if Materials.known(result.finishId)then materialTier[result.finishId]or "Neutral"else "Neutral"end
  if kind=="feature"then return tier(Features.ById[result.featureId])end
  if kind=="toy"then return tier(Toys.ById[result.toyId])end
+ -- The daily rack (ROTATION-BRIEF 1): an Outfit Egg item's own rarity (epic and the sparkle pick read Rare).
+ if kind=="hue"and result.wearableId then return wearTier[result.rarity]or "Common"end
  if kind=="hue"then
   local k=Look.kind(result.itemId)
   if k=="finish"then return lookTier[result.itemId]end

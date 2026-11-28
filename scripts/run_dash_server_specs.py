@@ -181,7 +181,10 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           # Beta (44) note 18: the pet click's gates (see-through GUI, the roam reason, the need bubble's drawn hit).
           "PetClickGates",
           # Onboarding shorter (qa-2026-11-28-beta44): Things to do's learn rows and ticks, Show me, the window focus.
-          "ThingsLearn"]
+          "ThingsLearn",
+          # The daily rack, lane B (qa-2026-11-28-rotation): the Outfit Egg's request, retries and answers, the odds rows
+          # and the Today's picks sheet, the onboarding pointer's path, the gift order, the Paint odds under their switches.
+          "RackShop"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
@@ -269,6 +272,8 @@ def client_modules():
                     "TeachWiring.lua", "WindowFocus.lua",
                     # Beta 42: the gift's full-screen stage (its pure parts; the stage is required only when it shows).
                     "GiftStage.lua",
+                    # The daily rack, lane B: the Outfit Egg's client rules (its sheet's drawing is never required offline).
+                    "RackShop.lua",
                     # DECK-FEEL-BRIEF: the feel pass's pure rules, the body press and the fresh reopen gate.
                     "DeckFeel.lua", "DeckPressLean.lua", "DeckFresh.lua", "DeckHandoff.lua",
                     # Beta 41 code review: the jolt's rebase and the screen's holds (DeckFeel spec).

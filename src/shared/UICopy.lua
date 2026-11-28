@@ -73,6 +73,8 @@ local Table={
    look={name="Customization Egg",line="Colours, materials and the odd charm",description="Hatches one jar of colour or material. Now and then, a rare charm.",per="1 item per egg"},
    feature={line="Horns, claws or wings",description="Something pointy is growing in here. Hatches one feature item to grow on any pet.",per="1 item per egg"},
    stat={name="Stat Egg",line="A snack that speeds up training",description="Hatches one Stat Snack. Feed it to your pet: the next XP it earns in that stat counts extra.",per="1 snack per egg"},
+   -- The daily rack (ROTATION-BRIEF 3, switch daily_rack): today's outfit picks.
+   outfit={name="Outfit Egg",line="Today's picks: hats, tees and more",description="Hatches one of today's outfit picks for your pet. Tap a pick to see it on.",per="1 outfit per egg"},
   },
   -- v2 Stat Eggs (V2-SCOPE 5, V2-PET-AND-SNACKS 2): the odds card, the button and the reveal.
   stat={
@@ -351,6 +353,28 @@ local Table={
   shop={free="FREE",price="Free",hatch="Hatch free!",from="A gift from {pet}!"},
   busy="Try again in a moment.",room="Make room in the pouch first.",bring="Bring {pet} out first.",
  },
+ -- The daily rack (qa-2026-11-28-rotation/ROTATION-BRIEF 3 and 4, switch daily_rack): the Outfit Egg's pane, the
+ -- Today's picks sheet, its answers, its reveal and the onboarding gift. Kid safety: never a countdown, a clock, "last
+ -- chance" or "only today"; the day changes ("New picks every day") and everything comes back ("They come back").
+ rack={label="Today's picks",line="New picks every day",title="Today's picks",back="Missed one? They come back.",
+  gift="Your gift",yours="Yours",next="Next",hatch="★ Hatch {count}",notReady="Not ready",full="Closet full",
+  rest="You have today's picks! New picks tomorrow.",restButton="New picks tomorrow",gotIt="Got it",close="Close",
+  paintTitle="Today's colours",paintLine="Every colour comes back",paintDaily="One colour splashes extra each day",
+  paintBack="Every colour comes back.",splash="Today's splash",
+  rarity={common="Common",uncommon="Uncommon",rare="Rare",epic="Epic",legendary="Sparkle"},
+  sticker={common="Common!",uncommon="Uncommon!",rare="Rare!",epic="Epic!",legendary="Sparkle!"},
+  answer={done="All picked for today — new picks tomorrow",changed="Today's picks changed. Take a look!",day="New picks are here!",
+   full="Your closet is full",busy="Try again in a moment.",reveal="Open your last egg first.",oops="That didn't work. Try again."},
+  reveal={detail="{rarity} · {percent}",description="Yours to keep. Wear it any time in Dress up.",wear="Wear it!",later="Later",
+   worn="{item} on!"},
+  gift={per="A gift: 100%",note="New picks every day!",cute="So cute!",description="It's on! More picks come from the Outfit Egg."},
+  teach={odds="Tap to see today's picks!"},
+  -- lane C's closet (Wardrobe under daily_rack): its link to the Outfit Egg and its words
+  closet={fromEgg="From the Outfit Egg",go="Hatch one",tile="Outfit Egg",more="More colours in the egg",
+   promise="New picks every day",reason="This comes from the Outfit Egg",
+   -- the Book's Wardrobe page and the Companions hub line under daily_rack (their readers pick it while the rack is on)
+   book="Hats and bits to wear, from the Outfit Egg. Looks only.",hub="Hats, shirts and more from the Outfit Egg"},
+  look={noPity="Every egg has a chance at a charm.",noPityShort="Charms: a chance every egg"}},
  -- Onboarding part 2 (ONBOARDING-P2-BRIEF 2, Onboard "teach"): the pointer's labels on the real buttons, a few words
  -- each. Keyboard and gamepad add their key or glyph after the words (TeachPointer).
  teach={dress="Dress up!",paint="Tap Paint!",deck="Play!",menu="Open the Menu!",things="All the games!",throw="Throw it!",go="Go!",

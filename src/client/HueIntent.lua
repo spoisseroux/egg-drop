@@ -78,6 +78,9 @@ function Intent.lookQuote(state)
  local mode=state.lookSelectionMode or Look.selectionMode(state.restricted)
  local value={poolVersion=state.lookPoolVersion or Look.PoolVersion,price=Look.Price,selectionMode=mode,missingCharms=missing,charmMisses=misses}
  if mode=="fixed"then value.fixedItemId=Look.fixedNext(missing,misses,state.hueInventory,state.finishInventory)end
+ -- The daily splash (DailyRack "lookdaily", ARCH-REVIEW-ROTATION 7): the day the odds showed rides beside the quote
+ -- (the server strips it before the quote and answers PoolChanged when it is not today). Off: no key, as before.
+ if type(state.lookDay)=="number"then value.lookDay=state.lookDay end
  return value
 end
 function Intent:lookHatch()

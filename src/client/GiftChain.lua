@@ -66,8 +66,11 @@ function Chain.showCard(packet,presented,open)
 	if open then return false end
 	return not(type(presented)=="table"and presented[Chain.recordKey(packet.gift)]==true)
 end
-Chain.Gifts=table.freeze({paint=true,toy=true,snack=true})
+-- The daily rack (ROTATION-BRIEF 4, switch daily_rack): the server's order is then Outfit -> Paint -> Toy -> Snack. The
+-- Outfit gift takes the Paint gift's place (the tuck, its words, its 1.5 s); the rest follows from `ready` as before.
+Chain.Gifts=table.freeze({paint=true,toy=true,snack=true,outfit=true})
 Chain.Steps=table.freeze({
+	outfit=table.freeze({head="onbGift.paint",sub="onbGift.paintSub",target="Eggs",gift="outfit"}),
 	paint=table.freeze({head="onbGift.paint",sub="onbGift.paintSub",target="Eggs",gift="paint"}),
 	toy=table.freeze({head="onbGift.toy",sub="onbGift.toySub",target="Eggs",gift="toy"}),
 	snack=table.freeze({head="onbGift.snack",sub="onbGift.snackSub",target="Eggs",gift="snack"}),
@@ -82,10 +85,10 @@ Chain.Steps=table.freeze({
 	deck=table.freeze({head="teach.deckInvite",target="Deck"}),
 })
 -- Exempt from the gap and the session count: the first gift, and a gift already given.
-Chain.Exempt=table.freeze({paint=true,unseen=true})
+Chain.Exempt=table.freeze({paint=true,outfit=true,unseen=true})
 -- Onboarding part 2 (Onboard `teach`, ONBOARDING-P2-BRIEF 2 rules): every gift step is exempt; the invites (pull, park,
 -- dash, nest) count, three a session, 90 s clear of the last reveal. Beta 44: the deck invite is exempt too.
-Chain.Teach=table.freeze({exempt=table.freeze({paint=true,toy=true,snack=true,unseen=true,deck=true}),perSession=3,gap=90})
+Chain.Teach=table.freeze({exempt=table.freeze({paint=true,toy=true,snack=true,outfit=true,unseen=true,deck=true}),perSession=3,gap=90})
 Chain.MaxDt=1 -- s: one step never adds more than this to a bubble's own clock (focus lost, a hitch)
 function Chain.rules(teach)
 	if teach==true then return Chain.Teach end
@@ -139,8 +142,11 @@ function Chain.next(f)
 	if not f.on then return nil end
 	if f.unseen then return "unseen"end
 	if f.nestReady and f.returned then return "nest"end
+	if f.ready=="outfit"then return "outfit"end
 	if f.ready=="paint"then return "paint"end
-	if not f.granted.paint then return nil end
+	-- the daily rack: the Outfit gift is the first step, so the deck lesson may follow it before the Paint gift (which
+	-- now waits two rounds or a later day); off (no outfit record) exactly as before
+	if not(f.granted.paint or f.granted.outfit)then return nil end
 	-- beta 44: the deck lesson next (after the Paint gift and its lesson): the deck invite; "You can hatch one!" waits
 	-- for the course to be over (the tour seen)
 	if f.course and f.deckNext then return "deck"end
@@ -210,7 +216,8 @@ end
 function Chain:read()
 	local state=self.d.state()
 	if self.returned==nil and type(state)=="table"and type(state.gifts)=="table"then
-		self.returned=state.gifts.granted and state.gifts.granted.paint==true or false
+		local granted=state.gifts.granted
+		self.returned=type(granted)=="table"and(granted.paint==true or granted.outfit==true)or false
 	end
 	local d=self.d
 	return Chain.facts(state,{returned=self.returned,mask=d.mask and d.mask(),park=d.park and d.park(),teach=self:teaching(),
@@ -421,7 +428,7 @@ function Chain:step(now)
 		local step=Chain.next(f)
 		local free=self.d.gate()==nil and not self.d.busy()
 		if free then self.lastFree=self.lastFree or now else self.lastFree=nil end
-		local wait=if step=="paint"then Chain.PaintDelay else Chain.Free
+		local wait=if step=="paint"or step=="outfit"then Chain.PaintDelay else Chain.Free
 		if step and step~=self.waitingFor then self.waitingFor,self.waitingSince=step,now end
 		if step and free and Chain.may(self.session,step,now,f,f.teach)and now-(self.waitingSince or now)>=wait and now-(self.lastFree or now)>=math.min(wait,Chain.Free)then
 			if not Chain.rules(f.teach).exempt[step]then self.session.count+=1 end

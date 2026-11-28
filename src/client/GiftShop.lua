@@ -11,8 +11,12 @@
 --                             then "hatch" (the pane's Hatch free!); nil with no gift, a hatch result up or the ask out
 --   held(latch, state, now)   does an ask's latch still hold? Until the chain's done; the switch going off (no `gifts`)
 --                             or Latch s with no answer lets it go
+--                             The daily rack's Outfit gift (ROTATION-BRIEF 4, switch daily_rack) takes one more step:
+--                             the tile, then an odds row ("odds": "Tap to see today's picks!", opens the sheet), the
+--                             sheet's own button while it is open ("sheet"), then Hatch free!; ctx.oddsDone (the
+--                             sheet closed on this open), ctx.sheetOpen. Hatch free! works at every step (route).
 local Shop={}
-Shop.Tile=table.freeze({paint="look",toy="toy",snack="stat"})
+Shop.Tile=table.freeze({paint="look",toy="toy",snack="stat",outfit="outfit"})
 Shop.Latch=45 -- s: a latch whose done never came lets go (the chain's own ask times out at 30)
 function Shop.mode(kind,state,order)
 	if type(kind)~="string"or not Shop.Tile[kind]then return nil end
@@ -32,7 +36,13 @@ function Shop.route(ctx)
 end
 function Shop.aim(ctx)
 	if not ctx.gift or ctx.latch or ctx.lastHatch or not Shop.Tile[ctx.gift]then return nil end
-	if ctx.picked and ctx.selected==Shop.Tile[ctx.gift]then return "hatch"end
+	if ctx.picked and ctx.selected==Shop.Tile[ctx.gift]then
+		if ctx.gift=="outfit"then
+			if ctx.sheetOpen then return "sheet"end
+			if not ctx.oddsDone then return "odds"end
+		end
+		return "hatch"
+	end
 	return "tile"
 end
 function Shop.held(latch,state,now)
