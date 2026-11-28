@@ -19,7 +19,7 @@ return function(_,offline)
 		local s=db.player_1.hatching
 		s.coachMask=2^20 -- needHi
 		s.nest={at=1700000000,n=0,tucked=true,pet="pip"}
-		s.stats.rounds=2
+		s.stats.rounds=1 -- one field round after the Bear (the Welcome round is not counted)
 	end
 
 	for _,pair in ipairs({{"live",live},{"base",base}})do

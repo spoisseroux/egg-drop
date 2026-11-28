@@ -4,7 +4,7 @@
 -- button. Every lesson is the normal screen with one thing lit (TeachPointer), and ends in something happening to the pet.
 --   dress  after the Paint gift's card: "Dress up!" on the pet screen's Dress up, then "Tap Paint!" on the Colour tab's
 --          Paint key (the won pot selected)          done: any pet holds paint (a pot was used, hueUse saved)
---   deck   after the wipe, or "Later" on the card: "Play!" on the dock's Deck button   done: stats.rounds >= 2
+--   deck   after the wipe, or "Later" on the card: "Play!" on the dock's Deck button   done: stats.rounds >= 1 (the Welcome round is not counted)
 --   menu   after "You're all set!" ("What's next?" lights the Menu button), or once the deck is done: "Open the Menu!",
 --          then "All the games!" on the hub's Things to do tile               done: coach bit menuSeen (28)
 --   park   the Toy gift given (or every toy owned) and no fetch yet, in the Pet Park: "Throw it!"   done: stats.fetches > 0
@@ -65,7 +65,7 @@ end
 -- Each lesson's saved fact (ARCH-REVIEW-P2 1).
 function Lessons.done(id,f)
 	if id=="dress"then return f.painted==true end
-	if id=="deck"then return(f.rounds or 0)>=2 end -- the Welcome round is 1
+	if id=="deck"then return(f.rounds or 0)>=1 end -- a field round played; the Welcome round is not counted
 	if id=="menu"then return f.menuSeen==true end
 	if id=="park"then return f.fetched==true end
 	if id=="dash"then return f.raced==true end

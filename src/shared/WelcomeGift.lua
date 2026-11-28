@@ -14,14 +14,14 @@
 -- Paid only when the guide's three facts are truly done in the SAVE (BearNeeds.trulyDone, server side):
 --   Pet    the `needHi` coach bit (saved, or queued on the board: the server already accepted it) or a paid pet
 --   Nest   the egg in the nest tucked in, or one hatched (`nest.tucked`, `nest.n` > 0); not asked when the nest is off
---   Stars  a deck round played after the Bear: saved `stats.rounds` >= Rounds (the Welcome round is the first)
+--   Stars  a deck round played after the Bear: saved `stats.rounds` >= Rounds (the Welcome round is not counted)
 -- and never on a veteran save (Coach.veteran), as the guide itself.
 local Coach=require(script.Parent.CoachMarks)
 local Gift={}
 Gift.Bonus=5
 Gift.Owed=0
 Gift.Stored=255 -- frozen stored bound for `welcomeGift`; never tuned
-Gift.Rounds=2 -- BearNeeds.Rounds: a round after the Bear (the Welcome round counts as the first)
+Gift.Rounds=1 -- BearNeeds.Rounds: a round after the Bear (the Welcome round is not counted)
 -- The server's request loop (WelcomeGiftHost): the facts may still be saving when the card shows (the coach bit's
 -- quiet window, a round's payout), so it tries again every Gap s, at most Tries times.
 Gift.Tries=12

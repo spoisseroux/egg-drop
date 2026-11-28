@@ -6,8 +6,8 @@
 -- Three free cranks, each once per save, each only when its trigger is true in the save:
 --   paint  the egg in the nest tucked in (or one hatched); with the nest off, the first hello. A pots-only pool:
 --          the four paint pots, 25% each (Pools.paint). Adds one pot (hueInventory) and its lookFound bit.
---   toy    after the Paint gift, and two rounds after the Bear (stats.rounds >= ToyRounds: the Welcome round is the
---          first) or a later server day than the Paint gift. Unlocks one toy the save does not own; owning every toy
+--   toy    after the Paint gift, and two rounds after the Bear (stats.rounds >= ToyRounds: the Welcome round is not
+--          counted) or a later server day than the Paint gift. Unlocks one toy the save does not own; owning every toy
 --          is AllOwned (the step is skipped, nothing given).
 --   snack  after the Paint gift, once a Garden Dash race finished (any ribbon). A free Stat Egg through the existing
 --          statEggBuy (free, gift) path; never the player's own banked or medal egg.
@@ -33,7 +33,7 @@ local Gifts={}
 Gifts.Version=1
 Gifts.Kinds=table.freeze({"paint","toy","snack"})
 Gifts.Crankable=table.freeze({paint=true,toy=true}) -- the kinds HatchProgress.giftEgg grants (the Snack rides statEggBuy)
-Gifts.ToyRounds=3 -- saved stats.rounds: the Welcome round and two more
+Gifts.ToyRounds=2 -- saved stats.rounds: two field rounds after the Bear (the Welcome round is not counted)
 Gifts.IdLimit=100 -- frozen: an op id's length
 Gifts.ItemLimit=40 -- frozen: an item id's length
 Gifts.StoredV=255 -- frozen: the most `v` a later build may write

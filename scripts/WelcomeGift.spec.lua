@@ -51,7 +51,7 @@ return function(server)
 	end
 	local function done(h,db,c,except)
 		except=except or {}
-		local stats=copy(db.player_1.hatching.stats);stats.rounds=if except.stars then 1 else Gift.Rounds
+		local stats=copy(db.player_1.hatching.stats);stats.rounds=if except.stars then 0 else Gift.Rounds
 		return rejoin(h,db,c,{
 			coachMask=if except.pet then 0 else Coach.with(0,"needHi"),
 			nest=if except.nest then {at=c.now,n=0,tucked=false,pet="pip"}else {at=c.now,n=0,tucked=true,pet="pip"},
@@ -59,7 +59,7 @@ return function(server)
 	end
 
 	test("pure: the numbers, the field's rules and load repair",function()
-		assert(Gift.Bonus==5 and Gift.Owed==0 and Gift.Stored==255 and Gift.Rounds==2)
+		assert(Gift.Bonus==5 and Gift.Owed==0 and Gift.Stored==255 and Gift.Rounds==1,"one field round after the Bear (the Welcome round is not counted)")
 		assert(Gift.valid({})and Gift.valid({welcomeGift=0})and Gift.valid({welcomeGift=5})and Gift.valid({welcomeGift=255}))
 		for _,bad in ipairs({-1,1.5,256,"5",true,{},0/0})do
 			assert(not Gift.valid({welcomeGift=bad}),"invalid "..tostring(bad))
@@ -73,7 +73,7 @@ return function(server)
 
 	test("pure: due only when owed, not a veteran, and Pet, Nest and Stars are all done; each reason",function()
 		local function save(over)
-			local s={welcomeGift=0,totalWins=0,coachMask=Coach.with(0,"needHi"),nest={tucked=true,n=0},stats={rounds=2}}
+			local s={welcomeGift=0,totalWins=0,coachMask=Coach.with(0,"needHi"),nest={tucked=true,n=0},stats={rounds=1}}
 			for k,v in pairs(over or {})do s[k]=v end
 			return s
 		end
@@ -88,7 +88,7 @@ return function(server)
 		assert(select(2,Gift.due(save({nest={tucked=false,n=0}}),true))=="NotDone"and select(2,Gift.due(save({nest=false}),true))=="NotDone","Nest not done")
 		assert(Gift.due(save({nest={tucked=false,n=1}}),true),"one hatched")
 		assert(Gift.due(save({nest=false}),false),"the nest off in this world: Pet and Stars")
-		assert(select(2,Gift.due(save({stats={rounds=1}}),true))=="NotDone"and select(2,Gift.due(save({stats=false}),true))=="NotDone","the Welcome round alone is not a round played")
+		assert(select(2,Gift.due(save({stats={rounds=0}}),true))=="NotDone"and select(2,Gift.due(save({stats=false}),true))=="NotDone","the Welcome round alone is not a round played (it is not counted)")
 		local s=save();local nectar=10;s.nectar=nectar;assert(Gift.apply(s)==5 and s.nectar==15 and s.welcomeGift==5)
 	end)
 
@@ -195,7 +195,7 @@ return function(server)
 
 	test("code review: the client asks again from the snapshot while owed and done (after the card's own ask), never once paid",function()
 		local function snap(over)
-			local s={welcomeGift=0,totalWins=0,coachMask=Coach.with(0,"needHi"),nest={tucked=true,n=0},stats={rounds=2}}
+			local s={welcomeGift=0,totalWins=0,coachMask=Coach.with(0,"needHi"),nest={tucked=true,n=0},stats={rounds=1}}
 			for k,v in pairs(over or {})do s[k]=v end
 			return s
 		end
@@ -207,7 +207,7 @@ return function(server)
 		assert(not Gift.shouldAsk(snap(),true,nil,clock,100+Gift.AskAfter+Gift.AskEvery-1))
 		assert(Gift.shouldAsk(snap(),true,nil,clock,100+Gift.AskAfter+Gift.AskEvery),"and again")
 		assert(not Gift.shouldAsk(snap({welcomeGift=5}),true,nil,clock,1e6)and clock.doneSince==nil,"paid: never")
-		assert(not Gift.shouldAsk(snap({stats={rounds=1}}),true,nil,{},1e6),"not done: never")
+		assert(not Gift.shouldAsk(snap({stats={rounds=0}}),true,nil,{},1e6),"not done: never (the Welcome round is not counted)")
 		assert(not Gift.shouldAsk(snap({welcomeGift=false}),true,nil,{},1e6),"not owed: never")
 	end)
 

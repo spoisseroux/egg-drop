@@ -12,7 +12,7 @@ return function(client)
 	local cases={}
 	local function test(name,run)run();table.insert(cases,name)end
 	local function snapshot(over)
-		local s={nectar=0,totalWins=0,coachMask=0,stats={rounds=1},toyUnlocks={},gifts={owed=true,granted={},ready=nil}}
+		local s={nectar=0,totalWins=0,coachMask=0,stats={rounds=0},toyUnlocks={},gifts={owed=true,granted={},ready=nil}}
 		for k,v in pairs(over or {})do s[k]=v end
 		return s
 	end
@@ -45,7 +45,7 @@ return function(client)
 		assert(Chain.next(Chain.facts(unseen))=="unseen"and Chain.giftOf("unseen",Chain.facts(unseen))=="paint")
 		local paid=snapshot({nectar=50,gifts={owed=true,granted={paint=true}}})
 		assert(Chain.next(Chain.facts(paid))=="pull","Stars cover an egg: their first pull")
-		paid.stats={rounds=1,starsSpent=12};assert(Chain.next(Chain.facts(paid))==nil,"pulled: no invite")
+		paid.stats={rounds=0,starsSpent=12};assert(Chain.next(Chain.facts(paid))==nil,"pulled: no invite")
 		local toy=snapshot({gifts={owed=true,granted={paint=true},ready="toy"}})
 		assert(Chain.next(Chain.facts(toy))=="toy")
 		local park=snapshot({gifts={owed=true,granted={paint=true,toy=true}}})
@@ -120,7 +120,7 @@ return function(client)
 		r.run(Chain.Gap-2);assert(not r.shown,"the gap")
 		r.run(4);assert(r.shown and r.head=="onbGift.pull")
 		r.chain:tap();assert(r.leads[1]=="Eggs"and not r.shown and not r.chain:holds(),"an invite: the lead is the step")
-		r.state=snapshot({nectar=50,stats={rounds=1,starsSpent=12},gifts={owed=true,granted={paint=true},ready="toy"}})
+		r.state=snapshot({nectar=50,stats={rounds=0,starsSpent=12},gifts={owed=true,granted={paint=true},ready="toy"}})
 		r.run(3);assert(r.shown and r.head=="onbGift.toy","the second invite this session")
 		r.chain:close()
 		r.state=snapshot({stats={rounds=4,starsSpent=12},gifts={owed=true,granted={paint=true,toy=true}}})

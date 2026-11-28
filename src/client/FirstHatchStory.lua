@@ -813,7 +813,7 @@ end
 -- ask shows the garden Bear where it is, as before). Same place, same pose: no pop. Movement is already back.
 function Story:handOff(bear,hidden,land)
 	local d=self.d
-	pcall(d.stand,land,V2.Stand.beat+V2.Stand.reach)
+	pcall(d.stand,land,V2.Stand.hold)
 	local function reveal()
 		for p in pairs(hidden or {})do if p.Parent then p.LocalTransparencyModifier=0 end end
 		hidden=nil

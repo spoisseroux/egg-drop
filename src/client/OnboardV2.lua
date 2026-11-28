@@ -369,7 +369,9 @@ V2.CardTimeout=90
 -- the spot; reach s more for the ask to arrive). The story's own Bear stands there until the garden Bear is drawn
 -- within `near` studs of it (or `wait` s pass), then the two swap.
 -- The fun pass: the beat is 0.8 s (was 1.5).
-V2.Stand=table.freeze({beat=.8,reach=.6,wait=2,near=1.2})
+-- Beta (40) Studio check: `hold` is how long the garden Bear keeps the egg's spot facing the player (GardenState.StandMax):
+-- with only beat+reach (1.4 s) it trotted to heel on the player's far side, hidden behind them while "Pet me!" waited.
+V2.Stand=table.freeze({beat=.8,reach=.6,wait=2,near=1.2,hold=10})
 -- Pure: is the garden Bear drawn at the egg's spot (flat distance)?
 function V2.standArrived(at,land)
 	if typeof(at)~="Vector3"or typeof(land)~="Vector3"then return false end

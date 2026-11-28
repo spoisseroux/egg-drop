@@ -11,22 +11,22 @@ return function(client)
 	local cases={}
 	local function test(name,run)run();table.insert(cases,name)end
 	local function snapshot(over)
-		local s={totalWins=0,coachMask=0,stats={rounds=1},toyUnlocks={},petHues={},gifts={owed=true,granted={paint=true}}}
+		local s={totalWins=0,coachMask=0,stats={rounds=0},toyUnlocks={},petHues={},gifts={owed=true,granted={paint=true}}}
 		for k,v in pairs(over or {})do s[k]=v end
 		return s
 	end
 	local painted={pip={main={rose=1}}}
 	local function facts(over,live)return Lessons.facts(snapshot(over),live or {teach=true})end
 
-	test("pure: each lesson's saved fact (painted, two rounds, menuSeen, a fetch, a ribbon), never a timer",function()
+	test("pure: each lesson's saved fact (painted, a field round, menuSeen, a fetch, a ribbon), never a timer",function()
 		local f=facts()
 		for _,id in ipairs(Lessons.Order)do assert(not Lessons.done(id,f),id)end
 		assert(Lessons.done("dress",facts({petHues=painted})),"a pot used: any pet holds paint")
 		assert(not Lessons.done("dress",facts({petHues={pip={main={rose=0}}}})),"cleared (hueClear): shows again")
-		assert(Lessons.done("deck",facts({stats={rounds=2}}))and not Lessons.done("deck",facts({stats={rounds=1}})),"the Welcome round is 1")
+		assert(Lessons.done("deck",facts({stats={rounds=1}}))and not Lessons.done("deck",facts({stats={rounds=0}})),"one field round; the Welcome round is not counted")
 		assert(Lessons.done("menu",facts({coachMask=Coach.bit("menuSeen")})))
 		assert(Lessons.done("menu",Lessons.facts(snapshot(),{teach=true,mask=Coach.bit("menuSeen")})),"this session's bit counts at once")
-		assert(Lessons.done("park",facts({stats={rounds=1,fetches=1}})))
+		assert(Lessons.done("park",facts({stats={rounds=0,fetches=1}})))
 		assert(Lessons.done("dash",facts({dash={ribbons={fun=1}}}))and not Lessons.done("dash",facts({dash={ribbons={}}})))
 	end)
 
@@ -39,12 +39,12 @@ return function(client)
 		local c=Lessons.candidates(facts(),s)
 		assert(c[1]=="dress"and c[2]=="deck","Later: the deck may come (Dress up stays lit on the pet screen)")
 		assert(Lessons.next(facts({petHues=painted}),{})=="deck","painted: the deck")
-		assert(Lessons.next(facts({petHues=painted,stats={rounds=2}}),{})=="menu","two rounds: the Menu")
+		assert(Lessons.next(facts({petHues=painted,stats={rounds=1}}),{})=="menu","a field round: the Menu")
 		assert(Lessons.candidates(facts({petHues=painted}),{asked={menu=true}})[2]=="menu","What's next? asks for it at once")
-		local toy={petHues=painted,stats={rounds=3},coachMask=Coach.bit("menuSeen"),gifts={owed=true,granted={paint=true,toy=true}}}
+		local toy={petHues=painted,stats={rounds=2},coachMask=Coach.bit("menuSeen"),gifts={owed=true,granted={paint=true,toy=true}}}
 		assert(Lessons.next(facts(toy),{})=="park","the Toy gift given, no fetch: the park")
 		assert(Lessons.next(Lessons.facts(snapshot(toy),{teach=true,park=false}),{})==nil,"no Pet Park in this world: none")
-		local fetched={petHues=painted,stats={rounds=3,fetches=1},coachMask=Coach.bit("menuSeen"),dash={ribbons={}},gifts={owed=true,granted={paint=true,toy=true}}}
+		local fetched={petHues=painted,stats={rounds=2,fetches=1},coachMask=Coach.bit("menuSeen"),dash={ribbons={}},gifts={owed=true,granted={paint=true,toy=true}}}
 		assert(Lessons.next(facts(fetched),{})=="dash","fetch learned, no ribbon: the Dash")
 		fetched.dash={ribbons={fun=1}};assert(Lessons.next(facts(fetched),{})==nil,"all done")
 		assert(Lessons.next(Lessons.facts(snapshot(),{teach=false}),{})==nil,"teach off: nothing lit")
@@ -81,8 +81,8 @@ return function(client)
 		r.run(.5);assert(r.at=="Deck"and r.words=="teach.deck")
 		r.run(Lessons.Ignore+.5);assert(r.at==nil and r.lessons.session.parked.deck,"untouched 12 s: it fades for this session")
 		r.run(60);assert(r.at==nil,"not again this session")
-		-- the fact closes it anyway: two rounds played (no pointer needed)
-		r.state=snapshot({petHues=painted,stats={rounds=2}})
+		-- the fact closes it anyway: a field round played (no pointer needed; the Welcome round is not counted)
+		r.state=snapshot({petHues=painted,stats={rounds=1}})
 		r.targets.menu={node="Menu",words="menu"}
 		r.run(.5);assert(r.at=="Menu"and r.words=="teach.menu")
 		r.targets.menu={node="ThingsTile",words="things"};r.run(.5);assert(r.at=="ThingsTile"and r.words=="teach.things","in the hub: All the games!")

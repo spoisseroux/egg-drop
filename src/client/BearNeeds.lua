@@ -34,7 +34,7 @@ Needs.Copy=table.freeze({needHi="onb3.need.hi",needToy="onb3.need.toy",needDeck=
 Needs.Target=table.freeze({needToy="Eggs",needNest="Nest",needPark="Park",follow="Eggs"})
 Needs.Rest=4      -- after a need closes, this long with no bubble
 Needs.Return=2.5  -- after anything hides the bubble, free this long before it comes back
-Needs.Rounds=2    -- saved `stats.rounds` at or above this: a round after the Bear (the Welcome round is the first)
+Needs.Rounds=1    -- saved `stats.rounds` at or above this: a round after the Bear (the Welcome round is not counted)
 Needs.Retry=1     -- the first trail could not start (not free yet): try again after this long
 
 -- ── Pure rules ───────────────────────────────────────────────────────────────────────────────────────────────────────

@@ -105,7 +105,7 @@ return function(server)
 
 	test("pure: due per kind, each reason; no veteran check on an owed save",function()
 		local function save(over)
-			local s={gifts={v=1},inventoryMask=1,totalWins=0,coachMask=0,nest={tucked=true,n=0},stats={rounds=1},toyUnlocks={}}
+			local s={gifts={v=1},inventoryMask=1,totalWins=0,coachMask=0,nest={tucked=true,n=0},stats={rounds=0},toyUnlocks={}}
 			for k,v in pairs(over or {})do s[k]=v end
 			return s
 		end
@@ -121,8 +121,9 @@ return function(server)
 		assert(Gifts.due(save({totalWins=Coach.VeteranWins*10}),"paint","20000",{}),"a few wins never cancel an owed gift")
 		local p={op="p",item="rose",day="20000"}
 		assert(select(2,Gifts.due(save(),"toy","20000",{}))=="NotDue"and select(2,Gifts.due(save(),"snack","20000",{}))=="NotDue","Paint first")
-		assert(select(2,Gifts.due(save({gifts={v=1,paint=p}}),"toy","20000",{}))=="NotDue","the same day, one round")
-		assert(Gifts.due(save({gifts={v=1,paint=p},stats={rounds=Gifts.ToyRounds}}),"toy","20000",{}),"two rounds after the Bear")
+		assert(select(2,Gifts.due(save({gifts={v=1,paint=p}}),"toy","20000",{}))=="NotDue","the same day, the Welcome round only (not counted)")
+		assert(select(2,Gifts.due(save({gifts={v=1,paint=p},stats={rounds=Gifts.ToyRounds-1}}),"toy","20000",{}))=="NotDue","the same day, one field round")
+		assert(Gifts.due(save({gifts={v=1,paint=p},stats={rounds=Gifts.ToyRounds}}),"toy","20000",{}),"two field rounds after the Bear (the Welcome round is not counted)")
 		assert(Gifts.due(save({gifts={v=1,paint=p}}),"toy","20001",{}),"a later server day")
 		local all={};for _,id in ipairs(Toys.Pools[Toys.PoolVersion])do all[id]=true end
 		assert(select(2,Gifts.due(save({gifts={v=1,paint=p},stats={rounds=9},toyUnlocks=all}),"toy","20000",{}))=="AllOwned")
@@ -224,7 +225,7 @@ return function(server)
 		-- a Toy Egg bought and its reveal not acked yet: no Paint gift, no giftSeen, no Snack gift
 		local g,dbg,cg=painted()
 		assert(H.giftSeen(g,"paint")) -- seen first, so giftSeen below is the guard's to refuse
-		g=rejoin(g,dbg,cg,{nectar=100,stats=withRounds(dbg,1),dash={ribbons={gold=1}}})
+		g=rejoin(g,dbg,cg,{nectar=100,stats=withRounds(dbg,0),dash={ribbons={gold=1}}})
 		local rev=g.state.revision
 		local okBuy,whyBuy=H.toyCommand(g,"toyBuy",{id=rev..":toy-guard",catalogVersion=Toys.CatalogVersion,poolVersion=Toys.PoolVersion,eligible=Toys.remaining(g.state.toyUnlocks)},rev)
 		assert(okBuy,tostring(whyBuy));assert(g.state.pendingToyResult,"the toy's reveal is open")
