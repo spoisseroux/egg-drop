@@ -1039,7 +1039,9 @@ def tuck(obj):
 def foot_stones():
     """Kit stones as boulders: two flanking the foot, one hiding the live marble column stub at the path's foot (x -23.4
     to -20.6, z -78.8 to -77.2, top 5.1), and six fallen stones on the lawn under shelf 1 as if the cut shed them.
-    Returns [{kit, at, yaw, scale}] (scale multiplies the kit stone)."""
+    Returns [{kit, at, yaw, scale}] (scale multiplies the kit stone). Beta 42 E21: the three at the foot carry
+    "foot": True, and build_world_finish_pack.foot_boxes gives each an invisible collision box (0.85 of it, same yaw;
+    scripts/check_world_finish_path.py --boxes keeps them off the tread)."""
     S_ = S.path_samples()
     foot = S_[0]
     rnd = np.random.default_rng(67)
@@ -1050,13 +1052,14 @@ def foot_stones():
     for side in (1,):
         a = side * (foot["w"] / 2 + 1.6)
         at = P(foot, a, S.ground(*P(foot, a, 0)[::2]) or foot["h"])
-        out.append({"kit": 4, "at": [round(v, 3) for v in at], "yaw": round(along, 3), "scale": [1.0, 1.6, 2.2]})
+        out.append({"kit": 4, "at": [round(v, 3) for v in at], "yaw": round(along, 3), "scale": [1.0, 1.6, 2.2],
+                    "foot": True})
     # the white column stub at the path's foot (x -23.4..-20.6, z -79.4..-76.6, up to y 9.5; Fable world R1 7): one big
     # boulder over it and a smaller one in front, so it is buried from CAM-MOUTH30 and CAM-FOOT. Round 5: its top was
     # only 0.2 over the stub (the stub still showed in Studio); 4.0 tall puts it about 1.3 over.
     g = S.ground(-22.0, -78.0) or 4.6
-    out.append({"kit": 5, "at": [-22.0, round(g - .1, 3), -78.0], "yaw": .3, "scale": [1.8, 4.0, 6.0]})
-    out.append({"kit": 3, "at": [-20.4, round(g - .1, 3), -75.6], "yaw": 1.2, "scale": [1.4, 2.0, 2.6]})
+    out.append({"kit": 5, "at": [-22.0, round(g - .1, 3), -78.0], "yaw": .3, "scale": [1.8, 4.0, 6.0], "foot": True})
+    out.append({"kit": 3, "at": [-20.4, round(g - .1, 3), -75.6], "yaw": 1.2, "scale": [1.4, 2.0, 2.6], "foot": True})
     shelf1 = [s for s in S_ if 10 <= s["d"] <= 40]
     for k in range(6):
         s = shelf1[int(k * (len(shelf1) - 1) / 5)]

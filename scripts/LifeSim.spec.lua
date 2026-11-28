@@ -396,7 +396,7 @@ return function(client)
 		end
 	end)
 
-	test("birds: a chirp lands one on its perch's crown in .8 s, a repeat chirp hops low (often twice), it stays 8 to 20 s",function()
+	test("birds: a chirp lands one on its perch's crown in its flight's time (beta 42 E19: distance / 8, at least .8 s), a repeat chirp hops low (often twice), it stays 8 to 20 s",function()
 		local B=Sim.Bird
 		local spot=Vector3.new(10,14,10)
 		local birds=Sim.Birds.new(7)
@@ -404,21 +404,24 @@ return function(client)
 		assert(birds:chirp(0,5,spot,3,world,false)=="land")
 		local bird=birds.list[1]
 		assert(bird.colour==5%3 and(bird.from-spot).Magnitude>=9)
-		birds:step(.4,world,false,3,0);assert(bird.state=="land"and bird.wings=="fly")
-		birds:step(.81,world,false,3,0);assert(bird.state=="sit"and bird.wings=="perch")
-		birds:step(.81+.08,world,false,3,0)
+		local L=bird.flight
+		assert(near(L,math.clamp((bird.from-spot).Magnitude/B.speed,B.flightMin,B.flightMax),1e-9)and L>B.land,"flight "..L)
+		local o=L-B.land -- the old .8 s beats, moved on by the longer flight
+		birds:step(L/2,world,false,3,0);assert(bird.state=="land"and bird.wings=="fly")
+		birds:step(L+.01,world,false,3,0);assert(bird.state=="sit"and bird.wings=="perch")
+		birds:step(L+.01+.08,world,false,3,0)
 		assert(near(bird.tau,B.tailUp,1e-3),"the tail flicks up on landing: "..bird.tau)
-		birds:step(1.2,world,false,3,0)
+		birds:step(1.2+o,world,false,3,0)
 		assert(near(bird.tau,B.tail),"and back")
 		assert((bird.root.Position-(spot+Vector3.new(0,Sim.Bird.lift,0))).Magnitude<1e-3,"sits on the crown top")
 		local parts=Sim.birdParts(bird.root,bird.wings,bird.flick,bird.phi,bird.turn,bird.tau,bird.tuck)
 		assert(#parts==10)
 		bird.turnAt=math.huge -- no turn hop in the way
-		assert(birds:chirp(1.3,5,spot,3,world,false)=="hop")
-		birds:step(1.3+.09,world,false,3,0)
+		assert(birds:chirp(1.3+o,5,spot,3,world,false)=="hop")
+		birds:step(1.3+o+.09,world,false,3,0)
 		assert(near(bird.root.Position.Y,spot.Y+Sim.Bird.lift+.16,1e-3),".16 high at the top: "..bird.root.Position.Y-spot.Y)
 		assert(bird.flick==1,"wings flick in the first .12 s")
-		birds:step(1.3+.18+.12+.09+.12+.2,world,false,3,0);assert(bird.hopAt==nil and bird.flick==0)
+		birds:step(1.3+o+.18+.12+.09+.12+.2,world,false,3,0);assert(bird.hopAt==nil and bird.flick==0)
 		-- 40% of hops come in pairs, .12 s apart.
 		local pairs,n=0,0
 		for i=1,600 do
@@ -428,13 +431,84 @@ return function(client)
 		end
 		assert(math.abs(pairs/n-.4)<.06,"pairs: "..pairs/n)
 		local stay=bird.stayUntil
-		assert(stay>=8 and stay<=20,"stay "..stay)
+		assert(stay>=8+o-1e-9 and stay<=20+o+1e-9,"stay "..stay)
 		local t=3
 		while bird.state=="sit"and t<25 do t+=.1;birds:step(t,world,false,3,0)end
 		assert(bird.state=="leave"and t>=stay-.11,"leaves when its stay is over")
 		t+=.04;birds:step(t,world,false,3,0);assert(bird.wings=="perch","crouches first")
-		t+=.2;birds:step(t,world,false,3,0);assert(bird.wings=="fly")
-		t+=1.2;birds:step(t,world,false,3,0);assert(#birds.list==0,"gone after the arc")
+		t+=.2;birds:step(t,world,false,3,0);assert(bird.wings=="fly"and bird.fade==0,"flies off, still shown")
+		-- Beta 42 E19: it fades out over the last half of its flight away, never popping mid-air.
+		local leaveAt=bird.leaveAt
+		local last=0
+		for k=1,20 do
+			birds:step(leaveAt+B.crouchTime+B.leave*k/20-.01,world,false,3,0)
+			if birds.list[1]~=bird then break end
+			assert(bird.fade>=last-1e-9,"fading, never back");last=bird.fade
+		end
+		assert(last>.95,"all but gone at the end: "..last)
+		birds:step(leaveAt+B.crouchTime+B.leave+.01,world,false,3,0);assert(#birds.list==0,"gone after the arc")
+	end)
+	test("beta 42 E19: every flight's time is its distance at 8 studs a second (.8 to 4 s) and its arc grows with it; forage spots within 15 studs of the perch; no frame of a flight jumps",function()
+		local B,F=Sim.Bird,Sim.Forage
+		assert(B.speed==8 and B.flightMin==.8 and B.flightMax==4 and F.perch==15)
+		local a=Vector3.new(0,10,0)
+		local t1,h1=Sim.birdFlight(a,a+Vector3.new(4,0,0))
+		local t2,h2=Sim.birdFlight(a,a+Vector3.new(16,0,0))
+		local t3,h3=Sim.birdFlight(a,a+Vector3.new(80,0,0))
+		assert(near(t1,.8)and near(t2,2)and near(t3,4),"times "..t1.." "..t2.." "..t3)
+		assert(h1<=h2 and h2<h3 and near(h1,B.arcMin)and near(h3,B.arcMax),"arcs "..h1.." "..h2.." "..h3)
+		assert(Sim.birdFlight(nil,a)==B.land,"no ends: the old landing")
+		local forage={groundY=function()return 4 end,safe=function()return true end,stations={},finds={},kerbs={},
+			landings={[1]=Vector3.new(0,14,0),[2]=Vector3.new(30,14,0)},players=function()return {}end,pets=function()return {}end}
+		local random=Random.new(9)
+		local camera=Vector3.new(0,10,20)
+		local found=0
+		for _=1,200 do
+			local at=Sim.forageSpot(random,camera,forage,Vector3.new(0,14,0))
+			if at then
+				found+=1
+				local d=Vector2.new(at.X,at.Z).Magnitude
+				assert(d>=F.perchMin-1e-6 and d<=F.perch+1e-6,"near the perch: "..d)
+				assert(Vector2.new(at.X-camera.X,at.Z-camera.Z).Magnitude<=F.far+1e-6,"still in view")
+			end
+		end
+		assert(found>100,"spots found "..found)
+		-- Down to the lawn: near its perch; up again: its distance's time, through the air in between.
+		local birds=Sim.Birds.new(3)
+		local world={camera=camera,stations={},forage=forage}
+		assert(birds:chirp(0,1,forage.landings[1],3,world,false)=="land")
+		local bird=birds.list[1]
+		local t,downs=0,0
+		for _=1,400 do
+			t+=1/30
+			if bird.state=="sit"then bird.stayUntil=math.min(bird.stayUntil,t)end
+			birds:step(t,world,false,3,0)
+			if birds.list[1]~=bird then break end
+			if bird.state=="land"and bird.ground then
+				downs+=1
+				assert(Vector2.new(bird.spot.X,bird.spot.Z).Magnitude<=F.perch+1e-6,"down near its perch")
+				assert(near(bird.flight,(Sim.birdFlight(bird.from,bird.spot))),"down at its distance's time")
+				break
+			end
+		end
+		local b2=Sim.Birds.new(11)
+		local w2={camera=camera,stations={}}
+		assert(b2:chirp(0,2,forage.landings[2],3,w2,false)=="land")
+		local bb=b2.list[1]
+		local lastAt,most=nil,0
+		for k=0,math.ceil(bb.flight*30)do
+			b2:step(k/30,w2,false,3,0)
+			local p=bb.root.Position
+			if lastAt then most=math.max(most,(p-lastAt).Magnitude)end
+			lastAt=p
+		end
+		local d=(bb.from-bb.spot).Magnitude
+		assert(most<=2.5*d/bb.flight/30+.15,"a smooth flight: worst step "..most)
+		-- a rise to a crown far off takes longer than one near
+		local near1=Sim.birdFlight(Vector3.new(0,4,0),forage.landings[1])
+		local far2=Sim.birdFlight(Vector3.new(0,4,0),forage.landings[2])
+		assert(far2>near1,"further, longer")
+		assert(downs<=1)
 	end)
 
 	test("birds: the head snaps (.12 s) to a new look every .8 to 2.5 s and holds it; 30% with a cock; turns come with a hop",function()
@@ -512,13 +586,14 @@ return function(client)
 		assert(birds:chirp(0,9,Vector3.new(100,14,103),9,world,false)==nil,"by a station")
 		assert(select(2,birds:chirp(0,9,Vector3.new(0,20,43),9,world,false))=="camera")
 		assert(select(2,birds:chirp(0,9,nil,9,world,false))=="spot","a perch with no landing")
-		for t=0,1,.1 do birds:step(t,world,false,3,0)end
+		-- beta 42 E19: landed by 2 s (a landing takes its distance at Bird.speed, at most 1.7 s from 9 to 12 out)
+		for t=0,2,.1 do birds:step(t,world,false,3,0)end
 		world.player=Vector3.new(20,10,5)
-		birds:step(1.1,world,false,3,0)
+		birds:step(2.1,world,false,3,0)
 		local first=birds:find(1)
 		assert(first.state=="leave"and first.away.Z<0,"flies away from the player")
 		assert(birds:find(2).state=="sit")
-		birds:step(1.2,world,false,2,0)
+		birds:step(2.2,world,false,2,0)
 		assert(#birds.list==2,"the cap shrinks at once")
 	end)
 
@@ -1063,6 +1138,18 @@ return function(client)
 		local eye=plan.p4+Vector3.new(0,1,5.5)
 		close:step(plan.t5,grove:active(plan.t5),{camera=eye,right=view.right},world,nil,3,false)
 		assert(close.list[1].quick==plan.t5,"closer than 6 to the camera: a quick fade")
+		-- Beta 42 E18: a fruit I shook down (plan.shake) is for my pet: no near-camera fade; a race still fades it.
+		local shaken=table.clone(plan);shaken.shake=true;shaken=table.freeze(shaken)
+		local mine=Sim.Loose.new()
+		mine:step(plan.t5,{shaken},{camera=eye,right=view.right},world,nil,3,false)
+		assert(mine.list[1]and mine.list[1].quick==nil,"a shake's fruit by the camera stays")
+		local asked=0
+		mine:step(plan.t5+.1,{shaken},{camera=eye,right=view.right},world,nil,3,false,function()asked+=1;return true end)
+		assert(asked==1 and mine.list[1].taken,"and my pet may take it")
+		local raced=Sim.Loose.new()
+		raced:step(plan.t5,{shaken},{camera=eye,right=view.right},world,nil,3,false)
+		raced:step(plan.t5+.1,{shaken},{camera=eye,right=view.right},world,nil,3,true)
+		assert(raced.list[1].quick==plan.t5+.1,"a race still fades it")
 		-- After all that, the grove is untouched: the same active list and the same hanging.
 		assert(#grove:active(now)==1 and grove:active(now)[1]==plan and grove:hanging(plan.key,now)==nil)
 		assert(#grove:active(plan.gone+.01)==0,"gone from the grove once faded")
@@ -1184,10 +1271,11 @@ return function(client)
 		assert(result==nil and why=="night"and #birds.list==0)
 		assert(birds:chirp(0,5,spot,3,world,false,nil)=="land","nil: the hour is off")
 		local bird=birds.list[1]
-		birds:step(1,world,false,3)
-		assert(birds:chirp(1.1,5,spot,3,world,false,false)=="hop","the one there still hops")
-		assert(select(2,birds:chirp(1.1,6,spot+Vector3.new(4,0,0),3,world,false,false))=="night","but no second lands")
-		local t=1.2
+		local L=bird.flight -- beta 42 E19: the landing's own time
+		birds:step(L+.2,world,false,3)
+		assert(birds:chirp(L+.3,5,spot,3,world,false,false)=="hop","the one there still hops")
+		assert(select(2,birds:chirp(L+.3,6,spot+Vector3.new(4,0,0),3,world,false,false))=="night","but no second lands")
+		local t=L+.4
 		while #birds.list>0 and t<30 do t+=.1;birds:step(t,world,false,3)end
 		assert(#birds.list==0 and t>=bird.stayUntil,"left when its stay was over")
 		-- Bubbles: GardenLife passes the gate in `allowed`; a night slot is skipped, never saved up.
@@ -1204,15 +1292,15 @@ return function(client)
 		local world={camera=Vector3.new(40,12,40),stations={}}
 		assert(birds:chirp(0,1,Vector3.new(0,14,0),3,world,false,nil)=="land")
 		assert(birds:chirp(0,2,Vector3.new(20,14,0),3,world,false,nil)=="land")
-		birds:step(1,world,false,3)
+		birds:step(2,world,false,3) -- beta 42 E19: both landed (a landing takes its distance at Bird.speed)
 		local strength,number=0,nil
 		local function breathAt()return strength,number end
-		assert(birds:breathe(1.1,breathAt,false)==0,"no breath")
+		assert(birds:breathe(2.1,breathAt,false)==0,"no breath")
 		strength,number=.9,77
-		assert(birds:breathe(1.2,breathAt,true)==0,"Reduced Motion: none")
-		assert(birds:breathe(1.2,breathAt,false)==2,"both hop")
-		for _,bird in ipairs(birds.list)do assert(bird.hopAt==1.2 and near(bird.hop2,1.2+B.hopTime+B.pairGap),"a pair")end
-		assert(birds:breathe(1.5,breathAt,false)==0,"once a breath")
+		assert(birds:breathe(2.2,breathAt,true)==0,"Reduced Motion: none")
+		assert(birds:breathe(2.2,breathAt,false)==2,"both hop")
+		for _,bird in ipairs(birds.list)do assert(bird.hopAt==2.2 and near(bird.hop2,2.2+B.hopTime+B.pairGap),"a pair")end
+		assert(birds:breathe(2.5,breathAt,false)==0,"once a breath")
 		number=78
 		assert(birds:breathe(400,breathAt,false)==2,"the next breath")
 	end)
@@ -1373,7 +1461,9 @@ return function(client)
 		assert(pitched,"the head dips")
 		assert(hops>=3,"hops "..hops)
 		assert(bird.state=="land"and bird.perch~=nil and bird.spot.Y>10,"up to a crown")
-		now+=B.land+.05;birds:step(now,world,false,3,0)
+		assert(near(bird.flight,(Sim.birdFlight(bird.from,bird.spot)),1e-9),"beta 42 E19: at its distance's pace")
+		assert(Vector2.new(start.X-10,start.Z-10).Magnitude<=Sim.Forage.perch+1e-6,"beta 42 E19: it foraged near its perch")
+		now+=bird.flight+.05;birds:step(now,world,false,3,0)
 		assert(bird.state=="sit"and not bird.ground)
 	end)
 	test("beta 17 1.3 C: a character within 7 or a pet within 4 flushes it: two hops away, one chirp, up to the nearest free crown",function()
@@ -1491,12 +1581,13 @@ return function(client)
 	end)
 
 	-- Beta 38 (GARDEN-B38-BRIEF 3a): fruit in the canopy ----------------------------------------------------------
-	test("canopy: every fruit tree five slots (Blossom Point seven), all full; two under the skirt, the rest seated 15 to 40 degrees under the widest line, round the face, sunk 35%; keys unique; the switch off keeps today's",function()
+	test("canopy: every fruit tree five slots (Blossom Point seven), all full; beta 42 E20: none under the skirt, all seated 10 to 45 degrees above the widest line on the leaves' measured face, round it, sunk 35%; each shakes down to the ground; keys unique; the switch off keeps today's",function()
 		local Fruit=require(game:GetService("ReplicatedStorage").Shared.GardenFruit)
 		local Kit=require(game:GetService("ReplicatedStorage").Shared.WorldAeroKit)
 		local crowns=Sim.kitCrowns(Kit,require(client.AeroKit).crownFrame,{foliage_blossom=true})
 		local C=Fruit.Canopy
 		assert(#crowns==8,"eight fruit trees")
+		assert(C.under==0 and C.seatFrom==10 and C.seatTo==45,"beta 42 E20: up in the crown")
 		local keys={}
 		local sevens=0
 		for i,crown in ipairs(crowns)do
@@ -1521,12 +1612,24 @@ return function(client)
 					assert(q<=F.skirt+1e-6,"inside the skirt")
 				else
 					assert(slot.seated and near(slot.amp,Fruit.Sway.seated),"seated, half the sway")
-					-- Its face point on the leaves' face, 15 to 40 degrees under the widest line.
+					-- Beta 42 E20: its face point on the leaves' measured face (GardenFruit.surfaceAt), 10 to 45 degrees
+					-- above the widest line.
 					local face=inverse*slot.face
-					local d=Vector3.new(face.X/h.X,face.Y/h.Y,face.Z/h.Z)/C.hull
-					assert(near(d.Magnitude,1,1e-6),"on the face")
-					local lat=math.deg(math.asin(-d.Y))
+					local n=Vector3.new(face.X/h.X,face.Y/h.Y,face.Z/h.Z)
+					local lat=math.deg(math.asin(n.Unit.Y))
 					assert(lat>=C.seatFrom-1e-6 and lat<=C.seatTo+1e-6,"latitude "..lat)
+					local share=Fruit.surfaceAt(crown.mesh,math.atan2(n.Z,n.X),lat)
+					assert(share and share>=.5 and share<=1.05,"a measured face ("..tostring(share)..")")
+					assert(near(n.Magnitude,share,1e-6),"on the leaves' face: "..n.Magnitude.." vs "..share)
+					local d=n.Unit
+					-- Never inside the leaves: the body's centre is further out than the face it sits on.
+					local c=inverse*slot.centre
+					assert(Vector3.new(c.X/h.X,c.Y/h.Y,c.Z/h.Z).Magnitude>n.Magnitude,"out of the leaves, not in them")
+					assert(slot.centre.Y>crown.position.Y,"above the widest line")
+					-- Shaking still reaches it: its shake plan falls to the ground (4 + lift) and rests there.
+					local plan=Sim.fruitShakePlan(i,crown,{slot},T0,-1000001,flatWorld())
+					assert(plan and plan.shake and near(plan.p1.Y,4+F.lift,1e-6)and near(plan.p4.Y,4+F.lift,1e-6),"shaken down to the ground")
+					assert(plan.release.Y>plan.p1.Y+3,"it falls from up in the crown")
 					-- Sunk 35%: the centre .3 of the body's radius out along the normal from the face.
 					local out=(slot.centre-slot.face):Dot(slot.normal)
 					assert(near(out,C.size/2*(1-2*C.sunk),1e-6),"sunk ("..out..")")
@@ -1547,17 +1650,16 @@ return function(client)
 			assert(#today<=F.slots and(today[1]==nil or today[1].period==nil),"today's stems")
 		end
 		assert(sevens==1,"Blossom Point")
-		-- A canopy slot's sway: 3 at rest, up to 10 in a gust, the seated half; still: none; today's slots unchanged.
+		-- A canopy slot's sway: the seated half of 3 at rest, of 10 in a gust; still: none; today's slots unchanged.
 		local slots=Sim.fruitStems(1,crowns[1],true)
-		local hang,seat=slots[1],slots[3]
-		local most,mostSeat,mostGust=0,0,0
+		local seat=slots[1]
+		local mostSeat,mostGust=0,0
 		for t=0,6,.01 do
-			most=math.max(most,math.abs(Sim.fruitSwayOf(hang,T0+t,0,false)))
 			mostSeat=math.max(mostSeat,math.abs(Sim.fruitSwayOf(seat,T0+t,0,false)))
-			mostGust=math.max(mostGust,math.abs(Sim.fruitSwayOf(hang,T0+t,1,false)))
+			mostGust=math.max(mostGust,math.abs(Sim.fruitSwayOf(seat,T0+t,1,false)))
 		end
-		assert(near(most,3,.02)and near(mostSeat,1.5,.02)and near(mostGust,10,.05),most.." "..mostSeat.." "..mostGust)
-		assert(Sim.fruitSwayOf(hang,T0,1,true)==0,"Reduced Motion: still")
+		assert(near(mostSeat,1.5,.02)and near(mostGust,5,.05),mostSeat.." "..mostGust)
+		assert(Sim.fruitSwayOf(seat,T0,1,true)==0,"Reduced Motion: still")
 		local plain={k=2,key=10}
 		assert(Sim.fruitSwayOf(plain,T0+1,.5,false)==Sim.fruitSway(2,T0+1,.5,false),"today's pendulum")
 		-- A canopy plan carries its hang, so the tug starts from the seat.

@@ -30,11 +30,18 @@ Fruit.OwnerReach=24   -- the player from the fruit (LifePet's leash 16, plus nud
 
 -- The shake (client-local, as the gust drops): walk into a trunk (root within trunk + Reach of its centre) faster than
 -- Speed; the crown rocks Rock degrees Rocks times in RockTime, Leaves leaf cards fall, one fruit drops with the gust
--- drop's fall. That slot is empty Hidden seconds, then grows back over Grow; the tree has nothing to shake till then.
+-- drop's fall. That slot is empty Hidden seconds, then grows back over Grow.
 -- Beta 38 (GARDEN-B38-BRIEF 3b): the crown rocks 8 degrees, three swings in .7 s easing out, and 12 leaf cards fall.
+-- Beta 42 E18 (Spencer's note 18: "shake the tree multiple times getting one fruit each time if they're on there"): a
+-- tree shakes again `every` seconds while a fruit still hangs on it, exactly one fruit a shake; a tree left bare rests
+-- `emptyRest`. The server allows a tree shakeBudget(tree) (its slots) fruit shakes per `gap` seconds a player (its
+-- slots' regrow, less slack), at most one per `serverGap` (every, less lag); each opens one claim, claims add up.
 Fruit.Shake=table.freeze({reach=1.6,speed=4,rock=8,rocks=3,rockTime=.7,leaves=12,hidden=60,grow=20,
 	slack=2,       -- the server's root may lag the client's
-	gap=75})       -- the server: one shake a tree a player this often (Hidden + Grow, less slack)
+	every=1.5,     -- the client: seconds between two shakes of one tree while fruit hangs on it
+	emptyRest=10,  -- the client: after a shake that left nothing hanging
+	serverGap=1,   -- the server: the least between two fruit shakes of one tree a player
+	gap=75})       -- the server: the budget's window (Hidden + Grow, less slack)
 Fruit.Trunk=.6   -- a trunk's radius at crown scale 1 (GardenKeepOut.Trunk)
 Fruit.TrunkOf=table.freeze({Landmark_BlossomPointTree=1.1})
 
@@ -47,15 +54,40 @@ Fruit.Look=table.freeze({
 })
 -- Beta 38 (GARDEN-B38-BRIEF 3a, Fable; Spencer's note 15 "fruit in the trees like Animal Crossing"): the fruit sits in
 -- the canopy. Five slots a tree, all full when grown (Blossom Point seven): `under` hang under the skirt as before, the
--- rest are seated on the crown's outer face between seatFrom and seatTo degrees under its widest line, sunk `sunk` of
--- the body into the leaves with a darker leaf disc behind and a two-leaf sprig on top. In the tree the body is `size`
--- (1.15); a dropped one settles to Look.body.size (.9) over its first bounce. Look only: the rules above are unchanged.
-Fruit.Canopy=table.freeze({slots=5,slotsOf=table.freeze({Landmark_BlossomPointTree=7}),under=2,seatFrom=15,seatTo=40,
+-- rest are seated on the crown's outer face between seatFrom and seatTo degrees above its widest line (beta 42 E20,
+-- Spencer's note 20 "higher up in the tree mesh like animal crossing": none under the skirt or below the widest line),
+-- sunk `sunk` of the body into the leaves with a darker leaf disc behind and a two-leaf sprig on top. In the tree the
+-- body is `size` (1.15); a dropped one settles to Look.body.size (.9) over its first bounce. Look only.
+Fruit.Canopy=table.freeze({slots=5,slotsOf=table.freeze({Landmark_BlossomPointTree=7}),under=0,seatFrom=10,seatTo=45,
 	sunk=.35,size=1.15,
-	hull=.9,       -- [PLACEHOLDER] the leaves' face as a share of the crown's bounding ellipsoid (hulls overstate the leaves)
+	hull=.78,      -- the leaves' face as a share of the bounding ellipsoid where Surface has no table (its mean)
 	shadow=table.freeze({colour="#2F6B34",thick=.04,across=1.25}),   -- the leaf disc behind a seated fruit
 	sprig=table.freeze({at=Vector3.new(-.16,.62,0),tilt=-25}),       -- the second leaf, mirrored over the first
 })
+-- Beta 42 E20: where the leaves really are (scripts/crown_fruit_surface.py, from the kit FBX; its --check keeps this in
+-- step): per crown mesh, the share of the bounding ellipsoid the leaf clumps reach (cards left out) along the seat
+-- direction d = (cos lat cos a, sin lat, cos lat sin a) in the crown part's frame; `lats` rows from lat0 by step
+-- degrees, `az` columns from a = 0, row by row. A seat lands on the leaves' face, neither inside nor floating.
+Fruit.Surface=table.freeze({
+	W7_Kit_Crown_Blossom__foliage_blossom=table.freeze({lat0=10,step=5,lats=8,az=24,
+		r=table.freeze({0.83,0.91,0.94,0.92,0.78,0.68,0.64,0.67,0.57,0.55,0.73,0.87,0.89,0.90,0.89,0.78,0.63,0.65,0.75,0.85,0.80,0.68,0.63,0.71,0.82,0.89,0.93,0.91,0.75,0.71,0.69,0.67,0.62,0.55,0.72,0.86,0.91,0.92,0.86,0.76,0.62,0.64,0.79,0.87,0.82,0.68,0.63,0.72,0.82,0.89,0.93,0.91,0.73,0.74,0.82,0.69,0.64,0.60,0.72,0.84,0.89,0.89,0.82,0.75,0.61,0.64,0.84,0.90,0.85,0.69,0.63,0.73,0.81,0.89,0.93,0.91,0.73,0.78,0.86,0.76,0.64,0.61,0.72,0.81,0.87,0.86,0.80,0.72,0.63,0.68,0.87,0.91,0.88,0.75,0.64,0.66,0.74,0.87,0.92,0.91,0.73,0.82,0.90,0.90,0.66,0.61,0.71,0.79,0.86,0.82,0.77,0.70,0.66,0.73,0.87,0.91,0.92,0.79,0.66,0.66,0.72,0.80,0.86,0.89,0.75,0.87,0.95,0.93,0.69,0.62,0.69,0.78,0.84,0.80,0.73,0.69,0.72,0.79,0.87,0.91,0.93,0.83,0.68,0.67,0.73,0.79,0.78,0.77,0.77,0.89,0.99,0.96,0.85,0.64,0.64,0.74,0.82,0.72,0.65,0.71,0.80,0.80,0.86,0.92,0.93,0.82,0.69,0.68,0.74,0.78,0.79,0.79,0.78,0.89,1.01,0.99,0.89,0.68,0.66,0.68,0.66,0.64,0.65,0.72,0.84,0.80,0.86,0.93,0.91,0.81,0.71,0.69})}),
+})
+-- Pure: the leaves' share of the bounding ellipsoid for crown mesh `mesh` at azimuth `a` (radians, the crown part's
+-- frame) and latitude `lat` (degrees above the widest line): bilinear in the Surface table (a wraps, lat clamps); nil
+-- for a mesh without one.
+function Fruit.surfaceAt(mesh,a,lat)
+	local s=Fruit.Surface[mesh]
+	if not s or type(a)~="number"or type(lat)~="number"or a~=a or lat~=lat then return nil end
+	local u=(a/(2*math.pi))%1*s.az
+	local v=math.clamp((lat-s.lat0)/s.step,0,s.lats-1)
+	local i0,j0=math.floor(u),math.floor(v)
+	local fu,fv=u-i0,v-j0
+	local j1=math.min(j0+1,s.lats-1)
+	local function at(i,j)return s.r[j*s.az+(i%s.az)+1]end
+	local low=at(i0,j0)+(at(i0+1,j0)-at(i0,j0))*fu
+	local high=at(i0,j1)+(at(i0+1,j1)-at(i0,j1))*fu
+	return low+(high-low)*fv
+end
 -- Three varieties, one a tree (look only), all warm against the lime crowns; `tall` stretches the body upright.
 Fruit.Varieties=table.freeze({
 	sunset=table.freeze({body="#FF8A4C",blush="#FFD166",tall=1}),
@@ -69,15 +101,20 @@ Fruit.VarietyOf=table.freeze({Tree_05_blossom="sunset",Tree_10_blossom="sunset",
 -- The hanging pendulum: Rest degrees on each fruit's own Period (seconds, from periodMin to periodMax), up to Gust in a
 -- gust; the seated ones half as much. Reduced Motion: still.
 Fruit.Sway=table.freeze({rest=3,gust=10,periodMin=2.2,periodMax=3,seated=.5})
--- The shake's beats (3b): the first fruit lets go `first` s in (the second swing), and one shake in `secondChance` a
--- second fruit `second` s after it. A fruit's landing ticks `landBuzz`.
-Fruit.Drops=table.freeze({first=.3,second=.3,secondChance=.25})
-Fruit.MaxDrops=2 -- the most one shake lets go (dropTimes)
+-- The shake's beats (3b): the fruit lets go `first` s in (the second swing). A fruit's landing ticks `landBuzz`.
+-- Beta 42 E18: exactly one fruit a shake (the old one-in-four second fruit is gone: shake again for the next).
+Fruit.Drops=table.freeze({first=.3})
+Fruit.MaxDrops=1 -- the most one shake lets go (dropTimes)
 -- Pure: how many claims a shake opens on the server: the fruit the client says fell (1 when it says nothing or nonsense:
--- older clients, Reduced Motion), never more than a shake can drop. Each still pays within Gap and DailyLimit.
+-- older clients, Reduced Motion; 0 for an empty shake), never more than a shake can drop. Each still pays only within
+-- Gap and DailyLimit.
 function Fruit.shakeClaims(drops)
 	if type(drops)~="number"or drops~=drops or drops%1~=0 then return 1 end
-	return math.clamp(drops,1,Fruit.MaxDrops)
+	return math.clamp(drops,0,Fruit.MaxDrops)
+end
+-- Pure: how many fruit shakes the server allows a tree per Shake.gap (a player): its slots (a tree's name or entry).
+function Fruit.shakeBudget(tree)
+	return Fruit.slotsFor(if type(tree)=="table"then tree.tree else tree)
 end
 Fruit.LandBuzz="drop"
 -- The prompt (3b): a "Shake" pill at the trunk while a shake is allowed for me. Fable asks for 6 studs; the server's
@@ -103,13 +140,10 @@ function Fruit.promptReach(tree)
 	local trunk=type(tree)=="table"and type(tree.trunk)=="number"and tree.trunk or Fruit.Trunk
 	return math.min(Fruit.Prompt.reach,trunk+S.reach+S.slack/2)
 end
--- Pure: the let-go times after a shake at `now` for a shake numbered `count` (the client's own count): the first on
--- the second swing, and one shake in four a second (Wind.hash, the same on a re-run). Both clamp to the fruit on the tree.
-function Fruit.dropTimes(now,count)
-	local D=Fruit.Drops
-	local out={now+D.first}
-	if type(count)=="number"and Wind.hash(count,21)<D.secondChance then table.insert(out,now+D.first+D.second)end
-	return out
+-- Pure: the let-go times after a shake at `now`: one, on the second swing (beta 42 E18: one fruit a shake; `_count`,
+-- the client's shake count, is kept for callers).
+function Fruit.dropTimes(now,_count)
+	return{now+Fruit.Drops.first}
 end
 
 -- Eating: five bites over 3.2 s, the fruit at each scale after that bite, turning `turn` degrees a bite; three crumbs a

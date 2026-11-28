@@ -101,6 +101,34 @@ return function(client)
 		assert(r.pet:notice(fruitAt(Vector3.new(3,4,0)),r.now+91)==true)
 	end)
 
+	test("beta 42 E18: a fruit I shook down (loose.shake): taken while the pet follows me moving, after a short snack wait; a gust's fruit still waits 90 s and a moving owner",function()
+		assert(S.shakeCooldown<=10 and S.shakeCooldown<S.cooldown)
+		local function shaken(at)local f=fruitAt(at);f.shake=true;return f end
+		local r=rig()
+		r.actor={mode="Room",behavior="follow"};r.still=false;r.run(.1)
+		assert(r.pet:notice(fruitAt(Vector3.new(5,4,0)),r.now)==false,"a gust's fruit, owner moving: no")
+		local at=r.now
+		assert(r.pet:notice(shaken(Vector3.new(5,4,0)),at)==true,"my shake's fruit, owner moving: yes")
+		-- the snack goes on while I keep moving (not aborted as "following a moving owner")
+		r.run(1)
+		assert(r.pet.active and r.pet.active.phase~="back","still going: "..tostring(r.pet.active and r.pet.active.phase))
+		r.pet:release(r.visual)
+		assert(r.pet:notice(shaken(Vector3.new(3,4,0)),at+S.shakeCooldown-.5)==false,"a short wait between snacks")
+		assert(r.pet:notice(shaken(Vector3.new(3,4,0)),at+S.shakeCooldown+.5)==true,"then the next shaken fruit")
+		r.pet:release(r.visual)
+		r.still=true
+		assert(r.pet:notice(fruitAt(Vector3.new(3,4,0)),at+S.shakeCooldown+10)==false,"a gust's fruit waits the 90 s")
+		-- the rest of the rules hold for a shaken fruit too
+		local b=rig()
+		b.busy=true
+		assert(b.pet:notice(shaken(Vector3.new(5,4,0)),b.now)==false,"busy: no");b.busy=false
+		b.actor={mode="Room",behavior="rest",dash={}};b.run(.1)
+		assert(b.pet:notice(shaken(Vector3.new(5,4,0)),b.now)==false,"racing: no")
+		b.actor={mode="Room",behavior="wander",action="walk"};b.run(.1)
+		assert(b.pet:notice(shaken(Vector3.new(5,4,0)),b.now)==false,"busy wandering: no")
+		assert(select(1,Pet.free({mode="Room",behavior="follow"},false,true))==true and select(1,Pet.free({mode="Room",behavior="follow"},false))==false)
+	end)
+
 	test("the snack: turn, pause, trot to .9 studs, three nibbles (the fruit shrinks and goes), a .35 hop, content, one heart, back",function()
 		local r=rig()
 		r.run(.2)

@@ -11,8 +11,9 @@
 -- No counter anywhere: the client only notes it (SnackWhy).
 --
 -- Checks (all on the server's own state; the packet gives only an index and a spot):
---   shake  the root, at the server, within the trunk's reach (+ slack); at most once per tree per Shake.gap a player.
---          An accepted shake is that tree's fruit for Window seconds (used once).
+--   shake  the root, at the server, within the trunk's reach (+ slack); per tree a player, at most shakeBudget (its
+--          slots) fruit shakes per Shake.gap and one per Shake.serverGap (beta 42 E18). Each accepted shake opens one
+--          claim on that tree's fruit for Window seconds (each used once).
 --   eat    the switch on; the save loaded and free (canProgress); the pet out is owned, the garden actor is that pet,
 --          in the garden and not in care, a race, a park or a greeting; at most one paid fruit per Gap (server memory)
 --          and DailyLimit a day (the save); the spot within Reach of the tree's trunk; the tree really let a fruit go
@@ -128,15 +129,30 @@ function Host:receive(player,packet)
 	return true
 end
 function Host:treesNow()return self.trees or Fruit.trees()end
--- A shake: the root at the server by the trunk; once per tree per Shake.gap. Its fruit is claimable for Window, one
--- claim per fruit it dropped (packet.drops, Fruit.shakeClaims: at most MaxDrops).
+-- A shake: the root at the server by the trunk. Beta 42 E18: a tree may be shaken again and again while fruit hangs,
+-- one fruit a shake: at most Fruit.shakeBudget(tree) fruit shakes per Shake.gap (its slots: the most that can hang in
+-- one regrow) and one per Shake.serverGap, per player. Each opens one claim for Window (Fruit.shakeClaims; an empty
+-- shake, drops 0, opens none and uses no budget); open claims add up, so the most open at once is the budget.
+-- rec.shakeAt[i]: the accepted fruit shakes' clocks (oldest first); rec.shaken[i]: the open claims' clocks.
+local function prune(list,from)
+	while list[1]~=nil and list[1]<from do table.remove(list,1)end
+	return list
+end
 function Host:shake(board,rec,i,clock,drops)
 	local tree=self:treesNow()[i]
 	local at=self.rootOf(board)
 	if not at or not Fruit.shakes(tree,at.X,at.Z,nil,Fruit.Shake.slack)then return nil,"Far"end
-	if clock-(rec.shakeAt[i]or -math.huge)<Fruit.Shake.gap then return nil,"Rate"end
-	rec.shakeAt[i]=clock
-	rec.shaken[i]={at=clock,left=Fruit.shakeClaims(drops)}
+	local claims=Fruit.shakeClaims(drops)
+	if claims<=0 then return true end
+	local S=Fruit.Shake
+	local shakes=prune(rec.shakeAt[i]or {},clock-S.gap)
+	rec.shakeAt[i]=shakes
+	if #shakes>0 and clock-shakes[#shakes]<S.serverGap then return nil,"Rate"end
+	if #shakes>=Fruit.shakeBudget(tree)then return nil,"Rate"end
+	table.insert(shakes,clock)
+	local open=prune(rec.shaken[i]or {},clock-Fruit.Window)
+	for _=1,claims do table.insert(open,clock)end
+	rec.shaken[i]=open
 	return true
 end
 -- An eat claim: ok, nil, petId or false, reason. Nothing is changed but the shake it uses.
@@ -157,8 +173,9 @@ function Host:check(board,rec,i,x,z,clock)
 	local tree=self:treesNow()[i]
 	if not Fruit.nearTree(tree,x,z)then return false,"Far"end
 	local now=self.now()
-	local shake=rec.shaken[i]
-	local shook=shake~=nil and clock-shake.at<=Fruit.Window and shake.left>0
+	local open=rec.shaken[i]
+	if open then prune(open,clock-Fruit.Window)end
+	local shook=open~=nil and #open>0
 	if not shook and not Fruit.dropped(i,tree.centre,now,Fruit.Window,self.breath())then return false,"NoFruit"end
 	local sample=Activity.sample(actor,now)
 	local pet=sample and sample.position
@@ -166,8 +183,8 @@ function Host:check(board,rec,i,x,z,clock)
 	local at=self.rootOf(board)
 	if not at or math.sqrt((at.X-x)^2+(at.Z-z)^2)>Fruit.OwnerReach then return false,"Far"end
 	if shook then
-		shake.left-=1
-		if shake.left<=0 then rec.shaken[i]=nil end
+		table.remove(open,1) -- the oldest open claim
+		if #open==0 then rec.shaken[i]=nil end
 	end
 	return true,nil,petId
 end
