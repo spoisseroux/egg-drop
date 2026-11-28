@@ -42,13 +42,16 @@ local function finishBear(world,result,height)
 end
 -- The daily rack (ROTATION-BRIEF 3): an Outfit Egg item is shown worn, on the pet it was hatched for, in its look with
 -- the item on (result.wearAppearance, RackShop.wearing). A display model only, like the finish's Bear.
+-- Angel Wings (ROTATION-2-BRIEF 3, lane E): worn, the pet turns 35 degrees and sits 15% smaller so the wings read from
+-- the front (AngelWings.previewPose; the cards get the same pose from CardPreviewCache).
 local function wearPet(world,result,height)
  local Pets=require(game:GetService("ReplicatedStorage").Shared.PetCatalog)
  local pet=Pets.byId[result.wearPet or "pip"]or Pets.byId.pip
  if not pet or type(result.wearAppearance)~="table"then return nil end
- return posedPet(world,pet,result.wearAppearance,height)
+ local ok,pose=pcall(function()return require(script.Parent.AngelWings).previewPose(result.wearAppearance)end)
+ return posedPet(world,pet,result.wearAppearance,height,if ok then pose else nil)
 end
-function posedPet(world,pet,appearance,height)
+function posedPet(world,pet,appearance,height,pose)
  local ok,visual=pcall(require(script.Parent.PetFactory).new,world,Vector3.zero,pet,nil,appearance,{emissionEnabled=false})
  if not ok or not visual then return nil end
  visual.idleMotionFrozen=true;visual.expression="neutral";visual.greeting=2;visual.poseCadence=0
@@ -70,7 +73,7 @@ function posedPet(world,pet,appearance,height)
  local function measure()
   visual:setRevealPose({heroScale=1});visual.origin=Vector3.zero;visual.yaw=0;visual.poseDirty=true;visual:update(0)
   local low,high=body()
-  if low<math.huge then self.fit=height*1.25/math.max(.01,high-low)end
+  if low<math.huge then self.fit=height*1.25/math.max(.01,high-low)/(if pose and type(pose.pull)=="number"and pose.pull>0 then pose.pull else 1)end
  end
  measure()
  visual.onRigChanged=function()
@@ -79,7 +82,7 @@ function posedPet(world,pet,appearance,height)
  end
  function self:pose(sample)
   local reveal={heroScale=self.fit*sample.heroScale,stretch=0,eye=1,blink=1,headYaw=0,headRoll=0,handL=.16,handR=.24,ear=0,tail=0}
-  visual:setRevealPose(reveal);visual.yaw=sample.toyYaw or 0;visual.origin=Vector3.zero;visual.greeting=2;visual.poseDirty=true;visual:update(0)
+  visual:setRevealPose(reveal);visual.yaw=(sample.toyYaw or 0)+(if pose and type(pose.yaw)=="number"then pose.yaw else 0);visual.origin=Vector3.zero;visual.greeting=2;visual.poseDirty=true;visual:update(0)
   local low=body()
   local lift=.0021+(sample.hop or 0)*height;local forward=(sample.forward or 0)*height
   if low<math.huge then visual.origin=Vector3.new(0,lift-low,forward);visual.poseDirty=true;visual:update(0);body()end
@@ -104,7 +107,8 @@ function Item.create(world,gui,result,builder,height,reduced)
  if result.toyId then api=require(script.Parent.PetToyGeometry);id=result.toyId
  elseif result.featureId then api=require(script.Parent.PetFeatureGeometry);id=result.featureId end
  local handle
- if api then handle=if result.toyId then api.create(world,id,1)else api.create(world,id,1,1,Color3.fromHex("#95CDB9"))
+ -- Toy colours (ROTATION-2-BRIEF 1, lane C): a Toy Colour Egg pick shows its toy in that colour (an unknown skin: the original).
+ if api then handle=if result.toyId then api.create(world,id,1,result.toySkin)else api.create(world,id,1,1,Color3.fromHex("#95CDB9"))
   -- v842: the Sparkler's sparks in the reveal follow Reduced Effects.
   if handle and result.toyId and api.setSparks then api.setSparks(handle,not reduced and not game:GetService("GuiService").ReducedMotionEnabled)end
  elseif result.stat and result.size then
@@ -114,8 +118,9 @@ function Item.create(world,gui,result,builder,height,reduced)
   local model=SnackModel.build(result.size,result.stat,1)
   model.Parent=world
   handle={model=model,destroy=function()model:Destroy()end,snack=true,placeholder=model:GetAttribute("SnackBackend")=="Placeholder"}
- elseif result.itemId then
-  -- Slice 3 (2026-11-16): hue jars, finish jars and the charm capsule turn in 3D like toys.
+ elseif result.itemId and not result.deckItem then
+  -- Slice 3 (2026-11-16): hue jars, finish jars and the charm capsule turn in 3D like toys. A Deck Egg pick (deckItem)
+  -- is flat art: the builder's (RackArt).
   local model=require(script.Parent.JarModel).build(result.itemId,1,{turn=false})
   if model then model.Parent=world;handle={model=model,destroy=function()model:Destroy()end}end
  end

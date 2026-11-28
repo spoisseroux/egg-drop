@@ -252,9 +252,12 @@ return function(client)
 
 	test("kid safety: no clock in any rack word (no countdown, timer, hours, minutes, 'left', 'last chance', 'only today')",function()
 		for _,key in ipairs(Copy.keys())do
-			if string.sub(key,1,5)=="rack."or key=="hatch.egg.outfit.line"or key=="hatch.egg.outfit.description"then
+			-- slice 2: the Toy Colour Egg's and Deck Egg's words too (rack.toy.*, rack.deck.*, rack.wings.*, their hatch.egg rows)
+			if string.sub(key,1,5)=="rack."or key=="hatch.egg.outfit.line"or key=="hatch.egg.outfit.description"
+				or string.sub(key,1,20)=="hatch.egg.toycolour."or string.sub(key,1,15)=="hatch.egg.deck."then
 				local s=string.lower(Copy.get(key))
-				for _,bad in ipairs({"hour","minute","second","{h","left","last chance","only today","hurry","ends","expire","timer"})do
+				for _,bad in ipairs({"hour","minute","second","{h","left","last chance","only today","today only","hurry","ends","expire","timer",
+					"countdown","clock","tonight","until"})do
 					assert(not string.find(s,bad,1,true),key..": "..bad)
 				end
 			end

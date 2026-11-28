@@ -206,7 +206,10 @@ CLIENT = ["DashPredict", "DashCamera", "DashFade", "DashHints", "DashInput", "Da
           "AngelWings",
           # The Hidden Grove (qa-2026-11-28-grove, ARCH-REVIEW-GROVE): the switch, the WorldGrove contract (placeholder and
           # a fixture through the generator), budgets, clearances, the ring, its hides in AeroWorld, the light's rules.
-          "Grove"]
+          "Grove",
+          # Rotation slice 2, lane B: the Toy Colour Egg and Deck Egg tiles, requests, answers, rows, sheet cards, reveals,
+          # Angel Wings on the sparkle pick, every copy key the lanes use, and no clock word.
+          "RackShop2"]
 SPECS += CLIENT
 # Client specs that run only when named in DASH_SPECS (not in the default run): the Aero waterfall layers.
 CLIENT_EXTRA = ["AeroFalls"]
