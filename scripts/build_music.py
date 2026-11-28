@@ -4,6 +4,7 @@
 Follows artifacts/qa-2026-11-28-music/MUSIC-BRIEF.md (Fable, 2026-11-28).
 
   python scripts/build_music.py                      # v4 (current): garden day + night without the pads
+  python scripts/build_music.py --version deck-v5    # Pocket Deck v5: 126 BPM, softer marimba sharing the hook
   python scripts/build_music.py --version deck-v4    # Pocket Deck v4 "Marimba Pop" (140 BPM) + its lite
   python scripts/build_music.py --version v3         # v3: garden beds with pads + the exciting Pocket Deck
   python scripts/build_music.py --version v2         # the first-pass v2 render
@@ -2206,18 +2207,19 @@ def root4(cb, half):
 
 # --- instruments (all synthesized)
 
-def s_marimba(midi, vel, rng):
+def s_marimba(midi, vel, rng, soft=False):
+    """soft (deck v5): a softer mallet: 8 ms attack, upper partials 6-8 dB lower, a shorter ring, a lighter thump."""
     f = hz(midi)
-    tau = 0.28 * (523.25 / f) ** 0.6
+    tau = (0.2 if soft else 0.28) * (523.25 / f) ** 0.6
     n = int(min(1.6, 5 * tau) * SR)
     t = np.arange(n) / SR
     y = (np.sin(2 * np.pi * f * t) * np.exp(-t / tau)
-         + vel * db(-18) * np.sin(2 * np.pi * 3.93 * f * t) * np.exp(-t / 0.06)      # brief: -14; -18 clears 2-5 kHz
-         + vel * db(-24) * np.sin(2 * np.pi * 9.6 * f * t) * np.exp(-t / 0.02))
+         + vel * db(-24 if soft else -18) * np.sin(2 * np.pi * 3.93 * f * t) * np.exp(-t / 0.06)   # brief: -14
+         + vel * db(-32 if soft else -24) * np.sin(2 * np.pi * 9.6 * f * t) * np.exp(-t / 0.02))
     k = int(0.005 * SR)
     bp = lambda fr: 1.0 / np.sqrt(1 + (2 * (fr / 1200 - 1200 / np.maximum(fr, 1e-9))) ** 2)
-    y[:k] += fft_filter_padded(rng.standard_normal(k), bp) * db(-18) * 3 * np.linspace(1, 0, k)
-    return y * note_env(n, 0.003, 10, 0.01)
+    y[:k] += fft_filter_padded(rng.standard_normal(k), bp) * db(-24 if soft else -18) * 3 * np.linspace(1, 0, k)
+    return y * note_env(n, 0.008 if soft else 0.003, 10, 0.01)
 
 
 def s_glock(midi, rng):
@@ -2368,11 +2370,24 @@ def build_deck_v4(args):
     disabled = set(s.strip() for s in (args.without or "").split(",") if s.strip())
     on = lambda name: name not in disabled
     pal = Palette(args.seed, sorted(disabled))
-    report = {"version": "deck-v4", "brief": "artifacts/qa-2026-11-28-music/DECK-V4-BRIEF.md", "bpm": 140.0,
+    global BAR4, SIX4
+    tag = "v5" if args.version == "deck-v5" else "v4"
+    v5 = tag == "v5"
+    # v5 (Spencer on v4: "a little too fast? maybe the marimba is a little overwhelming?"): 126 BPM, a softer
+    # marimba 4 dB down that leads only A2 and the lift; nylon, ocarina and music box carry the hook elsewhere
+    bpm = 126.0 if v5 else 140.0
+    BAR4 = int(round(60.0 / bpm * 4 * SR))          # 84,000 at 126; 75,600 at 140 (both exact)
+    SIX4 = BAR4 // 16
+    N_MAIN, N_LITE = 64 * BAR4, 32 * BAR4
+    prev = "v4" if v5 else "v3"
+    previews = os.path.join(QA_DIR, f"previews-deck-{tag}")
+    swing = 0.16 if v5 else 0.12                    # 58% at 126 reads lazier; v4 kept 56%
+    mar_gain = -4.0 if v5 else 0.0
+    report = {"version": f"deck-{tag}", "brief": "artifacts/qa-2026-11-28-music/DECK-V4-BRIEF.md", "bpm": bpm,
               "bar_frames": BAR4, "seed": args.seed, "disabled": sorted(disabled)}
-    print("deck-v4: loading stems")
+    print(f"deck-{tag}: loading stems")
     G, D = load_all(report)
-    print("deck-v4: checking the transcription and the bar 4 / 8 bass roots")
+    print(f"deck-{tag}: checking the transcription and the bar 4 / 8 bass roots")
     report["transcription_check"] = transcription_check(G)
     report["bass_root_check"] = bass_root_check(G)
     print("  transcription:", {k: v for k, v in report["transcription_check"].items() if k != "misses"})
@@ -2407,11 +2422,30 @@ def build_deck_v4(args):
                 continue
             soft = -5.0 if (s in (6, 10) and (bar - 1) % 2 == 0) else 0.0
             vel = db(soft)
-            y = snd(("mar", m + octave, round(vel, 3)), lambda: s_marimba(m + octave, vel, np.random.default_rng(m)))
-            bus.hit("marimba", y, p4(bar, s) + jit(layer, bar, s), gain + soft, 0.0, -16)
+            y = snd(("mar", m + octave, round(vel, 3)), lambda: s_marimba(m + octave, vel, np.random.default_rng(m), soft=v5))
+            bus.hit("marimba", y, p4(bar, s) + jit(layer, bar, s), gain + mar_gain + soft, 0.0, -16)
             if glock:
                 g = snd(("glk", m + 24), lambda: s_glock(m + 24, np.random.default_rng(m + 1)))
-                bus.hit("glock", g, p4(bar, s) + jit(layer + 10, bar, s), gain - 17 + soft, 0.1, -12)
+                bus.hit("glock", g, p4(bar, s) + jit(layer + 10, bar, s), gain + mar_gain - (20 if v5 else 17) + soft, 0.1, -12)
+
+    def marimba_comp(bus, bar, gain):
+        """v5: the marimba comping quietly, the top two chord tones on slots 4 and 12."""
+        for s in (4, 12):
+            for m in CHORDS4[cb(bar)][0 if s < 8 else 1][-2:]:
+                y = snd(("mar", m + 12, 1.0), lambda m=m: s_marimba(m + 12, 1.0, np.random.default_rng(m + 12), soft=True))
+                bus.hit("marimba-comp", y, p4(bar, s) + jit(7, bar, s), gain, -0.1, -16)
+
+    def nylon_hook(bus, bar, gain):
+        for s, m in mel(bar):
+            soft = -4.0 if (s in (6, 10) and (bar - 1) % 2 == 0) else 0.0
+            y = snd(("ks-hook", m), lambda m=m: fft_filter_padded(ks_pluck(m, 0.2, np.random.default_rng(m * 7 + 200)),
+                                                                  lambda f: mag_lp(f, 1100, 4)))   # warm, out of 2-5 kHz
+            bus.hit("nylon-hook", y, p4(bar, s) + jit(8, bar, s), gain + soft, 0.1, -16)
+
+    def ocarina_hook(bus, bar, gain):
+        for s, m in mel(bar):
+            y = snd(("oca", m + 12, 1.5), lambda m=m: s_ocarina(m + 12, 1.5 * SIX4 / SR, np.random.default_rng(m + 5)))
+            bus.hit("ocarina-hook", y, p4(bar, s) + jit(9, bar, s), gain, 0.15, -12)
 
     def music_box(bus, bar, gain, slots=(0, 8)):
         for s, m in mel(bar):
@@ -2469,6 +2503,8 @@ def build_deck_v4(args):
     kick = snd("kick", lambda: fft_filter_padded(s_kick(np.random.default_rng(args.seed + 41)), lambda f: mag_lp(f, 3000, 2)))
     rimv = sorted(pal.variants["tok"], key=lambda q: -q[0])[0]
     rim = snd("rim", lambda: pal.render("tok", rimv[0] + 12, rimv[1], rimv[2]))
+    if v5:
+        rim = rim * db(-3)                          # v5: the rim sits back (the 2-5 kHz room is tighter without the marimba up top)
     toks = [snd(("tok", v[0]), lambda v=v: pal.render("tok", *v)) for v in sorted(pal.variants["tok"], key=lambda q: -q[0])]
     claps = [snd(("clap", i), lambda i=i: s_clap(np.random.default_rng(args.seed + 90 + i))) for i in range(2)]
     tambs = [snd(("tamb", i), lambda i=i: s_tamb(np.random.default_rng(args.seed + 95 + i))) for i in range(3)]
@@ -2476,21 +2512,25 @@ def build_deck_v4(args):
 
     def shaker(bus, bar, gain):
         for k in range(16):
-            sw = 0.12 * SIX4 if k % 2 else 0.0                       # 56% swing
+            sw = swing * SIX4 if k % 2 else 0.0                      # 56% swing (v5: 58%)
             y = snd(("shk", k % 3), lambda k=k: fft_filter_padded(s_shaker(1.0, 1.0, np.random.default_rng(args.seed + 100 + k % 3)),
                                                                   lambda f: mag_hp(f, 5500, 4)))
             bus.hit("shaker", y, p4(bar, k) + int(sw), gain + (2 if k % 4 == 0 else 0), 0.25 if k % 2 else -0.25, -24)
 
     # ---------------------------------------------------------------- main, 64 bars
-    print("deck-v4: main")
-    N = N_DECK4
+    print(f"deck-{tag}: main")
+    N = N_MAIN
     keep, rest = Bus(N), Bus(N)                     # keep = marimba + the bar-64 tok fill; rest = everything else
     bounce = (2, 6, 10, 14)
     for bar in range(1, 65):
         sec = (bar - 1) // 8
         if sec == 0:                                    # A hello
-            marimba(keep, bar)
-            chop(rest, bar, bounce, 0.07, -8)
+            if v5:
+                nylon_hook(rest, bar, -2)
+                marimba_comp(rest, bar, -16)
+            else:
+                marimba(keep, bar)
+            chop(rest, bar, bounce, 0.07, -11 if v5 else -8)
             bass(rest, bar, "roots", -2)
             shaker(rest, bar, -22)
             for s in (4, 12):
@@ -2508,10 +2548,15 @@ def build_deck_v4(args):
                 rest.hit("kick", kick, p4(bar, s), -4)
         elif sec == 2:                                  # B answer
             if bar in (17, 18, 21, 22):
-                marimba(keep, bar)
-                ocarina(rest, bar, -6)
+                if v5:
+                    ocarina_hook(rest, bar, -5)
+                else:
+                    marimba(keep, bar)
+                    ocarina(rest, bar, -6)
             else:
                 ocarina(rest, bar, -6, slots=(4, 12))
+            if v5:
+                marimba_comp(rest, bar, -16)
             chop(rest, bar, (3, 8), 0.25, -6, held=True)
             bass(rest, bar, "walk", -3)
             for s in (4, 12):
@@ -2522,7 +2567,11 @@ def build_deck_v4(args):
                 for j in range(4):
                     rest.hit("tom", toms[j], p4(bar, 12 + j), -8, (0.3, 0.1, -0.1, -0.3)[j], -20)
         elif sec == 3:                                  # A3
-            marimba(keep, bar, glock=True)
+            if v5:
+                music_box(rest, bar, -3, slots=tuple(range(16)))
+                marimba_comp(rest, bar, -16)
+            else:
+                marimba(keep, bar, glock=True)
             chop(rest, bar, bounce, 0.07, -8)
             bass(rest, bar, "two-step", -2)
             shaker(rest, bar, -22)
@@ -2536,8 +2585,12 @@ def build_deck_v4(args):
             music_box(rest, bar, -2)
             bass(rest, bar, "whole", -4)
         elif sec == 5:                                  # D build
-            marimba(keep, bar, gain=-4, octave=0)
-            chop(rest, bar, bounce, 0.07, -8)
+            if v5:
+                nylon_hook(rest, bar, -4)
+                marimba_comp(rest, bar, -17)
+            else:
+                marimba(keep, bar, gain=-4, octave=0)
+            chop(rest, bar, bounce, 0.07, -11 if v5 else -8)
             bass(rest, bar, "two-step" if bar >= 45 else "roots", -2)
             for s in range(0, 16, 2):
                 rest.hit("rim", rim, p4(bar, s), -19 + (2 if s % 4 == 0 else 0), -0.1, -24)
@@ -2581,7 +2634,7 @@ def build_deck_v4(args):
     if on("garden-ghost"):
         # Spencer's own melody stem bars 1-8 time-stretched to 140 BPM, under the music box in the breather
         x = G["melody"][: barf(8)]
-        st = np.stack([librosa.effects.time_stretch(x[:, ch].astype(np.float32), rate=140.0 / 117.0) for ch in range(2)], axis=1)
+        st = np.stack([librosa.effects.time_stretch(x[:, ch].astype(np.float32), rate=bpm / 117.0) for ch in range(2)], axis=1)
         gh = np.zeros((8 * BAR4, 2))
         gh[: min(len(st), len(gh))] = st[: len(gh)]
         gh = fft_filter(gh, lambda f: mag_lp(f, 2000, 2))
@@ -2616,9 +2669,11 @@ def build_deck_v4(args):
         y = dry + room(send, 0.2)
         # merge SFX room: the brief's -3 dB bell at 3 kHz (Q 1), plus a wide -5 dB across 2-5 kHz
         y = fft_filter(y, lambda f: mag_rbj(f, "peak", 3000, -3, 1.0) * mag_rbj(f, "peak", 3300, -5, 0.6))
+        if v5:                                      # +2 dB of 700 Hz body: phones carry the softer marimba
+            y = fft_filter(y, lambda f: mag_rbj(f, "peak", 700, 2.0, 0.7))
         return y
 
-    print("deck-v4: main bus")
+    print(f"deck-{tag}: main bus")
     main_mix, g_main = glue(bus_chain(dry, send), 1.5)
     seg = lambda x, a, b: float(_METER.integrated_loudness(x[p4(a): p4(b)]))
     base = seg(main_mix, 1, 17)
@@ -2630,8 +2685,8 @@ def build_deck_v4(args):
     main_out = finish(main_mix, DECK4_LUFS, DECK4_TP)
 
     # ---------------------------------------------------------------- lite, 32 bars
-    print("deck-v4: lite")
-    NL = N_LITE4
+    print(f"deck-{tag}: lite")
+    NL = N_LITE
     lite = Bus(NL)
     for bar in range(1, 33):
         arp(lite, bar, -6)
@@ -2641,9 +2696,9 @@ def build_deck_v4(args):
         elif bar <= 24:
             ocarina(lite, bar, -6)
         elif bar <= 28:
-            marimba(lite, bar, gain=-6)
+            ocarina_hook(lite, bar, -8) if v5 else marimba(lite, bar, gain=-6)
         else:
-            marimba(lite, bar, gain=-6, slots=(0, 8))
+            music_box(lite, bar, -4) if v5 else marimba(lite, bar, gain=-6, slots=(0, 8))
         if 9 <= bar <= 16 or 25 <= bar <= 32:
             shaker(lite, bar, -26)
     lpad = pad_render(NL, pad_notes[:64], TAB_PAD, bar=BAR4 / 2)
@@ -2656,16 +2711,16 @@ def build_deck_v4(args):
     report["event_counts"] = {"main": _count(events), "lite": _count(lite.mix.events)}
 
     # ---------------------------------------------------------------- write + measure
-    os.makedirs(DECK4_PREVIEWS, exist_ok=True)
-    files = {"pocket-deck-v4": main_out, "pocket-deck-lite-v4": lite_out}
+    os.makedirs(previews, exist_ok=True)
+    files = {f"pocket-deck-{tag}": main_out, f"pocket-deck-lite-{tag}": lite_out}
     q = {}
     for i, (name, x) in enumerate(files.items()):
         qi = quantize16(x, args.seed + 500 + i)
         sf.write(os.path.join(OUT_DIR, name + ".wav"), qi, SR, subtype="PCM_16")
         q[name] = qi.astype(np.float64) / 32767.0
-    print("deck-v4: measuring")
+    print(f"deck-{tag}: measuring")
     meas = {name: measure(x, name + ".wav", bar=BAR4) for name, x in q.items()}
-    mq = q["pocket-deck-v4"]
+    mq = q[f"pocket-deck-{tag}"]
     L = lambda a, b: round(seg(mq, a, b), 2)
     phone = lambda x: round(float(_METER.integrated_loudness(stereo(fft_filter(x.mean(axis=1), lambda f: mag_hp(f, 300, 2))))), 2)
     band = []
@@ -2680,12 +2735,12 @@ def build_deck_v4(args):
                        "band_2_5k_below_full_db_per_8_bars": band}
     for name, x in q.items():
         meas[name]["phone_lufs"] = phone(x)
-    v3 = os.path.join(OUT_DIR, "pocket-deck-v3.wav")
+    v3 = os.path.join(OUT_DIR, f"pocket-deck-{prev}.wav")
     if os.path.exists(v3):
-        report["phone_pocket_deck_v3"] = phone(sf.read(v3, dtype="float64", always_2d=True)[0])
+        report[f"phone_pocket_deck_{prev}"] = phone(sf.read(v3, dtype="float64", always_2d=True)[0])
     report["files"] = meas
     if not args.no_encode:
-        print("deck-v4: encoding")
+        print(f"deck-{tag}: encoding")
         for name in files:
             wav = os.path.join(OUT_DIR, name + ".wav")
             ogg = os.path.join(OUT_DIR, name + ".ogg")
@@ -2695,15 +2750,15 @@ def build_deck_v4(args):
                                  "frames_match": bool(len(dec) == len(q[name])), "seam": seam_stats(dec, bar=BAR4),
                                  "true_peak_dbtp": round(true_peak_db(dec), 2)}
             meas[name]["wav_sha256"] = sha256(wav)
-            ffmpeg(["-i", wav, "-c:a", "libmp3lame", "-q:a", "2", os.path.join(DECK4_PREVIEWS, name + ".mp3")])
-        lq = q["pocket-deck-lite-v4"]
+            ffmpeg(["-i", wav, "-c:a", "libmp3lame", "-q:a", "2", os.path.join(previews, name + ".mp3")])
+        lq = q[f"pocket-deck-lite-{tag}"]
         n = 40 * SR
         t = np.arange(n) / SR
         w = np.clip((t - 13.33) / 0.8, 0, 1) - np.clip((t - 26.67) / 0.8, 0, 1)          # 0 main, 1 lite
         demo = mq[np.arange(n) % len(mq)] * np.cos(w * np.pi / 2)[:, None] + lq[np.arange(n) % len(lq)] * np.sin(w * np.pi / 2)[:, None]
         f = int(0.5 * SR)
         demo[-f:] *= np.linspace(1, 0, f)[:, None]
-        write_mp3(demo, os.path.join(DECK4_PREVIEWS, "main-to-lite-and-back-40s.mp3"), args.seed + 510)
+        write_mp3(demo, os.path.join(previews, "main-to-lite-and-back-40s.mp3"), args.seed + 510)
         if os.path.exists(v3):
             a = sf.read(v3, dtype="float64", always_2d=True)[0][: 20 * SR].copy()
             f = int(0.03 * SR)
@@ -2713,9 +2768,9 @@ def build_deck_v4(args):
             for p in (p1, p2):
                 p[:f] *= np.linspace(0, 1, f)[:, None]
                 p[-f:] *= np.linspace(1, 0, f)[:, None]
-            write_mp3(np.concatenate([a, gap, p1, gap, p2]), os.path.join(DECK4_PREVIEWS, "compare-pocket-deck-v3-then-v4.mp3"),
+            write_mp3(np.concatenate([a, gap, p1, gap, p2]), os.path.join(previews, f"compare-pocket-deck-{prev}-then-{tag}.mp3"),
                       args.seed + 511)
-    with open(os.path.join(QA_DIR, "report-deck-v4.json"), "w", encoding="utf-8", newline="\n") as fh:
+    with open(os.path.join(QA_DIR, f"report-deck-{tag}.json"), "w", encoding="utf-8", newline="\n") as fh:
         json.dump(report, fh, indent=2, default=_jsonable)
         fh.write("\n")
     print("\n%-22s %10s %9s %8s %8s %6s %7s %6s %6s" % ("file", "frames", "seconds", "LUFS", "dBTP", "LRA", "phone", "mono", ">6k"))
@@ -2734,7 +2789,7 @@ def build_deck_v4(args):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--version", choices=("v2", "v3", "v4", "deck-v4"), default="v4",
+    ap.add_argument("--version", choices=("v2", "v3", "v4", "deck-v4", "deck-v5"), default="v4",
                     help="v4 (default: garden day + night without the pads), deck-v4 (Pocket Deck 'Marimba Pop' + lite), "
                          "v3 (all four), or the first-pass v2")
     ap.add_argument("--pad", choices=("on", "off"), help="garden synth pads (day breathing pad, night darker pad); "
@@ -2744,7 +2799,7 @@ def main():
     ap.add_argument("--seed", type=int, default=SEED)
     ap.add_argument("--no-encode", action="store_true", help="skip OGG/MP3 encoding and previews")
     args = ap.parse_args()
-    {"v2": build, "deck-v4": build_deck_v4}.get(args.version, build_v3)(args)
+    {"v2": build, "deck-v4": build_deck_v4, "deck-v5": build_deck_v4}.get(args.version, build_v3)(args)
 
 
 if __name__ == "__main__":

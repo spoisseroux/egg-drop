@@ -1,0 +1,221 @@
+{
+  "version": "deck-v5",
+  "brief": "artifacts/qa-2026-11-28-music/DECK-V4-BRIEF.md",
+  "bpm": 126.0,
+  "bar_frames": 84000,
+  "seed": 20261128,
+  "disabled": [],
+  "stem_offset_frames": 2257,
+  "transcription_check": {
+    "notes_matched": 96,
+    "notes_total": 96,
+    "misses": [],
+    "per_bar_corr_mean": 0.701,
+    "per_bar_corr_min": 0.666,
+    "shifted_bar_control_mean": 0.269
+  },
+  "bass_root_check": {
+    "bar4_first_half": {
+      "A": 0.1,
+      "F#": 0.75,
+      "G": 1.0,
+      "strongest": "G"
+    },
+    "bar8_first_half": {
+      "A": 0.47,
+      "F#": 1.0,
+      "G": 0.87,
+      "strongest": "F#"
+    },
+    "chosen_root": "F#",
+    "chord_stem_voicing": {
+      "bar4": "E3 F#3 A3 C4",
+      "bar8": "E3 F#3 A3 C#4"
+    }
+  },
+  "section_gain_db": {
+    "lift_49_60": -0.11,
+    "breather_33_40": -1.94
+  },
+  "glue": {
+    "main": {
+      "threshold_db": -6.0,
+      "loudness_reduction_db": 5.69
+    },
+    "lite": {
+      "threshold_db": -6.0,
+      "loudness_reduction_db": 4.72
+    }
+  },
+  "event_counts": {
+    "main": {
+      "bass": 228,
+      "chop": 624,
+      "clap": 24,
+      "glock": 96,
+      "kick": 112,
+      "marimba": 144,
+      "marimba-comp": 128,
+      "music-box": 64,
+      "nylon-hook": 96,
+      "ocarina": 48,
+      "ocarina-hook": 24,
+      "pip": 2,
+      "plip": 2,
+      "rim": 136,
+      "shaker": 640,
+      "stab": 48,
+      "tamb": 224,
+      "tok-fill": 4,
+      "tom": 10
+    },
+    "lite": {
+      "arp": 256,
+      "bass": 64,
+      "music-box": 40,
+      "ocarina": 16,
+      "ocarina-hook": 24,
+      "shaker": 256
+    }
+  },
+  "shape": {
+    "bars1_16_lufs": -17.7,
+    "lift_49_60_lufs": -16.45,
+    "breather_33_40_lufs": -20.2,
+    "lift_minus_1_16_lu": 1.25,
+    "breather_minus_1_16_lu": -2.5,
+    "band_2_5k_below_full_db_per_8_bars": [
+      24.5,
+      24.9,
+      28.1,
+      25.0,
+      29.4,
+      24.6,
+      24.2,
+      24.5
+    ]
+  },
+  "phone_pocket_deck_v4": -19.06,
+  "files": {
+    "pocket-deck-v5": {
+      "file": "pocket-deck-v5.wav",
+      "frames": 5376000,
+      "seconds": 121.905,
+      "integrated_lufs": -17.5,
+      "true_peak_dbtp": -3.8,
+      "sample_peak_dbfs": -3.8,
+      "loudness_range_lu": 3.62,
+      "mono_loss_db": -0.09,
+      "share_above_6k": 0.0018,
+      "seam": {
+        "rms_last50_db": -26.3,
+        "rms_first50_db": -15.76,
+        "wrap_step": [
+          1195,
+          1117
+        ],
+        "p99_step": [
+          1111,
+          1363
+        ],
+        "wrap_step_ratio_p99": 1.076,
+        "wrap_curvature_ratio_p99": 1.437,
+        "hf_seam_vs_median_barline_db": 0.44,
+        "hf_seam_vs_loudest_barline_db": -4.9,
+        "slope_last4ms_vs_first4ms": [
+          12.03,
+          32.74
+        ]
+      },
+      "phone_lufs": -19.59,
+      "ogg": {
+        "bytes": 2465410,
+        "sha256": "efff8d09007a2867e63dd1b0d159c9cf4bc4c3a1840fef3671d67018e868cb2b",
+        "decoded_frames": 5376000,
+        "frames_match": true,
+        "seam": {
+          "rms_last50_db": -26.27,
+          "rms_first50_db": -15.72,
+          "wrap_step": [
+            1087,
+            958
+          ],
+          "p99_step": [
+            1099,
+            1353
+          ],
+          "wrap_step_ratio_p99": 0.99,
+          "wrap_curvature_ratio_p99": 1.374,
+          "hf_seam_vs_median_barline_db": 0.64,
+          "hf_seam_vs_loudest_barline_db": -4.91,
+          "slope_last4ms_vs_first4ms": [
+            11.89,
+            33.04
+          ]
+        },
+        "true_peak_dbtp": -3.7
+      },
+      "wav_sha256": "1098ca9b30cecb7eb23184c6f35de2031b8ec2813783a5932839d8fcfb86e3df"
+    },
+    "pocket-deck-lite-v5": {
+      "file": "pocket-deck-lite-v5.wav",
+      "frames": 2688000,
+      "seconds": 60.952,
+      "integrated_lufs": -22.0,
+      "true_peak_dbtp": -6.75,
+      "sample_peak_dbfs": -6.76,
+      "loudness_range_lu": 0.5,
+      "mono_loss_db": -0.11,
+      "share_above_6k": 0.0004,
+      "seam": {
+        "rms_last50_db": -28.51,
+        "rms_first50_db": -19.81,
+        "wrap_step": [
+          1329,
+          1472
+        ],
+        "p99_step": [
+          645,
+          568
+        ],
+        "wrap_step_ratio_p99": 2.592,
+        "wrap_curvature_ratio_p99": 4.7,
+        "hf_seam_vs_median_barline_db": -7.7,
+        "hf_seam_vs_loudest_barline_db": -10.54,
+        "slope_last4ms_vs_first4ms": [
+          -8.05,
+          38.31
+        ]
+      },
+      "phone_lufs": -23.27,
+      "ogg": {
+        "bytes": 1219354,
+        "sha256": "15da1d8d4284fa7f594b8af62e17293fc8b9b9b989f6a8ba17c93ca26d83ea6b",
+        "decoded_frames": 2688000,
+        "frames_match": true,
+        "seam": {
+          "rms_last50_db": -28.55,
+          "rms_first50_db": -19.82,
+          "wrap_step": [
+            1470,
+            1602
+          ],
+          "p99_step": [
+            643,
+            565
+          ],
+          "wrap_step_ratio_p99": 2.833,
+          "wrap_curvature_ratio_p99": 5.251,
+          "hf_seam_vs_median_barline_db": -6.84,
+          "hf_seam_vs_loudest_barline_db": -9.74,
+          "slope_last4ms_vs_first4ms": [
+            -7.66,
+            38.74
+          ]
+        },
+        "true_peak_dbtp": -6.73
+      },
+      "wav_sha256": "b975fc8f0061db6153fb332520b3b42bfa3e2a5217e56d91eba47be22cad592e"
+    }
+  }
+}
