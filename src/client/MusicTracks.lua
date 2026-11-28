@@ -20,7 +20,7 @@ Tracks.Ids={garden_day=0,garden_night=0,deck=0,deck_lite=0}
 Tracks.Lengths=table.freeze({garden=5789538/44100,deck=2894769/44100,deck_lite=16*60/117*4})
 -- Brief 3: if the render's midpoint (.707 day + .707 night) is over 1 LU above day, ship 1.5 on both curves
 -- (report.json, mid-fade loudness). 1 = plain equal power.
-Tracks.Exponent=1
+Tracks.Exponent=1.5 -- build_music.py measured +1.04 LU at the midpoint with 1; 1.5 gives -0.46 LU (report.json)
 -- The night file is mastered 3 LU under day (-20.6 LUFS against -17.6), so it plays at the same MusicVolume.
 Tracks.NightLevel=1
 -- The deck lite file is mastered 3 LU under the deck: the same DeckMusicVolume.
