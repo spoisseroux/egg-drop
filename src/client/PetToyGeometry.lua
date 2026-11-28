@@ -6,7 +6,11 @@
 -- ReplicatedStorage.PetToyAssets (assets/toys/PetToyAssets.rbxmx). The sizes and centres
 -- below are the manifest's (assets/art-source/toys/pet-toys-manifest.json). Round pieces
 -- stay sphere primitives (PetPropGeometry). At most 12 parts a toy.
+-- Toy colours (ROTATION-2-BRIEF 1): Toys.create(parent, id, scale, skinId) tints the one named part of that toy
+-- (ToySkinLook.Parts: FeltBall, BoneBody, IndigoGrip, TealBody, CarrotBody, DeckShell); seams, leaves, brass, buttons
+-- and the screen keep their colours so the toy still reads as itself. An unknown skin draws the original.
 local Prop=require(script.Parent.PetPropGeometry)
+local SkinLook=require(script.Parent.ToySkinLook)
 local Replicated=game:GetService("ReplicatedStorage")
 local Toys={}
 local hex=Color3.fromHex
@@ -20,6 +24,7 @@ local faceFront=CFrame.Angles(0,math.pi,0)
 -- live sync created in Studio arrives with an empty MeshId until it is filled in Edit),
 -- the part falls back to a plain sphere of the same size.
 local function mesh(h,name,size,at,color)
+ color=SkinLook.tint(h.skin,name,color)
  local pack=Replicated:FindFirstChild("PetToyAssets");local source=pack and pack:FindFirstChild(h.id.."__"..name)
  if not(source and source:IsA("MeshPart")and source.MeshId~="")then return h:add(name,size,CFrame.new(at),color,"sphere")end
  local p=source:Clone();p.Name=name
@@ -33,6 +38,8 @@ local function mesh(h,name,size,at,color)
 end
 local V=Vector3.new
 local builders={}
+-- A primitive part, tinted like a mesh one when it is the skin's named part.
+local function add(h,name,size,frame,color,shape)return h:add(name,size,frame,SkinLook.tint(h.skin,name,color),shape)end
 -- Sparkler: an indigo grip with a pommel, a brass ferrule and wire, and a small glowing tip
 -- that throws real sparks. v842 phone notes: the spiky citrine mesh star at the tip is gone;
 -- the sparks are a ParticleEmitter, small, warm and short-lived, in the reveal and in the
@@ -51,7 +58,10 @@ builders.sparkler=function(h)
  sparks.SpreadAngle=Vector2.new(180,180);sparks.Acceleration=Vector3.new(0,-s*6,0);sparks.Drag=3
  sparks.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,s*.07),NumberSequenceKeypoint.new(.4,s*.05),NumberSequenceKeypoint.new(1,0)})
  sparks.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(1,.7)})
- sparks.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromHex("#FFF4C8")),ColorSequenceKeypoint.new(.5,Color3.fromHex("#FFB547")),ColorSequenceKeypoint.new(1,Color3.fromHex("#FF7A2A"))})
+ -- A coloured sparkler throws sparks from its colour lerped 60% to white down to the colour itself (the tip and the
+ -- light stay warm); the original keeps the warm three-stop sparks.
+ local first,last=SkinLook.sparks(h.skin)
+ sparks.Color=if first then ColorSequence.new(first,last)else ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromHex("#FFF4C8")),ColorSequenceKeypoint.new(.5,Color3.fromHex("#FFB547")),ColorSequenceKeypoint.new(1,Color3.fromHex("#FF7A2A"))})
  sparks.LightEmission=1;sparks.LightInfluence=0;sparks.Rotation=NumberRange.new(0,360);sparks.ZOffset=.2
  sparks.Enabled=not game:GetService("GuiService").ReducedMotionEnabled
  sparks.Parent=tip
@@ -70,7 +80,7 @@ end
 -- bowing toward each other, and it still reads as a seam from the back and while it
 -- rolls. 2 parts.
 builders.ball=function(h)
- h:add("FeltBall",V(.24,.24,.24),CFrame.identity,hex("#D0E83A"),"sphere")
+ add(h,"FeltBall",V(.24,.24,.24),CFrame.identity,hex("#D0E83A"),"sphere")
  mesh(h,"Seam",V(.2127,.2127,.21749),V(0,0,0),hex("#FCFBEF"))
 end
 -- Bone: the classic cartoon dog bone, a straight shaft with two round knobs on each end,
@@ -134,10 +144,12 @@ Toys.Hold=table.freeze({
 Toys.DefaultHold=table.freeze({offset=Vector3.new(.035,0,.045),turn=CFrame.identity,fold=.4})
 function Toys.hold(id)return Toys.Hold[id]or Toys.DefaultHold end
 function Toys.has(id)return type(id)=="string"and builders[id]~=nil end
-function Toys.create(parent,id,scale)
+function Toys.create(parent,id,scale,skinId)
  local build=type(id)=="string"and builders[id]
  if not build then return nil end
  local h=Prop.new(parent,"PersonalToy_"..id,scale);h.id=id
+ h.skin=SkinLook.skin(id,skinId);h.skinId=h.skin and h.skin.id or nil
+ h.model:SetAttribute("ToySkin",h.skinId)
  build(h)
  return h
 end

@@ -3,8 +3,11 @@ local Shared=game:GetService("ReplicatedStorage").Shared
 local OddsText=require(Shared.OddsText);local NextItem=require(script.Parent.NextItemText);local Catalog=require(Shared.ToyCatalog);local Art=require(script.Parent.DeckArt);local EggArt=require(script.Parent.EggArt)
 local Reveal=require(script.Parent.HueItemReveal);local ItemArt=require(script.Parent.RewardItemArt)
 local Copy=require(Shared.UICopy)
+local SkinLook=require(script.Parent.ToySkinLook);local Swatches=require(script.Parent.WardrobeSwatches)
 require(script.Parent.ToyTabIcon) -- registers the "toy" card icon (QA v2 R4.5)
 local Panel={};Panel.__index=Panel
+-- Lane B owns the words (UICopy); until its keys land the brief's English shows.
+local function words(key,fallback)local text=Copy.get(key);return if text==key then fallback else text end
 local function place(n,x,y,w,h)n.Position,n.Size=UDim2.fromOffset(x,y),UDim2.fromOffset(w,h)end
 local function label(parent,name,copy,role)
  local n=Art.text(parent,name,copy,UDim2.fromOffset(0,0),UDim2.fromOffset(100,24),"text",16);Art.type(n,role or "Body");n.TextXAlignment=Enum.TextXAlignment.Left;return n
@@ -32,7 +35,82 @@ function Panel.new(parent,intent,options)
    self:choose(id)
   end)
  end
+ -- Toy colours (ROTATION-2-BRIEF 1): under the cards, the focused toy's swatch row (28 px, 8 px gap, a ring on the worn
+ -- colour; the original first, then the owned colours) and the egg line. A tap wears that colour through
+ -- `options.wearSkin(order)` ({id, action = "toySkinWear", toyId, skinId | "none"}); one wear in flight, the last tap
+ -- wins (WardrobeSwatches via ToySkinLook.queue); answers come back through Panel:result.
+ self.skinQueue=SkinLook.queue({id=function()return game:GetService("HttpService"):GenerateGUID(false)end,
+  send=function(order)if self.options.wearSkin then self.options.wearSkin(order)end end})
+ local rowH=Swatches.Size+Swatches.Ring*2+4
+ self.swatchRow=Instance.new("ScrollingFrame");self.swatchRow.Name="ToySwatches";self.swatchRow.BackgroundTransparency=1;self.swatchRow.BorderSizePixel=0
+ self.swatchRow.ScrollingDirection=Enum.ScrollingDirection.X;self.swatchRow.ScrollBarThickness=0;self.swatchRow.Size=UDim2.fromOffset(100,rowH)
+ self.swatchRow.ZIndex=root.ZIndex+1;self.swatchRow.Visible=false;self.swatchRow.Selectable=false;self.swatchRow.Parent=root
+ self.swatchButtons={};self.swatchKey=nil
+ self.moreColours=label(root,"MoreToyColours",words("rack.toy.more","More colours come from the Toy Colour Egg."),"Supporting");self.moreColours.Visible=false
  return self
+end
+-- {toyId = skinId} as drawn now: the server's worn colours with the answered saves and every open wear on top (the
+-- owner's appearance `toySkins`, so the pet and the pane show a tap at once).
+function Panel:shownSkins(state)
+ local s=state or self.state
+ return self.skinQueue:shown(SkinLook.wornMap(s))
+end
+function Panel:wornSkin(toyId)return self:shownSkins()[toyId]or SkinLook.None end
+function Panel:changed()if self.options.identityChanged then self.options.identityChanged()end end
+-- A swatch tap: wear `skinId` ("none" = the original) on `toyId`, an owned colour of an owned toy.
+function Panel:wearSkin(toyId,skinId)
+ if not self.root.Visible or self.mode~="choices"or not SkinLook.on(self.state)then return false end
+ if self.options.canEquip and not self.options.canEquip()then return false end
+ if not Catalog.owns(self.state.toyUnlocks,toyId)or toyId==Catalog.Default then return false end
+ if skinId~=SkinLook.None and not SkinLook.owned(self.state)[skinId]then return false end
+ if not self.skinQueue:tap(toyId,skinId,SkinLook.wornMap(self.state))then return false end
+ pcall(function()require(script.Parent.UIClick).play("equip")end)
+ self:changed();return true
+end
+-- Gamepad / keyboard: the next owned colour of the focused toy (wraps).
+function Panel:cycleSkin(delta)
+ local toyId=self.focusedToy;local list=toyId and SkinLook.swatches(self.state,toyId)
+ if not list or #list<2 then return false end
+ local worn,at=self:wornSkin(toyId),1
+ for i,row in ipairs(list)do if row.id==worn then at=i end end
+ return self:wearSkin(toyId,list[(at-1+(delta or 1))%#list+1].id)
+end
+-- A WearableResult message: true when it answered this panel's toy colour wear.
+function Panel:result(message)
+ if not self.skinQueue:result(message,SkinLook.wornMap(self.state))then return false end
+ self:changed();return true
+end
+-- The swatch row for `toyId` (nil hides it). Rebuilt only when the list changes; the ring follows the shown colour.
+function Panel:paintSwatches(toyId,list,width)
+ local row=self.swatchRow
+ local ids={};for _,item in ipairs(list or {})do table.insert(ids,item.id)end
+ local key=if list then tostring(toyId)..":"..table.concat(ids,",")..":"..width else nil
+ if key~=self.swatchKey then
+  self.swatchKey=key;self.swatchButtons={}
+  for _,child in ipairs(row:GetChildren())do child:Destroy()end
+  if list then
+   local xs,canvas=Swatches.layout(#list,width)
+   row.CanvasSize=UDim2.fromOffset(canvas,0)
+   for index,item in ipairs(list)do
+    local b=Instance.new("TextButton");b.Name="ToySwatch_"..item.id;b.Text="";b.AutoButtonColor=false;b.BorderSizePixel=0;b.Selectable=false
+    b.Size=UDim2.fromOffset(Swatches.Size,Swatches.Size);b.Position=UDim2.fromOffset(xs[index],Swatches.Ring+2);b.ZIndex=row.ZIndex+1
+    b.BackgroundColor3=item.color;Art.corner(b,Swatches.Size)
+    local edge=Instance.new("UIStroke");edge.Thickness=1;edge.Transparency=.55;edge.Color=Color3.new(0,0,0);edge.ApplyStrokeMode=Enum.ApplyStrokeMode.Border;edge.Parent=b
+    local ring=Instance.new("Frame");ring.Name="Worn";ring.BackgroundTransparency=1;ring.AnchorPoint=Vector2.new(.5,.5);ring.Position=UDim2.fromScale(.5,.5)
+    ring.Size=UDim2.new(1,Swatches.Ring*2+2,1,Swatches.Ring*2+2);ring.ZIndex=b.ZIndex+1;ring.Visible=false;ring.Parent=b;Art.corner(ring,Swatches.Size)
+    local stroke=Instance.new("UIStroke");stroke.Thickness=Swatches.Ring;stroke.ApplyStrokeMode=Enum.ApplyStrokeMode.Border;stroke.Parent=ring;Art.bind(stroke,{Color="text"})
+    b.Activated:Connect(function()self:wearSkin(toyId,item.id)end)
+    self.swatchButtons[index]={button=b,ring=ring,item=item}
+   end
+  end
+ end
+ local worn=toyId and self:wornSkin(toyId)
+ for _,entry in ipairs(self.swatchButtons)do
+  local on=entry.item.id==worn
+  entry.ring.Visible=on
+  entry.button:SetAttribute("AccessibleLabel",Swatches.label(entry.item,on))
+ end
+ row.Visible=list~=nil
 end
 function Panel:choose(id)
  if not self.root.Visible or self.mode~="choices"then return false end
@@ -56,6 +134,9 @@ function Panel:paintReceiptIdentity()
 end
 function Panel:refresh(state,petId,mode,animate)
  self.state,self.petId,self.mode=state or {},petId,mode;self.root.Visible=mode~=nil
+ -- Toy colours: answered saves the snapshot now shows stop being overlaid; off (no `rack.toy`) drops every open wear.
+ if SkinLook.on(self.state)then self.skinQueue:sync(SkinLook.wornMap(self.state))else self.skinQueue:clear()end
+ if mode~="choices"then self.swatchRow.Visible=false;self.moreColours.Visible=false end
  self.useNow.Visible=mode=="receipt"and self.state.pendingToyResult~=nil
  if mode~="receipt"and self.reveal.resultId then self.reveal:clear()end
  if not mode then return end
@@ -83,6 +164,7 @@ function Panel:refresh(state,petId,mode,animate)
  self.status.Text=self.intent and self.intent.message or "";self.status.Visible=self.status.Text~=""
 end
 function Panel:layout(width,compact,availableHeight)
+ self.swatchRow.Visible=false;self.moreColours.Visible=false -- the colour row lives under the Customize cards only
  if self.mode=="receipt"then
   self.title.Visible=false
   local height=ReceiptLayout.layout(self.art,self.note,width,availableHeight,compact)
@@ -115,6 +197,16 @@ function Panel:layoutCards(width,cols,cardH,gap,focusIndex,compact)
   table.insert(focus,{button=node,id=id,wearing=wearing,name=Catalog.ById[id].name,act=function()return self:choose(id)end})
  end
  local y=h+12
+ -- Toy colours: the focused toy's swatches (only when it has an owned colour) and the egg line (switch on, a real toy).
+ local focusedToy=live[math.clamp(focusIndex or 1,1,math.max(1,#live))]
+ local skinnable=focusedToy~=nil and focusedToy~=Catalog.Default and SkinLook.on(self.state)and SkinLook.Original[focusedToy]~=nil
+ self.focusedToy=if skinnable then focusedToy else nil
+ local list=if skinnable then SkinLook.swatches(self.state,focusedToy,words("rack.toy.original","Original"))else nil
+ if list and #list<2 then list=nil end
+ self:paintSwatches(self.focusedToy,list,math.max(1,width-6))
+ if list then local rowH=Swatches.Size+Swatches.Ring*2+4;place(self.swatchRow,3,y,width-6,rowH);y+=rowH+6 end
+ self.moreColours.Visible=skinnable
+ if skinnable then Art.type(self.moreColours,"Supporting",compact);local mh=Art.textHeight(self.moreColours,width-6,20);place(self.moreColours,3,y,width-6,mh);y+=mh+8 end
  -- QA v2 R4.5: no egg row under the cards in Customize (the screen shows one
  -- "More from eggs" line instead); the egg row stays on the receipt / buy pages.
  self.shop.Visible=false

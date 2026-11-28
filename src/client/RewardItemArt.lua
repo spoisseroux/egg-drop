@@ -1,13 +1,26 @@
 -- Original passive item silhouettes from the device/play brief.
 local Art=require(script.Parent.DeckArt)
+local SkinLook=require(script.Parent.ToySkinLook)
 local Item={}
 local function part(parent,name,x,y,w,h,color,rotation)
  local n=Art.frame(parent,name,Color3.fromHex(color),UDim2.fromScale(x,y),UDim2.fromScale(w,h),parent.ZIndex+1)
  n.Rotation=rotation or 0;Art.corner(n,100);return n
 end
+-- Toy colours (ROTATION-2-BRIEF 1): a toy-colour reveal or card passes `toySkin` (a ToySkins id, `skinId` also read),
+-- with or without `toyId` (the skin names its toy). The toy draws in that colour; an unknown skin draws the original.
+function Item.toyAndSkin(result)
+ local skinId=type(result)=="table"and(result.toySkin or result.skinId)or nil
+ local row=SkinLook.row(skinId)
+ local toyId=type(result)=="table"and result.toyId or nil
+ if toyId==nil and row then toyId=row.toy end
+ return toyId,(if row and row.toy==toyId then row else nil)
+end
 function Item.create(parent,result,position,size,z)
  local host=Art.frame(parent,"AwardedItem",Art.Ink,position,size,z or parent.ZIndex+1);host.BackgroundTransparency=1
- local id=result.toyId or result.featureId;host:SetAttribute("AwardedItemId",id)
+ local toyId,skin=Item.toyAndSkin(result)
+ if toyId then result=table.clone(result);result.toyId=toyId end
+ local id=result.toyId or result.featureId;host:SetAttribute("AwardedItemId",id);host:SetAttribute("AwardedToySkin",skin and skin.id or nil)
+ local function tinted(name,color)return if skin and skin.part==name then skin.color:ToHex()else color end
  local aspect=Instance.new("UIAspectRatioConstraint");aspect.AspectRatio=1;aspect.Parent=host
  local geometry=script.Parent:FindFirstChild(if result.toyId then "PetToyGeometry"else "PetFeatureGeometry")
  if geometry then
@@ -15,7 +28,7 @@ function Item.create(parent,result,position,size,z)
   viewport.Ambient=Color3.fromRGB(190,204,190);viewport.LightColor=Color3.fromRGB(255,244,219);viewport.LightDirection=Vector3.new(-1,-1.4,-3)
   local world=Instance.new("WorldModel");world.Parent=viewport
   local api=require(geometry)
-  local handle=if result.toyId then api.create(world,id,1)else api.create(world,id,1,1,Color3.fromHex("#95CDB9"))
+  local handle=if result.toyId then api.create(world,id,1,skin and skin.id or nil)else api.create(world,id,1,1,Color3.fromHex("#95CDB9"))
   -- An id this build cannot draw (a toy from a later pool) shows the empty slot, never an error.
   if not handle then return host end
   handle:pivot(CFrame.Angles(0,math.rad(-20),0))
@@ -25,17 +38,17 @@ function Item.create(parent,result,position,size,z)
   host.Destroying:Connect(function()handle:destroy()end);return host
  end
  if id=="ball"then
-  part(host,"FeltBall",.18,.18,.64,.64,"D0E83A")
+  part(host,"FeltBall",.18,.18,.64,.64,tinted("FeltBall","D0E83A"))
   part(host,"SeamArcL",.33,.24,.05,.52,"FCFBEF",-10)
   part(host,"SeamArcR",.62,.24,.05,.52,"FCFBEF",10)
  elseif id=="sparkler"then
-  part(host,"IndigoGrip",.39,.55,.17,.32,"363459",-12)
+  part(host,"IndigoGrip",.39,.55,.17,.32,tinted("IndigoGrip","363459"),-12)
   part(host,"BrassWire",.47,.27,.045,.36,"CCA348",-12)
   for i,angle in ipairs({-34,0,34})do part(host,"CitrineSeed"..i,.43+(i-2)*.09,.19,.08,.22,"E3D254",angle)end
   for i,seat in ipairs({{.18,.22,-35},{.72,.16,28},{.70,.43,55}})do part(host,"WarmSpark"..i,seat[1],seat[2],.04,.12,"FFE59C",seat[3])end
  elseif id=="bone"then
-  part(host,"OchreWaist",.24,.43,.52,.14,"BB934D",-12)
-  for _,seat in ipairs({{.13,.32},{.15,.49},{.67,.24},{.70,.42}})do part(host,"SeafoamLobe",seat[1],seat[2],.21,.23,"92D7B6")end
+  part(host,"OchreWaist",.24,.43,.52,.14,tinted("BoneBody","BB934D"),-12)
+  for _,seat in ipairs({{.13,.32},{.15,.49},{.67,.24},{.70,.42}})do part(host,"SeafoamLobe",seat[1],seat[2],.21,.23,tinted("BoneBody","92D7B6"))end
   part(host,"OffcenterWrap",.43,.38,.10,.20,"F5DFAC",-12)
  elseif id=="horns"then
   for _,side in ipairs({-1,1})do

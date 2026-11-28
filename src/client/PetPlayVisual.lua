@@ -5,6 +5,7 @@ local Attachments=require(script.Parent.PetAttachments)
 local Rules=require(game:GetService("ReplicatedStorage").Shared.PetAttachmentRules)
 local Wearables=require(game:GetService("ReplicatedStorage").Shared.WearableCatalog)
 local ToyCatalog=require(game:GetService("ReplicatedStorage").Shared.ToyCatalog)
+local SkinLook=require(script.Parent.ToySkinLook)
 local Play={}
 local maps={
  pip={left="HandL",right="HandR"},puddle={left="CuffL",right="CuffR"},wick={left="HandL",right="HandR"},orbit={left="HandL",right="HandR"},
@@ -55,7 +56,7 @@ function Play.renderHeld(v,root)
  if not Play.holds(v)then dropHeld(v);return end
  local id=v.personalToyId
  local held=v.heldToy
- if held and(held.destroyed or held.id~=id)then dropHeld(v);held=nil end
+ if held and(held.destroyed or held.id~=id or held.skinId~=v.personalToySkin)then dropHeld(v);held=nil end
  if v.personalToyActive then
   -- The clip's own prop is showing: the carried one waits outside the model.
   if held and held.model.Parent then held.model.Parent=nil end
@@ -66,7 +67,7 @@ function Play.renderHeld(v,root)
  local seats=v.heldSeats;local hand=seats.right or seats.left
  if not hand or not hand.part or not hand.part.Parent then dropHeld(v);return end
  if not held then
-  held=Toys.create(v.model,id,seats.height*(Toys.hold(id).scale or 1));if not held then return end
+  held=Toys.create(v.model,id,seats.height*(Toys.hold(id).scale or 1),v.personalToySkin);if not held then return end
   held.model.Name="HeldToy_"..id;held.height=seats.height
   v.heldToy=held
  elseif not held.model.Parent then held.model.Parent=v.model end
@@ -95,8 +96,11 @@ end
 function Play.apply(v,appearance)
  local a=type(appearance)=="table"and appearance or {};local toy=a.toyId
  if not Toys.has(toy)then toy=ToyCatalog.Default end
- if v.personalToyId~=toy or v.personalAppearanceGeneration~=a.appearanceGeneration then Play.reset(v)end
- v.personalToyId,v.personalAppearanceGeneration=toy,a.appearanceGeneration
+ -- Toy colours (ROTATION-2-BRIEF 1): the toy's skin (`toySkins[toy]` for the owner, `toySkin` from the public field);
+ -- a new colour rebuilds the held and played props. Unknown or another toy's: the original.
+ local skin=SkinLook.forAppearance(a,toy)
+ if v.personalToyId~=toy or v.personalAppearanceGeneration~=a.appearanceGeneration or v.personalToySkin~=skin then Play.reset(v)end
+ v.personalToyId,v.personalAppearanceGeneration,v.personalToySkin=toy,a.appearanceGeneration,skin
  local stages=type(a.featureStages)=="table"and a.featureStages or {}
  local h,c,w=stage(stages.horns),stage(stages.claws),stage(stages.wings)
  -- Authored rigs (the Bear) place horns, wings and wearables from their attachment template;
@@ -184,7 +188,7 @@ local function previewSample(v,now)
  if v.destroyed or id==nil or id=="none"or not Toys.has(id)then Play.cancel(v);v.personalPreviewStart=nil;return nil end
  if v.personalPreviewToy~=id or not v.personalPreviewStart then v.personalPreviewToy=id;v.personalPreviewStart=now end
  local t=Play.previewPhase(now-v.personalPreviewStart,v.reducedEffects)
- if not v.personalToy then local seats=Play.seats(v);v.personalToy=Toys.create(v.model,id,seats.height);v.personalToyHeight=seats.height end
+ if not v.personalToy then local seats=Play.seats(v);v.personalToy=Toys.create(v.model,id,seats.height,v.personalToySkin);v.personalToyHeight=seats.height end
  if not v.personalToy then return nil end
  v.personalToyActive=true;v.personalToyPhase=t
  local reach=if v.reducedEffects then .22 else math.sin(math.min(1,t/1.8)*math.pi)*.38
@@ -217,7 +221,7 @@ function Play.sample(v,now)
   v.personalNextOpportunity=now+9+(seed%701)/100
  end
  local t=if v.reducedEffects then .43 else(now-v.personalPlayStarted)*1.8/(v.personalClipDuration or 1.8)
- if not v.personalToy then local seats=Play.seats(v);v.personalToy=Toys.create(v.model,v.personalToyId,seats.height);v.personalToyHeight=seats.height end
+ if not v.personalToy then local seats=Play.seats(v);v.personalToy=Toys.create(v.model,v.personalToyId,seats.height,v.personalToySkin);v.personalToyHeight=seats.height end
  if not v.personalToy then return nil end
  v.personalToyActive=true;v.personalToyPhase=t
  local reach=if v.reducedEffects then .22 else math.sin(math.min(1,t/1.8)*math.pi)*.38

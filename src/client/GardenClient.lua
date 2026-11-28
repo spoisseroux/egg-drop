@@ -4,6 +4,7 @@ local Players=game:GetService("Players")
 local Http=game:GetService("HttpService")
 local Activity=require(ReplicatedStorage.Shared.GardenActivity)
 local ToyCatalog=require(ReplicatedStorage.Shared.ToyCatalog)
+local SkinLook=require(script.Parent.ToySkinLook)
 local Garden={};Garden.__index=Garden
 local function visibleStage(n)return if type(n)=="number"and n==n and n%1==0 and n>=0 and n<=5 then n else 0 end
 function Garden.new(boards,options)
@@ -68,6 +69,8 @@ function Garden:appearance(board,petId)
     local selected=board:GetAttribute("CompanionId")==petId
     local toy=selected and type(item)=="table"and item.toyId or "none"
     if not ToyCatalog.known(toy)then toy=ToyCatalog.Default end
+    -- Toy colours (ARCH-REVIEW-ROTATION-2 8): the toy's published colour, kept only as a well-formed skin of that toy.
+    local toySkin=selected and type(item)=="table"and SkinLook.publicSkin(toy,item.toySkin)or nil
     local features=selected and type(item)=="table"and type(item.featureStages)=="table"and item.featureStages or {}
     -- Saved wearables (slot key -> item id) for the selected pet; unknown ids are dropped by the rig rules.
     local wearables={}
@@ -76,7 +79,7 @@ function Garden:appearance(board,petId)
     end
     local generation=board:GetAttribute("PetAppearanceRevision")
     generation=if type(generation)=="number"and generation==generation and generation>=0 and generation<math.huge then generation else 0
-    return {toyId=toy,featureStages={horns=visibleStage(features.horns),claws=visibleStage(features.claws),wings=visibleStage(features.wings)},appearanceGeneration=generation,finish=type(item)=="table"and item.finish or "standard",sheen=type(item)=="table"and item.sheen or 0,jellyStage=type(item)=="table"and item.jellyStage or 0,mainDoses=type(item)=="table"and item.mainDoses or nil,secondaryDoses=type(item)=="table"and item.secondaryDoses or nil,charmShape=type(item)=="table"and item.charmShape or "dot",charmVisible=type(item)=="table"and item.charmVisible==true,body=type(item)=="table"and item.body or "original",bodyRank=type(item)=="table"and item.bodyRank or 0,bodyMix=type(item)=="table"and item.bodyMix or nil,secondary=type(item)=="table"and item.secondary or "default",secondaryWhite=type(item)=="table"and item.secondaryWhite==true,wearables=wearables}
+    return {toyId=toy,toySkin=toySkin,featureStages={horns=visibleStage(features.horns),claws=visibleStage(features.claws),wings=visibleStage(features.wings)},appearanceGeneration=generation,finish=type(item)=="table"and item.finish or "standard",sheen=type(item)=="table"and item.sheen or 0,jellyStage=type(item)=="table"and item.jellyStage or 0,mainDoses=type(item)=="table"and item.mainDoses or nil,secondaryDoses=type(item)=="table"and item.secondaryDoses or nil,charmShape=type(item)=="table"and item.charmShape or "dot",charmVisible=type(item)=="table"and item.charmVisible==true,body=type(item)=="table"and item.body or "original",bodyRank=type(item)=="table"and item.bodyRank or 0,bodyMix=type(item)=="table"and item.bodyMix or nil,secondary=type(item)=="table"and item.secondary or "default",secondaryWhite=type(item)=="table"and item.secondaryWhite==true,wearables=wearables}
 end
 function Garden:renderActor(ownerId,petId,character)
  local exact=self:get(ownerId,petId,character);if exact then return exact end
