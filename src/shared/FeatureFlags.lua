@@ -135,5 +135,7 @@ return table.freeze({PetTrail=true,FirstHelloBonus=true,RoundTwoNudge=true,ToyPi
  AlivePaint=true,
  -- AliveDeckFeel (DECK-FEEL-BRIEF, beta 40 notes 9-17): the Pocket Deck feel pass (DeckFeel); beta and Studio only.
  AliveDeckFeel=true,
+ -- AliveMusic2 (MUSIC-BRIEF 3 and 4, qa-2026-11-28-music): the v2 music (MusicTracks); beta and Studio only.
+ AliveMusic2=true,
  LevelsMatter=true,GardenDash=true,AeroWorld=true,ThingsToDo=true,GardenFinds=true,IslandBounds=true,OnboardingV3=true,GardenHour=true,
  PetCatchup=true,FreshSaveCommand=true,Hush=false,WorldFeel=true,PlayerScale=true,Tier=true,PlayDen=true,ParkHollow=true,CliffDen=true,TierPets=true,ParkTopLawn=true,ThisWeek=true})

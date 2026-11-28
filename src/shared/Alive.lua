@@ -28,11 +28,13 @@ Alive.PlaceId=107705084891479 -- Pocket Pals Beta
 -- today exactly. Missing = on.
 -- ONBOARDING-V3-BRIEF section 4 (beta 37 notes): `pet2` is the cuter petting screen (PetCuddle, PetCuddleUI: the mitten,
 -- the Happy heart, the lean, the glass plates, the spots). Missing = on. Off = the petting screen exactly as before.
+-- MUSIC-BRIEF (qa-2026-11-28-music) 3 and 4: `music2` is the v2 music (MusicTracks: the garden's day and night pair crossed
+-- with the hour, the deck track and its lite variant). Missing = on; off, or while its ids are 0, today's music exactly.
 Alive.Features=table.freeze({"springs","menus","close","wind","life","scene","snack","windbed","asmr","wobble","balls","crunch","air",
- "fruit","keepout","aerohatch","deckjuice","pet2","paint","deckfeel"})
+ "fruit","keepout","aerohatch","deckjuice","pet2","paint","deckfeel","music2"})
 local FlagNames=table.freeze({springs="AliveSprings",menus="AliveMenus",close="AliveClose",wind="AliveWind",life="AliveLife",
  scene="AliveScene",snack="AliveSnack",windbed="AliveWindbed",asmr="AliveAsmr",wobble="AliveWobble",balls="AliveBalls",
- crunch="AliveCrunch",air="AliveAir",fruit="AliveFruit",keepout="AliveKeepOut",aerohatch="AliveAeroHatch",deckjuice="AliveDeckJuice",pet2="AlivePet2",paint="AlivePaint",deckfeel="AliveDeckFeel"})
+ crunch="AliveCrunch",air="AliveAir",fruit="AliveFruit",keepout="AliveKeepOut",aerohatch="AliveAeroHatch",deckjuice="AliveDeckJuice",pet2="AlivePet2",paint="AlivePaint",deckfeel="AliveDeckFeel",music2="AliveMusic2"})
 -- What a missing or malformed config value means, where it is not on.
 Alive.Defaults=table.freeze({windbed=false})
 

@@ -12,6 +12,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
 local Wind = require(script.Parent.Wind)
+local MusicTracks = require(script.Parent.MusicTracks)
 
 local Ambient = {}
 Ambient.__index = Ambient
@@ -510,7 +511,7 @@ end
 
 -- audio: the BoardAudio instance (master volume, focus, music toggle, ducks).
 -- options: {world, data, perches, now, daylight, listener, auto=false, wind={on, gust} or false, warn,
--- night=function (the cricket gate), bushes={Vector3}} (fixtures).
+-- night=function (the cricket gate), bushes={Vector3}, music2={on, hourOn, weight} or false} (fixtures).
 -- The cricket gate: the garden hour on (HollowClock.hourOn) and Alive life on. Off the beta place (the ceiling) it is a
 -- constant false, so the live game never asks.
 function Ambient.nightGate(Shared, clock)
@@ -601,6 +602,23 @@ function Ambient.new(audio, options)
 	if Ambient.Ids.deck_music then
 		self.deckVoice = sound("deck_music", Ambient.Ids.deck_music, self.deckGroup, SoundService, true)
 		table.insert(warm, self.deckVoice)
+	end
+	-- MUSIC-BRIEF 3 and 4 (Alive music2): the v2 garden pair (in BoardAudio) and deck pair (here). Not on this place at
+	-- all (the live game): nothing runs per frame. While MusicTracks.Ids are 0 it makes no voice: today's music.
+	-- options.music2 (specs): {on(), hourOn(), weight()} or false. By default only for the game's own instance (auto).
+	if options.music2 ~= nil then
+		self.music2Of = options.music2 or nil
+	elseif options.auto ~= false then
+		task.spawn(function()
+			local Alive = require(Shared:WaitForChild("Alive"))
+			if not Alive.ceiling(MusicTracks.Feature) then return end
+			local Clock = require(script.Parent.HollowClock)
+			self.music2Of = {
+				on = function() return Alive.on(MusicTracks.Feature) end,
+				hourOn = function() return Clock.hourOn() == true end,
+				weight = function() return MusicTracks.nightWeight(Clock.Hour.phase(Clock.Hour.time())) end,
+			}
+		end)
 	end
 	if options.wind ~= nil then
 		self.wind = options.wind or nil
@@ -1009,7 +1027,19 @@ function Ambient:step(dt)
 		if self.bedVoice.IsPlaying then self.bedVoice:Stop() end
 		for _, fall in ipairs(self.falls) do if fall.voice.IsPlaying then fall.voice:Stop() end end
 	end
-	if self.deckVoice then
+	if self.music2Of then
+		local ok, problem = pcall(self.stepMusic2, self, dt, master, active)
+		if not ok then
+			self.warn("[Ambient] music2: " .. tostring(problem))
+			self.music2Of = nil
+			pcall(self.dropMusic2, self)
+		end
+	end
+	local deck2 = self.deck2
+	if deck2 and deck2.ready then
+		-- MUSIC-BRIEF 4: the v2 pair plays in today's deck loop's place.
+		if self.deckVoice and self.deckVoice.IsPlaying then self.deckVoice.Volume = 0; self.deckVoice:Stop() end
+	elseif self.deckVoice then
 		self.deckVoice.Volume = Ambient.DeckMusicVolume * self.deckMix
 		if self.deckMix > 0 and master > 0 and active then startLoop(self.deckVoice, 0)
 		elseif self.deckVoice.IsPlaying and self.deckMix == 0 then self.deckVoice:Stop() end
@@ -1394,6 +1424,106 @@ function Ambient:petSpeechBusy(exceptOwner)
 	return false
 end
 
+-- MUSIC-BRIEF 3 and 4 (Alive music2). Which pairs are in use (the switch and MusicTracks.Ids), then the garden pair's
+-- night weight and hour handed to BoardAudio, and the deck pair stepped here.
+function Ambient:stepMusic2(dt, master, active)
+	local of = self.music2Of
+	local use = MusicTracks.active(of.on() == true, MusicTracks.Ids)
+	local audio = self.audio
+	if audio and audio.setGarden2 then
+		local want = use.garden and not audio.garden2Failed
+		if want ~= (audio.garden2 ~= nil) then
+			audio:setGarden2(if want then { day = MusicTracks.Ids.garden_day, night = MusicTracks.Ids.garden_night } else nil)
+			self.music2Clock = nil
+		end
+		if audio.garden2 then
+			-- The weight moves over 90-120 s: read at 10 Hz, and at once on the first step (joining at night).
+			self.music2Clock = (self.music2Clock or MusicTracks.WeightEvery) + dt
+			if self.music2Clock >= MusicTracks.WeightEvery then
+				self.music2Clock = 0
+				self.music2Hour = of.hourOn() == true
+				self.music2W = if self.music2Hour then of.weight() else 0
+			end
+			audio:stepGarden2(dt, self.music2W, self.music2Hour)
+		end
+	end
+	local want = use.deck and not self.deck2Failed
+	if want ~= (self.deck2 ~= nil) then
+		if want then self:makeDeck2(if use.lite then MusicTracks.Ids.deck_lite else nil) else self:dropDeck2() end
+	end
+	if self.deck2 and self.deck2.ready then self:stepDeck2(dt, master, active) end
+end
+-- The deck pair: the round track and, when uploaded, its lite variant (the results card, a finished round, a menu over
+-- the deck: self.deckLite, set by the client entry). Both run in step whenever the deck music plays (the lite one on
+-- the deck's grid at 2:1, MusicTracks.target), crossed in DeckFade seconds, equal power. In the deck music's group like
+-- today's loop, so the master, focus and the ducks reach both.
+function Ambient:makeDeck2(liteId)
+	local deck = { main = sound("deck_v2", MusicTracks.Ids.deck, self.deckGroup, SoundService, true), w = 0, check = 0, ready = false }
+	if liteId then deck.lite = sound("deck_lite_v2", liteId, self.deckGroup, SoundService, true) end
+	self.deck2 = deck
+	task.spawn(function()
+		local fine = true
+		local ok = pcall(Ambient.preload, { deck.main, deck.lite }, function(_, status)
+			if status ~= Enum.AssetFetchStatus.Success then fine = false end
+		end)
+		if self.destroyed or self.deck2 ~= deck then return end
+		if ok and fine then
+			deck.ready = true
+			return
+		end
+		-- Never silent: a pair that will not load gives the deck back to today's loop for the session.
+		self.warn("Egg Drop could not load the v2 deck music; today's loop plays")
+		self.deck2Failed = true
+		self:dropDeck2()
+	end)
+	return deck
+end
+function Ambient:dropDeck2()
+	local deck = self.deck2
+	if not deck then return end
+	self.deck2 = nil
+	deck.main:Destroy()
+	if deck.lite then deck.lite:Destroy() end
+end
+function Ambient:dropMusic2()
+	self:dropDeck2()
+	if self.audio and self.audio.garden2 and self.audio.setGarden2 then self.audio:setGarden2(nil) end
+end
+function Ambient:stepDeck2(dt, master, active)
+	local deck = self.deck2
+	local main, lite = deck.main, deck.lite
+	local wantLite = false
+	if lite and self.deckLite then
+		local ok, on = pcall(self.deckLite)
+		wantLite = ok and on == true
+	end
+	deck.w = MusicTracks.slew(deck.w, if wantLite then 1 else 0, dt, MusicTracks.DeckFade)
+	local mainGain, liteGain = MusicTracks.gains(deck.w, 1)
+	main.Volume = Ambient.DeckMusicVolume * self.deckMix * mainGain
+	if lite then lite.Volume = Ambient.DeckMusicVolume * MusicTracks.LiteLevel * self.deckMix * liteGain end
+	if self.deckMix > 0 and master > 0 and active then
+		if not main.IsPlaying then
+			-- Together, from the top, as today's loop starts each round.
+			main.TimePosition = 0
+			main:Play()
+			if lite then lite.TimePosition = 0; lite:Play() end
+			deck.check = 0
+		elseif lite and not lite.IsPlaying then
+			lite.TimePosition = MusicTracks.target(main.TimePosition, MusicTracks.Lengths.deck, 0, MusicTracks.Lengths.deck_lite) or 0
+			lite:Play()
+			deck.check = 0
+		end
+	elseif self.deckMix == 0 then
+		if main.IsPlaying then main:Stop() end
+		if lite and lite.IsPlaying then lite:Stop() end
+	end
+	deck.check -= dt
+	if lite and deck.check <= 0 then
+		deck.check = MusicTracks.CheckEvery
+		MusicTracks.sync(main, lite, mainGain, liteGain, MusicTracks.Drift, Ambient.length)
+	end
+end
+
 function Ambient:destroy()
 	if self.destroyed then return end
 	self.destroyed = true
@@ -1404,6 +1534,7 @@ function Ambient:destroy()
 	self.bedVoice:Destroy()
 	for _, voices in pairs(self.voices) do for _, voice in ipairs(voices) do voice:Destroy() end end
 	if self.deckVoice then self.deckVoice:Destroy() end
+	self:dropDeck2()
 	if self.raceVoice then self.raceVoice:Destroy(); self.race = nil end
 	if self.audio and self.audio.ducks and self.audio.ducks[Ambient.RaceDuck] ~= nil then
 		self.audio.ducks[Ambient.RaceDuck] = nil
